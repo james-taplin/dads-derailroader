@@ -88,12 +88,15 @@ class Draft(unittest.TestCase):
         run = self.run_convert()
         inv = read_json(run.path / "inventory.json")
         probe_in = read_json(run.path / "unity/project/Assets/Rr2dv/ProbeInput.json")
-        probe_out = {"vehicles": [{"id": "ts-260-a", "wheels": [{"clip": "Drivers", "treadCandidate": 0.598}]}]}
+        probe_out = {"vehicles": [{"id": "ts-260-a", "wheels": [{"clip": "Drivers", "sourceRadius": 0.6, "bands": [
+            {"radius": 0.598, "lateralMin": 0.70, "lateralMax": 0.78, "vertices": 50},
+            {"radius": 0.62, "lateralMin": 0.68, "lateralMax": 0.69, "vertices": 20}]}]}]}
         rec = record.draft(run.path, inv, probe_in, probe_out, {})
         self.assertIsNone(rec["config"]["WheelRadius"])
         self.assertIsNone(rec["hooks"]["SimSpec"]["steamEngine"]["cylinderBore"])
-        self.assertEqual(rec["metadata"]["wheelCandidates"], probe_out["vehicles"][0]["wheels"])
-        self.assertIn("wheelCandidates", " ".join(rec["metadata"]["pending"]))
+        candidate = rec["metadata"]["wheelCandidates"][0]
+        self.assertEqual((candidate["tread"], candidate["flangeRadius"]), (0.598, 0.62))
+        self.assertIn("probe candidate 0.598000 m", " ".join(rec["metadata"]["pending"]))
 
     def test_reviewed_radius_fills_the_bore(self):
         run = self.run_convert(wheel_radius=0.598)

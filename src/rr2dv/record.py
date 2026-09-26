@@ -16,6 +16,7 @@ import math
 import re
 from pathlib import Path
 
+from . import wheels
 from .jsonio import read_json_lenient
 from .rrmod import components, definition
 
@@ -161,14 +162,17 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
     # WheelRadius and the bore derived from it stay pending until a person accepts a tread band.
     main_index = d.get("mainDriverIndex", 0)
     main_ws = (d.get("wheelsets") or [{}])[main_index] if d.get("wheelsets") else {}
-    wheel_candidates = [w for v in (probe_output or {}).get("vehicles", []) if v.get("id") == loco_id
+    wheel_candidates = [wheels.tread(w) for v in (probe_output or {}).get("vehicles", []) if v.get("id") == loco_id
                         for w in v.get("wheels", [])]
     reviewed = (answers.get("wheelRadius") or {}) if isinstance(answers.get("wheelRadius"), dict) else {}
     radius = reviewed.get("value")
     wheel_radius = env(radius, "m", "measured", *(reviewed.get("evidence") or ["run answers: reviewed tread band"])) if radius else None
     if not radius:
-        pending.append("WheelRadius: review the probe's tread-band candidates in metadata.wheelCandidates "
-                       f"(source nominal radius {main_ws.get('diameter', 0) / 2:g} m is not the tread)")
+        main = next((c for c in wheel_candidates if c["clip"] == (main_ws.get("animation") or {}).get("clipName")), None)
+        found = (f"probe candidate {main['tread']:.6f} m, {main['confidence']} confidence"
+                 if main and main["tread"] else "no probe candidate")
+        pending.append(f"WheelRadius: review the tread candidates in metadata.wheelCandidates ({found}; source nominal "
+                       f"radius {main_ws.get('diameter', 0) / 2:g} m is not the tread), then pass --wheel-radius")
 
     needed = [f for f in ("maximumBoilerPressure", "pistonDiameterInches", "pistonStrokeInches", "wheelsets")
               if not d.get(f)]

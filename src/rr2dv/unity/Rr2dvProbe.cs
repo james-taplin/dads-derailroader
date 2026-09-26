@@ -24,8 +24,14 @@ public static class Rr2dvProbe
     [Serializable] public class AnchorOut { public string kind, name, purpose, parentPath; public bool resolved; public float[] position, rotation, scale; }
     [Serializable] public class Pose { public string path; public float[] start, end, startEuler, endEuler; }
     [Serializable] public class ClipOut { public string key, asset; public float duration; public int curves; public string[] missingPaths; public Pose[] poses; }
-    [Serializable] public class RadiusBin { public float radius; public int vertices; }
-    [Serializable] public class WheelOut { public string clip; public float sourceRadius, treadCandidate; public string[] rotatingPaths; public RadiusBin[] radii; }
+    // One 1 mm radius band of the wheel's outer surface: mean radius and the lateral extent it covers, measured from the
+    // rotating node's pivot (axle-centric; both sides folded). A tyre tread is a wide band; the flange tip is narrow.
+    [Serializable] public class RadiusBand { public float radius, lateralMin, lateralMax; public int vertices; }
+    [Serializable] public class WheelMesh { public string path; public int vertices; public float centreOffset, maxRadius; public bool used; public string reason; }
+    [Serializable] public class WheelOut
+    {
+        public string clip; public float sourceRadius; public string[] rotatingPaths; public WheelMesh[] meshes; public RadiusBand[] bands;
+    }
     [Serializable] public class VehicleOut
     {
         public string id, role, prefab; public float[] boundsMin, boundsMax;
@@ -35,8 +41,8 @@ public static class Rr2dvProbe
     [Serializable] public class Result { public string status; public int exitCode, problems; public bool runtimeValidated; public string error; }
 
     const string InputAsset = "Assets/Rr2dv/ProbeInput.json";
-    const float TreadWindow = 0.15f;   // tread candidates within +/-15% of the source radius
-    const int KeptRadiusBins = 12;
+    const float BandWindow = 0.15f;      // radius bands kept within +/-15% of the source radius
+    const float WheelCentreMax = 0.1f;   // a wheel-like mesh is centred on its pivot within 10% of the source radius
     static readonly List<string> Problems = new List<string>();
 
     public static void Run()
@@ -138,40 +144,71 @@ public static class Rr2dvProbe
         return a;
     }
 
+    // Measures only; the tread is chosen from the bands by rr2dv (wheels.py), which keeps it for review (board X30).
+    // A mesh counts when the wheelset clip rotates it through its nearest animated ancestor (so rods and linkage with
+    // their own curves are left out), it is centred on that pivot and it reaches the source radius.
     static WheelOut Wheel(Vehicle v, Transform root, Wheelset w)
     {
-        var o = new WheelOut { clip = w.clip, sourceRadius = w.diameter / 2f, rotatingPaths = new string[0], radii = new RadiusBin[0] };
+        var o = new WheelOut { clip = w.clip, sourceRadius = w.diameter / 2f, rotatingPaths = new string[0], meshes = new WheelMesh[0], bands = new RadiusBand[0] };
         var clip = string.IsNullOrEmpty(w.clipAsset) ? null : AssetDatabase.LoadAssetAtPath<AnimationClip>(w.clipAsset);
         if (!clip) { Problems.Add(v.id + ": wheelset clip not loadable: " + w.clip); return o; }
-        var rotating = AnimationUtility.GetCurveBindings(clip)
+        if (o.sourceRadius <= 0) { Problems.Add(v.id + ": wheelset " + w.clip + " has no source diameter"); return o; }
+        var bindings = AnimationUtility.GetCurveBindings(clip);
+        var animated = new HashSet<Transform>();
+        foreach (var b in bindings) { var t = Find(root, b.path); if (t) animated.Add(t); }
+        var rotating = bindings
             .Where(b => b.propertyName.IndexOf("Rotation", StringComparison.OrdinalIgnoreCase) >= 0 || b.propertyName.IndexOf("Euler", StringComparison.OrdinalIgnoreCase) >= 0)
             .Select(b => b.path).Distinct().OrderBy(p => p, StringComparer.Ordinal).ToArray();
         o.rotatingPaths = rotating;
-        var counts = new Dictionary<int, int>();
+        var seen = new HashSet<MeshFilter>();
+        var meshes = new List<WheelMesh>();
+        var bands = new SortedDictionary<int, RadiusBand>();
+        var sums = new Dictionary<int, double>();
         foreach (var path in rotating)
         {
-            var t = string.IsNullOrEmpty(path) ? root : root.Find(path);
+            var t = Find(root, path);
             if (!t) continue;
             var pivot = t.position;
             foreach (var f in t.GetComponentsInChildren<MeshFilter>(true))
             {
                 if (!f.sharedMesh) continue;
-                foreach (var local in f.sharedMesh.vertices)
+                var owner = f.transform;
+                while (owner != t && !animated.Contains(owner)) owner = owner.parent;
+                // A mesh under a nested rotating node is measured around that node's own pivot, on its turn.
+                if (owner != t && rotating.Contains(TPath(owner, root))) continue;
+                if (!seen.Add(f)) continue;
+                var m = new WheelMesh { path = TPath(f.transform, root) };
+                meshes.Add(m);
+                if (owner != t) { m.reason = "moved by its own curves (" + TPath(owner, root) + ")"; continue; }
+                var points = f.sharedMesh.vertices.Select(local => f.transform.TransformPoint(local) - pivot).ToArray();
+                m.vertices = points.Length;
+                if (points.Length == 0) { m.reason = "no vertices"; continue; }
+                // Axle along car-local x: radius in the y-z plane around the pivot.
+                var centre = new Vector2(points.Average(p => p.y), points.Average(p => p.z));
+                m.centreOffset = centre.magnitude;
+                m.maxRadius = points.Max(p => new Vector2(p.y, p.z).magnitude);
+                if (m.centreOffset > WheelCentreMax * o.sourceRadius) { m.reason = "not centred on the axle"; continue; }
+                if (m.maxRadius < (1f - BandWindow) * o.sourceRadius) { m.reason = "smaller than the wheel"; continue; }
+                m.used = true;
+                foreach (var p in points)
                 {
-                    var p = f.transform.TransformPoint(local);
-                    // Axle along car-local x: radius in the y-z plane around the rotating node's pivot.
-                    float r = new Vector2(p.y - pivot.y, p.z - pivot.z).magnitude;
-                    if (r < 0.3f * o.sourceRadius) continue;
-                    int bin = Mathf.RoundToInt(r * 1000f);
-                    counts[bin] = counts.TryGetValue(bin, out var n) ? n + 1 : 1;
+                    float r = new Vector2(p.y, p.z).magnitude;
+                    if (Mathf.Abs(r - o.sourceRadius) > BandWindow * o.sourceRadius) continue;
+                    float lateral = Mathf.Abs(p.x);
+                    int key = Mathf.RoundToInt(r * 1000f);
+                    RadiusBand band;
+                    if (!bands.TryGetValue(key, out band)) { band = new RadiusBand { lateralMin = lateral, lateralMax = lateral }; bands[key] = band; sums[key] = 0; }
+                    band.vertices++;
+                    sums[key] += r;
+                    if (lateral < band.lateralMin) band.lateralMin = lateral;
+                    if (lateral > band.lateralMax) band.lateralMax = lateral;
                 }
             }
         }
-        o.radii = counts.OrderByDescending(kv => kv.Value).ThenBy(kv => kv.Key).Take(KeptRadiusBins)
-            .Select(kv => new RadiusBin { radius = kv.Key / 1000f, vertices = kv.Value }).ToArray();
-        var window = o.radii.Where(b => Mathf.Abs(b.radius - o.sourceRadius) <= TreadWindow * o.sourceRadius).ToArray();
-        o.treadCandidate = window.Length > 0 ? window[0].radius : 0f;
-        if (o.sourceRadius > 0 && window.Length == 0) Problems.Add(v.id + ": no tread radius near source radius for wheelset " + w.clip);
+        foreach (var kv in bands) kv.Value.radius = (float)(sums[kv.Key] / kv.Value.vertices);
+        o.meshes = meshes.ToArray();
+        o.bands = bands.Values.ToArray();
+        if (o.bands.Length == 0) Problems.Add(v.id + ": no wheel surface near the source radius for wheelset " + w.clip);
         return o;
     }
 
