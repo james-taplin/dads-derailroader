@@ -40,6 +40,7 @@ def loco(ident: str, tender: str = "", truck: str = "", parts=(), kind: str = "S
         components.append({"kind": "Whistle", "defaultWhistleIdentifier": whistle, "name": "Whistle"})
     components += list(extra_components)
     d = {"kind": kind, "archetype": "LocomotiveSteam", "modelIdentifier": ident,
+         "wheelsets": [{"offset": 0.0, "length": 2.4, "diameter": 1.2, "numberOfAxles": 3, "animation": {"clipName": "Drivers"}}],
          "tenderIdentifier": tender, "truckIdentifier": truck, "components": components}
     if heating_surface is not None:
         d["totalHeatingSurface"] = heating_surface
@@ -99,12 +100,14 @@ def guid(*parts):
     import hashlib
     return hashlib.md5("|".join(parts).encode()).hexdigest()
 
-def prefab_yaml(root, mat, dll):
+def prefab_yaml(root, mat, dll, anim):
     return ("%YAML 1.1\n--- !u!1 &100\nGameObject:\n  m_Name: " + root + "\n--- !u!4 &101\nTransform:\n"
             "  m_GameObject: {fileID: 100}\n  m_Father: {fileID: 0}\n--- !u!1 &200\nGameObject:\n  m_Name: Wheel\n"
             "--- !u!4 &201\nTransform:\n  m_GameObject: {fileID: 200}\n  m_Father: {fileID: 101}\n"
             "--- !u!23 &202\nMeshRenderer:\n  m_Materials:\n  - {fileID: 2100000, guid: " + mat + ", type: 2}\n"
-            "--- !u!114 &203\nMonoBehaviour:\n  m_Script: {fileID: 11500000, guid: " + dll + ", type: 3}\n")
+            "--- !u!114 &203\nMonoBehaviour:\n  m_Script: {fileID: 11500000, guid: " + dll + ", type: 3}\n"
+            "  clips:\n  - name: Drivers\n    clip: {fileID: 7400000, guid: " + anim + ", type: 2}\n"
+            "  materials:\n  - name: paint\n    material: {fileID: 2100000, guid: " + mat + ", type: 2}\n")
 
 def export_fake_project(bundle, project):
     """Shape of an AssetRipper export: prefabs per catalogue asset (Wheel child, material by GUID),
@@ -129,7 +132,7 @@ def export_fake_project(bundle, project):
         (assets / "Material" / (stem + "_paint.mat")).write_text("%YAML 1.1\nMaterial:\n  m_Name: paint\n")
         (assets / "Material" / (stem + "_paint.mat.meta")).write_text("guid: " + mat + "\n")
         (assets / "PrefabInstance").mkdir(exist_ok=True)
-        (assets / "PrefabInstance" / name).write_text(prefab_yaml(stem, mat, dll))
+        (assets / "PrefabInstance" / name).write_text(prefab_yaml(stem, mat, dll, guid(seed, "anim")))
         (assets / "PrefabInstance" / (name + ".meta")).write_text("guid: " + guid(seed, stem, "prefab") + "\n")
     if any(f.name.lower() == "definitions.json" for f in pack.iterdir()):
         (assets / "AnimationClip").mkdir()
@@ -192,3 +195,43 @@ def fake_carcreator(path: Path) -> Path:
                 info.size = len(blob)
                 tar.addfile(info, io.BytesIO(blob))
     return path
+
+
+FAKE_UNITY = r'''#!/usr/bin/env python3
+"""Stand-in for Unity 2019.4 running Rr2dvProbe.Run, for tests. $FAKE_UNITY_MODE: flake-once | no-result | problems."""
+import json, os, sys
+from pathlib import Path
+args = sys.argv[1:]
+project = Path(args[args.index("-projectPath") + 1]); log = Path(args[args.index("-logFile") + 1])
+out = Path(os.environ["RR2DV_PROBE_OUT"]); mode = os.environ.get("FAKE_UNITY_MODE", "")
+state = Path(os.environ.get("FAKE_UNITY_STATE", str(out) + ".state"))
+calls = int(state.read_text()) + 1 if state.exists() else 1
+state.write_text(str(calls))
+if mode == "flake-once" and calls == 1:
+    log.write_text("No valid Unity Editor license found\n"); sys.exit(1)
+log.write_text("fake unity " + args[args.index("-executeMethod") + 1] + "\n")
+if mode == "no-result":
+    sys.exit(0)
+data = json.loads((project / "Assets/Rr2dv/ProbeInput.json").read_text())
+problems = ["fake problem"] if mode == "problems" else []
+(out / "probe.json").write_text(json.dumps({"schema": 1, "vehicles": [{"id": v["id"], "role": v["role"]} for v in data["vehicles"]],
+                                           "problems": problems}))
+(out / "result.json").write_text(json.dumps({"status": "problems" if problems else "passed", "exitCode": 2 if problems else 0,
+                                            "problems": len(problems), "runtimeValidated": False}))
+sys.exit(2 if problems else 0)
+'''
+
+
+def fake_unity(folder: Path) -> Path:
+    folder.mkdir(parents=True, exist_ok=True)
+    exe = folder / "Unity"
+    exe.write_text(FAKE_UNITY.replace("#!/usr/bin/env python3", "#!" + __import__("sys").executable, 1))
+    exe.chmod(0o755)
+    return exe
+
+
+def tool_machine(tmp: Path) -> dict:
+    """Settings for a machine with fake AssetRipper, Unity and CarCreator (POSIX tests)."""
+    os.environ["FAKE_AR_STATE"] = str(tmp / "ar-state")
+    return {"workRoot": str(tmp / "work"), "assetRipper": str(fake_assetripper(tmp / "tools")),
+            "unity": str(fake_unity(tmp / "tools")), "carCreator": str(fake_carcreator(tmp / "tools" / "CarCreator_3.1.9.unitypackage"))}

@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
-from . import assetripper, unityproject
+from . import assetripper, probeinput, unityproject, unityrun
 from .jsonio import sha256_file, write_json
 from .machine import Machine, check_work_root
 from .rrmod import Index, blocking, inventory
@@ -153,7 +153,17 @@ def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Seq
     run.finish("import", "done", f"Unity {project['unity']} project with {len(project['vehicles'])} vehicle(s), "
                                  f"{len(project['parts'])} part(s), {project['unique_guids']} GUIDs")
 
-    for name, description, available in STAGES[5:]:
+    run.begin("probe")
+    probe_in = probeinput.build(run.path, inv, project)
+    result = unityrun.run_method(machine.path("unity"), run.path / project["project"], "Rr2dvProbe.Run", run.path / "probe",
+                                 {"RR2DV_PROBE_OUT": str(run.path / "probe")})
+    if result.get("status") not in ("passed", "problems"):
+        return fail("probe", f"Unity probe failed: {result.get('error') or result}")
+    problems = result.get("problems", 0)
+    run.finish("probe", "done", f"{len(probe_in['vehicles'])} vehicle(s) measured; {problems} problem(s) to review"
+                                + (" (see probe/probe.json)" if problems else ""))
+
+    for name, description, available in STAGES[6:]:
         if not available:
             message = f"stopped before '{name}' ({description}): not implemented yet"
             run.finish(name, "not_available", message)

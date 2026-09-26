@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fixtures import fake_assetripper, fake_carcreator, standard_mod
+from fixtures import fake_assetripper, fake_carcreator, fake_unity, standard_mod
 from rr2dv.jsonio import read_json, sha256_file
 from rr2dv.machine import Machine
 from rr2dv.pipeline import EXIT_FAILED, EXIT_INCOMPLETE, convert
@@ -26,7 +26,7 @@ class Import(unittest.TestCase):
         self.addCleanup(os.environ.pop, "FAKE_AR_STATE", None)
         self.cc = fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage")
         self.machine = Machine(None, {"workRoot": str(self.tmp / "work"), "assetRipper": str(fake_assetripper(self.tmp / "tools")),
-                                      "carCreator": str(self.cc)})
+                                      "carCreator": str(self.cc), "unity": str(fake_unity(self.tmp / "tools"))})
 
     def convert(self):
         out = convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]])

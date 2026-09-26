@@ -15,3 +15,6 @@ rr2dv = "rr2dv.cli:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+rr2dv = ["unity/*.cs"]

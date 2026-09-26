@@ -229,6 +229,14 @@ def assemble(run_path: Path, inv: dict, exports: dict[str, dict], car_creator: P
         shutil.copyfile(script, target)
         core[f"builder/tools/unity/{script.name}"] = sha256_file(script)
     result["core_scripts"] = core
+    app = {}
+    for script in sorted((Path(__file__).parent / "unity").glob("*.cs")):  # rr2dv's own editor scripts (probe)
+        target = editor / script.name
+        if target.exists():
+            raise ProjectError(f"app script {script.name} clashes with Assets/Editor/{script.name}")
+        shutil.copyfile(script, target)
+        app[f"rr2dv/unity/{script.name}"] = sha256_file(script)
+    result["app_scripts"] = app
     result["unique_guids"] = check_guids(assets)
     write_json(run_path / "unity" / "project.json", result)
     return result
