@@ -1,5 +1,6 @@
 import io
 import json
+import sys
 import shutil
 import tempfile
 import unittest
@@ -7,7 +8,9 @@ import zipfile
 from contextlib import redirect_stdout
 from pathlib import Path
 
-from fixtures import loco, standard_mod, tree_state, write_pack
+import os
+
+from fixtures import fake_assetripper, loco, standard_mod, tree_state, write_pack
 from rr2dv import cli
 from rr2dv.jsonio import read_json, sha256_file
 from rr2dv.machine import Machine
@@ -17,12 +20,19 @@ from rr2dv.rrmod import Index, inventory
 from rr2dv.safety import UnsafePath
 
 
+def with_fake_assetripper(test, tmp: Path) -> str:
+    os.environ["FAKE_AR_STATE"] = str(tmp / "ar-state")
+    test.addCleanup(os.environ.pop, "FAKE_AR_STATE", None)
+    return str(fake_assetripper(tmp / "tools"))
+
+
+@unittest.skipIf(sys.platform == "win32", "fake AssetRipper is a POSIX script")
 class Pipeline(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.tmp)
         self.m = standard_mod(self.tmp)
-        self.machine = Machine(None, {"workRoot": str(self.tmp / "work")})
+        self.machine = Machine(None, {"workRoot": str(self.tmp / "work"), "assetRipper": with_fake_assetripper(self, self.tmp)})
         self.out = self.tmp / "out"
 
     def test_convert_stages_inputs_and_never_writes_to_the_input(self):
@@ -36,8 +46,8 @@ class Pipeline(unittest.TestCase):
 
         run = outcome.run
         stages = {k: v["status"] for k, v in run.record["stages"].items()}
-        self.assertEqual([stages[s] for s in ("locate", "link", "stage", "extract", "build")],
-                         ["done", "done", "done", "not_available", "pending"])
+        self.assertEqual([stages[s] for s in ("locate", "link", "stage", "extract", "import", "build")],
+                         ["done", "done", "done", "done", "not_available", "pending"])
         self.assertEqual(read_json(run.file)["status"], "incomplete")
         self.assertEqual((run.record["answers"]["locomotive"], run.record["answers"]["audio"]["basis"]), ("ts-260-a", "S060"))
         staged = read_json(run.path / "staged.json")["files"]
@@ -84,7 +94,7 @@ class Pipeline(unittest.TestCase):
             convert(self.m["mod"], self.m["mod"] / "out", self.machine)
         with self.assertRaises(UnsafePath):
             convert(self.m["mod"], self.tmp / "work" / "x", self.machine)
-        inside = Machine(None, {"workRoot": str(self.m["mod"] / "runs")})
+        inside = Machine(None, {"workRoot": str(self.m["mod"] / "runs"), "assetRipper": self.machine.values["assetRipper"]})
         with self.assertRaises(UnsafePath):
             convert(self.m["mod"], self.out, inside)
         dv = self.tmp / "DV" / "Mods"
@@ -114,13 +124,15 @@ class Pipeline(unittest.TestCase):
         self.assertFalse((self.tmp / "escape.txt").exists())
 
 
+@unittest.skipIf(sys.platform == "win32", "fake AssetRipper is a POSIX script")
 class Cli(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.tmp)
         self.m = standard_mod(self.tmp)
         settings = self.tmp / "machine.json"
-        settings.write_text(json.dumps({"workRoot": str(self.tmp / "work"), "searchRoots": [str(self.m["search"])]}))
+        settings.write_text(json.dumps({"workRoot": str(self.tmp / "work"), "searchRoots": [str(self.m["search"])],
+                                        "assetRipper": with_fake_assetripper(self, self.tmp)}))
         self.base = ["--machine", str(settings)]
 
     def run_cli(self, *args):
@@ -145,7 +157,8 @@ class Cli(unittest.TestCase):
     def test_convert_reports_where_it_stopped(self):
         code, text = self.run_cli("convert", str(self.m["mod"]), "--out", str(self.tmp / "out"))
         self.assertEqual(code, EXIT_INCOMPLETE, text)
-        self.assertIn("extract  not_available", text)
+        self.assertIn("extract  done", text)
+        self.assertIn("import   not_available", text)
         self.assertIn("Run folder:", text)
 
 

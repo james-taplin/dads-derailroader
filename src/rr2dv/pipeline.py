@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
+from . import assetripper
 from .jsonio import sha256_file, write_json
 from .machine import Machine
 from .rrmod import Index, blocking, inventory
@@ -54,6 +55,23 @@ def choose_locomotive(index: Index, requested: str | None) -> tuple[str | None, 
     return None, "the input has several steam locomotives; choose one with --loco: " + ", ".join(steam)
 
 
+def extract(run: Run, inv: dict, machine: Machine) -> dict:
+    """Export every required bundle with AssetRipper (cached by bundle, extractor and target version)."""
+    exe = machine.path("assetRipper")
+    if exe is None or not exe.is_file():
+        raise FileNotFoundError("AssetRipper is not set up: add `assetRipper` to the settings file (see `rr2dv doctor`)")
+    cache = machine.work_root / "_cache" / "assetripper"
+    exports = {}
+    for rec in inv["packs"]:
+        bundle = next((f for f in rec["files"] if f["name"].casefold() == "bundle"), None)
+        if bundle is None:
+            continue
+        staged = run.path / "inputs" / rec["root"] / (rec["path"] or rec["name"]) / bundle["name"]
+        result = assetripper.export(exe, staged, bundle["sha256"], cache)
+        exports[f"{rec['root']}:{rec['path'] or rec['name']}"] = result
+    return exports
+
+
 def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None = None,
             search: Sequence[Path] = (), audio: str | None = None) -> Outcome:
     input_path = input_path.resolve()
@@ -71,7 +89,7 @@ def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None 
         request["input_sha256"] = sha256_file(input_path)
     run = Run.create(work_root, loco or input_path.stem, request)
     try:
-        return _stages(run, input_path, kind, loco, search, audio)
+        return _stages(run, input_path, kind, loco, search, audio, machine)
     except Exception as e:  # record the failure on the run, then let the caller report it
         current = next((n for n, s in run.record["stages"].items() if s["status"] == "running"), None)
         message = f"{type(e).__name__}: {e}"
@@ -82,7 +100,7 @@ def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None 
 
 
 def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Sequence[Path],
-            audio: str | None) -> Outcome:
+            audio: str | None, machine: Machine) -> Outcome:
     def fail(stage: str, message: str, code: int = EXIT_FAILED) -> Outcome:
         run.finish(stage, "failed", message)
         run.close("failed", message)
@@ -120,7 +138,13 @@ def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Seq
     write_json(run.path / "staged.json", staged)
     run.finish("stage", "done", f"{len(staged['files'])} files copied and verified")
 
-    for name, description, available in STAGES[3:]:
+    run.begin("extract")
+    exports = extract(run, inv, machine)
+    write_json(run.path / "exports.json", exports)
+    reused = sum(1 for e in exports.values() if e["cached"])
+    run.finish("extract", "done", f"{len(exports)} bundle(s) exported ({reused} reused from cache)")
+
+    for name, description, available in STAGES[4:]:
         if not available:
             message = f"stopped before '{name}' ({description}): not implemented yet"
             run.finish(name, "not_available", message)

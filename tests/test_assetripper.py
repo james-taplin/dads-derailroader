@@ -1,0 +1,88 @@
+import json
+import os
+import shutil
+import sys
+import tempfile
+import unittest
+from pathlib import Path
+
+from fixtures import fake_assetripper, standard_mod
+from rr2dv.assetripper import ExportError, export, settings_from_form
+from rr2dv.jsonio import read_json, sha256_file
+from rr2dv.machine import Machine
+from rr2dv.pipeline import EXIT_INCOMPLETE, convert
+
+
+class Form(unittest.TestCase):
+    def test_form_is_submitted_like_a_browser_with_target_version_set(self):
+        html = """<input name="TargetVersion" value="2022.3.0f1"><input type="checkbox" name="A" checked>
+        <input type="checkbox" name="B"><input name="C" value="x" disabled><input type="submit" name="go" value="Save">
+        <select name="S"><option value="1"><option value="2" selected></select>"""
+        self.assertEqual(settings_from_form(html), {"TargetVersion": "2019.4.40f1", "A": "", "S": "2"})
+
+    def test_unknown_settings_page_is_refused(self):
+        with self.assertRaises(ExportError):
+            settings_from_form("<input name='Other' value='1'>")
+
+
+@unittest.skipIf(sys.platform == "win32", "fake AssetRipper is a POSIX script")
+class Export(unittest.TestCase):
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp)
+        os.environ["FAKE_AR_STATE"] = str(self.tmp / "state")
+        self.addCleanup(os.environ.pop, "FAKE_AR_STATE", None)
+        self.exe = fake_assetripper(self.tmp / "tools")
+        self.bundle = self.tmp / "pack" / "bundle"
+        self.bundle.parent.mkdir()
+        self.bundle.write_bytes(b"unity bundle")
+        self.sha = sha256_file(self.bundle)
+        self.cache = self.tmp / "cache"
+
+    def exports_made(self):
+        f = self.tmp / "state" / "exports.txt"
+        return int(f.read_text()) if f.exists() else 0
+
+    def test_export_then_reuse_from_cache(self):
+        first = export(self.exe, self.bundle, self.sha, self.cache)
+        self.assertFalse(first["cached"])
+        path = Path(first["path"])
+        self.assertTrue((path / "ExportedProject" / "Assets" / "pack.prefab").is_file())
+        info = read_json(path / "export.json")
+        self.assertEqual((info["bundle_sha256"], info["target"]), (self.sha, "2019.4.40f1"))
+        self.assertEqual(json.loads((self.tmp / "state" / "settings.json").read_text())["TargetVersion"], "2019.4.40f1")
+        second = export(self.exe, self.bundle, self.sha, self.cache)
+        self.assertEqual((second["cached"], second["path"]), (True, first["path"]))
+        self.assertEqual(self.exports_made(), 1)
+
+    def test_failed_export_leaves_no_cache_entry(self):
+        os.environ["FAKE_AR_FAIL"] = "1"
+        self.addCleanup(os.environ.pop, "FAKE_AR_FAIL", None)
+        with self.assertRaises(ExportError):
+            export(self.exe, self.bundle, self.sha, self.cache)
+        names = [p.name for p in self.cache.iterdir()]
+        self.assertTrue(all(n.startswith(".failed-") for n in names), names)
+        self.assertTrue((self.cache / names[0] / "logs" / "assetripper.log").is_file())
+        del os.environ["FAKE_AR_FAIL"]
+        self.assertFalse(export(self.exe, self.bundle, self.sha, self.cache)["cached"])
+
+    def test_assetripper_that_will_not_start(self):
+        broken = self.tmp / "tools" / "broken"
+        broken.write_text("#!/bin/sh\nexit 3\n")
+        broken.chmod(0o755)
+        with self.assertRaisesRegex(ExportError, "exited during startup"):
+            export(broken, self.bundle, self.sha, self.cache, startup_timeout=10)
+
+    def test_second_conversion_reuses_every_export(self):
+        m = standard_mod(self.tmp / "mods")
+        machine = Machine(None, {"workRoot": str(self.tmp / "work"), "assetRipper": str(self.exe)})
+        a = convert(m["mod"], self.tmp / "out", machine, search=[m["search"]])
+        self.assertEqual(a.code, EXIT_INCOMPLETE, a.message)
+        self.assertIn("3 bundle(s) exported (0 reused", a.run.record["stages"]["extract"]["detail"])
+        b = convert(m["mod"], self.tmp / "out", machine, search=[m["search"]])
+        self.assertIn("3 bundle(s) exported (3 reused", b.run.record["stages"]["extract"]["detail"])
+        self.assertEqual(self.exports_made(), 3)
+
+
+if __name__ == "__main__":
+    unittest.main()

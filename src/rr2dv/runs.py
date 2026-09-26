@@ -16,7 +16,7 @@ STAGES = [
     ("locate", "Find the locomotive in the input", True),
     ("link", "Resolve tender, trucks and parts", True),
     ("stage", "Copy the required packs into the run folder", True),
-    ("extract", "Export the bundles with AssetRipper", False),
+    ("extract", "Export the bundles with AssetRipper", True),
     ("import", "Prepare the Unity project", False),
     ("probe", "Measure the model", False),
     ("record", "Generate the vehicle record", False),

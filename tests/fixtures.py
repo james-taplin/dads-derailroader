@@ -81,3 +81,48 @@ def tree_state(root: Path) -> dict:
             p = Path(current) / name
             state[p.relative_to(root).as_posix()] = (hashlib.sha256(p.read_bytes()).hexdigest(), p.stat().st_mtime_ns)
     return state
+
+
+FAKE_ASSETRIPPER = r'''#!/usr/bin/env python3
+"""Stand-in for AssetRipper's headless HTTP API, for tests. Records what it was asked in $FAKE_AR_STATE."""
+import http.server, json, os, sys, urllib.parse
+from pathlib import Path
+port = int(sys.argv[sys.argv.index("--port") + 1])
+state = Path(os.environ["FAKE_AR_STATE"])
+state.mkdir(parents=True, exist_ok=True)
+FORM = """<form><input name="TargetVersion" value="2022.3.0f1"><input type="checkbox" name="Skip" checked>
+<input type="checkbox" name="Off"><input name="Locked" value="x" disabled><select name="Mode"><option value="a">
+<option value="b" selected></select><input type="submit" value="Save"></form>"""
+loaded = {}
+class H(http.server.BaseHTTPRequestHandler):
+    def log_message(self, *a): pass
+    def reply(self, body="ok"):
+        self.send_response(200); self.end_headers(); self.wfile.write(body.encode())
+    def do_GET(self):
+        self.reply(FORM if self.path == "/Settings/Edit" else "AssetRipper")
+    def do_POST(self):
+        form = dict(urllib.parse.parse_qsl(self.rfile.read(int(self.headers.get("Content-Length", 0))).decode(), keep_blank_values=True))
+        if self.path == "/Settings/Update":
+            (state / "settings.json").write_text(json.dumps(form))
+        elif self.path == "/LoadFile":
+            loaded["path"] = form["Path"]
+        elif self.path == "/Export/UnityProject":
+            if os.environ.get("FAKE_AR_FAIL"):
+                self.reply(); return
+            assets = Path(form["Path"]) / "ExportedProject" / "Assets"
+            assets.mkdir(parents=True)
+            (assets / (Path(loaded["path"]).parent.name + ".prefab")).write_text("prefab")
+            count = state / "exports.txt"
+            count.write_text(str(int(count.read_text()) + 1 if count.exists() else 1))
+            print("Finished post-export", flush=True)
+        self.reply()
+http.server.HTTPServer(("127.0.0.1", port), H).serve_forever()
+'''
+
+
+def fake_assetripper(folder: Path) -> Path:
+    folder.mkdir(parents=True, exist_ok=True)
+    exe = folder / "AssetRipper.GUI.Free"
+    exe.write_text(FAKE_ASSETRIPPER.replace("#!/usr/bin/env python3", "#!" + os.environ.get("FAKE_AR_PYTHON", __import__("sys").executable), 1))
+    exe.chmod(0o755)
+    return exe
