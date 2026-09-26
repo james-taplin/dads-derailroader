@@ -130,6 +130,7 @@ class Pack:
     objects: list[dict] = field(default_factory=list)
     assets: dict[str, dict] = field(default_factory=dict)
     mod: Mod | None = None
+    errors: dict[str, str] = field(default_factory=dict)  # lower-cased file name -> why it could not be read
 
     @property
     def name(self) -> str:
@@ -268,17 +269,24 @@ class Index:
         pack = Pack(root, folder, _known_files(folder, files))
         pack.mod = next((mods_here[p] for p in [folder, *folder.parents] if p in mods_here), None)
         where = f"{root.label}:{pack.rel or '.'}"
-        try:
-            if DEFINITIONS in pack.files:
-                objects = read_json_lenient(pack.files[DEFINITIONS]).get("objects", [])
-                pack.objects = [o for o in objects if isinstance(o, dict) and isinstance(o.get("identifier"), str)]
-            if CATALOG in pack.files:
-                assets = read_json_lenient(pack.files[CATALOG]).get("assets", {})
-                pack.assets = assets if isinstance(assets, dict) else {}
-        except (SourceError, AttributeError) as e:
-            sev = "error" if root.rank == 0 else "warning"
-            self.issues.append(Issue(sev, "pack-unreadable", f"{where}: {e}"))
-            return
+        # A broken file only matters if a locomotive needs this pack; inventory() turns it into an error then.
+        for key in (DEFINITIONS, CATALOG):
+            if key not in pack.files:
+                continue
+            try:
+                data = read_json_lenient(pack.files[key])
+                if not isinstance(data, dict):
+                    raise SourceError(pack.files[key], "expected a JSON object")
+                if key == DEFINITIONS:
+                    objects = data.get("objects", [])
+                    pack.objects = [o for o in objects if isinstance(o, dict) and isinstance(o.get("identifier"), str)] \
+                        if isinstance(objects, list) else []
+                else:
+                    assets = data.get("assets", {})
+                    pack.assets = assets if isinstance(assets, dict) else {}
+            except SourceError as e:
+                pack.errors[key] = str(e)
+                self.issues.append(Issue("warning", "pack-unreadable", f"{where}: {e} (only matters if a locomotive needs this pack)"))
         self.packs.append(pack)
         self._packs_by_name[pack.name.casefold()].append(pack)
         for obj in pack.objects:
@@ -296,6 +304,9 @@ class Index:
                 self.groups.append(GroupFile(root, folder / f, data))
 
     # ---- lookups --------------------------------------------------------------------------------------
+
+    def unreadable_definitions(self, max_rank: int | None = None) -> list[Pack]:
+        return [p for p in self.packs if DEFINITIONS in p.errors and (max_rank is None or p.root.rank <= max_rank)]
 
     def find_object(self, identifier: str) -> Resolution:
         return _rank_pick(self._objects.get(identifier, []), lambda po: po[0].root.rank)
@@ -363,6 +374,14 @@ def _ambiguous(what: str, res: Resolution) -> str:
     return f"{what} matches more than one candidate at the same priority ({', '.join(places)}); remove the duplicate or pass it as the input"
 
 
+def _unreadable_hint(index: "Index") -> str:
+    broken = index.unreadable_definitions()
+    if not broken:
+        return ""
+    return f" ({len(broken)} pack(s) with an unreadable Definitions.json could hold it: " + \
+        ", ".join(f"{p.root.label}:{p.rel}" for p in broken[:5]) + ("..." if len(broken) > 5 else "") + ")"
+
+
 def _file_record(root: Root, path: Path, role: str, hash_files: bool) -> dict:
     rec = {"root": root.label, "path": _rel(root, path), "role": role, "bytes": path.stat().st_size}
     if hash_files:
@@ -375,10 +394,15 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
     issues: list[Issue] = []
     res = index.find_object(loco_id)
     if res.hit is None:
-        code, msg = ("ambiguous", _ambiguous(f"locomotive {loco_id}", res)) if res.candidates else ("not-found", f"locomotive {loco_id} not found")
+        code, msg = ("ambiguous", _ambiguous(f"locomotive {loco_id}", res)) if res.candidates else ("not-found", f"locomotive {loco_id} not found" + _unreadable_hint(index))
         return {"schema": 1, "locomotive": {"id": loco_id}, "issues": [Issue("error", code, msg).as_dict()]}
     loco_pack, loco = res.hit
     ldef = definition(loco)
+    hidden = index.unreadable_definitions(max_rank=loco_pack.root.rank)
+    if hidden:
+        issues.append(Issue("warning", "unreadable-definitions",
+                            f"{len(hidden)} pack(s) have an unreadable Definitions.json ({', '.join(p.rel for p in hidden[:5])}); "
+                            "a duplicate identifier hidden there cannot be detected"))
     if ldef.get("kind") != STEAM_LOCOMOTIVE:
         issues.append(Issue("error", "not-steam", f"{loco_id} is {ldef.get('kind')!r}, not a steam locomotive"))
 
@@ -399,7 +423,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         elif tres.candidates:
             issues.append(Issue("error", "ambiguous", _ambiguous(f"tender {tender_id}", tres)))
         else:
-            issues.append(Issue("error", "missing-tender", f"tender {tender_id} not found in the input or search folders"))
+            issues.append(Issue("error", "missing-tender", f"tender {tender_id} not found in the input or search folders" + _unreadable_hint(index)))
 
     trucks = []
     for vpack, vehicle in list(vehicles):
@@ -416,7 +440,8 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
             issues.append(Issue("error", "ambiguous", _ambiguous(f"truck {truck_id}", tres)))
         else:
             issues.append(Issue("error", "missing-truck",
-                                f"truck {truck_id} (used by {vehicle['identifier']}) not found; add the folder of the mod that provides it"))
+                                f"truck {truck_id} (used by {vehicle['identifier']}) not found; add the folder of the mod that provides it"
+                                + _unreadable_hint(index)))
 
     car_ids = {loco_id} | ({tender_info["id"]} if tender_info else set())
     groups = sorted((g for g in index.groups if g.target in car_ids), key=lambda g: _rel(g.root, g.path))
@@ -482,6 +507,9 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                     issues.append(Issue("error", "missing-part-pack", f"{label}: pack {pack_ident!r} not found"))
                 continue
             ppack = pres.hit
+            if CATALOG in ppack.errors:
+                packs[ppack.path] = ppack  # reported as pack-unreadable below
+                continue
             prefix = [s for s in pack_ident.replace("\\", "/").split("/") if s][:-1]
             if prefix and ppack.folder_above.casefold() != prefix[-1].casefold():
                 issues.append(Issue("warning", "pack-folder-mismatch",
@@ -513,6 +541,8 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
     ordered = sorted(packs.values(), key=lambda p: (p.root.rank, p.rel))
     pack_records = []
     for p in ordered:
+        for key, why in sorted(p.errors.items()):
+            issues.append(Issue("error", "pack-unreadable", f"needed pack {p.root.label}:{p.rel or '.'} is broken: {why}"))
         if BUNDLE not in p.files:
             issues.append(Issue("error", "missing-bundle", f"pack {p.root.label}:{p.rel or '.'} has no bundle file"))
         files = []

@@ -56,6 +56,14 @@ class Pipeline(unittest.TestCase):
             self.assertEqual(sha256_file(run.path / f["file"]), f["sha256"])
         self.assertTrue((run.path / "inputs" / "search1" / "TruckMod" / "Trucks" / "Bundle").is_file())
 
+    def test_unrelated_broken_pack_does_not_stop_convert(self):
+        bad = self.m["mod"] / "k50parts"
+        bad.mkdir()
+        (bad / "Catalog.json").write_text('{"assets": {"x": "a\x01b"}}')
+        outcome = convert(self.m["mod"], self.out, self.machine, search=[self.m["search"]])
+        self.assertEqual(outcome.code, EXIT_INCOMPLETE, outcome.message)
+        self.assertIn("pack-unreadable", (outcome.run.path / "index_issues.json").read_text())
+
     def test_same_input_same_fingerprint(self):
         a = convert(self.m["mod"], self.out, self.machine, search=[self.m["search"]]).run
         b = convert(self.m["mod"], self.out, self.machine, search=[self.m["search"]]).run

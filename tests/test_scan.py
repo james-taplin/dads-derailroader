@@ -90,15 +90,31 @@ class Scan(unittest.TestCase):
         inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
         self.assertEqual(codes(inv), ["missing-bundle", "missing-part-asset"])
 
-    def test_unreadable_pack_is_error_in_input_warning_in_search(self):
-        bad = self.m["search"] / "Broken" / "pack"
-        bad.mkdir(parents=True)
-        (bad / "Definitions.json").write_text("{not json")
+    def test_broken_unrelated_pack_is_only_a_warning(self):
+        # X24: one bad Catalog.json elsewhere in the catalogue must not stop every loco.
+        bad = self.m["mod"] / "k50parts"
+        bad.mkdir()
+        (bad / "Catalog.json").write_text('{"assets": {"a": "bad\u0001"}}'.replace("\\u0001", "\x01"))
         index = Index(self.m["mod"], [self.m["search"]])
-        self.assertEqual([i.severity for i in index.issues], ["warning"])
+        self.assertEqual([(i.severity, i.code) for i in index.issues], [("warning", "pack-unreadable")])
+        self.assertEqual(blocking(inventory(index, "ts-260-a")), [])
+
+    def test_broken_needed_pack_is_an_error(self):
+        (self.m["mod"] / "parts" / "Catalog.json").write_text("{not json")
+        inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
+        self.assertEqual(codes(inv), ["pack-unreadable"])
+        (self.m["mod"] / "parts" / "Catalog.json").write_text('{"assets": {"bell": {"filename": "bell.prefab"}}}')
         (self.m["mod"] / "ts-260-a" / "Catalog.json").write_text("[")
-        index = Index(self.m["mod"], [self.m["search"]])
-        self.assertIn("error", [i.severity for i in index.issues])
+        self.assertIn("pack-unreadable", codes(inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")))
+
+    def test_unreadable_definitions_are_named_when_something_is_missing(self):
+        broken = self.m["mod"] / "broken"
+        broken.mkdir()
+        (broken / "Definitions.json").write_text("{oops")
+        inv = inventory(Index(self.m["mod"]), "ts-260-a")  # truck mod not searched
+        missing = next(i for i in inv["issues"] if i["code"] == "missing-truck")
+        self.assertIn("input:broken", missing["message"])
+        self.assertIn("unreadable-definitions", codes(inv))
 
     def test_input_inside_search_root_is_indexed_once(self):
         index = Index(self.m["mod"], [self.tmp / "input"])
