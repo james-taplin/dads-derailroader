@@ -59,6 +59,15 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
   S060 or S282 audio by boiler size: `totalHeatingSurface` < 1,500 ft2 = S060, otherwise S282 (`rrmod.audio_basis`).
   `--audio` overrides; a definition without heating surface needs that answer. Never extract Railroader audio.
 - `modelIdentifier` may name a catalogue key or a prefab file (GN M-2: model `gn-m2t`, key `gn-m2t-2680`).
+- **Trucks are never converted (James, W21).** Every converted car runs on vanilla DV bogies: CCL `BogieType.Default`
+  (200, DV's freight bogie; the other vanilla types are loco bogies), wheel radius 0.459 m. No truck mod's bundle or
+  Railroader base-game truck is staged, exported or copied, so a truck's licence never stops a conversion. Its
+  definition is read for information only (what the swap leaves out). Until the builder has a vanilla-bogie field the
+  choice sits in the record's `tender.metadata.vanillaBogies`.
+- CCL is MIT-licensed and public: for CCL facts read its v3.1.9 source (clone
+  `https://github.com/derail-valley-modding/custom-car-loader` read-only, outside the repo) rather than guessing.
+- Wheel radius and cylinder bore stay pending until reviewed (`--wheel-radius`); the probe's tread candidates are
+  evidence for review, never a measurement (X30).
 - Optional component-group files (`identifier` + `bulkAdds`, from the mod being converted) are choices for the user;
   their images are named `<mod id>.<file>` and are looked up inside that mod.
 

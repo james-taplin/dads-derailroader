@@ -122,6 +122,15 @@ class Draft(unittest.TestCase):
         for item in ("poweredAxles", "source weight", "per-engine calibration"):
             self.assertIn(item, pending)
 
+    def test_tender_runs_on_vanilla_dv_bogies(self):
+        rec = read_json(self.run_convert().path / "record" / "vehicle-record.json")
+        t = rec["tender"]
+        self.assertEqual((t["config"]["WheelRadius"]["value"], t["config"]["WheelRadius"]["basis"]), (0.459, "DV_choice"))
+        bogies = t["metadata"]["vanillaBogies"]
+        self.assertEqual((bogies["BogieType"], bogies["value"], bogies["centres"]["value"]), ("Default", 200, [2.0, -2.0]))
+        self.assertEqual([r["id"] for r in bogies["replaces"]], ["test-truck-2s"])
+        self.assertIn("BogieBufferTypes.cs", bogies["evidence"][0])
+
     def test_livery_choice_is_checked(self):
         with self.assertRaisesRegex(ValueError, "livery 'Green'"):
             convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]], livery="Green")

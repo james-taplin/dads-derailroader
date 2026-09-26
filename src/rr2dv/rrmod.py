@@ -2,7 +2,8 @@
 
 A Railroader mod is a folder with an info.json. It holds one or more asset packs: folders with Definitions.json
 and/or Catalog.json plus a `bundle`. Objects in Definitions.json reference each other by identifier (tender,
-truck) and reference assets in other packs through PrefabModelComponent models. Mods can also carry optional
+truck) and reference assets in other packs through PrefabModelComponent models. Trucks are not followed: every
+converted car runs on vanilla Derail Valley bogies. Mods can also carry optional
 component-group files (an object `identifier` plus `bulkAdds`, e.g. alternative heralds) and images referenced
 as "<mod id>.<file name>".
 
@@ -432,23 +433,30 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         else:
             issues.append(Issue("error", "missing-tender", f"tender {tender_id} not found in the input or search folders" + _unreadable_hint(index)))
 
+    # Trucks are never converted (James, W21): every car runs on vanilla Derail Valley bogies, so nothing of a truck
+    # (its mod's bundle, or Railroader base-game meshes) ends up in the pack, and its licence cannot stop a conversion.
+    # The truck's own definition is read for information only: what the swap leaves out.
     trucks = []
     for vpack, vehicle in list(vehicles):
         truck_id = definition(vehicle).get("truckIdentifier")
         if not (isinstance(truck_id, str) and truck_id):
             continue
         tres = index.find_object(truck_id)
+        entry = {"id": truck_id, "owner": vehicle["identifier"], "replaced_by": "vanilla Derail Valley bogies",
+                 "found": None, "source": None, "left_out": []}
         if tres.hit:
             tpack, truck = tres.hit
-            packs[tpack.path] = tpack
-            vehicles.append((tpack, truck))
-            trucks.append({"id": truck_id, "owner": vehicle["identifier"], "pack": tpack.describe()})
-        elif tres.candidates:
-            issues.append(Issue("error", "ambiguous", _ambiguous(f"truck {truck_id}", tres)))
-        else:
-            issues.append(Issue("error", "missing-truck",
-                                f"truck {truck_id} (used by {vehicle['identifier']}) not found; add the folder of the mod that provides it"
-                                + _unreadable_hint(index)))
+            tdef = definition(truck)
+            entry["found"] = tpack.describe()
+            entry["source"] = {k: tdef.get(k) for k in ("diameter", "numberOfAxles", "length") if tdef.get(k) is not None}
+            entry["left_out"] = sorted({str(c.get("kind", "?")) for c in components(tdef)}
+                                       | ({"brakeAnimation"} if tdef.get("brakeAnimation") else set()))
+        note = "found in " + (f"{entry['found']['root']}:{entry['found']['path'] or entry['found']['name']}" if tres.hit
+                              else "several places" if tres.candidates else "no indexed folder")
+        issues.append(Issue("info", "truck-replaced",
+                            f"truck {truck_id} (used by {vehicle['identifier']}; {note}) is replaced by vanilla Derail Valley bogies"
+                            + (f"; left out: {', '.join(entry['left_out'])}" if entry["left_out"] else "")))
+        trucks.append(entry)
 
     car_ids = {loco_id} | ({tender_info["id"]} if tender_info else set())
     groups = sorted((g for g in index.groups if g.target in car_ids), key=lambda g: _rel(g.root, g.path))
@@ -484,7 +492,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         model = vdef.get("modelIdentifier")
         if isinstance(model, str) and model and vpack.assets and not vpack.has_model(model):
             issues.append(Issue("warning", "model-not-in-catalog", f"{vid}: model {model!r} matches no key or prefab in {vpack.name}/Catalog.json"))
-        role = "locomotive" if vehicle is loco else "tender" if tender_info and vid == tender_info["id"] else "truck"
+        role = "locomotive" if vehicle is loco else "tender"
         if isinstance(model, str) and model:
             vehicle_records.append({"id": vid, "role": role, "model": model, "prefab": vpack.model_prefab(model), "pack": vpack.describe()})
         else:

@@ -52,6 +52,7 @@ def loco(ident: str, tender: str = "", truck: str = "", parts=(), kind: str = "S
 def tender(ident: str, truck: str = "") -> dict:
     return {"identifier": ident, "metadata": {"name": f"Test {ident}"},
             "definition": {"kind": "Car", "archetype": "Tender", "modelIdentifier": ident, "truckIdentifier": truck, "length": 7.0,
+                           "truckSeparation": 4.0,
                            "weightEmpty": 40000,
                            "loadSlots": [{"requiredLoadIdentifier": "coal", "maximumCapacity": 20000},
                                          {"requiredLoadIdentifier": "water", "maximumCapacity": 6000}],
@@ -64,7 +65,8 @@ def truck(ident: str) -> dict:
 
 
 def standard_mod(base: Path) -> dict:
-    """A tender loco with one part in a second pack, whose trucks live in a separate mod (search root)."""
+    """A tender loco with one part in a second pack. The tender's trucks live in a separate mod (search root);
+    rr2dv replaces them with vanilla DV bogies and never uses that mod."""
     mod = base / "input" / "Test Loco Mod"
     mod.mkdir(parents=True)
     (mod / "info.json").write_text('{"id": "test-loco-mod"}', encoding="utf-8")

@@ -34,18 +34,21 @@ class Scan(unittest.TestCase):
         self.assertEqual(blocking(inv), [])
         self.assertEqual(inv["tender"]["id"], "tt-260-a")
         self.assertEqual([t["id"] for t in inv["trucks"]], ["test-truck-2s"])
-        self.assertEqual(inv["trucks"][0]["pack"]["root"], "search1")
+        self.assertEqual((inv["trucks"][0]["found"]["root"], inv["trucks"][0]["replaced_by"]), ("search1", "vanilla Derail Valley bogies"))
         self.assertEqual([(p["pack"], p["asset"], p["filename"]) for p in inv["parts"]], [("parts", "bell", "bell.prefab")])
-        self.assertEqual([p["name"] for p in inv["packs"]], ["parts", "ts-260-a", "Trucks"])
+        self.assertEqual([p["name"] for p in inv["packs"]], ["parts", "ts-260-a"])  # the truck's pack is never used
+        self.assertNotIn("TruckMod", [m["id"] for m in inv["mods"]])
         self.assertEqual((inv["audio"]["basis"], inv["audio"]["replaces"]), ("S060", ["Whistle"]))
         self.assertEqual([c["purpose"] for c in inv["controls"]["radial"]], ["Throttle", "Reverser"])
         bundle = self.m["mod"] / "ts-260-a" / "bundle"
         rec = next(p for p in inv["packs"] if p["name"] == "ts-260-a")
         self.assertIn({"name": "bundle", "bytes": bundle.stat().st_size, "sha256": sha256_file(bundle)}, rec["files"])
 
-    def test_missing_truck_blocks(self):
+    def test_missing_truck_does_not_block(self):
         inv = inventory(Index(self.m["mod"]), "ts-260-a")
-        self.assertEqual(codes(inv), ["missing-truck"])
+        self.assertEqual((blocking(inv), codes(inv)), ([], ["truck-replaced"]))
+        self.assertIsNone(inv["trucks"][0]["found"])
+        self.assertIn("no indexed folder", inv["issues"][0]["message"])
 
     def test_duplicate_identifier_at_same_rank_is_an_error_not_a_first_match(self):
         write_pack(self.m["mod"] / "copy", objects=[tender("tt-260-a")], assets={})
@@ -56,7 +59,7 @@ class Scan(unittest.TestCase):
         write_pack(self.m["mod"] / "localtrucks", objects=[truck("test-truck-2s")], assets={})
         inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
         self.assertEqual(blocking(inv), [])
-        self.assertEqual(inv["trucks"][0]["pack"]["root"], "input")
+        self.assertEqual(inv["trucks"][0]["found"]["root"], "input")
 
     def test_mod_prefix_separates_same_named_packs(self):
         other = self.tmp / "more"
@@ -73,7 +76,7 @@ class Scan(unittest.TestCase):
             tender("tt-260-a", truck="test-truck-2s")]}))
         inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
         self.assertEqual(blocking(inv), [])
-        self.assertEqual(codes(inv), ["pack-folder-mismatch"])
+        self.assertEqual(codes(inv), ["pack-folder-mismatch", "truck-replaced"])
 
     def test_malformed_objects_do_not_crash(self):
         write_pack(self.m["mod"] / "odd", objects=[{"identifier": "x", "definition": []},
@@ -88,7 +91,7 @@ class Scan(unittest.TestCase):
         (self.m["mod"] / "parts" / "Catalog.json").write_text('{"assets": {}}')
         (self.m["mod"] / "ts-260-a" / "bundle").unlink()
         inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
-        self.assertEqual(codes(inv), ["missing-bundle", "missing-part-asset"])
+        self.assertEqual(codes(inv), ["missing-bundle", "missing-part-asset", "truck-replaced"])
 
     def test_broken_unrelated_pack_is_only_a_warning(self):
         # X24: one bad Catalog.json elsewhere in the catalogue must not stop every loco.
@@ -102,7 +105,7 @@ class Scan(unittest.TestCase):
     def test_broken_needed_pack_is_an_error(self):
         (self.m["mod"] / "parts" / "Catalog.json").write_text("{not json")
         inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
-        self.assertEqual(codes(inv), ["pack-unreadable"])
+        self.assertEqual(codes(inv), ["pack-unreadable", "truck-replaced"])
         (self.m["mod"] / "parts" / "Catalog.json").write_text('{"assets": {"bell": {"filename": "bell.prefab"}}}')
         (self.m["mod"] / "ts-260-a" / "Catalog.json").write_text("[")
         self.assertIn("pack-unreadable", codes(inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")))
@@ -111,8 +114,9 @@ class Scan(unittest.TestCase):
         broken = self.m["mod"] / "broken"
         broken.mkdir()
         (broken / "Definitions.json").write_text("{oops")
-        inv = inventory(Index(self.m["mod"]), "ts-260-a")  # truck mod not searched
-        missing = next(i for i in inv["issues"] if i["code"] == "missing-truck")
+        (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [loco("ts-260-a", tender="tt-missing")]}))
+        inv = inventory(Index(self.m["mod"]), "ts-260-a")
+        missing = next(i for i in inv["issues"] if i["code"] == "missing-tender")
         self.assertIn("input:broken", missing["message"])
         self.assertIn("unreadable-definitions", codes(inv))
 

@@ -14,7 +14,7 @@ from .jsonio import read_json, sha256_file, write_json
 # Unity inspected -> exported -> audited. `available` marks what this version implements.
 STAGES = [
     ("locate", "Find the locomotive in the input", True),
-    ("link", "Resolve tender, trucks and parts", True),
+    ("link", "Resolve tender and parts; trucks become vanilla DV bogies", True),
     ("stage", "Copy the required packs into the run folder", True),
     ("extract", "Export the bundles with AssetRipper", True),
     ("import", "Prepare the Unity project", True),

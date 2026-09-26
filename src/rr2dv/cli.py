@@ -72,7 +72,7 @@ def cmd_scan(args) -> int:
         state = "BLOCKED" if errors else "ready for the next stage"
         tender = inv.get("tender") or {}
         print(f"\n{loco['id']} - {loco['name']}: {state}")
-        print(f"  tender: {tender.get('id', 'none')}; trucks: {', '.join(t['id'] for t in inv['trucks']) or 'none'}; "
+        print(f"  tender: {tender.get('id', 'none')}; trucks: {', '.join(t['id'] for t in inv['trucks']) + ' (replaced by vanilla DV bogies)' if inv['trucks'] else 'none'}; "
               f"parts: {len(inv['parts'])}; packs: {', '.join(p['name'] for p in inv['packs'])}")
         purposes = sorted({c['purpose'] for c in inv['controls']['radial'] if c.get('purpose')})
         print(f"  controls: {', '.join(purposes) or 'none'}; toggles: {len(inv['controls']['toggles'])}")

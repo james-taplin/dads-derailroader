@@ -14,11 +14,11 @@ pack for the Custom Car Loader 3.1.9. It never modifies the mod you give it.
 
 | Stage | State |
 |---|---|
-| Find the locomotive, resolve its tender, trucks and parts across mods, check licences, copy and verify the inputs | working |
+| Find the locomotive, resolve its tender and parts across mods, check licences, copy and verify the inputs | working |
 | Export the bundles with AssetRipper (cached per bundle, AssetRipper build and Unity version) | working; passed a real-AssetRipper smoke test (S-16, C-21) |
 | Prepare the Unity 2019.4.40f1 project (restored animation paths, trucks and parts with their dependencies, CarCreator, our builder core) | working, not yet opened in Unity on a real machine |
-| Measure the model in Unity (hierarchy, meshes, anchors in car space, clip bindings and end poses, wheel radius candidates) | written; the Unity probe has not yet run on a real machine |
-| Draft the vehicle record: identity, liveries, maps, components, wheelsets, capacities, sim/HUD/sound basis, pull and cylinder calibration, boiler and firing estimates, each value with its unit, basis and evidence | working (source-derived part); measured geometry and mass pending |
+| Measure the model in Unity (hierarchy, meshes, anchors in car space, clip bindings and end poses, wheel tread bands) | runs in Unity 2019.4 (S-16); tread choice awaiting retest |
+| Draft the vehicle record: identity, liveries, maps, components, wheelsets, capacities, sim/HUD/sound basis, pull and cylinder calibration, boiler and firing estimates, vanilla tender bogies, each value with its unit, basis and evidence | working (source-derived part); wheel radius needs review (`--wheel-radius`); measured geometry and mass pending |
 | Build, audit | next (P3) |
 | Publish the finished pack to an output folder | working (used once the build stages exist) |
 
@@ -35,6 +35,9 @@ Settings live in `%APPDATA%\rr2dv\machine.json` (or pass `--machine`). It uses t
 `machine.local.json` (`python`, `unity`, `carCreator`, `assetRipper`, `railroader`, `mods`, ...), plus optional
 `workRoot` and `searchRoots`. With `railroader` set, its `Mods` folder and base-game asset packs are searched for
 dependencies such as trucks from other mods.
+
+Trucks are never converted: every converted tender runs on vanilla Derail Valley bogies, so no truck mod or
+Railroader game mesh ends up in the pack.
 
 Sounds are never converted: every converted loco uses vanilla Derail Valley S060 sounds (small boiler, under
 1,500 ft² heating surface) or S282 sounds (big boiler). `--audio S060|S282` overrides the rule.

@@ -8,7 +8,7 @@ from pathlib import Path
 import os
 import sys
 
-from fixtures import fake_assetripper, fake_carcreator, fake_unity, loco, standard_mod, tender, tree_state, write_pack
+from fixtures import fake_assetripper, fake_carcreator, fake_unity, loco, part, standard_mod, tender, tree_state, write_pack
 from rr2dv.jsonio import read_json, sha256_file
 from rr2dv.machine import Machine
 from rr2dv.pipeline import EXIT_FAILED, EXIT_INCOMPLETE, convert
@@ -78,9 +78,20 @@ class Licences(Base):
         self.assertIn("licence-unreadable", codes(self.inv()))
 
     def test_a_dependency_mod_whose_bundle_we_use_counts(self):
+        write_pack(self.m["search"] / "PartsMod" / "extras", assets={"horn": {"filename": "horn.prefab"}})
+        (self.m["search"] / "PartsMod" / "info.json").write_text('{"Id": "PartsMod"}')
+        (self.m["search"] / "PartsMod" / "LICENSE").write_text(STRICT)
+        (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [
+            loco("ts-260-a", tender="tt-260-a", parts=[part("PartsMod\\extras", "horn", "horn1")]), tender("tt-260-a")]}))
+        self.assertEqual([i["data"]["mod"] for i in blocking(self.inv())], ["PartsMod"])
+
+    def test_a_truck_mod_never_counts_because_trucks_are_replaced(self):
         (self.m["search"] / "TruckMod" / "info.json").write_text('{"Id": "TruckMod"}')
         (self.m["search"] / "TruckMod" / "LICENSE").write_text(STRICT)
-        self.assertEqual([i["data"]["mod"] for i in blocking(self.inv())], ["TruckMod"])
+        inv = self.inv()
+        self.assertEqual(blocking(inv), [])
+        self.assertNotIn("TruckMod", [m["id"] for m in inv["mods"]])
+        self.assertEqual(inv["trucks"][0]["replaced_by"], "vanilla Derail Valley bogies")
 
     def test_mod_supplying_only_images_counts(self):
         decals = self.m["search"] / "DecalPack"

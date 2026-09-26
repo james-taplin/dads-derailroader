@@ -8,7 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fixtures import fake_assetripper, fake_carcreator, fake_unity, standard_mod
+from fixtures import fake_assetripper, fake_carcreator, fake_unity, loco, part, standard_mod, tender, write_pack
 from rr2dv.jsonio import read_json, sha256_file
 from rr2dv.machine import Machine
 from rr2dv.pipeline import EXIT_FAILED, EXIT_INCOMPLETE, convert
@@ -40,10 +40,9 @@ class Import(unittest.TestCase):
         # main pack: loco + tender prefabs in place, clip placeholder restored to the real path
         self.assertEqual({v["role"]: v["unity_prefab"] for v in info["vehicles"]}, {
             "locomotive": "Assets/PrefabInstance/ts-260-a.prefab",
-            "tender": "Assets/PrefabInstance/tt-260-a.prefab",
-            "truck": "Assets/RR/search1/TruckMod/Trucks/PrefabInstance/Test-Truck-2s.prefab"})
+            "tender": "Assets/PrefabInstance/tt-260-a.prefab"})
         self.assertIn("path: Wheel", (assets / "AnimationClip" / "Drivers.anim").read_text())
-        self.assertNotIn("path_0x", (assets / "RR/search1/TruckMod/Trucks/AnimationClip/Drivers.anim").read_text())
+        self.assertFalse((assets / "RR" / "search1").exists(), "the truck mod is replaced by vanilla bogies, never copied")
         # part copied with its material dependency and GUIDs intact
         part = info["parts"][0]
         self.assertEqual(part["unity_prefab"], "Assets/RR/input/parts/PrefabInstance/bell.prefab")
@@ -61,6 +60,17 @@ class Import(unittest.TestCase):
             self.assertEqual(sha256_file(assets / "Editor" / script.name), sha256_file(script))
         self.assertIn("builder/tools/unity/LlwVehicleRecord.cs", info["core_scripts"])
         self.assertGreater(info["unique_guids"], 5)
+
+    def test_tender_from_another_mod_is_copied_with_its_clips_restored(self):
+        write_pack(self.m["search"] / "TenderMod" / "Tenders", objects=[tender("tt-ext")],
+                   assets={"tt-ext": {"filename": "tt-ext.prefab"}}, bundle_name="Bundle")
+        (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [
+            loco("ts-260-a", tender="tt-ext", parts=[part("Test Loco Mod\\parts", "bell", "bell1")])]}))
+        run, project = self.convert()
+        info = read_json(run / "unity" / "project.json")
+        prefab = next(v["unity_prefab"] for v in info["vehicles"] if v["role"] == "tender")
+        self.assertEqual(prefab, "Assets/RR/search1/TenderMod/Tenders/PrefabInstance/tt-ext.prefab")
+        self.assertNotIn("path_0x", (project / "Assets/RR/search1/TenderMod/Tenders/AnimationClip/Drivers.anim").read_text())
 
     def test_source_code_is_kept_out_of_the_project(self):
         run, project = self.convert()

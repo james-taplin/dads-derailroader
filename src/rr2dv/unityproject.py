@@ -5,7 +5,7 @@ Follows our proven setup (G-29 setup_build_project.ps1, pilots.py prepare; guide
   (tooling/builder/tools/resolve_clip_paths.py), which writes nothing unless every clip resolves. A clip that fits
   several prefabs with different paths ("tied") is bound to the one prefab whose own clip map names it (board X30);
   a tied clip no map names, or that several maps name, stays an error;
-- tender/truck prefabs from other packs, and every part prefab, are copied with their GUID closure
+- a tender prefab from another pack, and every part prefab, are copied with their GUID closure
   (tooling/builder/tools/pilot/copy_deps.py; scripts skipped, .meta kept) under Assets/RR/<root>/<pack>;
   vehicle packs also get their clips restored;
 - ProjectVersion 2019.4.40f1, asset pipeline mode 1, render-pipeline packages removed, TextMeshPro 2.1.6 + uGUI 1.0.0;
