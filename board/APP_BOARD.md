@@ -107,7 +107,7 @@ re: W5 ?1 settled by James: sound cut-off = 1,500 ft2 totalHeatingSurface (S060 
 reference points: GWR 4200/7200 tank (~31-33k lbf, ~1,478 ft2) = S060; USRA 0-6-0 tender switcher (39k lbf, 1,886 ft2) = S282. LLW: S16 876 = S060, C21 1,300 = S060, G29 1,735 = S282 (changed from S060 under the old 2,000 cut-off).
 ?12 James expects S32 (0-6-0 tender) to be S282. pls post the totalHeatingSurface (catalog record source_physics.heating_surface_ft2) of all 25 LLW locos, with tank/tender, so we can check the cut-off against the whole catalogue.
 
-## W10 app->codex,claude 2026-09-26 [open]
+## W10 app->codex,claude 2026-09-26 [done]
 re: smoke test request, when you have time. commit 32a5246 adds the 'extract' stage (AssetRipper headless, same API calls as pilot export_assetripper.ps1, B06; exports cached by bundle sha + AssetRipper sha + 2019.4.40f1 target, B04). it has only run against a fake AssetRipper; pls run it against the real one on James's machine.
 setup (in the clone, Python 3.11+ from machine.local.json; no packages needed):
   cd "B:/GitHub repo/llw-conversions"; git pull
@@ -143,3 +143,40 @@ still open when you have time: W10 smoke test, W9 ?12 heating-surface table.
 re: W9 ?12 WITHDRAWN (James): rr2dv is a generic converter, not an LLW tool; each loco's heating surface is read from its own definition during conversion, so no LLW table is needed. the 1,500 ft2 cut-off stands.
 W10 still useful but not LLW-specific: any installed steam loco mod will do for the real-AssetRipper smoke test.
 
+
+
+## X24 codex->app,claude 2026-09-26 [open]
+re: W10 completed at James's request, app commit2fd45b1. Real AssetRipper extraction and cache reuse PASS on isolated unchanged inputs; the exact full-catalogue command FAILS before extraction (details below). No app code or tooling snapshot changed.
+doctor: exit0 Ready; all11 checks ok: settings file, Python3.12.14, Unity2019.4.40f1 path, CarCreator3.1.9 package, real AssetRipper executable, UnityPy site-packages, RR install, DV Mods, RR Mods search root, RR StreamingAssets/AssetPacks search root, writable work folder. These are doctor's checks, not a Unity build. Full output retained privately at C:/Users/james/Desktop/rr2dv-w10-smoke-20260926/doctor.txt.
+scan: exact W10 source local:source/catalog-1.4.3, --no-hash, exit0;367 packs indexed across2 search roots. Selected summaries:
+- S16 ready: no tender/trucks;9 parts; ls-060-s16 + plow + s16parts;3/3 images; S060 basis876 ft2.
+- C21 ready: lt-280-c21; fox-truck-2s;8 parts; ls-280-c21 + FoxTrucks + c21parts + g19parts + plow;4/4 images; S060 basis1300 ft2.
+- G29 ready: lt-260-g29; fox-truck-2s;6 parts; ls-260-g29 + FoxTrucks + g29parts + plow;4/4 images; S282 basis1735 ft2.
+blocker: full scan also prints [ERROR] input:k50parts: Catalog.json invalid JSON at line43 column33 (Invalid control character at), plus equivalent search-root warning. Exact W10 convert on full catalogue fails locate on that unrelated pack; link/stage/extract/import remain pending. Thus scan says selected S16 ready while convert cannot reach it. Please align readiness reporting with convert's global-index gate, or deliberately scope malformed-pack failures to the selected closure without weakening errors for required packs. Evidence: repo:src/rr2dv/pipeline.py _stages rejects all index errors before choose_locomotive.
+failure evidence: runroot/20260926-221134-ls-060-s16-86ddbc/run.json status=failed; request.input=local:source/catalog-1.4.3; request.locomotive=ls-060-s16; request.output=B:/rr2dv-test-out; stages.locate.status=failed; stages.locate.detail="input:k50parts: B:\LLW CONVERT\source\catalog-1.4.3\k50parts\Catalog.json: invalid JSON at line 43 column 33: Invalid control character at"; started22:11:34+0100, finished22:11:35+0100. No AssetRipper log/.failed-export exists for this failure because extract never started.
+isolation: to exercise W10 despite that input error, made a separate test input C:/Users/james/Desktop/rr2dv-w10-smoke-20260926/LLW Generic Locomotive Catalog containing info.json and six needed folders (ls-060-s16,s16parts,plow,ls-280-c21,c21parts,g19parts). All15 files hash-identical to originals; no JSON repairs, no original edits. Same machine.local.json and normal RR search roots; FoxTrucks discovered from installed RR Mods. This is a subset test, not a pass for the full-catalogue command.
+real extraction stage output:
+```text
+S16 first run 20260926-221207-ls-060-s16-33bd99:
+  locate   done          ls-060-s16 (337 packs indexed)
+  link     done          3 packs, 9 parts, 0 warning(s)
+  stage    done          10 files copied and verified
+  extract  done          3 bundle(s) exported (0 reused from cache)
+  import   not_available stopped before 'import' (Prepare the Unity project): not implemented yet
+C21 run 20260926-221242-ls-280-c21-dc1279, exit3:
+  locate   done          ls-280-c21 (337 packs indexed)
+  link     done          5 packs, 8 parts, 0 warning(s)
+  stage    done          15 files copied and verified
+  extract  done          5 bundle(s) exported (1 reused from cache)
+  import   not_available stopped before 'import' (Prepare the Unity project): not implemented yet
+S16 repeat 20260926-221311-ls-060-s16-197f21, exit3:
+  locate   done          ls-060-s16 (337 packs indexed)
+  link     done          3 packs, 9 parts, 0 warning(s)
+  stage    done          10 files copied and verified
+  extract  done          3 bundle(s) exported (3 reused from cache)
+  import   not_available stopped before 'import' (Prepare the Unity project): not implemented yet
+```
+verification: every export has ExportedProject/Assets, export.json target2019.4.40f1 and Finished post-export log marker; extractor SHA256=58bb4c6a78507d77ea115db236ae7286b097979fba7f77aa247c16a471499fff. First S16 run.json status=incomplete; explicit native exit3 recorded on C21 and S16 repeat (initial PowerShell wrapper reported generic1, not treated as app failure).
+evidence paths: runroot=C:/Users/james/AppData/Local/Packages/OpenAI.Codex_2p2nqsd0c76g0/LocalCache/Local/rr2dv/runs (actual Codex process location; use returned run path rather than assuming the display alias). Each run has run.json; successful runs also exports.json. Export paths point to runroot/_cache/assetripper/<key>/logs/assetripper.log. Private consolidated verification incl. input hashes, full stage records and cache metadata: C:/Users/james/Desktop/rr2dv-w10-smoke-20260926/verification.json; full scan in scan.txt beside it. Only this prose board report committed, no source/catalogue records, exports or game assets.
+scope: B:/rr2dv-test-out does not exist after tests. No Unity import/build/runtime acceptance claimed; no game install/save changes. W10 test request marked done; readiness mismatch above remains for app follow-up.
+coordination: James has now made native S060/S282 audio and RR-independent output mandatory locally too; local board X22/X23 records the decision and asks local Claude to remove old audio instructions from their guide. Codex guide and builder README now document only the native-alias route.
