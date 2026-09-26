@@ -9,7 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
-from . import assetripper, probeinput, unityproject, unityrun
+from . import assetripper, probeinput, record, unityproject, unityrun
+from .jsonio import read_json
 from .jsonio import sha256_file, write_json
 from .machine import Machine, check_work_root
 from .rrmod import Index, blocking, inventory
@@ -73,7 +74,7 @@ def extract(run: Run, inv: dict, machine: Machine) -> dict:
 
 
 def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None = None,
-            search: Sequence[Path] = (), audio: str | None = None) -> Outcome:
+            search: Sequence[Path] = (), audio: str | None = None, livery: str | None = None) -> Outcome:
     input_path = input_path.resolve()
     out_dir = out_dir.resolve()
     kind = input_kind(input_path)
@@ -85,12 +86,12 @@ def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None 
     check_write_target(out_dir, guard + [("app work folder", work_root)])
 
     request = {"input": str(input_path), "input_kind": kind, "locomotive": loco, "output": str(out_dir),
-               "search_roots": [str(p) for p in search], "audio": audio}
+               "search_roots": [str(p) for p in search], "audio": audio, "livery": livery}
     if kind == "zip":
         request["input_sha256"] = sha256_file(input_path)
     run = Run.create(work_root, loco or input_path.stem, request)
     try:
-        return _stages(run, input_path, kind, loco, search, audio, machine)
+        return _stages(run, input_path, kind, loco, search, audio, machine, livery)
     except Exception as e:  # record the failure on the run, then let the caller report it
         current = next((n for n, s in run.record["stages"].items() if s["status"] == "running"), None)
         message = f"{type(e).__name__}: {e}"
@@ -101,7 +102,7 @@ def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None 
 
 
 def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Sequence[Path],
-            audio: str | None, machine: Machine) -> Outcome:
+            audio: str | None, machine: Machine, livery: str | None = None) -> Outcome:
     def fail(stage: str, message: str, code: int = EXIT_FAILED) -> Outcome:
         run.finish(stage, "failed", message)
         run.close("failed", message)
@@ -163,7 +164,17 @@ def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Seq
     run.finish("probe", "done", f"{len(probe_in['vehicles'])} vehicle(s) measured; {problems} problem(s) to review"
                                 + (" (see probe/probe.json)" if problems else ""))
 
-    for name, description, available in STAGES[6:]:
+    run.begin("record")
+    probe_out_file = run.path / "probe" / "probe.json"
+    probe_out = read_json(probe_out_file) if probe_out_file.exists() else None
+    if livery:
+        run.record["answers"]["livery"] = livery
+    draft = record.draft(run.path, inv, probe_in, probe_out, run.record["answers"])
+    write_json(run.path / "record" / "vehicle-record.json", draft)
+    pending = draft["metadata"]["pending"]
+    run.finish("record", "done", f"draft vehicle record with {len(pending)} item(s) pending review (record/vehicle-record.json)")
+
+    for name, description, available in STAGES[7:]:
         if not available:
             message = f"stopped before '{name}' ({description}): not implemented yet"
             run.finish(name, "not_available", message)

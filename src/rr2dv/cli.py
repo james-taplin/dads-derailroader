@@ -100,7 +100,7 @@ def cmd_scan(args) -> int:
 
 def cmd_convert(args) -> int:
     machine = machine_mod.load(args.machine)
-    outcome = convert(Path(args.input), Path(args.out), machine, args.loco, _search_roots(args, machine), args.audio)
+    outcome = convert(Path(args.input), Path(args.out), machine, args.loco, _search_roots(args, machine), args.audio, args.livery)
     run = outcome.run
     if run:
         for name, stage in run.record["stages"].items():
@@ -134,6 +134,7 @@ def build_parser() -> argparse.ArgumentParser:
     conv.add_argument("input", help="Railroader mod folder or .zip (never modified)")
     conv.add_argument("--out", required=True, help="folder to put the finished Derail Valley pack in")
     conv.add_argument("--loco", help="locomotive identifier, when the mod has more than one")
+    conv.add_argument("--livery", help="livery name to use (default: the mod's first)")
     conv.add_argument("--audio", choices=["S060", "S282"],
                       help="vanilla Derail Valley sound set to use instead of the boiler-size rule")
     with_search(conv)

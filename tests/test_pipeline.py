@@ -48,7 +48,7 @@ class Pipeline(unittest.TestCase):
         run = outcome.run
         stages = {k: v["status"] for k, v in run.record["stages"].items()}
         self.assertEqual([stages[s] for s in ("locate", "link", "stage", "extract", "import", "probe", "record", "build")],
-                         ["done", "done", "done", "done", "done", "done", "not_available", "pending"])
+                         ["done", "done", "done", "done", "done", "done", "done", "not_available"])
         self.assertEqual(read_json(run.file)["status"], "incomplete")
         self.assertEqual((run.record["answers"]["locomotive"], run.record["answers"]["audio"]["basis"]), ("ts-260-a", "S060"))
         staged = read_json(run.path / "staged.json")["files"]
@@ -178,7 +178,8 @@ class Cli(unittest.TestCase):
         self.assertIn("extract  done", text)
         self.assertIn("import   done", text)
         self.assertIn("probe    done", text)
-        self.assertIn("record   not_available", text)
+        self.assertIn("record   done", text)
+        self.assertIn("build    not_available", text)
         self.assertIn("Run folder:", text)
 
 

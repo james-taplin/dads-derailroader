@@ -18,7 +18,8 @@ pack for the Custom Car Loader 3.1.9. It never modifies the mod you give it.
 | Export the bundles with AssetRipper (cached per bundle, AssetRipper build and Unity version) | working; passed a real-AssetRipper smoke test (S-16, C-21) |
 | Prepare the Unity 2019.4.40f1 project (restored animation paths, trucks and parts with their dependencies, CarCreator, our builder core) | working, not yet opened in Unity on a real machine |
 | Measure the model in Unity (hierarchy, meshes, anchors in car space, clip bindings and end poses, wheel radius candidates) | written; the Unity probe has not yet run on a real machine |
-| Generate the vehicle record, build, audit | next (P3) |
+| Draft the vehicle record: identity, liveries, maps, components, wheelsets, capacities, sim/HUD/sound basis, pull and cylinder calibration, boiler and firing estimates, each value with its unit, basis and evidence | working (source-derived part); measured geometry and mass pending |
+| Build, audit | next (P3) |
 | Publish the finished pack to an output folder | working (used once the build stages exist) |
 
 ## Try it

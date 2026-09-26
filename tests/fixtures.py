@@ -39,7 +39,9 @@ def loco(ident: str, tender: str = "", truck: str = "", parts=(), kind: str = "S
     if whistle:
         components.append({"kind": "Whistle", "defaultWhistleIdentifier": whistle, "name": "Whistle"})
     components += list(extra_components)
-    d = {"kind": kind, "archetype": "LocomotiveSteam", "modelIdentifier": ident,
+    d = {"kind": kind, "archetype": "LocomotiveSteam", "modelIdentifier": ident, "mainDriverIndex": 0,
+         "maximumBoilerPressure": 180.0, "pistonDiameterInches": 16.0, "pistonStrokeInches": 24.0, "publishedTractiveEffort": 0,
+         "weightEmpty": 90000, "positionHead": 5.2, "positionTail": -4.1,
          "wheelsets": [{"offset": 0.0, "length": 2.4, "diameter": 1.2, "numberOfAxles": 3, "animation": {"clipName": "Drivers"}}],
          "tenderIdentifier": tender, "truckIdentifier": truck, "components": components}
     if heating_surface is not None:
@@ -49,8 +51,12 @@ def loco(ident: str, tender: str = "", truck: str = "", parts=(), kind: str = "S
 
 def tender(ident: str, truck: str = "") -> dict:
     return {"identifier": ident, "metadata": {"name": f"Test {ident}"},
-            "definition": {"kind": "Car", "archetype": "Tender", "modelIdentifier": ident, "truckIdentifier": truck,
-                           "components": [{"kind": "ToggleAnimation", "name": "Water Hatch"}]}}
+            "definition": {"kind": "Car", "archetype": "Tender", "modelIdentifier": ident, "truckIdentifier": truck, "length": 7.0,
+                           "weightEmpty": 40000,
+                           "loadSlots": [{"requiredLoadIdentifier": "coal", "maximumCapacity": 20000},
+                                         {"requiredLoadIdentifier": "water", "maximumCapacity": 6000}],
+                           "components": [{"kind": "ToggleAnimation", "name": "Water Hatch"},
+                                          {"kind": "DefaultLivelryComponent", "name": "Black", "idColors": [{"id": "Body", "value": "#191919"}]}]}}
 
 
 def truck(ident: str) -> dict:

@@ -19,7 +19,7 @@ STAGES = [
     ("extract", "Export the bundles with AssetRipper", True),
     ("import", "Prepare the Unity project", True),
     ("probe", "Measure the model", True),
-    ("record", "Generate the vehicle record", False),
+    ("record", "Generate the vehicle record", True),
     ("build", "Build the CCL pack in Unity", False),
     ("audit", "Check the built pack", False),
     ("publish", "Copy the finished pack to the output folder", True),
