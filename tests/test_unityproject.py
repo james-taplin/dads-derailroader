@@ -13,7 +13,7 @@ from rr2dv.jsonio import read_json, sha256_file
 from rr2dv.machine import Machine
 from rr2dv.pipeline import EXIT_FAILED, EXIT_INCOMPLETE, convert
 from rr2dv.safety import UnsafePath
-from rr2dv.unityproject import ProjectError, check_guids, import_unitypackage, set_project_settings, tooling_root
+from rr2dv.unityproject import ProjectError, check_guids, import_unitypackage, resolve_clips, set_project_settings, tooling_root
 
 
 @unittest.skipIf(sys.platform == "win32", "fake AssetRipper is a POSIX script")
@@ -161,6 +161,59 @@ class Pieces(unittest.TestCase):
         set_project_settings(project)
         self.assertEqual(read_json(project / "Packages/manifest.json")["dependencies"],
                          {"com.unity.textmeshpro": "2.1.6", "com.unity.ugui": "1.0.0"})
+
+
+def _prefab(root: str, child: str, clips: dict) -> str:
+    """Prefab YAML: root / child / Hatch, with a Railroader-style clip map."""
+    text = "%YAML 1.1\n"
+    fid = 100
+    parent = "0"
+    for name in (root, child, "Hatch"):
+        text += (f"--- !u!1 &{fid}\nGameObject:\n  m_Name: {name}\n--- !u!4 &{fid + 1}\nTransform:\n"
+                 f"  m_GameObject: {{fileID: {fid}}}\n  m_Father: {{fileID: {parent}}}\n")
+        parent, fid = str(fid + 1), fid + 100
+    text += "--- !u!114 &900\nMonoBehaviour:\n  clips:\n"
+    for key, g in clips.items():
+        text += f"  - name: {key}\n    clip: {{fileID: 7400000, guid: {g}, type: 2}}\n"
+    return text
+
+
+class TiedClips(unittest.TestCase):
+    """A clip whose paths fit two prefabs differently is bound to the prefab whose own clip map names it (X30)."""
+
+    def setUp(self):
+        import zlib
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp)
+        self.src = self.tmp / "src"
+        (self.src / "PrefabInstance").mkdir(parents=True)
+        (self.src / "AnimationClip").mkdir()
+        (self.src / "PrefabInstance" / "loco.prefab").write_text(_prefab("loco", "Cab", {"Drivers": "a1"}))
+        (self.src / "PrefabInstance" / "tender.prefab").write_text(_prefab("tender", "Body", {"Hatch": "b1"}))
+        self.clip = "AnimationClip:\n  m_FloatCurves:\n  - path: path_0x%x_hatch\n" % zlib.crc32(b"Hatch")
+        (self.src / "AnimationClip" / "Hatch.anim").write_text(self.clip)
+        (self.src / "AnimationClip" / "Hatch.anim.meta").write_text("guid: b1\n")
+
+    def test_tied_clip_is_bound_to_its_owner(self):
+        dest = self.tmp / "dest"
+        out = resolve_clips(self.src, dest, self.tmp / "reports" / "clips-main.json")
+        self.assertEqual((out["clips"], out["bound"]), (1, 1))
+        self.assertIn("path: Body/Hatch", (dest / "AnimationClip" / "Hatch.anim").read_text())
+        evidence = read_json(self.tmp / "reports" / "clips-main-bindings.json")["bindings"]
+        self.assertEqual(evidence, {"AnimationClip/Hatch.anim": [{"prefab": "PrefabInstance/tender.prefab", "key": "Hatch"}]})
+
+    def test_tied_clip_without_an_owner_stays_an_error(self):
+        (self.src / "AnimationClip" / "Hatch_0.anim").write_text(self.clip)
+        (self.src / "AnimationClip" / "Hatch_0.anim.meta").write_text("guid: c1\n")
+        dest = self.tmp / "dest"
+        with self.assertRaisesRegex(ProjectError, "Hatch_0.anim: no prefab's clip map names it"):
+            resolve_clips(self.src, dest, self.tmp / "reports" / "clips-main.json")
+        self.assertFalse(dest.exists(), "nothing is written unless every clip resolves")
+
+    def test_clip_named_by_two_prefabs_stays_an_error(self):
+        (self.src / "PrefabInstance" / "loco.prefab").write_text(_prefab("loco", "Cab", {"Hatch": "b1"}))
+        with self.assertRaisesRegex(ProjectError, "loco.prefab, PrefabInstance/tender.prefab name it"):
+            resolve_clips(self.src, self.tmp / "dest", self.tmp / "reports" / "clips-main.json")
 
 
 if __name__ == "__main__":

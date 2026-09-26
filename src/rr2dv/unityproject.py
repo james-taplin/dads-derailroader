@@ -2,7 +2,9 @@
 
 Follows our proven setup (G-29 setup_build_project.ps1, pilots.py prepare; guide B04 steps 4-5):
 - the locomotive's pack export is the project; its clip paths are restored with our strict resolver
-  (tooling/builder/tools/resolve_clip_paths.py), which writes nothing unless every clip resolves;
+  (tooling/builder/tools/resolve_clip_paths.py), which writes nothing unless every clip resolves. A clip that fits
+  several prefabs with different paths ("tied") is bound to the one prefab whose own clip map names it (board X30);
+  a tied clip no map names, or that several maps name, stays an error;
 - tender/truck prefabs from other packs, and every part prefab, are copied with their GUID closure
   (tooling/builder/tools/pilot/copy_deps.py; scripts skipped, .meta kept) under Assets/RR/<root>/<pack>;
   vehicle packs also get their clips restored;
@@ -22,6 +24,7 @@ import tarfile
 from pathlib import Path, PurePosixPath
 
 from .jsonio import sha256_file, write_json
+from .probeinput import MAP_ENTRY
 from .safety import UnsafePath, _bad_part
 
 UNITY_VERSION = "2019.4.40f1"
@@ -64,12 +67,62 @@ def find_prefab(assets: Path, filename: str) -> Path:
     return hits[0]
 
 
+TIED = "Tied prefabs"
+
+
+def clip_owners(source_assets: Path) -> dict[str, list[dict]]:
+    """Each clip (path relative to source_assets) -> the prefabs whose clip maps name it, with the map key."""
+    clip_by_guid = {}
+    for meta in source_assets.rglob("*.anim.meta"):
+        m = re.search(r"^guid: (\w+)", meta.read_text(encoding="utf-8-sig", errors="replace"), re.M)
+        if m:
+            clip_by_guid[m[1]] = meta.relative_to(source_assets).as_posix()[:-5]
+    owners: dict[str, list[dict]] = {}
+    for prefab in sorted(source_assets.rglob("*.prefab")):
+        rel = prefab.relative_to(source_assets).as_posix()
+        for key, g in MAP_ENTRY["clip"].findall(prefab.read_text(encoding="utf-8-sig", errors="replace")):
+            if g in clip_by_guid:
+                entry = {"prefab": rel, "key": key.strip()}
+                if entry not in owners.setdefault(clip_by_guid[g], []):
+                    owners[clip_by_guid[g]].append(entry)
+    return owners
+
+
+def _resolve(source_assets: Path, dest_assets: Path, report: Path, bindings: Path | None = None) -> dict:
+    args = [source_assets, report, "--apply", dest_assets] + (["--bindings", bindings] if bindings else [])
+    try:
+        _tool("resolve_clip_paths.py", *args)
+    except ProjectError:
+        if not report.is_file():
+            raise
+    return json.loads(report.read_text(encoding="utf-8"))
+
+
 def resolve_clips(source_assets: Path, dest_assets: Path, report: Path) -> dict:
-    _tool("resolve_clip_paths.py", source_assets, report, "--apply", dest_assets)
-    result = json.loads(report.read_text(encoding="utf-8"))
+    result = _resolve(source_assets, dest_assets, report)
+    bound = {}
+    tied = [e["clip"] for e in result.get("errors", []) if TIED in e.get("error", "") and e.get("clip")]
+    if tied and len(tied) == len(result["errors"]):
+        owners = clip_owners(source_assets)
+        unbound = {c: owners.get(c, []) for c in tied if len({o["prefab"] for o in owners.get(c, [])}) != 1}
+        if not unbound:
+            bound = {c: owners[c][0]["prefab"] for c in tied}
+            evidence = report.with_name(report.stem + "-bindings.json")
+            write_json(evidence, {"rule": "a tied clip is bound to the one prefab whose clip map names it",
+                                  "bindings": {c: owners[c] for c in tied}})
+            plain = report.with_name(report.stem + "-bindings.plain.json")
+            write_json(plain, bound)
+            result = _resolve(source_assets, dest_assets, report, plain)
+        else:
+            detail = "; ".join(f"{c}: " + (", ".join(o["prefab"] for o in o_) + " name it" if o_ else "no prefab's clip map names it")
+                               for c, o_ in sorted(unbound.items()))
+            raise ProjectError(f"animation clips fit several prefabs and the source maps do not say which: {detail} (see {report})")
     if result.get("errors") or not result.get("applied"):
-        raise ProjectError(f"animation clip paths did not all resolve; see {report}")
-    return {"clips": len(result.get("clips", [])), "report": report.name}
+        errors = result.get("errors") or [{"error": "not applied"}]
+        first = errors[0]
+        raise ProjectError(f"resolve_clip_paths: {len(errors)} clip(s) did not resolve, first "
+                           f"{first.get('clip', '')}: {first.get('error')}; see {report}")
+    return {"clips": len(result.get("clips", [])), "report": report.name, "bound": len(bound)}
 
 
 def set_project_settings(project: Path) -> None:
