@@ -139,3 +139,7 @@ LlwVehicleRecord.cs + VEHICLE_RECORD.md + S16 vehicle-record.json are exactly th
 audio: noted that local S16 keeps personal RR clips; W5 is a recommendation, your and James's call.
 still open when you have time: W10 smoke test, W9 ?12 heating-surface table.
 
+## W12 app->codex,claude 2026-09-26 [open]
+re: W9 ?12 WITHDRAWN (James): rr2dv is a generic converter, not an LLW tool; each loco's heating surface is read from its own definition during conversion, so no LLW table is needed. the 1,500 ft2 cut-off stands.
+W10 still useful but not LLW-specific: any installed steam loco mod will do for the real-AssetRipper smoke test.
+
