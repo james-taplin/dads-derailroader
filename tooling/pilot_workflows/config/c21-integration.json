@@ -1,0 +1,1199 @@
+{
+  "stage": "source-derived integration specification; not a finished LocoConfig",
+  "vehicles": [
+    {
+      "id": "ls-280-c21",
+      "kind": "SteamLocomotive",
+      "proposed_dv_id": "LLW_C21",
+      "simulation_basis": "S282 separate tender",
+      "source_mass_lb": 92000,
+      "source_mass_converted_kg": 41730.49804,
+      "dv_dry_mass_kg": null,
+      "mass_review": "Confirm whether source mass includes operating water before assigning DV dry mass.",
+      "source_cylinders_inches": [
+        16.0,
+        23.0
+      ],
+      "source_boiler_pressure_psig": 180.0,
+      "capacities": {},
+      "wheelsets": [
+        {
+          "role": "unpowered",
+          "source": {
+            "offset": 4.52,
+            "length": 0.0,
+            "diameter": 0.69,
+            "numberOfAxles": 1,
+            "animation": {
+              "clipName": "Pilot"
+            },
+            "transform": {
+              "path": [
+                "PilotTruck"
+              ]
+            }
+          },
+          "nominal_radius_m": 0.345,
+          "measured_radius_m": null
+        },
+        {
+          "role": "powered",
+          "source": {
+            "offset": 0.0,
+            "length": 4.7,
+            "diameter": 1.09,
+            "numberOfAxles": 4,
+            "animation": {
+              "clipName": "Drivers"
+            },
+            "transform": null
+          },
+          "nominal_radius_m": 0.545,
+          "measured_radius_m": null
+        }
+      ],
+      "controls": [
+        {
+          "source_name": "Throttle",
+          "source_purpose": "Throttle",
+          "source_parent": {
+            "path": [
+              "Main",
+              "Throttle",
+              "Cylinder.245"
+            ]
+          },
+          "source_animation": {
+            "clipName": "Throttle"
+          },
+          "target_port": "throttle.EXT_IN",
+          "target_control_id": 0,
+          "grip_and_joint_validation": "pending Unity measurements and in-game test"
+        },
+        {
+          "source_name": "Reverser",
+          "source_purpose": "Reverser",
+          "source_parent": {
+            "path": [
+              "Main",
+              "Empty.061",
+              "Reverser.001"
+            ]
+          },
+          "source_animation": {
+            "clipName": "Reverser"
+          },
+          "target_port": "reverser.CONTROL_EXT_IN",
+          "target_control_id": 1,
+          "grip_and_joint_validation": "pending Unity measurements and in-game test"
+        },
+        {
+          "source_name": "Independent Brake",
+          "source_purpose": "LocomotiveBrake",
+          "source_parent": {
+            "path": [
+              "Main",
+              "LocoBrake",
+              "Cylinder.001"
+            ]
+          },
+          "source_animation": {
+            "clipName": "Indy"
+          },
+          "target_port": "indBrake.EXT_IN",
+          "target_control_id": 3,
+          "grip_and_joint_validation": "pending Unity measurements and in-game test"
+        },
+        {
+          "source_name": "Train Brake",
+          "source_purpose": "TrainBrake",
+          "source_parent": {
+            "path": [
+              "Main",
+              "TrainBrake",
+              "Cylinder.002"
+            ]
+          },
+          "source_animation": {
+            "clipName": "TB"
+          },
+          "target_port": "brake.EXT_IN",
+          "target_control_id": 2,
+          "grip_and_joint_validation": "pending Unity measurements and in-game test"
+        },
+        {
+          "source_name": "Whistle",
+          "source_purpose": "Whistle",
+          "source_parent": {
+            "path": [
+              "Main",
+              "Whistle",
+              "Cylinder.329"
+            ]
+          },
+          "source_animation": {
+            "clipName": "Whistle"
+          },
+          "target_port": "whistle.EXT_IN",
+          "target_control_id": 14,
+          "grip_and_joint_validation": "pending Unity measurements and in-game test"
+        }
+      ],
+      "source_anchors": [
+        {
+          "kind": "Chuff",
+          "name": "Chuff",
+          "transform": {
+            "position": [
+              -0.0004986611,
+              4.084839,
+              3.42113853
+            ],
+            "rotation": [
+              3.429228e-09,
+              -3.85610729e-05,
+              8.927706e-05,
+              1.0
+            ],
+            "scale": [
+              0.8,
+              0.8,
+              0.8
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "Seat",
+          "priority": 0,
+          "name": "Engineer Seat",
+          "transform": {
+            "position": [
+              1.095959,
+              1.97766113,
+              -3.633342
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "Gauge",
+          "style": "BoilerPressure",
+          "name": "BPG",
+          "transform": {
+            "position": [
+              0.0006507474,
+              3.27697754,
+              -2.14232135
+            ],
+            "rotation": [
+              0.0,
+              1.00000012,
+              0.0,
+              4.6930556e-05
+            ],
+            "scale": [
+              1.3,
+              1.3,
+              2.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "PrefabControl",
+          "prefab": "BrakeStand6CutOut",
+          "name": "BS6CO",
+          "transform": {
+            "position": [
+              0.6708478,
+              1.62323,
+              -3.29787874
+            ],
+            "rotation": [
+              3.1200148e-22,
+              1.0,
+              5.505047e-15,
+              -4.88250826e-08
+            ],
+            "scale": [
+              0.8,
+              0.8,
+              0.8
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "PrefabControl",
+          "prefab": "SightGlass",
+          "name": "SightGlassFireman",
+          "transform": {
+            "position": [
+              -0.414396,
+              2.47436523,
+              -3.28822351
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              0.6,
+              1.0,
+              0.6
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "PrefabControl",
+          "prefab": "HeadlightControlBidirectionalDimming",
+          "name": "HCBD",
+          "transform": {
+            "position": [
+              1.38751328,
+              3.13745117,
+              -3.36600232
+            ],
+            "rotation": [
+              -0.7071068,
+              -5.304673e-05,
+              -0.000121925914,
+              -0.7071068
+            ],
+            "scale": [
+              0.6,
+              0.6,
+              0.6
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "Gauge",
+          "style": "DualBrakeCylinderLine",
+          "name": "RMG",
+          "transform": {
+            "position": [
+              0.7980444,
+              2.791565,
+              -2.0778687
+            ],
+            "rotation": [
+              0.0,
+              1.0,
+              0.0,
+              -8.301316e-08
+            ],
+            "scale": [
+              0.425,
+              0.425,
+              0.36
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "CylinderCock",
+          "radius": 1.1,
+          "forwardOffset": 0.55,
+          "name": "CylinderCock 1",
+          "transform": {
+            "position": [
+              -2.51248566e-05,
+              0.233825684,
+              3.70217586
+            ],
+            "rotation": [
+              0.0,
+              9.08230732e-07,
+              0.0,
+              1.00000012
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "Gauge",
+          "style": "DualReservoirMainEq",
+          "name": "RMG 1",
+          "transform": {
+            "position": [
+              0.6978613,
+              2.791565,
+              -2.077869
+            ],
+            "rotation": [
+              0.0,
+              1.00000012,
+              0.0,
+              -6.34586e-08
+            ],
+            "scale": [
+              0.425,
+              0.425,
+              0.36
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "Seat",
+          "priority": 0,
+          "name": "Fireman Seat",
+          "transform": {
+            "position": [
+              -1.095962,
+              1.977661,
+              -3.633342
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        }
+      ],
+      "source_option_groups": [
+        {
+          "kind": "ComponentGroup",
+          "id": "Class Lights",
+          "activateComponents": [
+            "MF",
+            "mark"
+          ],
+          "deactivateComponents": [],
+          "name": "Class Lights",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "ComponentGroup",
+          "id": "safetydecal",
+          "activateComponents": [
+            "safety",
+            "safety2"
+          ],
+          "deactivateComponents": [],
+          "name": "safety decals",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "ComponentGroup",
+          "id": "sdn",
+          "activateComponents": [
+            "dome1",
+            "dome2"
+          ],
+          "deactivateComponents": [],
+          "name": "Sand Dome Numbers",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "ComponentGroup",
+          "id": "pilot",
+          "activateComponents": [
+            "pt2"
+          ],
+          "deactivateComponents": [
+            "pt1"
+          ],
+          "name": "Pilot",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "ComponentGroup",
+          "id": "hdlt",
+          "activateComponents": [
+            "hdl1",
+            "hdl2",
+            "nb1",
+            "nb2"
+          ],
+          "deactivateComponents": [
+            "hdl3",
+            "hdl4",
+            "nb3",
+            "nb4"
+          ],
+          "name": "Headlight",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "ComponentGroup",
+          "id": "hd",
+          "activateComponents": [
+            "hnd1"
+          ],
+          "deactivateComponents": [
+            "hnd2"
+          ],
+          "name": "Smokebox Handrail",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "ComponentGroup",
+          "id": "plow",
+          "activateComponents": [
+            "pt3"
+          ],
+          "deactivateComponents": [],
+          "name": "Plow",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        }
+      ],
+      "source_liveries": [
+        {
+          "kind": "DefaultLivelryComponent",
+          "idColors": [
+            {
+              "id": "AirPump",
+              "value": "0000"
+            },
+            {
+              "id": "Boiler",
+              "value": "0000"
+            },
+            {
+              "id": "Cylinders",
+              "value": "0000"
+            },
+            {
+              "id": "Doors",
+              "value": "0000"
+            },
+            {
+              "id": "Bucket",
+              "value": "0000"
+            },
+            {
+              "id": "Roof",
+              "value": "0000"
+            },
+            {
+              "id": "Stripe",
+              "value": "0000"
+            },
+            {
+              "id": "Whitewalls",
+              "value": "0000"
+            },
+            {
+              "id": "Bands",
+              "value": "0000"
+            },
+            {
+              "id": "Domes",
+              "value": "0000"
+            },
+            {
+              "id": "Numplate",
+              "value": "0000"
+            },
+            {
+              "id": "Windows",
+              "value": "0000"
+            },
+            {
+              "id": "Rods",
+              "value": "0000"
+            },
+            {
+              "id": "Numplate2",
+              "value": "0000"
+            }
+          ],
+          "idFonts": [],
+          "idLettering": [],
+          "name": "Black",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "DefaultLivelryComponent",
+          "idColors": [
+            {
+              "id": "AirPump",
+              "value": "0000"
+            },
+            {
+              "id": "Boiler",
+              "value": "0000"
+            },
+            {
+              "id": "Cylinders",
+              "value": "0000"
+            },
+            {
+              "id": "Doors",
+              "value": "0000"
+            },
+            {
+              "id": "Bucket",
+              "value": "0000"
+            },
+            {
+              "id": "Roof",
+              "value": "5D000B"
+            },
+            {
+              "id": "Stripe",
+              "value": "FFFF"
+            },
+            {
+              "id": "Whitewalls",
+              "value": "FFFF"
+            },
+            {
+              "id": "Bands",
+              "value": "0000"
+            },
+            {
+              "id": "Domes",
+              "value": "0000"
+            },
+            {
+              "id": "Numplate",
+              "value": "0000"
+            },
+            {
+              "id": "Windows",
+              "value": "5D000B"
+            },
+            {
+              "id": "Rods",
+              "value": "0000"
+            },
+            {
+              "id": "Numplate2",
+              "value": "5D000B"
+            }
+          ],
+          "idFonts": [],
+          "idLettering": [],
+          "name": "Lined",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "DefaultLivelryComponent",
+          "idColors": [
+            {
+              "id": "AirPump",
+              "value": "233D23"
+            },
+            {
+              "id": "Boiler",
+              "value": "233D23"
+            },
+            {
+              "id": "Cylinders",
+              "value": "233D23"
+            },
+            {
+              "id": "Doors",
+              "value": "0000"
+            },
+            {
+              "id": "Bucket",
+              "value": "0000"
+            },
+            {
+              "id": "Roof",
+              "value": "562626"
+            },
+            {
+              "id": "Stripe",
+              "value": "FFFF"
+            },
+            {
+              "id": "Whitewalls",
+              "value": "FFFF"
+            },
+            {
+              "id": "Bands",
+              "value": "233D23"
+            },
+            {
+              "id": "Domes",
+              "value": "0000"
+            },
+            {
+              "id": "Numplate",
+              "value": "0000"
+            },
+            {
+              "id": "Windows",
+              "value": "0000"
+            },
+            {
+              "id": "Rods",
+              "value": "0000"
+            },
+            {
+              "id": "Numplate2",
+              "value": "B22020"
+            }
+          ],
+          "idFonts": [],
+          "idLettering": [],
+          "name": "Subpar Southern",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "DefaultLivelryComponent",
+          "idColors": [
+            {
+              "id": "AirPump",
+              "value": "22282B"
+            },
+            {
+              "id": "Boiler",
+              "value": "22282B"
+            },
+            {
+              "id": "Cylinders",
+              "value": "0000"
+            },
+            {
+              "id": "Doors",
+              "value": "0000"
+            },
+            {
+              "id": "Bucket",
+              "value": "0000"
+            },
+            {
+              "id": "Roof",
+              "value": "0000"
+            },
+            {
+              "id": "Stripe",
+              "value": "0000"
+            },
+            {
+              "id": "Whitewalls",
+              "value": "0000"
+            },
+            {
+              "id": "Bands",
+              "value": "22282B"
+            },
+            {
+              "id": "Domes",
+              "value": "0000"
+            },
+            {
+              "id": "Numplate",
+              "value": "0000"
+            },
+            {
+              "id": "Windows",
+              "value": "0000"
+            },
+            {
+              "id": "Rods",
+              "value": "0000"
+            },
+            {
+              "id": "Numplate2",
+              "value": "0000"
+            }
+          ],
+          "idFonts": [],
+          "idLettering": [],
+          "name": "Black (Russian Iron)",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        }
+      ],
+      "pending_measurements": [
+        "tread radii and axle locations",
+        "coupling planes and collision boxes",
+        "cab floor/teleport volume",
+        "control axes, grips and gauge readability",
+        "boiler volume and DV steam-flow calibration"
+      ]
+    },
+    {
+      "id": "lt-280-c21",
+      "kind": "Car",
+      "proposed_dv_id": "LLW_C21_Tender",
+      "simulation_basis": "TenderSimCreator",
+      "source_mass_lb": 42000,
+      "source_mass_converted_kg": 19050.87954,
+      "dv_dry_mass_kg": null,
+      "mass_review": "Confirm whether source mass includes operating water before assigning DV dry mass.",
+      "source_cylinders_inches": [
+        null,
+        null
+      ],
+      "source_boiler_pressure_psig": null,
+      "capacities": {
+        "coal": {
+          "source_value": 10000.0,
+          "source_unit": "Pounds",
+          "dv_value": 4535.9237,
+          "dv_unit": "kg"
+        },
+        "water": {
+          "source_value": 4500.0,
+          "source_unit": "Gallons",
+          "dv_value": 17034.353027999998,
+          "dv_unit": "litres"
+        }
+      },
+      "wheelsets": [],
+      "controls": [],
+      "source_anchors": [
+        {
+          "kind": "LoadTarget",
+          "radius": 1.5,
+          "slotIndex": 0,
+          "name": "LoadTarget Coal",
+          "transform": {
+            "position": [
+              -0.000313957338,
+              3.18255615,
+              0.933656037
+            ],
+            "rotation": [
+              0.0,
+              -1.86188881e-05,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "LoadTarget",
+          "radius": 0.5,
+          "slotIndex": 1,
+          "name": "LoadTarget Water 1",
+          "transform": {
+            "position": [
+              -2.68917174e-05,
+              2.380066,
+              -1.28983057
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.00000012
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        }
+      ],
+      "source_option_groups": [
+        {
+          "kind": "ComponentGroup",
+          "id": "safety",
+          "activateComponents": [
+            "safety",
+            "safety1"
+          ],
+          "deactivateComponents": [],
+          "name": "Safety Decals",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        }
+      ],
+      "source_liveries": [
+        {
+          "kind": "DefaultLivelryComponent",
+          "idColors": [
+            {
+              "id": "Stripe",
+              "value": "0000"
+            },
+            {
+              "id": "TrucksColor",
+              "value": "0000"
+            },
+            {
+              "id": "Deck",
+              "value": "0000"
+            },
+            {
+              "id": "Bucket",
+              "value": "0000"
+            },
+            {
+              "id": "Whitewalls",
+              "value": "0000"
+            }
+          ],
+          "idFonts": [],
+          "idLettering": [],
+          "name": "Black",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        },
+        {
+          "kind": "DefaultLivelryComponent",
+          "idColors": [
+            {
+              "id": "Stripe",
+              "value": "FFFFFF"
+            },
+            {
+              "id": "TrucksColor",
+              "value": "0000"
+            },
+            {
+              "id": "Deck",
+              "value": "5D000B"
+            },
+            {
+              "id": "Bucket",
+              "value": "5D000B"
+            },
+            {
+              "id": "Whitewalls",
+              "value": "FFFFFF"
+            }
+          ],
+          "idFonts": [],
+          "idLettering": [],
+          "name": "Lined ",
+          "transform": {
+            "position": [
+              0.0,
+              0.0,
+              0.0
+            ],
+            "rotation": [
+              0.0,
+              0.0,
+              0.0,
+              1.0
+            ],
+            "scale": [
+              1.0,
+              1.0,
+              1.0
+            ]
+          },
+          "parent": null,
+          "enabled": true
+        }
+      ],
+      "pending_measurements": [
+        "tender coupling planes/collision",
+        "Fox truck placement and tread radius",
+        "coal and water loading interaction"
+      ]
+    }
+  ],
+  "external_fidelity_references": [
+    {
+      "kind": "source_whistle",
+      "id": "wh-3-lunkenheimner"
+    },
+    {
+      "kind": "decal_texture",
+      "id": "msl-decal-pack.smoke.png"
+    },
+    {
+      "kind": "decal_texture",
+      "id": "msl-decal-pack.llwgauge.png"
+    },
+    {
+      "kind": "decal_texture",
+      "id": "msl-decal-pack.safety.png"
+    }
+  ]
+}

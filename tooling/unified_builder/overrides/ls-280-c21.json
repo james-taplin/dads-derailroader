@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "profile": "c21",
+  "source_bundle_sha256": "560bfa0909b9642f68ff0b759d7274bc01a9892dec4053852a13b703bb33d3f8",
+  "measured_config": "profiles/c21/C21Config.cs",
+  "reference": "C21 test17",
+  "oil_policy": "8 retained caps; preserve tags/order",
+  "mass_policy": "working order minus configured spawn boiler water; auxiliary contents additional",
+  "runtime_status": "merged output not game tested"
+}

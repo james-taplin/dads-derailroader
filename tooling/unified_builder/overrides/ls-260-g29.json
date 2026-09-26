@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "profile": "g29",
+  "source_bundle_sha256": "1e3c72e1468740da642c4bd322bbb9f0b1180f1734eaecec1824fd09023100c6",
+  "measured_config": "profiles/g29/G29Config.cs",
+  "reference": "G29 prerelease2",
+  "oil_policy": "6 tall replacement cups; preserve tags/order",
+  "mass_policy": "working order minus configured spawn boiler water; auxiliary contents additional",
+  "runtime_status": "merged output not game tested"
+}

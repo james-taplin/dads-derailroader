@@ -1,0 +1,2 @@
+# tooling/ is a byte-exact snapshot checked by tooling/MANIFEST.sha256: never convert line endings.
+tooling/** -text
