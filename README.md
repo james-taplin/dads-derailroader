@@ -16,14 +16,14 @@ pack for the Custom Car Loader 3.1.9. It never modifies the mod you give it.
 |---|---|
 | Find the locomotive, resolve its tender, trucks and parts across mods, check licences, copy and verify the inputs | working |
 | Export the bundles with AssetRipper (cached per bundle, AssetRipper build and Unity version) | working; passed a real-AssetRipper smoke test (S-16, C-21) |
-| Prepare the Unity project | next (P2) |
+| Prepare the Unity 2019.4.40f1 project (restored animation paths, trucks and parts with their dependencies, CarCreator, our builder core) | working, not yet opened in Unity on a real machine |
 | Measure the model, generate the vehicle record, build, audit | later (P3) |
 | Publish the finished pack to an output folder | working (used once the build stages exist) |
 
 ## Try it
 
 ```
-python -m pip install -e .
+python -m pip install -e .                     # run from the repository: rr2dv uses its tooling/ folder
 rr2dv doctor                                   # checks Unity, CarCreator, AssetRipper and folders
 rr2dv scan "path\to\Some Loco Mod"             # read-only: what's in the mod and what each loco needs
 rr2dv convert "path\to\Some Loco Mod" --out "path\to\output"

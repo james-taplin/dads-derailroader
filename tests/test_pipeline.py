@@ -10,7 +10,7 @@ from pathlib import Path
 
 import os
 
-from fixtures import fake_assetripper, loco, standard_mod, tree_state, write_pack
+from fixtures import fake_assetripper, fake_carcreator, loco, standard_mod, tree_state, write_pack
 from rr2dv import cli
 from rr2dv.jsonio import read_json, sha256_file
 from rr2dv.machine import Machine
@@ -32,7 +32,8 @@ class Pipeline(unittest.TestCase):
         self.tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.tmp)
         self.m = standard_mod(self.tmp)
-        self.machine = Machine(None, {"workRoot": str(self.tmp / "work"), "assetRipper": with_fake_assetripper(self, self.tmp)})
+        self.machine = Machine(None, {"workRoot": str(self.tmp / "work"), "assetRipper": with_fake_assetripper(self, self.tmp),
+                                      "carCreator": str(fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage"))})
         self.out = self.tmp / "out"
 
     def test_convert_stages_inputs_and_never_writes_to_the_input(self):
@@ -46,8 +47,8 @@ class Pipeline(unittest.TestCase):
 
         run = outcome.run
         stages = {k: v["status"] for k, v in run.record["stages"].items()}
-        self.assertEqual([stages[s] for s in ("locate", "link", "stage", "extract", "import", "build")],
-                         ["done", "done", "done", "done", "not_available", "pending"])
+        self.assertEqual([stages[s] for s in ("locate", "link", "stage", "extract", "import", "probe", "build")],
+                         ["done", "done", "done", "done", "done", "not_available", "pending"])
         self.assertEqual(read_json(run.file)["status"], "incomplete")
         self.assertEqual((run.record["answers"]["locomotive"], run.record["answers"]["audio"]["basis"]), ("ts-260-a", "S060"))
         staged = read_json(run.path / "staged.json")["files"]
@@ -140,7 +141,8 @@ class Cli(unittest.TestCase):
         self.m = standard_mod(self.tmp)
         settings = self.tmp / "machine.json"
         settings.write_text(json.dumps({"workRoot": str(self.tmp / "work"), "searchRoots": [str(self.m["search"])],
-                                        "assetRipper": with_fake_assetripper(self, self.tmp)}))
+                                        "assetRipper": with_fake_assetripper(self, self.tmp),
+                                        "carCreator": str(fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage"))}))
         self.base = ["--machine", str(settings)]
 
     def run_cli(self, *args):
@@ -166,7 +168,8 @@ class Cli(unittest.TestCase):
         code, text = self.run_cli("convert", str(self.m["mod"]), "--out", str(self.tmp / "out"))
         self.assertEqual(code, EXIT_INCOMPLETE, text)
         self.assertIn("extract  done", text)
-        self.assertIn("import   not_available", text)
+        self.assertIn("import   done", text)
+        self.assertIn("probe    not_available", text)
         self.assertIn("Run folder:", text)
 
 

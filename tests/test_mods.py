@@ -8,7 +8,7 @@ from pathlib import Path
 import os
 import sys
 
-from fixtures import fake_assetripper, loco, standard_mod, tender, tree_state, write_pack
+from fixtures import fake_assetripper, fake_carcreator, loco, standard_mod, tender, tree_state, write_pack
 from rr2dv.jsonio import read_json, sha256_file
 from rr2dv.machine import Machine
 from rr2dv.pipeline import EXIT_FAILED, EXIT_INCOMPLETE, convert
@@ -29,7 +29,8 @@ class Base(unittest.TestCase):
         self.m = standard_mod(self.tmp)
         os.environ["FAKE_AR_STATE"] = str(self.tmp / "ar-state")
         self.addCleanup(os.environ.pop, "FAKE_AR_STATE", None)
-        self.machine = Machine(None, {"workRoot": str(self.tmp / "work"), "assetRipper": str(fake_assetripper(self.tmp / "tools"))})
+        self.machine = Machine(None, {"workRoot": str(self.tmp / "work"), "assetRipper": str(fake_assetripper(self.tmp / "tools")),
+                                      "carCreator": str(fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage"))})
 
     def inv(self, **kw):
         return inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a", **kw)

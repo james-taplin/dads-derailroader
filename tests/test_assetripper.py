@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fixtures import fake_assetripper, standard_mod
+from fixtures import fake_assetripper, fake_carcreator, standard_mod
 from rr2dv.assetripper import ExportError, export, settings_from_form
 from rr2dv.jsonio import read_json, sha256_file
 from rr2dv.machine import Machine
@@ -47,7 +47,7 @@ class Export(unittest.TestCase):
         first = export(self.exe, self.bundle, self.sha, self.cache)
         self.assertFalse(first["cached"])
         path = Path(first["path"])
-        self.assertTrue((path / "ExportedProject" / "Assets" / "pack.prefab").is_file())
+        self.assertTrue((path / "ExportedProject" / "Assets" / "PrefabInstance" / "pack.prefab").is_file())
         info = read_json(path / "export.json")
         self.assertEqual((info["bundle_sha256"], info["target"]), (self.sha, "2019.4.40f1"))
         self.assertEqual(json.loads((self.tmp / "state" / "settings.json").read_text())["TargetVersion"], "2019.4.40f1")
@@ -75,7 +75,8 @@ class Export(unittest.TestCase):
 
     def test_second_conversion_reuses_every_export(self):
         m = standard_mod(self.tmp / "mods")
-        machine = Machine(None, {"workRoot": str(self.tmp / "work"), "assetRipper": str(self.exe)})
+        machine = Machine(None, {"workRoot": str(self.tmp / "work"), "assetRipper": str(self.exe),
+                                 "carCreator": str(fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage"))})
         a = convert(m["mod"], self.tmp / "out", machine, search=[m["search"]])
         self.assertEqual(a.code, EXIT_INCOMPLETE, a.message)
         self.assertIn("3 bundle(s) exported (0 reused", a.run.record["stages"]["extract"]["detail"])

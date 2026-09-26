@@ -148,6 +148,13 @@ class Pack:
     def describe(self) -> dict:
         return {"name": self.name, "root": self.root.label, "path": self.rel}
 
+    def model_prefab(self, model: str) -> str:
+        """Prefab file name for a model identifier: the catalogue entry's file, else "<model>.prefab"."""
+        asset = self.assets.get(model)
+        if isinstance(asset, dict) and isinstance(asset.get("filename"), str):
+            return asset["filename"]
+        return model + ".prefab"
+
     def has_model(self, model: str) -> bool:
         """A model identifier names a catalogue key or a prefab file (LLW uses one string for both; others don't)."""
         if model in self.assets:
@@ -470,12 +477,18 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                 issues.append(Issue("warning", "missing-texture", f"{owner}: image {name!r} not found in {where}; it will be left out"))
             textures.append(entry)
 
+    vehicle_records = []
     for vpack, vehicle in vehicles:
         vdef = definition(vehicle)
         vid = vehicle["identifier"]
         model = vdef.get("modelIdentifier")
         if isinstance(model, str) and model and vpack.assets and not vpack.has_model(model):
             issues.append(Issue("warning", "model-not-in-catalog", f"{vid}: model {model!r} matches no key or prefab in {vpack.name}/Catalog.json"))
+        role = "locomotive" if vehicle is loco else "tender" if tender_info and vid == tender_info["id"] else "truck"
+        if isinstance(model, str) and model:
+            vehicle_records.append({"id": vid, "role": role, "model": model, "prefab": vpack.model_prefab(model), "pack": vpack.describe()})
+        else:
+            issues.append(Issue("error", "no-model", f"{vid} ({role}) has no modelIdentifier"))
         is_car = vid in car_ids
         comps = components(vdef)
         for comp in comps:
@@ -519,7 +532,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                 issues.append(Issue("error", "missing-part-asset", f"{label}: asset {asset_ident!r} not in {ppack.name}/Catalog.json"))
                 continue
             packs[ppack.path] = ppack
-            parts.append({"owner": vid, "component": comp.get("name"), "pack": ppack.name,
+            parts.append({"owner": vid, "component": comp.get("name"), "pack": ppack.name, "pack_ref": ppack.describe(),
                           "asset": asset_ident, "filename": asset.get("filename"), "enabled": comp.get("enabled", True)})
         if is_car:
             follow_textures(vid, comps, "definition")
@@ -602,6 +615,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         "locomotive": {"id": loco_id, "name": (loco.get("metadata") or {}).get("name"), "pack": loco_pack.describe()},
         "tender": tender_info,
         "trucks": trucks,
+        "vehicles": vehicle_records,
         "parts": parts,
         "packs": pack_records,
         "extra_files": sorted(extra.values(), key=lambda r: (r["root"], r["path"])),

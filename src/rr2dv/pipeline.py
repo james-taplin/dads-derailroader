@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
-from . import assetripper
+from . import assetripper, unityproject
 from .jsonio import sha256_file, write_json
 from .machine import Machine
 from .rrmod import Index, blocking, inventory
@@ -144,7 +144,15 @@ def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Seq
     reused = sum(1 for e in exports.values() if e["cached"])
     run.finish("extract", "done", f"{len(exports)} bundle(s) exported ({reused} reused from cache)")
 
-    for name, description, available in STAGES[4:]:
+    run.begin("import")
+    car_creator = machine.path("carCreator")
+    if car_creator is None or not car_creator.is_file():
+        raise FileNotFoundError("CarCreator 3.1.9 is not set up: add `carCreator` to the settings file (see `rr2dv doctor`)")
+    project = unityproject.assemble(run.path, inv, exports, car_creator)
+    run.finish("import", "done", f"Unity {project['unity']} project with {len(project['vehicles'])} vehicle(s), "
+                                 f"{len(project['parts'])} part(s), {project['unique_guids']} GUIDs")
+
+    for name, description, available in STAGES[5:]:
         if not available:
             message = f"stopped before '{name}' ({description}): not implemented yet"
             run.finish(name, "not_available", message)

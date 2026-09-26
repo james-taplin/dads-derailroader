@@ -94,6 +94,49 @@ FORM = """<form><input name="TargetVersion" value="2022.3.0f1"><input type="chec
 <input type="checkbox" name="Off"><input name="Locked" value="x" disabled><select name="Mode"><option value="a">
 <option value="b" selected></select><input type="submit" value="Save"></form>"""
 loaded = {}
+
+def guid(*parts):
+    import hashlib
+    return hashlib.md5("|".join(parts).encode()).hexdigest()
+
+def prefab_yaml(root, mat):
+    return ("%YAML 1.1\n--- !u!1 &100\nGameObject:\n  m_Name: " + root + "\n--- !u!4 &101\nTransform:\n"
+            "  m_GameObject: {fileID: 100}\n  m_Father: {fileID: 0}\n--- !u!1 &200\nGameObject:\n  m_Name: Wheel\n"
+            "--- !u!4 &201\nTransform:\n  m_GameObject: {fileID: 200}\n  m_Father: {fileID: 101}\n"
+            "--- !u!23 &202\nMeshRenderer:\n  m_Materials:\n  - {fileID: 2100000, guid: " + mat + ", type: 2}\n")
+
+def export_fake_project(bundle, project):
+    """Shape of an AssetRipper export: prefabs per catalogue asset (Wheel child, material by GUID),
+    placeholder clip paths for vehicle packs, 2022-era project settings."""
+    import zlib
+    assets = project / "Assets"
+    assets.mkdir(parents=True)
+    pack = bundle.parent
+    seed = bundle.read_bytes().hex()
+    cat = next((f for f in pack.iterdir() if f.name.lower() == "catalog.json"), None)
+    names = [a["filename"] for a in json.loads(cat.read_text())["assets"].values()] if cat else [pack.name + ".prefab"]
+    for name in names:
+        stem = name.rsplit(".", 1)[0]
+        mat = guid(seed, stem, "mat")
+        (assets / "Material").mkdir(exist_ok=True)
+        (assets / "Material" / (stem + "_paint.mat")).write_text("%YAML 1.1\nMaterial:\n  m_Name: paint\n")
+        (assets / "Material" / (stem + "_paint.mat.meta")).write_text("guid: " + mat + "\n")
+        (assets / "PrefabInstance").mkdir(exist_ok=True)
+        (assets / "PrefabInstance" / name).write_text(prefab_yaml(stem, mat))
+        (assets / "PrefabInstance" / (name + ".meta")).write_text("guid: " + guid(seed, stem, "prefab") + "\n")
+    if any(f.name.lower() == "definitions.json" for f in pack.iterdir()):
+        (assets / "AnimationClip").mkdir()
+        (assets / "AnimationClip" / "Drivers.anim").write_text(
+            "AnimationClip:\n  m_FloatCurves:\n  - path: path_0x%x_wheel\n" % zlib.crc32(b"Wheel"))
+        (assets / "AnimationClip" / "Drivers.anim.meta").write_text("guid: " + guid(seed, "anim") + "\n")
+    settings = project / "ProjectSettings"
+    settings.mkdir()
+    (settings / "ProjectVersion.txt").write_text("m_EditorVersion: 2022.3.0f1\n")
+    (settings / "EditorSettings.asset").write_text("EditorSettings:\n  m_SerializationMode: 2\n  m_LineEndingsForNewScripts: 0\n")
+    (project / "Packages").mkdir()
+    (project / "Packages" / "manifest.json").write_text(json.dumps({"dependencies": {
+        "com.unity.render-pipelines.universal": "14.0.8", "com.unity.shadergraph": "14.0.8", "com.unity.modules.physics": "1.0.0"}}))
+
 class H(http.server.BaseHTTPRequestHandler):
     def log_message(self, *a): pass
     def reply(self, body="ok"):
@@ -109,9 +152,7 @@ class H(http.server.BaseHTTPRequestHandler):
         elif self.path == "/Export/UnityProject":
             if os.environ.get("FAKE_AR_FAIL"):
                 self.reply(); return
-            assets = Path(form["Path"]) / "ExportedProject" / "Assets"
-            assets.mkdir(parents=True)
-            (assets / (Path(loaded["path"]).parent.name + ".prefab")).write_text("prefab")
+            export_fake_project(Path(loaded["path"]), Path(form["Path"]) / "ExportedProject")
             count = state / "exports.txt"
             count.write_text(str(int(count.read_text()) + 1 if count.exists() else 1))
             print("Finished post-export", flush=True)
@@ -126,3 +167,21 @@ def fake_assetripper(folder: Path) -> Path:
     exe.write_text(FAKE_ASSETRIPPER.replace("#!/usr/bin/env python3", "#!" + os.environ.get("FAKE_AR_PYTHON", __import__("sys").executable), 1))
     exe.chmod(0o755)
     return exe
+
+
+def fake_carcreator(path: Path) -> Path:
+    """Minimal .unitypackage: tar.gz of <guid>/{pathname, asset, asset.meta}."""
+    import io, tarfile
+    path.parent.mkdir(parents=True, exist_ok=True)
+    entries = {"a1": ("Assets/CarCreator", None), "b2": ("Assets/CarCreator/CCL.Types.dll", b"dll"),
+               "c3": ("Assets/CarCreator/Editor/Wizard.cs", b"class Wizard {}")}
+    with tarfile.open(path, "w:gz") as tar:
+        for g, (pathname, data) in entries.items():
+            files = {"pathname": pathname.encode(), "asset.meta": f"guid: {g}0000000000000000000000000000"[:38].encode()}
+            if data is not None:
+                files["asset"] = data
+            for leaf, blob in files.items():
+                info = tarfile.TarInfo(f"{g}/{leaf}")
+                info.size = len(blob)
+                tar.addfile(info, io.BytesIO(blob))
+    return path

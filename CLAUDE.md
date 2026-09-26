@@ -18,7 +18,7 @@ only read, post to `board/APP_BOARD.md` (its header has the protocol), and repla
 
 | Path | What |
 |---|---|
-| `src/rr2dv/` | The app. Standard library only, Python 3.11+. `rrmod.py` scans mods and resolves a loco's dependency closure; `licences.py` is the licence policy; `assetripper.py` drives AssetRipper's HTTP API (exports cached in `<workRoot>/_cache/assetripper`); `pipeline.py` runs the stages; `runs.py` owns run folders; `publish.py` and `safety.py` guard every write; `machine.py` holds tool paths and `doctor`; `cli.py` is the entry point. |
+| `src/rr2dv/` | The app. Standard library only, Python 3.11+. `rrmod.py` scans mods and resolves a loco's dependency closure; `licences.py` is the licence policy; `assetripper.py` drives AssetRipper's HTTP API (exports cached in `<workRoot>/_cache/assetripper`); `unityproject.py` assembles the per-run Unity project with our canonical `resolve_clip_paths.py` and `copy_deps.py` from `tooling/` (run, never copied); `pipeline.py` runs the stages; `runs.py` owns run folders; `publish.py` and `safety.py` guard every write; `machine.py` holds tool paths and `doctor`; `cli.py` is the entry point. |
 | `tests/` | `unittest` suite on synthetic mods built by `tests/fixtures.py`, with a fake AssetRipper HTTP server (POSIX only). Never commit real mod files. |
 | `board/APP_BOARD.md` | Message board with the local sessions. We post as `W<n>`; read it at session start (`git pull`). |
 | `tooling/` | Read-only snapshot of our local tooling (see below). |

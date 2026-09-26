@@ -1,0 +1,205 @@
+"""The `import` stage: assemble a fresh Unity 2019.4.40f1 project for one conversion from the cached AssetRipper exports.
+
+Follows our proven setup (G-29 setup_build_project.ps1, pilots.py prepare; guide B04 steps 4-5):
+- the locomotive's pack export is the project; its clip paths are restored with our strict resolver
+  (tooling/builder/tools/resolve_clip_paths.py), which writes nothing unless every clip resolves;
+- tender/truck prefabs from other packs, and every part prefab, are copied with their GUID closure
+  (tooling/builder/tools/pilot/copy_deps.py; scripts skipped, .meta kept) under Assets/RR/<root>/<pack>;
+  vehicle packs also get their clips restored;
+- ProjectVersion 2019.4.40f1, asset pipeline mode 1, render-pipeline packages removed, TextMeshPro 2.1.6 + uGUI 1.0.0;
+- CarCreator 3.1.9 unpacked with its original GUIDs;
+- the shared builder core (tooling/builder/tools/unity/*.cs, incl. LlwVehicleRecord.cs) copied into Assets/Editor.
+Duplicate GUIDs anywhere in the result are an error (B04). Cached exports are only read.
+"""
+from __future__ import annotations
+
+import json
+import re
+import shutil
+import subprocess
+import sys
+import tarfile
+from pathlib import Path, PurePosixPath
+
+from .jsonio import sha256_file, write_json
+from .safety import UnsafePath, _bad_part
+
+UNITY_VERSION = "2019.4.40f1"
+UNITY_REVISION = "ffc62b691db5"
+PACKAGES_REMOVED = re.compile(r"render-pipelines|shadergraph|visualeffectgraph")
+PACKAGES_ADDED = {"com.unity.textmeshpro": "2.1.6", "com.unity.ugui": "1.0.0"}
+IGNORED_DIRS = ("Library", "Temp", "Logs", "obj")
+
+
+class ProjectError(RuntimeError):
+    """The Unity project could not be assembled."""
+
+
+def tooling_root() -> Path:
+    root = Path(__file__).resolve().parents[2] / "tooling"
+    if not (root / "builder" / "tools" / "unity").is_dir():
+        raise ProjectError(f"builder tooling not found at {root}; rr2dv needs the repository's tooling/ folder")
+    return root
+
+
+def _tool(script: str, *args) -> str:
+    path = tooling_root() / "builder" / "tools" / script
+    proc = subprocess.run([sys.executable, str(path), *map(str, args)], capture_output=True, text=True)
+    if proc.returncode:
+        raise ProjectError(f"{Path(script).name} failed: {(proc.stderr or proc.stdout).strip().splitlines()[-1:]}")
+    return proc.stdout
+
+
+def find_prefab(assets: Path, filename: str) -> Path:
+    hits = [p for p in assets.rglob("*.prefab") if p.name.casefold() == filename.casefold()]
+    if len(hits) != 1:
+        raise ProjectError(f"expected exactly one {filename} in {assets}, found {len(hits)}")
+    return hits[0]
+
+
+def resolve_clips(source_assets: Path, dest_assets: Path, report: Path) -> dict:
+    _tool("resolve_clip_paths.py", source_assets, report, "--apply", dest_assets)
+    result = json.loads(report.read_text(encoding="utf-8"))
+    if result.get("errors") or not result.get("applied"):
+        raise ProjectError(f"animation clip paths did not all resolve; see {report}")
+    return {"clips": len(result.get("clips", [])), "report": report.name}
+
+
+def set_project_settings(project: Path) -> None:
+    settings = project / "ProjectSettings"
+    settings.mkdir(exist_ok=True)
+    (settings / "ProjectVersion.txt").write_text(
+        f"m_EditorVersion: {UNITY_VERSION}\nm_EditorVersionWithRevision: {UNITY_VERSION} ({UNITY_REVISION})\n", encoding="ascii")
+    editor = settings / "EditorSettings.asset"
+    if editor.is_file():
+        text = editor.read_text(encoding="utf-8")
+        if "m_AssetPipelineMode" not in text:
+            text, n = re.subn(r"(  m_SerializationMode: 2\r?\n)", r"\g<1>  m_AssetPipelineMode: 1\n", text, count=1)
+            if not n:
+                raise ProjectError("EditorSettings.asset has no m_SerializationMode: 2 line to anchor the asset pipeline setting")
+            editor.write_text(text, encoding="utf-8")
+    manifest_path = project / "Packages" / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig")) if manifest_path.is_file() else {}
+    deps = {k: v for k, v in manifest.get("dependencies", {}).items() if not PACKAGES_REMOVED.search(k)}
+    deps.update(PACKAGES_ADDED)
+    manifest["dependencies"] = dict(sorted(deps.items()))
+    write_json(manifest_path, manifest)
+
+
+def import_unitypackage(package: Path, project: Path) -> int:
+    """Unpack a .unitypackage (tar.gz of <guid>/{pathname,asset,asset.meta}) into the project, safely."""
+    root = project.resolve()
+    written = 0
+    with tarfile.open(package, "r:gz") as archive:
+        groups: dict[str, dict[str, tarfile.TarInfo]] = {}
+        for member in archive.getmembers():
+            key, sep, leaf = member.name.partition("/")
+            if sep and leaf:
+                if not (member.isfile() or member.isdir()):
+                    raise UnsafePath(f"{package.name}: unexpected entry type {member.name!r}")
+                groups.setdefault(key, {})[leaf] = member
+        for key in sorted(groups):
+            members = groups[key]
+            if "pathname" not in members:
+                continue
+            relative = archive.extractfile(members["pathname"]).read().decode("utf-8").splitlines()[0].strip()
+            parts = PurePosixPath(relative).parts
+            if not parts or parts[0] != "Assets" or relative.startswith("/") or any(_bad_part(p) for p in parts):
+                raise UnsafePath(f"{package.name}: unsafe package path {relative!r}")
+            dest = project.joinpath(*parts)
+            if not dest.resolve().is_relative_to(root):
+                raise UnsafePath(f"{package.name}: {relative!r} escapes the project")
+            if "asset" in members:
+                if dest.exists():
+                    raise ProjectError(f"{package.name} would overwrite {relative}")
+                dest.parent.mkdir(parents=True, exist_ok=True)
+                dest.write_bytes(archive.extractfile(members["asset"]).read())
+                written += 1
+            else:
+                dest.mkdir(parents=True, exist_ok=True)
+            if "asset.meta" in members:
+                Path(str(dest) + ".meta").write_bytes(archive.extractfile(members["asset.meta"]).read())
+    return written
+
+
+def check_guids(assets: Path) -> int:
+    seen: dict[str, Path] = {}
+    for meta in sorted(assets.rglob("*.meta")):
+        m = re.search(r"^guid: (\w+)", meta.read_text(encoding="utf-8-sig", errors="replace"), re.M)
+        if not m:
+            continue
+        if m[1] in seen:
+            raise ProjectError(f"duplicate GUID {m[1]}: {seen[m[1]].relative_to(assets)} and {meta.relative_to(assets)}")
+        seen[m[1]] = meta
+    return len(seen)
+
+
+def _subfolder(pack: dict) -> str:
+    """Assets/RR/<root>/<pack path>, each folder name reduced to safe characters."""
+    segments = [re.sub(r"[^A-Za-z0-9_. -]", "_", s).strip(" .") or "_" for s in (pack.get("path") or pack["name"]).split("/")]
+    return "/".join(["RR", pack["root"], *segments])
+
+
+def assemble(run_path: Path, inv: dict, exports: dict[str, dict], car_creator: Path) -> dict:
+    project = run_path / "unity" / "project"
+    if project.exists():
+        raise ProjectError(f"{project} already exists; runs never reuse a project")
+    reports = run_path / "import"
+    reports.mkdir(parents=True, exist_ok=True)
+
+    def export_of(pack: dict) -> Path:
+        key = f"{pack['root']}:{pack['path'] or pack['name']}"
+        if key not in exports:
+            raise ProjectError(f"no export for pack {key}")
+        return Path(exports[key]["path"]) / "ExportedProject"
+
+    main_pack = inv["locomotive"]["pack"]
+    main = export_of(main_pack)
+    shutil.copytree(main, project, ignore=shutil.ignore_patterns(*IGNORED_DIRS))
+    assets = project / "Assets"
+    result = {"project": project.relative_to(run_path).as_posix(), "unity": f"{UNITY_VERSION} ({UNITY_REVISION})",
+              "clips": {"main": resolve_clips(main / "Assets", assets, reports / "clips-main.json")},
+              "vehicles": [], "parts": []}
+
+    copied: dict[tuple[str, str], str] = {}
+    resolved: set[str] = set()
+
+    def bring(pack: dict, filename: str, resolve: bool) -> str:
+        """Unity path of a prefab: in the main export as is, else copied with its dependencies."""
+        if pack == main_pack:
+            return find_prefab(assets, filename).relative_to(project).as_posix()
+        key = (f"{pack['root']}:{pack['path'] or pack['name']}", filename.casefold())
+        if key in copied:
+            return copied[key]
+        src_assets = export_of(pack) / "Assets"
+        prefab = find_prefab(src_assets, filename)
+        sub = _subfolder(pack)
+        _tool("pilot/copy_deps.py", src_assets, prefab.relative_to(src_assets), assets, sub)
+        if resolve and sub not in resolved:
+            name = re.sub(r"[^A-Za-z0-9_-]", "_", sub)
+            result["clips"][sub] = resolve_clips(src_assets, assets / sub, reports / f"clips-{name}.json")
+            resolved.add(sub)
+        copied[key] = f"Assets/{sub}/{prefab.relative_to(src_assets).as_posix()}"
+        return copied[key]
+
+    for v in inv.get("vehicles", []):
+        result["vehicles"].append({**v, "unity_prefab": bring(v["pack"], v["prefab"], resolve=True)})
+    for part in inv.get("parts", []):
+        result["parts"].append({**part, "unity_prefab": bring(part["pack_ref"], part["filename"], resolve=False)})
+
+    set_project_settings(project)
+    result["car_creator"] = {"file": car_creator.name, "sha256": sha256_file(car_creator),
+                             "files": import_unitypackage(car_creator, project)}
+    editor = assets / "Editor"
+    editor.mkdir(parents=True, exist_ok=True)
+    core = {}
+    for script in sorted((tooling_root() / "builder" / "tools" / "unity").glob("*.cs")):
+        target = editor / script.name
+        if target.exists():
+            raise ProjectError(f"export already contains Assets/Editor/{script.name}")
+        shutil.copyfile(script, target)
+        core[f"builder/tools/unity/{script.name}"] = sha256_file(script)
+    result["core_scripts"] = core
+    result["unique_guids"] = check_guids(assets)
+    write_json(run_path / "unity" / "project.json", result)
+    return result
