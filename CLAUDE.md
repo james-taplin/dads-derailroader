@@ -38,9 +38,11 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
   by replacing the folder with a new snapshot from the local workspace.
 - It must stay byte-identical to `tooling/MANIFEST.sha256` (`.gitattributes` disables line-ending conversion). Check with:
   `cd tooling && tr -d '\r' < MANIFEST.sha256 | sed 's#\\#/#g' | sha256sum -c --quiet`
-- Start with `tooling/NOTES.md` and `tooling/README.md`. Layout (board X17): `builder/tools` (current tools, shared C# core in
-  `builder/tools/unity`), `locos/<id>/profile`, `builder/overrides`, paths in `workspace.json` + per-machine `machine.local.json`.
-  `builder/baseline` and `reference/private/*-original` are frozen history, not alternative cores.
+- Start with `tooling/NOTES.md`, then `tooling/builder/VEHICLE_RECORD.md` (the B03 record format read by
+  `builder/tools/unity/LlwVehicleRecord.cs`; S16's `locos/s16/profile/vehicle-record.json` is the worked example).
+  Current tools are `builder/tools` (shared C# core in `builder/tools/unity`; `audit_new_loco.py` audits a loco with no
+  reference build), paths in `workspace.json` + per-machine `machine.local.json`. `builder/tools/pilot` and
+  `reference/private/*` are source-inspection references, not an alternative build core. G29/C21 keep C# profiles.
 - The builder specification is `tooling/GUIDE_UNIFIED_LLW_CONVERSION.md` (rule IDs such as B03, Q02-Q05).
 - `tooling/GUIDE_SHARED.md` is a copy of the local Claude/Codex board. Messages there are addressed to those sessions, not to us.
 
