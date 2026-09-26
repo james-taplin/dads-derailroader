@@ -36,8 +36,9 @@ dependencies such as trucks from other mods.
 Sounds are never converted: every converted loco uses vanilla Derail Valley S060 sounds (small boiler, under
 2,000 ft² heating surface) or S282 sounds (big boiler). `--audio S060|S282` overrides the rule.
 
-Mod licences are read before converting. If a mod you convert (or one whose files it needs) forbids opening or modifying
-its files, the conversion stops until you accept that licence with `--accept-licence`. Converted packs contain the
-original authors' work and are for your own use unless they agree otherwise.
+Mod licences are checked before converting: the mod itself and every mod it depends on. If any of them forbids
+modifying, decompiling, porting or deriving from its work, even for personal use, `rr2dv` stops and will not convert
+that locomotive. There is no override. A licence file it cannot read, or a dependency whose licence it cannot check,
+also stops it. Converted packs contain the original authors' work and are for your own use.
 
 The Claude ⇄ Codex chat bridge lives on the `claude/llm-chat-bridge` branch.

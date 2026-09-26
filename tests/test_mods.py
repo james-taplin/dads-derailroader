@@ -9,7 +9,8 @@ from fixtures import loco, standard_mod, tender, tree_state, write_pack
 from rr2dv.jsonio import read_json, sha256_file
 from rr2dv.machine import Machine
 from rr2dv.pipeline import EXIT_FAILED, EXIT_INCOMPLETE, convert
-from rr2dv.rrmod import Index, audio_basis, blocking, inventory, read_licence_terms
+from rr2dv.licences import terms_in
+from rr2dv.rrmod import Index, audio_basis, blocking, inventory
 
 STRICT = "You may not open, decompile, reverse engineer, or modify any part of the Mod. No redistribution. Personal use only."
 
@@ -31,41 +32,59 @@ class Base(unittest.TestCase):
 
 class Licences(Base):
     def test_terms(self):
-        p = self.tmp / "LICENSE"
-        p.write_text(STRICT)
-        self.assertEqual(read_licence_terms(p), ["no-reverse-engineering", "no-modification", "no-redistribution", "personal-use-only"])
-        p.write_text("MIT License. Permission is hereby granted, free of charge...")
-        self.assertEqual(read_licence_terms(p), [])
+        self.assertEqual(terms_in(STRICT), ["no-modification", "no-reverse-engineering", "no-redistribution", "personal-use-only"])
+        self.assertEqual(terms_in("MIT License. Permission is hereby granted, free of charge, to any person obtaining a copy "
+                                  "of this software, to deal in the Software without restriction, including without limitation "
+                                  "the rights to use, copy, modify, merge, publish."), [])
+        self.assertEqual(terms_in("Licensed under CC BY-NC-ND 4.0."), ["no-derivatives", "no-commercial-use"])
+        self.assertEqual(terms_in("Please do not port this locomotive to other games."), ["no-porting"])
+        self.assertEqual(terms_in("You may not redistribute any portion of this mod."), ["no-redistribution"])
+        readme = "Install: do not edit the folder name.\n\nLicence: free to use, please credit me."
+        self.assertEqual(terms_in(readme, readme=True), [])
+        self.assertIn("no-modification", terms_in("Licence: no modifications allowed.", readme=True))
 
-    def test_restrictive_licence_blocks_until_that_exact_file_is_accepted(self):
+    def assertStopped(self, outcome, code):
+        self.assertEqual(outcome.code, EXIT_FAILED, outcome.message)
+        self.assertEqual(outcome.run.record["stages"]["link"]["status"], "failed")
+        issues = read_json(outcome.run.path / "inventory.json")["issues"]
+        self.assertIn(code, [i["code"] for i in issues if i["severity"] == "error"])
+        self.assertFalse((outcome.run.path / "inputs").exists())
+
+    def test_forbidding_licence_stops_the_conversion_with_no_way_round_it(self):
         (self.m["mod"] / "LICENSE.txt").write_text(STRICT)
         before = tree_state(self.tmp / "input")
         out = convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]])
-        self.assertEqual(out.code, EXIT_FAILED)
-        self.assertIn("--accept-licence", out.message)
-        sha = sha256_file(self.m["mod"] / "LICENSE.txt")
-        self.assertEqual(convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]],
-                                 accept_licences=["0" * 16]).code, EXIT_FAILED)
-        ok = convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]], accept_licences=[sha[:16]])
-        self.assertEqual(ok.code, EXIT_INCOMPLETE, ok.message)
-        self.assertEqual(ok.run.record["answers"]["accepted_licences"][0]["sha256"], sha)
+        self.assertStopped(out, "licence-forbids-conversion")
+        self.assertIn("will not convert", out.message)
         self.assertEqual(tree_state(self.tmp / "input"), before)
+        import inspect
+        from rr2dv import cli, pipeline
+        self.assertNotIn("accept", inspect.signature(pipeline.convert).parameters)
+        self.assertNotIn("--accept-licence", cli.build_parser().format_help() + cli.build_parser()._subparsers._group_actions[0].choices["convert"].format_help())
 
-    def test_licence_of_a_mod_we_only_depend_on_through_its_bundle_counts(self):
+    def test_licence_files_are_found_by_name_anywhere_near_the_top_of_the_mod(self):
+        (self.m["mod"] / "docs").mkdir()
+        (self.m["mod"] / "docs" / "Copyright notice.md").write_text("No modifications of any kind are permitted.")
+        self.assertIn("licence-forbids-conversion", codes(self.inv()))
+
+    def test_unreadable_licence_stops(self):
+        (self.m["mod"] / "LICENSE.pdf").write_bytes(b"%PDF-1.4")
+        self.assertIn("licence-unreadable", codes(self.inv()))
+
+    def test_a_dependency_mod_whose_bundle_we_use_counts(self):
         (self.m["search"] / "TruckMod" / "info.json").write_text('{"Id": "TruckMod"}')
         (self.m["search"] / "TruckMod" / "LICENSE").write_text(STRICT)
-        inv = self.inv()
-        self.assertEqual([i["data"]["mod"] for i in blocking(inv)], ["TruckMod"])
+        self.assertEqual([i["data"]["mod"] for i in blocking(self.inv())], ["TruckMod"])
 
-    def test_code_mod_licence_is_irrelevant_when_no_file_of_it_is_used(self):
-        code_mod = self.m["search"] / "SomeCodeMod"
-        code_mod.mkdir()
-        (code_mod / "info.json").write_text('{"Id": "SomeCodeMod"}')
-        (code_mod / "LICENSE").write_text(STRICT)
+    def test_unrelated_installed_mods_do_not_count(self):
+        other = self.m["search"] / "SomeOtherMod"
+        other.mkdir()
+        (other / "info.json").write_text('{"Id": "SomeOtherMod"}')
+        (other / "LICENSE").write_text(STRICT)
         self.assertEqual(blocking(self.inv()), [])
 
     def test_permissive_terms_are_information_only(self):
-        (self.m["mod"] / "README.md").write_text("Free to use. Please do not redistribute.")
+        (self.m["mod"] / "README.md").write_text("Licence: free to use. Please do not redistribute.")
         inv = self.inv()
         self.assertEqual(blocking(inv), [])
         self.assertIn("licence-terms", codes(inv))
@@ -77,6 +96,23 @@ class GroupsAndImages(Base):
                  "GroupID": "tt-260-a-" + name.replace(" ", ""),
                  "bulkAdds": [{"kind": "CustomImage", "textureName": texture, "name": "Herald", "enabled": True}]}
         (self.m["mod"] / f"TT-{name.replace(' ', '')}.json").write_text(json.dumps(group))
+
+    def setUp(self):
+        super().setUp()
+        # Group files rely on LegosLibraryOfStuff, whose licence stops conversion; test the mechanics without it.
+        from rr2dv import rrmod
+        saved = rrmod.FEATURE_PROVIDERS["component-groups"]
+        rrmod.FEATURE_PROVIDERS["component-groups"] = ("PermissiveGroupsMod", "test")
+        self.addCleanup(rrmod.FEATURE_PROVIDERS.__setitem__, "component-groups", saved)
+        mod = self.m["search"] / "PermissiveGroupsMod"
+        mod.mkdir()
+        (mod / "info.json").write_text('{"Id": "PermissiveGroupsMod"}')
+
+    def test_group_files_imply_legoslibraryofstuff_which_stops_conversion(self):
+        from rr2dv import rrmod
+        rrmod.FEATURE_PROVIDERS["component-groups"] = ("LegosLibraryOfStuff", "guide section C")
+        self.add_group()
+        self.assertEqual([i["data"]["mod"] for i in blocking(self.inv())], ["LegosLibraryOfStuff"])
 
     def test_group_files_and_their_images_are_found_and_staged(self):
         self.add_group()
@@ -111,7 +147,7 @@ class GroupsAndImages(Base):
         self.add_group(texture="decal-pack.safety.png")
         inv = self.inv()
         self.assertEqual(inv["textures"][0]["file"], {"root": "search1", "path": "DecalPack/Logos/safety.png"})
-        self.assertEqual([m["id"] for m in inv["mods"]], ["test-loco-mod", "decal-pack"])  # info.json Id wins over folder name
+        self.assertEqual([m["id"] for m in inv["mods"]], ["test-loco-mod", "decal-pack", "PermissiveGroupsMod"])  # info.json Id wins
 
 
 class Definitions(Base):
@@ -133,7 +169,23 @@ class Definitions(Base):
         inv = self.inv()
         self.assertEqual([c["provider"] for c in inv["code_mods"]], ["LegosBetterSteam"])
         self.assertIn("code-mod-component", codes(inv))
-        self.assertEqual(blocking(inv), [])
+        # LegosBetterSteam's licence forbids modification: a loco that needs it is not converted, installed or not.
+        self.assertEqual([(i["code"], i["data"]["mod"]) for i in blocking(inv)], [("licence-forbids-conversion", "LegosBetterSteam")])
+
+    def test_code_mod_dependency_with_unknown_licence_stops(self):
+        from rr2dv import rrmod
+        rrmod.CODE_MOD_KINDS["MadeUpComponent"] = ("MadeUpMod", "test")
+        self.addCleanup(rrmod.CODE_MOD_KINDS.pop, "MadeUpComponent")
+        write_pack(self.m["mod"] / "ts-260-a",
+                   objects=[loco("ts-260-a", tender="tt-260-a", extra_components=[{"kind": "MadeUpComponent"}]),
+                            tender("tt-260-a", truck="test-truck-2s")],
+                   assets={"ts-260-a": {"filename": "a.prefab"}, "tt-260-a": {"filename": "t.prefab"}})
+        self.assertEqual([i["code"] for i in blocking(self.inv())], ["licence-unknown-dependency"])
+        mod = self.m["search"] / "MadeUpMod"
+        mod.mkdir()
+        (mod / "info.json").write_text('{"Id": "MadeUpMod"}')
+        (mod / "LICENSE").write_text("MIT License. Permission is hereby granted to use, copy, modify.")
+        self.assertEqual(blocking(self.inv()), [])
 
 
 class Audio(Base):

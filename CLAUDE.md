@@ -62,9 +62,12 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
 
 ## Licences
 
-- Many Railroader mods forbid redistribution, and some forbid opening, decompiling or modifying their files (e.g. both
-  legotrainman mods). `rrmod` reads licence/readme files of every mod whose files a conversion uses; a clause against
-  reverse engineering or modification blocks until the user accepts that exact file (`--accept-licence <sha256 prefix>`).
+- **Strict policy, no override (James).** `licences.py` + `rrmod.inventory`: if the mod being converted, or ANY mod it
+  depends on (packs, images, code mods such as LegosBetterSteam/LegosLibraryOfStuff), forbids modification even for
+  personal use, reverse engineering, porting/conversion or derivative works, the conversion stops. Unreadable licence
+  files and dependencies whose licence can't be checked also stop it. Never add a flag, setting or "permission"
+  path around this; fix wrong matches in the patterns instead. Both legotrainman mods forbid modification, so any loco
+  needing them (e.g. GN M-2) is not converted.
 - Never open, decompile or inspect code mods (DLLs) or bundles of mods we only depend on. Learn formats from the data
   files of the mod being converted and from our guides. Uploaded test mods stay in the session container, never in git.
 - Converted packs contain the original authors' work: personal use unless the author agrees otherwise.

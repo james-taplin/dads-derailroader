@@ -7,8 +7,8 @@ component-group files (an object `identifier` plus `bulkAdds`, e.g. alternative 
 as "<mod id>.<file name>".
 
 This module finds every pack, group file and image a steam locomotive needs, from the input first and then from
-extra search roots (the Railroader Mods folder, base-game asset packs), and reads each involved mod's licence
-files for terms that forbid opening or modifying its files. Nothing here writes to disk.
+extra search roots (the Railroader Mods folder, base-game asset packs), and applies the licence policy in
+licences.py to the mod and everything it depends on. Nothing here writes to disk.
 
 Resolution is deterministic: the input root outranks search roots, and search roots rank in the order given.
 Two candidates at the same rank are an error, never a first match (guide rule D03).
@@ -22,6 +22,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Sequence
 
+from . import licences
 from .jsonio import SourceError, read_json_lenient, sha256_file
 from .safety import is_link
 
@@ -47,17 +48,11 @@ AUDIO_BASES = ("S060", "S282")
 SMALL_BOILER_MAX_HEATING_FT2 = 2000.0
 SOUND_KINDS = {"Whistle", "Bell", "Chuff", "Compressor", "Dynamo"}
 
-LICENCE_FILE = re.compile(r"^(licen[cs]e|copying|readme|terms|eula|permissions?)([ ._-].*)?$", re.I)
-LICENCE_TEXT_SUFFIXES = {"", ".txt", ".md", ".rtf"}
-# Clauses that make a conversion (which opens and rebuilds the mod's bundle) contrary to the licence as written.
-BLOCKING_TERMS = {
-    "no-reverse-engineering": re.compile(r"reverse[\s-]*engineer|decompil", re.I),
-    "no-modification": re.compile(r"\b(no|not|never|prohibit\w*)\b[^.\n]{0,80}\bmodif", re.I),
-}
-OTHER_TERMS = {
-    "no-redistribution": re.compile(r"redistribut|re-?upload", re.I),
-    "personal-use-only": re.compile(r"personal[\s,]+(non-commercial\s+)?(use|purposes)", re.I),
-    "no-commercial-use": re.compile(r"no\s+commercial|non-commercial", re.I),
+# Features of a mod's own files that only work with a code mod. Each entry needs evidence.
+FEATURE_PROVIDERS = {
+    "component-groups": ("LegosLibraryOfStuff",
+                         "GN M-2 keeps its group files in LegosLibraryOfStuff/Definitions/; guide GUIDE_Railroader_to_DV_CCL.md "
+                         "section C: its heralds and tender text come from LegosLibraryOfStuff decal groups"),
 }
 
 
@@ -217,15 +212,6 @@ def _known_files(path: Path, names: Iterable[str]) -> dict[str, Path]:
     return found
 
 
-def read_licence_terms(path: Path) -> list[str]:
-    try:
-        text = path.read_text(encoding="utf-8-sig", errors="replace")
-    except OSError:
-        return ["unreadable"]
-    terms = [name for name, rx in BLOCKING_TERMS.items() if rx.search(text)]
-    return terms + [name for name, rx in OTHER_TERMS.items() if rx.search(text)]
-
-
 class Index:
     def __init__(self, input_path: Path, search_paths: Sequence[Path] = ()):
         self.roots = [Root(0, "input", input_path.resolve())]
@@ -271,11 +257,7 @@ class Index:
                     ident = data.get("Id") or data.get("id")
             except SourceError as e:
                 self.issues.append(Issue("warning", "info-unreadable", str(e)))
-        mod = Mod(root, folder, ident)
-        for f in files:
-            p = folder / f
-            if LICENCE_FILE.match(f) and p.suffix.casefold() in LICENCE_TEXT_SUFFIXES and p.is_file():
-                mod.licences.append({"file": f, "sha256": sha256_file(p), "terms": read_licence_terms(p)})
+        mod = Mod(root, folder, ident, licences.scan_folder(folder))
         self.mods.append(mod)
         self._mods_by_ident[ident.casefold()].append(mod)
         if ident.casefold() != folder.name.casefold():
@@ -329,6 +311,9 @@ class Index:
             narrowed = [p for p in candidates if p.folder_above.casefold() == segments[-2].casefold()]
             candidates = narrowed or candidates
         return _rank_pick(candidates, lambda p: p.root.rank)
+
+    def find_mod(self, ident: str) -> Resolution:
+        return _rank_pick(self._mods_by_ident.get(ident.casefold(), []), lambda m: m.root.rank)
 
     def find_texture(self, texture_name: str) -> tuple[Resolution, Mod | None]:
         """Images are named "<mod id>.<file name>"; find the mod, then the file anywhere inside it."""
@@ -540,8 +525,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                 files.append(entry)
         pack_records.append({**p.describe(), "files": files})
 
-    # Licences of every mod whose files the conversion reads. Converting opens and rebuilds pack bundles, so
-    # terms against reverse engineering or modification block it until the user accepts that licence file.
+    # Licence policy (licences.py): the mod, every mod whose files we read, and every code mod the loco relies on.
     involved: dict[Path, Mod] = {}
     for p in ordered:
         if p.mod:
@@ -551,21 +535,41 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                     key=lambda m: len(m.path.parts), default=None)
         if owner:
             involved[owner.path] = owner
+    providers = {c["provider"]: c["evidence"] for c in code_mods}
+    if group_records:
+        name, evidence = FEATURE_PROVIDERS["component-groups"]
+        providers.setdefault(name, evidence)
+    known_records = []
+    for provider in sorted(providers):
+        found = index.find_mod(provider)
+        for mod in found.candidates:
+            involved[mod.path] = mod
+        known = licences.KNOWN_LICENCES.get(provider.casefold())
+        if known:
+            known_records.append(known)
+        if not found.candidates and not known:
+            issues.append(Issue("error", "licence-unknown-dependency",
+                                f"needs code mod {provider} ({providers[provider]}), which is not installed where its licence can be read; "
+                                "rr2dv only converts when every dependency's licence has been checked"))
     mod_records = []
     for mod in sorted(involved.values(), key=lambda m: (m.root.rank, m.rel)):
         mod_records.append(mod.describe())
-        opens_bundles = any(p.mod is mod for p in ordered)
         for lic in mod.licences:
-            blocking_terms = [t for t in lic["terms"] if t in BLOCKING_TERMS]
-            if blocking_terms and opens_bundles:
-                issues.append(Issue("error", "licence-restricts-conversion",
-                                    f"mod {mod.ident}: {lic['file']} forbids {' and '.join(t.replace('no-', '').replace('-', ' ') for t in blocking_terms)}; "
-                                    f"converting opens its bundles. Read it; if you have the author's permission, accept it with "
-                                    f"--accept-licence {lic['sha256'][:16]}",
-                                    {"mod": mod.ident, "file": lic["file"], "sha256": lic["sha256"]}))
+            where = f"mod {mod.ident} ({lic['file']})"
+            if lic.get("unreadable"):
+                issues.append(Issue("error", "licence-unreadable", f"{where} cannot be read as text; rr2dv will not guess what it allows"))
+            elif licences.forbidding(lic["terms"]):
+                issues.append(Issue("error", "licence-forbids-conversion",
+                                    f"{where} forbids {licences.describe(licences.forbidding(lic['terms']))}; rr2dv will not convert this locomotive",
+                                    {"mod": mod.ident, "file": lic["file"], "sha256": lic["sha256"], "terms": lic["terms"]}))
             elif lic["terms"]:
-                issues.append(Issue("info", "licence-terms", f"mod {mod.ident}: {lic['file']} says {', '.join(lic['terms'])}; "
-                                    "the converted pack is for personal use"))
+                issues.append(Issue("info", "licence-terms", f"{where}: {', '.join(lic['terms'])}; the converted pack is for personal use"))
+    for known in known_records:
+        if licences.forbidding(known["terms"]):
+            issues.append(Issue("error", "licence-forbids-conversion",
+                                f"depends on {known['id']} by {known['author']}, whose licence forbids {licences.describe(licences.forbidding(known['terms']))} "
+                                f"({known['evidence']}); rr2dv will not convert this locomotive",
+                                {"mod": known["id"], "file": None, "sha256": None, "terms": known["terms"]}))
 
     audio_choice = audio_basis(ldef, audio)
     audio_choice["replaces"] = sorted(sounds)
@@ -580,6 +584,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         "packs": pack_records,
         "extra_files": sorted(extra.values(), key=lambda r: (r["root"], r["path"])),
         "mods": mod_records,
+        "known_licences": known_records,
         "optional_groups": group_records,
         "textures": textures,
         "code_mods": code_mods,
@@ -590,15 +595,6 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
     }
 
 
-def blocking(inv: dict, accepted_licences: Iterable[str] = ()) -> list[dict]:
-    """Errors that stop a conversion. A licence error clears only when that exact licence file (by SHA-256
-    prefix of at least 12 hex digits) was accepted."""
-    prefixes = [a.lower() for a in accepted_licences if len(a) >= 12]
-    out = []
-    for i in inv.get("issues", []):
-        if i["severity"] != "error":
-            continue
-        if i["code"] == "licence-restricts-conversion" and any(i["data"]["sha256"].startswith(p) for p in prefixes):
-            continue
-        out.append(i)
-    return out
+def blocking(inv: dict) -> list[dict]:
+    """Errors that stop a conversion. Licence errors are among them and have no override."""
+    return [i for i in inv.get("issues", []) if i["severity"] == "error"]

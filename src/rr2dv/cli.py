@@ -77,8 +77,11 @@ def cmd_scan(args) -> int:
         purposes = sorted({c['purpose'] for c in inv['controls']['radial'] if c.get('purpose')})
         print(f"  controls: {', '.join(purposes) or 'none'}; toggles: {len(inv['controls']['toggles'])}")
         for mod in inv["mods"]:
-            lic = "; ".join(f"{l['file']} ({', '.join(l['terms']) or 'no restrictive terms found'})" for l in mod["licences"])
+            lic = "; ".join(f"{l['file']} ({'unreadable' if l.get('unreadable') else ', '.join(l['terms']) or 'no restrictive terms found'})"
+                            for l in mod["licences"])
             print(f"  mod {mod['id']}: {lic or 'no licence file found'}")
+        for known in inv.get("known_licences", []):
+            print(f"  depends on {known['id']} by {known['author']}: {', '.join(known['terms'])} ({known['evidence']})")
         for g in inv["optional_groups"]:
             print(f"  optional group for {g['target']}: {g['group_name']} ({g['file']['path']})")
         found = sum(1 for tex in inv["textures"] if tex["file"])
@@ -97,8 +100,7 @@ def cmd_scan(args) -> int:
 
 def cmd_convert(args) -> int:
     machine = machine_mod.load(args.machine)
-    outcome = convert(Path(args.input), Path(args.out), machine, args.loco, _search_roots(args, machine),
-                      args.accept_licence, args.audio)
+    outcome = convert(Path(args.input), Path(args.out), machine, args.loco, _search_roots(args, machine), args.audio)
     run = outcome.run
     if run:
         for name, stage in run.record["stages"].items():
@@ -134,9 +136,6 @@ def build_parser() -> argparse.ArgumentParser:
     conv.add_argument("--loco", help="locomotive identifier, when the mod has more than one")
     conv.add_argument("--audio", choices=["S060", "S282"],
                       help="vanilla Derail Valley sound set to use instead of the boiler-size rule")
-    conv.add_argument("--accept-licence", action="append", default=[], metavar="SHA256",
-                      help="convert despite a licence clause against modification, after reading that licence file "
-                           "(first 16+ hex digits of its SHA-256, as printed by scan); repeatable")
     with_search(conv)
     conv.set_defaults(func=cmd_convert)
     return parser
