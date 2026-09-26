@@ -27,8 +27,12 @@ STAGES = [
 STAGE_NAMES = [s[0] for s in STAGES]
 
 
+RUN_LABEL_MAX = 20  # keeps run folder names short: Unity 2019.4 on Windows fails on paths over 260 characters
+RUN_ID_MAX = len("20260926-231733") + 1 + RUN_LABEL_MAX + 1 + 6
+
+
 def _safe(text: str) -> str:
-    return re.sub(r"[^A-Za-z0-9_-]", "_", text)[:40] or "run"
+    return re.sub(r"[^A-Za-z0-9_-]", "_", text)[:RUN_LABEL_MAX] or "run"
 
 
 def _now() -> str:

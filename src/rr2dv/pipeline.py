@@ -11,7 +11,7 @@ from typing import Sequence
 
 from . import assetripper, unityproject
 from .jsonio import sha256_file, write_json
-from .machine import Machine
+from .machine import Machine, check_work_root
 from .rrmod import Index, blocking, inventory
 from .runs import STAGES, Run, stage_inputs
 from .safety import check_write_target, safe_extract_zip
@@ -79,6 +79,7 @@ def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None 
     kind = input_kind(input_path)
     work_root = machine.work_root.resolve()
     # Refuse bad targets before creating anything.
+    check_work_root(work_root)
     guard = [("input mod", input_path)] + machine.protected()
     check_write_target(work_root, guard)
     check_write_target(out_dir, guard + [("app work folder", work_root)])

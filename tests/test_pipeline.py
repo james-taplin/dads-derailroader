@@ -113,6 +113,14 @@ class Pipeline(unittest.TestCase):
             convert(self.m["mod"], dv, guarded)
         self.assertFalse((self.tmp / "work").exists(), "nothing may be created before the guards pass")
 
+    def test_too_long_work_folder_is_refused_before_anything_is_created(self):
+        from rr2dv.machine import max_work_root_length
+        deep = self.tmp / ("w" * max_work_root_length())
+        machine = Machine(None, {**self.machine.values, "workRoot": str(deep)})
+        with self.assertRaisesRegex(ValueError, "workRoot"):
+            convert(self.m["mod"], self.out, machine, search=[self.m["search"]])
+        self.assertFalse(deep.exists())
+
     def test_source_changing_during_copy_stops_the_run(self):
         index = Index(self.m["mod"], [self.m["search"]])
         inv = inventory(index, "ts-260-a")

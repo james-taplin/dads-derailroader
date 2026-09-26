@@ -123,6 +123,14 @@ class MachineSettings(unittest.TestCase):
         self.assertEqual(Machine(None, {"searchRoots": "D:/RR/Mods"}).search_roots(), [Path("D:/RR/Mods")])
         self.assertEqual(Machine(None, {"searchRoots": 5}).search_roots(), [])
 
+    def test_work_folder_path_length(self):
+        from rr2dv.machine import check_work_root, max_work_root_length
+        self.assertGreaterEqual(max_work_root_length(), 70)
+        check_work_root(Path("C:/rr2dv"))
+        check_work_root(Path("/tmp/" + "x" * (max_work_root_length() - 6)))
+        with self.assertRaisesRegex(ValueError, "at most"):
+            check_work_root(Path("/tmp/" + "x" * max_work_root_length()))
+
     def test_missing_settings_file_is_empty_not_an_error(self):
         m = load(Path(tempfile.gettempdir()) / "no-such-rr2dv-settings.json")
         self.assertIsNone(m.source)

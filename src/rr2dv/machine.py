@@ -17,6 +17,23 @@ TOOL_KEYS = ("python", "unity", "unityPySitePackages", "carCreator", "mods", "ga
 UNITY_VERSION = "2019.4.40f1"
 CARCREATOR_VERSION = "3.1.9"
 MIN_TOOL_PYTHON = (3, 11)
+# Unity 2019.4 cannot open files whose full path passes Windows' 260-character limit (board X28: two uGUI package
+# test files failed under a 92-character work folder). Longest path we know of inside a generated project:
+LONGEST_PROJECT_PATH = "Library/PackageCache/com.unity.ugui@1.0.0/Tests/Editor/Canvas/CanvasElementsMaintainValidPositionsWhenCameraOrthoSizeIsZero.cs"
+WINDOWS_MAX_PATH = 259  # MAX_PATH 260 including the terminating null
+
+
+def max_work_root_length() -> int:
+    from .runs import RUN_ID_MAX
+    return WINDOWS_MAX_PATH - len(LONGEST_PROJECT_PATH) - len("/unity/project/") - RUN_ID_MAX
+
+
+def check_work_root(path: Path) -> None:
+    """Refuse a work folder too long for the Unity projects built inside it."""
+    real = os.path.realpath(path)
+    if len(real) > max_work_root_length():
+        raise ValueError(f"the work folder path is {len(real)} characters ({real}); Unity 2019.4 needs it to be at most "
+                         f"{max_work_root_length()}. Set a short `workRoot` in the settings file, e.g. C:\\rr2dv")
 
 
 def default_path() -> Path:
@@ -133,7 +150,11 @@ def doctor(machine: Machine) -> list[Check]:
         probe = work / f".rr2dv-write-test-{os.getpid()}"
         probe.write_bytes(b"")
         probe.unlink()
-        checks.append(Check("ok", "work folder", str(work)))
+        try:
+            check_work_root(work)
+            checks.append(Check("ok", "work folder", str(work)))
+        except ValueError as e:
+            checks.append(Check("fail", "work folder", str(e)))
     except OSError as e:
         checks.append(Check("fail", "work folder", f"{work} is not writable: {e}"))
 
