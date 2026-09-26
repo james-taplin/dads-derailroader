@@ -34,7 +34,7 @@ Settings live in `%APPDATA%\rr2dv\machine.json` (or pass `--machine`). It uses t
 dependencies such as trucks from other mods.
 
 Sounds are never converted: every converted loco uses vanilla Derail Valley S060 sounds (small boiler, under
-2,000 ft² heating surface) or S282 sounds (big boiler). `--audio S060|S282` overrides the rule.
+1,500 ft² heating surface) or S282 sounds (big boiler). `--audio S060|S282` overrides the rule.
 
 Mod licences are checked before converting: the mod itself and every mod whose models or images would end up in the
 Derail Valley pack. If any of them explicitly forbids modifying, decompiling, porting or deriving from its work, even

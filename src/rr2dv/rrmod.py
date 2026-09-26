@@ -45,7 +45,7 @@ CODE_MOD_KINDS = {
 # Audio is never converted: every sound (whistle, bell, chuff, pumps...) aliases to vanilla Derail Valley S060 or
 # S282 audio, chosen by boiler size. Heating surface below the cut-off counts as a small boiler.
 AUDIO_BASES = ("S060", "S282")
-SMALL_BOILER_MAX_HEATING_FT2 = 2000.0
+SMALL_BOILER_MAX_HEATING_FT2 = 1500.0  # ~32,000 lbf tank (GWR 7200: ~1,478 ft2) = S060; USRA 0-6-0 tender (1,886 ft2) = S282
 SOUND_KINDS = {"Whistle", "Bell", "Chuff", "Compressor", "Dynamo"}
 
 # Features of a mod's own files that only work with a code mod. Each entry needs evidence.

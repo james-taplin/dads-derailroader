@@ -29,7 +29,7 @@ def part(pack_identifier: str, asset: str, name: str) -> dict:
 
 
 def loco(ident: str, tender: str = "", truck: str = "", parts=(), kind: str = "SteamLocomotive", whistle: str | None = "wh-test",
-         heating_surface: float | None = 1500.0, extra_components=()) -> dict:
+         heating_surface: float | None = 1200.0, extra_components=()) -> dict:
     components = [
         {"kind": "RadialControl", "purpose": "Throttle", "name": "Throttle", "animation": {"clipName": "Throttle"}},
         {"kind": "RadialControl", "purpose": "Reverser", "name": "Reverser", "animation": {"clipName": "Reverser"}},

@@ -193,8 +193,11 @@ class Definitions(Base):
 
 class Audio(Base):
     def test_boiler_size_rule(self):
-        self.assertEqual(audio_basis({"totalHeatingSurface": 1735})["basis"], "S060")
-        self.assertEqual(audio_basis({"totalHeatingSurface": 2000})["basis"], "S282")
+        self.assertEqual(audio_basis({"totalHeatingSurface": 1300})["basis"], "S060")  # C-21, small tender engine
+        self.assertEqual(audio_basis({"totalHeatingSurface": 1478})["basis"], "S060")  # GWR 7200, ~32,000 lbf tank
+        self.assertEqual(audio_basis({"totalHeatingSurface": 1500})["basis"], "S282")
+        self.assertEqual(audio_basis({"totalHeatingSurface": 1735})["basis"], "S282")  # G-29
+        self.assertEqual(audio_basis({"totalHeatingSurface": 1886})["basis"], "S282")  # USRA 0-6-0 tender switcher
         self.assertEqual(audio_basis({"totalHeatingSurface": 6730})["basis"], "S282")
         self.assertIsNone(audio_basis({})["basis"])
         self.assertEqual(audio_basis({"totalHeatingSurface": 6730}, "S060")["rule"], "chosen by the user")

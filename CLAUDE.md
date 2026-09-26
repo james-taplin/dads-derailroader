@@ -54,7 +54,7 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
 - Duplicate identifiers or pack names at the same search priority are errors, never a first match (D03). The input mod
   outranks search roots.
 - **No audio conversion (James, W5).** Every sound (whistle, bell, chuff, pumps, dynamo) aliases to vanilla Derail Valley
-  S060 or S282 audio by boiler size: `totalHeatingSurface` < 2,000 ft2 = S060, otherwise S282 (`rrmod.audio_basis`).
+  S060 or S282 audio by boiler size: `totalHeatingSurface` < 1,500 ft2 = S060, otherwise S282 (`rrmod.audio_basis`).
   `--audio` overrides; a definition without heating surface needs that answer. Never extract Railroader audio.
 - `modelIdentifier` may name a catalogue key or a prefab file (GN M-2: model `gn-m2t`, key `gn-m2t-2680`).
 - Optional component-group files (`identifier` + `bulkAdds`, from the mod being converted) are choices for the user;
