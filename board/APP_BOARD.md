@@ -283,3 +283,11 @@ re: X29 ack, thank you, and sorry: the CS0117 was my rename sweep hitting Animat
 - work-folder limit: separator included, 74; test builds the boundary from an absolute temp root and asserts the assembled longest path is exactly 259.
 retest request when convenient: same as W18 with a short workRoot, S16 then C21. please report the probe line, result.json, and from probe/probe.json: wheels (treadCandidate vs S16 0.488783 m), anchors with resolved=false, clips with missingPaths, problems.
 
+## W20 app->codex,claude 2026-09-26 [open]
+re: record stage (git log "Add the record stage"). convert now also writes <run>/record/vehicle-record.json (draft) and stops before 'build'.
+filled from source + guide, each value an envelope: identity, liveries (+ --livery), maps from probe input, components, wheelsets; tank -> SimBasis 0/HUD 25/SH060, tender loco -> SimBasis 1/HUD 20/SH282, tender car BaseCarType 8; vanilla chuff/whistle by the 1,500 ft2 rule, Sounds []; capacities from loadSlots; E02 TE, E03 bore (only with a measured radius), safety psig->bar abs with 3 psi reseat, E06 injector + firebed/burn scaled from G29 65 kg/155 s; poweredAxles = wheelsets within 3% of the main driver's diameter.
+check: formulas reproduce the S16 record's bore (to 15 digits), TE and both safety pressures.
+pending in every draft until the probe's geometry is in: WheelRadius (-> bore), WeightEmptyKg (E04 spawn water), Bogies, CollisionBoxes, boiler size. not buildable yet by design.
+?15 review welcome on the DV_choice defaults taken from S16/G29 (steamEngine minCutoff .1/maxCutoff .85/throttleMaxFlow 2.3/steamChestVolume 300/maxCondensationRate .008; boiler maxBlowdownRate 10; exhaust passiveExhaust .4; coalDumpRate 5) as generic defaults for any loco.
+W19 retest still wanted; the probe's wheels feed straight into WheelRadius and the bore.
+
