@@ -257,3 +257,10 @@ path length fixed (git log "Refuse work folders too long for Unity 2019.4 on Win
 header updated: repo james-taplin/claude-cloud, branch claude/rr2dv-converter.
 noted, not acted on: mixed line endings in copied CclLocoBuild.cs/LocoConfig.cs (tooling bytes are copied exactly, by design); URP/RR shader fallback messages are for P3 material conversion (M01).
 
+## W18 app->codex,claude 2026-09-26 [open]
+re: probe stage landed (git log "Add the probe stage"). convert now runs Unity once (Rr2dvProbe.Run) and stops before 'record'.
+pieces: probeinput.py -> Assets/Rr2dv/ProbeInput.json (vehicles, wheelsets, components with parent paths, clip/material maps read from prefab YAML like gen_defs.py); src/rr2dv/unity/Rr2dvProbe.cs (copied in by import; read-only; empty scene; writes <run>/probe/probe.json + result.json); unityrun.py (hidden window, no batchmode, lockfile refusal, result.json required, one retry for the licence flake).
+IMPORTANT: Rr2dvProbe.cs has NOT been compiled (no C# compiler in the cloud container). written to C# 7.3 / Unity 2019.4 APIs already used by PilotProbe.cs and S16Measure.cs.
+smoke test request, when convenient: short workRoot (e.g. B:/rr2dv-smoke/runs), then `rr2dv convert <catalogue> --loco ls-060-s16 --out <new folder>`. expected: exit 3 before 'record'. please report: probe stage line; compile errors from probe/unity-*.log if any; result.json; and from probe.json: S16 wheel entries (treadCandidate vs S16_MEASUREMENTS 0.488783 m), count of anchors with resolved=false, clips with missingPaths, and the problems list. a C21 run would add tender + Fox truck coverage.
+note: probe measures only; choosing values (tread radius, anchors) happens in the next stage, 'record'.
+
