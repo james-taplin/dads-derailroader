@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claude ⇄ Codex bridge</title>
+<style>
+  :root {
+    --bg: #f6f5f2; --surface: #ffffff; --text: #1f1f1d; --muted: #6b6a66; --border: #e2e0da;
+    --a: #c96442; --a-soft: #fbeee8; --b: #2f6f64; --b-soft: #e6f2ef; --you: #3657b5; --you-soft: #e9eefb; --on-you: #ffffff;
+    --warn: #9a6a00; --warn-soft: #fdf3dc; --danger: #b3261e; --ok: #2e7d32;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #1b1b1a; --surface: #242423; --text: #ecebe7; --muted: #a3a19b; --border: #3a3936;
+      --a: #e38b6a; --a-soft: #3a2a23; --b: #6fbfb0; --b-soft: #1f3330; --you: #8ea8f0; --you-soft: #232c45; --on-you: #111a33;
+      --warn: #e2b04a; --warn-soft: #3a3120; --danger: #f08a82; --ok: #7bc47f;
+    }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .app { max-width: 860px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; padding: 0 16px; }
+  header { display: flex; align-items: center; gap: 12px; padding: 16px 0 12px; }
+  header h1 { font-size: 18px; margin: 0; flex: 1; }
+  select { font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); max-width: 60vw; }
+  .conn { font-size: 13px; color: var(--muted); display: flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); display: inline-block; }
+  .dot.on { background: var(--ok); }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+  .card.sticky { position: sticky; top: 8px; z-index: 2; box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+  .status { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+  .status .topic { font-weight: 600; font-size: 16px; flex-basis: 100%; }
+  .pill { font-size: 13px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: var(--you-soft); color: var(--you); }
+  .pill.paused { background: var(--warn-soft); color: var(--warn); }
+  .pill.ended { background: var(--border); color: var(--muted); }
+  .meta { font-size: 13px; color: var(--muted); }
+  .people { display: flex; gap: 14px; font-size: 13px; color: var(--muted); }
+  .people span { display: inline-flex; align-items: center; gap: 5px; }
+  .actions { display: flex; gap: 8px; margin-left: auto; }
+  button { font: inherit; font-weight: 600; padding: 7px 14px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
+  button:hover { border-color: var(--muted); }
+  button.primary { background: var(--you); border-color: var(--you); color: var(--on-you); }
+  button.danger { color: var(--danger); }
+  button.link { border: none; background: none; padding: 0; color: var(--you); font-weight: 500; font-size: 13px; }
+  button:disabled { opacity: .5; cursor: default; }
+  .notice { margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--warn-soft); color: var(--text); font-size: 14px; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+  .notice code { background: var(--surface); padding: 2px 6px; border-radius: 6px; border: 1px solid var(--border); }
+  .transcript { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 16px 0; }
+  .msg { max-width: 88%; border-radius: 12px; padding: 10px 14px; border: 1px solid var(--border); background: var(--surface); }
+  .msg .who { font-size: 12px; font-weight: 700; margin-bottom: 4px; display: flex; gap: 8px; }
+  .msg .who time { font-weight: 400; color: var(--muted); }
+  .msg .text { white-space: pre-wrap; overflow-wrap: anywhere; }
+  .msg.A { align-self: flex-start; background: var(--a-soft); border-color: transparent; }
+  .msg.A .who { color: var(--a); }
+  .msg.B { align-self: flex-end; background: var(--b-soft); border-color: transparent; }
+  .msg.B .who { color: var(--b); }
+  .msg.human { align-self: center; background: var(--you-soft); border-color: transparent; max-width: 80%; }
+  .msg.human .who { color: var(--you); }
+  .sys { align-self: center; font-size: 13px; color: var(--muted); }
+  .typing { align-self: flex-start; font-size: 13px; color: var(--muted); font-style: italic; }
+  .typing.B { align-self: flex-end; }
+  .composer { position: sticky; bottom: 0; background: var(--bg); padding: 10px 0 16px; border-top: 1px solid var(--border); }
+  .composer form { display: flex; gap: 8px; align-items: flex-end; }
+  textarea { flex: 1; font: inherit; resize: vertical; min-height: 44px; max-height: 40vh; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+  .hint { font-size: 12px; color: var(--muted); margin-top: 6px; }
+  .empty { margin-top: 40px; text-align: center; color: var(--muted); }
+  .empty h2 { color: var(--text); font-size: 18px; }
+  .empty ol { text-align: left; display: inline-block; margin-top: 8px; }
+  .toast { position: fixed; left: 50%; bottom: 90px; transform: translateX(-50%); background: var(--text); color: var(--bg); padding: 8px 14px; border-radius: 8px; font-size: 14px; opacity: 0; transition: opacity .2s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+  @media (max-width: 600px) { .actions { margin-left: 0; } .msg { max-width: 100%; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>Claude ⇄ Codex bridge</h1>
+    <select id="picker" hidden aria-label="Conversation"></select>
+    <span class="conn"><span class="dot" id="connDot"></span><span id="connText">Connecting…</span></span>
+  </header>
+  <main id="main"></main>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const TOKEN = '__TOKEN__';
+let conversations = [];
+let selectedId = null;
+let knownIds = new Set();
+
+const $ = (id) => document.getElementById(id);
+const el = (tag, attrs = {}, ...children) => {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (k === 'class') node.className = v;
+    else if (k.startsWith('on')) node.addEventListener(k.slice(2), v);
+    else if (v !== false && v != null) node.setAttribute(k, v === true ? '' : v);
+  }
+  for (const c of children.flat()) if (c != null && c !== false) node.append(c);
+  return node;
+};
+
+function toast(text) {
+  const t = $('toast');
+  t.textContent = text;
+  t.classList.add('show');
+  clearTimeout(toast.timer);
+  toast.timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+async function act(action, extra = {}) {
+  try {
+    const res = await fetch(`/api/panel/${action}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'x-bridge-token': TOKEN },
+      body: JSON.stringify({ id: selectedId, ...extra }),
+    });
+    const body = await res.json();
+    if (!res.ok) throw new Error(body.error || 'Something went wrong.');
+    return true;
+  } catch (err) {
+    toast(err.message);
+    return false;
+  }
+}
+
+const nameOf = (conv, role) => (conv.participants.find((p) => p.role === role) || {}).name;
+const otherName = (conv) => nameOf(conv, 'B') || conv.expecting || 'the other agent';
+const time = (iso) => new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+function statusLabel(conv) {
+  if (conv.status === 'waiting_for_join') return [`Waiting for ${otherName(conv)} to join`, ''];
+  if (conv.status === 'active') return [`${nameOf(conv, conv.turn)} is replying…`, ''];
+  if (conv.status === 'paused') {
+    return [{ user: 'Paused', turn_limit: 'Paused — message limit reached', repeating: 'Paused — going round in circles' }[conv.pauseReason] || 'Paused', 'paused'];
+  }
+  const by = conv.endedBy === 'human' ? 'you' : nameOf(conv, conv.endedBy) || 'an agent';
+  return [`Ended by ${by}`, 'ended'];
+}
+
+function transcriptMarkdown(conv) {
+  const lines = [`# ${conv.topic}`, '', `Bridge conversation \`${conv.id}\`, started ${new Date(conv.createdAt).toLocaleString()}`, ''];
+  for (const m of conv.messages) {
+    if (m.from === 'system') lines.push(`_${m.text}_`, '');
+    else lines.push(`**${m.from === 'human' ? 'You' : m.name}** (${time(m.at)}):`, '', m.text, '');
+  }
+  return lines.join('\n');
+}
+
+function download(conv) {
+  const blob = new Blob([transcriptMarkdown(conv)], { type: 'text/markdown' });
+  const a = el('a', { href: URL.createObjectURL(blob), download: `${conv.id}.md` });
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+function renderEmpty() {
+  return el('div', { class: 'empty' },
+    el('h2', {}, 'No conversations yet'),
+    el('p', {}, 'When Claude or Codex suggests talking to the other and you say yes, the chat will appear here live.'),
+    el('ol', {},
+      el('li', {}, 'In Claude, try: “Can you ask Codex what it thinks of this plan?”'),
+      el('li', {}, 'Claude asks your permission, then gives you a code like blue-otter.'),
+      el('li', {}, 'In Codex, say: “join bridge conversation blue-otter”.'),
+      el('li', {}, 'Watch here — interject, pause or stop whenever you like.')));
+}
+
+function renderStatus(conv) {
+  const [label, kind] = statusLabel(conv);
+  const people = conv.participants.map((p) => {
+    const replying = conv.status === 'active' && conv.turn === p.role;
+    return el('span', {}, el('span', { class: `dot${p.listening || replying ? ' on' : ''}` }),
+      `${p.name} — ${replying ? 'writing a reply' : p.listening ? 'listening' : 'waiting'}`);
+  });
+  if (conv.participants.length < 2 && conv.status !== 'ended') people.push(el('span', {}, el('span', { class: 'dot' }), `${otherName(conv)} — not joined yet`));
+
+  const buttons = [];
+  if (conv.status === 'active' || conv.status === 'waiting_for_join') {
+    buttons.push(el('button', { onclick: () => act('pause') }, 'Pause'));
+  }
+  if (conv.status === 'paused') {
+    const extra = conv.agentTurns >= conv.maxTurns ? ' (+10 messages)' : '';
+    buttons.push(el('button', { class: 'primary', onclick: () => act('resume') }, `Resume${extra}`));
+  }
+  if (conv.status !== 'ended') {
+    buttons.push(el('button', {
+      class: 'danger',
+      onclick: () => confirm('Stop this conversation? Both agents will wrap up and give you a summary.') && act('stop'),
+    }, 'Stop'));
+  } else {
+    buttons.push(el('button', { onclick: () => download(conv) }, 'Download transcript'));
+    buttons.push(el('button', {
+      class: 'danger',
+      onclick: () => confirm('Delete this conversation from the bridge?') && act('delete'),
+    }, 'Delete'));
+  }
+
+  const card = el('section', { class: 'card sticky' },
+    el('div', { class: 'status' },
+      el('div', { class: 'topic' }, conv.topic),
+      el('span', { class: `pill ${kind}` }, label),
+      el('span', { class: 'meta' }, `Message ${conv.agentTurns} of ${conv.maxTurns} · `,
+        conv.status !== 'ended' ? el('button', { class: 'link', onclick: () => act('more_turns') }, 'allow 10 more') : 'finished'),
+      el('div', { class: 'actions' }, buttons)),
+    el('div', { class: 'people', style: 'margin-top:8px' }, people));
+
+  if (conv.status === 'waiting_for_join') {
+    const phrase = `join bridge conversation ${conv.id}`;
+    card.append(el('div', { class: 'notice' },
+      `To bring in ${otherName(conv)}, open it and say:`, el('code', {}, phrase),
+      el('button', { class: 'link', onclick: () => navigator.clipboard.writeText(phrase).then(() => toast('Copied')) }, 'Copy')));
+  }
+  if (conv.status === 'paused') {
+    card.append(el('div', { class: 'notice' },
+      'Both agents are holding. Press Resume to let them carry on. If it stays paused for 15 minutes they stop waiting; to restart, tell either one “continue the bridge chat”.'));
+  }
+  return card;
+}
+
+function renderTranscript(conv) {
+  const list = el('section', { class: 'transcript', id: 'transcript' });
+  for (const m of conv.messages) {
+    if (m.from === 'system') {
+      list.append(el('div', { class: 'sys' }, m.text));
+      continue;
+    }
+    list.append(el('article', { class: `msg ${m.from}` },
+      el('div', { class: 'who' }, m.from === 'human' ? 'You' : m.name, el('time', {}, time(m.at))),
+      el('div', { class: 'text' }, m.text)));
+  }
+  if (conv.status === 'active') list.append(el('div', { class: `typing ${conv.turn}` }, `${nameOf(conv, conv.turn)} is writing…`));
+  return list;
+}
+
+let composer = null;
+
+// Built once and then only updated, so typing is never interrupted by live updates.
+function renderComposer(conv) {
+  if (!composer) {
+    const box = el('textarea', {
+      id: 'draft', rows: 2,
+      onkeydown: (e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); send(); } },
+    });
+    const button = el('button', { class: 'primary', type: 'submit' }, 'Send to both');
+    async function send() {
+      const text = box.value.trim();
+      if (!text) return;
+      if (await act('interject', { text })) box.value = '';
+    }
+    composer = {
+      box, button,
+      node: el('footer', { class: 'composer' },
+        el('form', { onsubmit: (e) => { e.preventDefault(); send(); } }, box, button),
+        el('div', { class: 'hint' }, 'Enter to send · Shift+Enter for a new line · For an instant stop, press Esc in the Claude or Codex app.')),
+    };
+  }
+  const ended = conv.status === 'ended';
+  composer.box.disabled = ended;
+  composer.button.disabled = ended;
+  composer.box.placeholder = ended ? 'This conversation has ended.' : 'Politely interject — both agents will see this before their next message…';
+  return composer.node;
+}
+
+function render() {
+  const picker = $('picker');
+  picker.hidden = conversations.length < 2;
+  picker.replaceChildren(...conversations.map((c) => el('option', { value: c.id, selected: c.id === selectedId }, `${c.topic} (${statusLabel(c)[0].toLowerCase()})`)));
+
+  const main = $('main');
+  const conv = conversations.find((c) => c.id === selectedId);
+  const nearBottom = !$('transcript') || window.innerHeight + window.scrollY >= document.body.scrollHeight - 120;
+
+  if (!conv) {
+    main.replaceChildren(renderEmpty());
+    return;
+  }
+  const status = renderStatus(conv);
+  const transcript = renderTranscript(conv);
+  const footer = renderComposer(conv);
+  if (main.contains(footer)) {
+    // Swap only the parts above the interject box so it keeps focus.
+    while (main.firstChild !== footer) main.firstChild.remove();
+    main.insertBefore(transcript, footer);
+    main.insertBefore(status, transcript);
+  } else {
+    main.replaceChildren(status, transcript, footer);
+  }
+  if (nearBottom) window.scrollTo(0, document.body.scrollHeight);
+}
+
+$('picker').addEventListener('change', (e) => { selectedId = e.target.value; render(); window.scrollTo(0, document.body.scrollHeight); });
+
+function connect() {
+  const source = new EventSource(`/api/events?token=${encodeURIComponent(TOKEN)}`);
+  source.addEventListener('state', (e) => {
+    $('connDot').classList.add('on');
+    $('connText').textContent = 'Live';
+    conversations = JSON.parse(e.data).conversations;
+    const fresh = conversations.filter((c) => !knownIds.has(c.id));
+    // Follow new conversations automatically; otherwise keep the one you're looking at.
+    if (knownIds.size && fresh.length) selectedId = fresh[0].id;
+    if (!conversations.some((c) => c.id === selectedId)) {
+      selectedId = (conversations.find((c) => c.status !== 'ended') || conversations[0] || {}).id || null;
+    }
+    knownIds = new Set(conversations.map((c) => c.id));
+    render();
+  });
+  source.onerror = () => {
+    $('connDot').classList.remove('on');
+    $('connText').textContent = 'Bridge not running — it starts when Claude or Codex uses it';
+  };
+}
+connect();
+</script>
+</body>
+</html>
