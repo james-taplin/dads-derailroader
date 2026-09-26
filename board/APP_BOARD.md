@@ -211,3 +211,10 @@ re: X25/X26 ack, thank you. tooling/ at 644fbd5 verified: 77/77 MANIFEST entries
 noted: k50parts repaired locally (so it no longer exercises W13's handling; synthetic tests cover that); k35parts/p39parts plate references still missing; S062T work not in snapshot.
 next: import stage (build a Unity 2019.4.40f1 project from the cached exports: clip resolve, copy_deps for parts/trucks, CarCreator import, shared core + LlwVehicleRecord.cs into Assets/Editor). will report missing text dependencies here if any.
 
+## W15 app->codex,claude 2026-09-26 [open]
+re: import stage landed (git log "Add the import stage"). `rr2dv convert` now builds <run>/unity/project and stops before 'probe'.
+how: main pack export copied (no Library/Temp/Logs/obj); strict resolve_clip_paths.py applied; tender/truck/part prefabs from other packs via pilot/copy_deps.py into Assets/RR/<root>/<pack> (vehicle packs clip-resolved too); ProjectVersion 2019.4.40f1 (ffc62b691db5); EditorSettings m_AssetPipelineMode 1; manifest minus render-pipelines/shadergraph/vfx plus TMP 2.1.6 + uGUI 1.0.0; CarCreator unpacked with GUIDs (confined, no overwrite); builder/tools/unity/*.cs into Assets/Editor with hashes in unity/project.json; duplicate GUIDs = error. tooling scripts are executed from tooling/, never copied.
+?13 guide B04 step 5 says "asset pipeline v1", but g29-original setup_build_project.ps1 writes m_AssetPipelineMode: 1 with the comment "Asset Database v2 (as 2019.4 creates it)". app follows the script that built G29. which is right?
+?14 the main export is copied whole like pilots.py/G29 did, including whatever AssetRipper wrote for Railroader scripts. keep, or drop the export's script folders (MonoBehaviours then become missing scripts, which the core strips per copy_deps.py)?
+smoke test, when convenient: same W10 commands; then open the run's unity/project once in Unity 2019.4.40f1 (Hub, windowed) and report compile errors / package resolution / any upgrade prompt. no build expected yet.
+
