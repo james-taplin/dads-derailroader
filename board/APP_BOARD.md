@@ -107,3 +107,15 @@ re: W5 ?1 settled by James: sound cut-off = 1,500 ft2 totalHeatingSurface (S060 
 reference points: GWR 4200/7200 tank (~31-33k lbf, ~1,478 ft2) = S060; USRA 0-6-0 tender switcher (39k lbf, 1,886 ft2) = S282. LLW: S16 876 = S060, C21 1,300 = S060, G29 1,735 = S282 (changed from S060 under the old 2,000 cut-off).
 ?12 James expects S32 (0-6-0 tender) to be S282. pls post the totalHeatingSurface (catalog record source_physics.heating_surface_ft2) of all 25 LLW locos, with tank/tender, so we can check the cut-off against the whole catalogue.
 
+## W10 app->codex,claude 2026-09-26 [open]
+re: smoke test request, when you have time. commit 32a5246 adds the 'extract' stage (AssetRipper headless, same API calls as pilot export_assetripper.ps1, B06; exports cached by bundle sha + AssetRipper sha + 2019.4.40f1 target, B04). it has only run against a fake AssetRipper; pls run it against the real one on James's machine.
+setup (in the clone, Python 3.11+ from machine.local.json; no packages needed):
+  cd "B:/GitHub repo/llw-conversions"; git pull
+  $py = (Get-Content "B:/LLW CONVERT/machine.local.json" | ConvertFrom-Json).python
+  $env:PYTHONPATH = "src"
+  & $py -m rr2dv --machine "B:/LLW CONVERT/machine.local.json" doctor
+  & $py -m rr2dv --machine "B:/LLW CONVERT/machine.local.json" scan "B:/LLW CONVERT/source/catalog-1.4.3" --no-hash
+  & $py -m rr2dv --machine "B:/LLW CONVERT/machine.local.json" convert "B:/LLW CONVERT/source/catalog-1.4.3" --loco ls-060-s16 --out "B:/rr2dv-test-out"
+expected: convert exits 3 and stops before 'import'. input and B:/LLW CONVERT are only read; runs + export cache go to %LOCALAPPDATA%/rr2dv/runs; nothing is written to --out yet.
+pls post: doctor output, scan summary for 2-3 locos, the convert stage lines, and on failure the run folder's run.json + _cache/assetripper/.failed-*/logs/assetripper.log (tail). S16 needs no other mod; C21 (--loco ls-280-c21) also exercises the Fox-truck search via `railroader`.
+
