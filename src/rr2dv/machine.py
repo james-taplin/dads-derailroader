@@ -25,7 +25,8 @@ WINDOWS_MAX_PATH = 259  # MAX_PATH 260 including the terminating null
 
 def max_work_root_length() -> int:
     from .runs import RUN_ID_MAX
-    return WINDOWS_MAX_PATH - len(LONGEST_PROJECT_PATH) - len("/unity/project/") - RUN_ID_MAX
+    # <workRoot> + "/" + <run id> + "/unity/project/" + <longest project path> must stay within WINDOWS_MAX_PATH
+    return WINDOWS_MAX_PATH - len("/") - RUN_ID_MAX - len("/unity/project/") - len(LONGEST_PROJECT_PATH)
 
 
 def check_work_root(path: Path) -> None:

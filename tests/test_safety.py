@@ -124,12 +124,25 @@ class MachineSettings(unittest.TestCase):
         self.assertEqual(Machine(None, {"searchRoots": 5}).search_roots(), [])
 
     def test_work_folder_path_length(self):
-        from rr2dv.machine import check_work_root, max_work_root_length
-        self.assertGreaterEqual(max_work_root_length(), 70)
-        check_work_root(Path("C:/rr2dv"))
-        check_work_root(Path("/tmp/" + "x" * (max_work_root_length() - 6)))
+        # X29: build the boundary from a real absolute root and check the fully assembled longest path.
+        import os
+        from rr2dv.machine import LONGEST_PROJECT_PATH, WINDOWS_MAX_PATH, check_work_root, max_work_root_length
+        from rr2dv.runs import RUN_ID_MAX
+        base = os.path.realpath(tempfile.gettempdir())
+        limit = max_work_root_length()
+
+        def root_of(length):
+            return Path(base) / ("x" * (length - len(base) - 1))
+
+        def assembled(root):
+            return os.path.realpath(root) + "/" + "r" * RUN_ID_MAX + "/unity/project/" + LONGEST_PROJECT_PATH
+
+        at_limit = root_of(limit)
+        self.assertEqual(len(assembled(at_limit)), WINDOWS_MAX_PATH)
+        check_work_root(at_limit)
         with self.assertRaisesRegex(ValueError, "at most"):
-            check_work_root(Path("/tmp/" + "x" * max_work_root_length()))
+            check_work_root(root_of(limit + 1))
+        self.assertEqual(limit, 74)
 
     def test_missing_settings_file_is_empty_not_an_error(self):
         m = load(Path(tempfile.gettempdir()) / "no-such-rr2dv-settings.json")

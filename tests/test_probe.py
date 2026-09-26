@@ -65,6 +65,14 @@ class Probe(unittest.TestCase):
         run = sorted((self.tmp / "work").glob("2*"))[-1]
         self.assertEqual(read_json(run / "run.json")["stages"]["probe"]["status"], "failed")
 
+    def test_compiler_errors_stop_unity_promptly(self):
+        import time
+        os.environ["FAKE_UNITY_MODE"] = "compile-error"
+        started = time.monotonic()
+        with self.assertRaisesRegex(UnityError, "did not compile.*error CS0117"):
+            self.convert()
+        self.assertLess(time.monotonic() - started, 60)
+
     def test_problems_are_reported_not_hidden(self):
         os.environ["FAKE_UNITY_MODE"] = "problems"
         out = self.convert()

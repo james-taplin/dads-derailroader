@@ -200,7 +200,7 @@ public static class Rr2dvProbe
     }
 
     static Transform Find(Transform root, string path) => string.IsNullOrEmpty(path) ? root : root.Find(path);
-    static string TPath(Transform t, Transform root) => AnimationUtility.CalculateTransformTPath(t, root);
+    static string TPath(Transform t, Transform root) => AnimationUtility.CalculateTransformPath(t, root);
     static float[] V(Vector3 v) => new[] { v.x, v.y, v.z };
     static float[] Q(Quaternion q) => new[] { q.x, q.y, q.z, q.w };
     static Vector3 ToV(float[] a, Vector3 fallback) => a != null && a.Length == 3 ? new Vector3(a[0], a[1], a[2]) : fallback;

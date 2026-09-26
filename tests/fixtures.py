@@ -207,6 +207,10 @@ out = Path(os.environ["RR2DV_PROBE_OUT"]); mode = os.environ.get("FAKE_UNITY_MOD
 state = Path(os.environ.get("FAKE_UNITY_STATE", str(out) + ".state"))
 calls = int(state.read_text()) + 1 if state.exists() else 1
 state.write_text(str(calls))
+if mode == "compile-error":
+    import time
+    log.write_text("Assets/Editor/Rr2dvProbe.cs(203,74): error CS0117: 'AnimationUtility' does not contain a definition\\n")
+    time.sleep(300)  # a windowed editor with compiler errors just waits
 if mode == "flake-once" and calls == 1:
     log.write_text("No valid Unity Editor license found\n"); sys.exit(1)
 log.write_text("fake unity " + args[args.index("-executeMethod") + 1] + "\n")

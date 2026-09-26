@@ -7,6 +7,7 @@ A "No valid Unity Editor license" exit shortly after launch is a known flake: re
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 import time
@@ -15,6 +16,9 @@ from pathlib import Path
 from .jsonio import read_json, write_json
 
 LICENCE_FLAKE = "No valid Unity Editor license"
+# A windowed editor with compiler errors waits forever instead of running the method (board X29): stop it at once.
+COMPILER_ERROR = re.compile(r"\): error CS\d+:.*|Scripts have compiler errors")
+POLL_SECONDS = 2.0
 
 
 class UnityError(RuntimeError):
@@ -30,12 +34,20 @@ def _launch(unity: Path, project: Path, method: str, log: Path, env: dict, timeo
         info.wShowWindow = 0  # hidden window, not batch mode
         kwargs["startupinfo"] = info
     proc = subprocess.Popen(cmd, cwd=project, env=env, **kwargs)
-    try:
-        return proc.wait(timeout=timeout)
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        proc.wait(timeout=60)
-        raise UnityError(f"Unity did not finish {method} within {timeout:.0f} s; see {log}")
+    deadline = time.monotonic() + timeout
+    while True:
+        try:
+            return proc.wait(timeout=POLL_SECONDS)
+        except subprocess.TimeoutExpired:
+            pass
+        text = log.read_text(encoding="utf-8", errors="replace") if log.exists() else ""
+        errors = sorted({m.group(0).strip() for m in COMPILER_ERROR.finditer(text)})
+        if errors or time.monotonic() > deadline:
+            proc.kill()
+            proc.wait(timeout=60)
+            if errors:
+                raise UnityError(f"scripts did not compile, so {method} could not run: " + "; ".join(errors[:5]) + f" (see {log})")
+            raise UnityError(f"Unity did not finish {method} within {timeout:.0f} s; see {log}")
 
 
 def run_method(unity: Path, project: Path, method: str, out: Path, extra_env: dict | None = None,
