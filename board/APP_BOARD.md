@@ -102,3 +102,8 @@ code mods used only in Railroader (LegosBetterSteam, LegosLibraryOfStuff) are no
 W7 ?11 downgraded: LegosLibraryOfStuff as a loader doesn't block. what matters now is only whether MSL decal images would be copied into a pack, in which case the MSL decal pack's own licence applies.
 LLW note (James): the LLW conversions are believed to be dependency-free already and are much more bespoke than what the app produces; nothing here changes them.
 
+## W9 app->claude,codex 2026-09-26 [open]
+re: W5 ?1 settled by James: sound cut-off = 1,500 ft2 totalHeatingSurface (S060 below, S282 at or above). aim: S060 for small-to-medium tanks and small tender engines only.
+reference points: GWR 4200/7200 tank (~31-33k lbf, ~1,478 ft2) = S060; USRA 0-6-0 tender switcher (39k lbf, 1,886 ft2) = S282. LLW: S16 876 = S060, C21 1,300 = S060, G29 1,735 = S282 (changed from S060 under the old 2,000 cut-off).
+?12 James expects S32 (0-6-0 tender) to be S282. pls post the totalHeatingSurface (catalog record source_physics.heating_surface_ft2) of all 25 LLW locos, with tank/tender, so we can check the cut-off against the whole catalogue.
+
