@@ -38,14 +38,29 @@ BASIS = {
 }
 TENDER_CAR = {"BaseCarType": 8, "License": None}
 AUDIO = {"S060": {"ChuffType": 0, "WhistleSystem": 3050}, "S282": {"ChuffType": 1, "WhistleSystem": 3100}}
-# DV-side engine/boiler choices shared by our accepted profiles (S16 record, G29 config).
-DV_ENGINE = {"minCutoff": 0.1, "maxCutoff": 0.85, "throttleMaxFlow": 2.3, "steamChestVolume": 300, "maxCondensationRate": 0.008}
-DV_BOILER = {"defaultFeedwaterTemperature": 25, "waterConsumptionMultiplier": 1, "maxBlowdownRate": 10,
-             "maxSafetyValveVentRate": 1.5, "spawnPressure": 1}
-
+# Draft DV-side simulation starting points (X30): the values of our S16 draft record, with its units, bases and evidence.
+# They are not validated for any loco; every one is listed for per-engine review in metadata.pending.
+GUIDE = "GUIDE_UNIFIED_LLW_CONVERSION.md"
+U02 = f"{GUIDE}#U02 and implementation profile choices"
+E06 = f"{GUIDE}#E06"
+DRAFT_ENGINE = {"minCutoff": (0.1, "1", "DV_choice", U02), "maxCutoff": (0.85, "1", "DV_choice", U02),
+                "throttleMaxFlow": (2.3, "kg/s", "analogue_estimate", E06),
+                "steamChestVolume": (300, "L", "analogue_estimate", E06),
+                "maxCondensationRate": (0.008, "1", "analogue_estimate", E06)}
+DRAFT_BOILER = {"defaultFeedwaterTemperature": (25, "degC", "DV_choice", U02),
+                "waterConsumptionMultiplier": (1, "1", "DV_choice", U02), "maxBlowdownRate": (10, "L/s", "DV_choice", U02),
+                "maxSafetyValveVentRate": (1.5, "kg/s", "analogue_estimate", E06),
+                "spawnPressure": (1, "bar absolute", "DV_choice", f"{GUIDE}#DV integration choice")}
+DRAFT_FIREBOX = {"coalDumpRate": (5, "kg/s", "DV_choice", U02), "coalConsumptionMultiplier": (1, "1", "DV_choice", U02)}
+DRAFT_EXHAUST = {"passiveExhaust": (0.4, "1", "DV_choice", U02)}
+DRAFT_NOTE = "draft starting point from our S16 draft record; not validated for this engine"
 
 def env(value, unit: str, basis: str, *evidence: str) -> dict:
     return {"value": value, "unit": unit, "basis": basis, "evidence": list(evidence)}
+
+
+def drafts(table: dict) -> dict:
+    return {k: {**env(v, unit, basis, evidence), "notes": DRAFT_NOTE} for k, (v, unit, basis, evidence) in table.items()}
 
 
 def tractive_effort_lbf(d: dict) -> tuple[float, str]:
@@ -142,18 +157,18 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
     audio = inv["audio"]["basis"]
     cid = car_id(loco_id)
 
-    # Wheel radius: the probe's tread candidate when measured, else pending (the source radius is nominal).
+    # Wheel radius: never taken from a probe candidate on its own (X30). The candidates go to metadata for review;
+    # WheelRadius and the bore derived from it stay pending until a person accepts a tread band.
     main_index = d.get("mainDriverIndex", 0)
     main_ws = (d.get("wheelsets") or [{}])[main_index] if d.get("wheelsets") else {}
-    measured = None
-    for v in (probe_output or {}).get("vehicles", []):
-        if v.get("id") == loco_id:
-            wheel = next((w for w in v.get("wheels", []) if w.get("clip") == (main_ws.get("animation") or {}).get("clipName")), None)
-            if wheel and wheel.get("treadCandidate"):
-                measured = wheel["treadCandidate"]
-    wheel_radius = env(measured, "m", "measured", "probe/probe.json#wheels.treadCandidate") if measured else None
-    if not measured:
-        pending.append("WheelRadius: probe tread radius (source nominal is " + f"{main_ws.get('diameter', 0) / 2:g} m)")
+    wheel_candidates = [w for v in (probe_output or {}).get("vehicles", []) if v.get("id") == loco_id
+                        for w in v.get("wheels", [])]
+    reviewed = (answers.get("wheelRadius") or {}) if isinstance(answers.get("wheelRadius"), dict) else {}
+    radius = reviewed.get("value")
+    wheel_radius = env(radius, "m", "measured", *(reviewed.get("evidence") or ["run answers: reviewed tread band"])) if radius else None
+    if not radius:
+        pending.append("WheelRadius: review the probe's tread-band candidates in metadata.wheelCandidates "
+                       f"(source nominal radius {main_ws.get('diameter', 0) / 2:g} m is not the tread)")
 
     needed = [f for f in ("maximumBoilerPressure", "pistonDiameterInches", "pistonStrokeInches", "wheelsets")
               if not d.get(f)]
@@ -170,13 +185,22 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
     firebed, burn = firebox_estimate(hs) if hs else (None, None)
     driven = drivers(d)
     powered = sum(d["wheelsets"][i]["numberOfAxles"] for i in driven)
-    bore = equivalent_bore_m(te, measured, psig, stroke) if measured else None
+    bore = equivalent_bore_m(te, radius, psig, stroke) if radius else None
     if bore is None:
-        pending.append("steamEngine.cylinderBore: needs the measured wheel radius (E03)")
+        pending.append("steamEngine.cylinderBore: needs the reviewed wheel radius (E03)")
+    pending.append(f"poweredAxles: inferred from driver diameter (wheelsets {driven} within 3% of the main driver); "
+                   "equal diameter alone does not prove they are coupled, check the rods")
+    pending.append("simulation: draft engine, boiler, firebox and exhaust choices need per-engine calibration "
+                   "(throttleMaxFlow, steamChestVolume, blowdown, vent rate, firing, exhaust, cutoff range)")
     code_mods = sorted({c["provider"] for c in inv.get("code_mods", [])})
     if code_mods:
-        pending.append(f"simulation: Railroader figures depend on {', '.join(code_mods)}; review pull and cylinders (E02)")
-
+        pending.append(f"simulation: nonstandard running gear ({', '.join(sorted({c['kind'] for c in inv['code_mods']}))} from "
+                       f"{', '.join(code_mods)}, e.g. articulated); Railroader's figures depend on it, review pull and cylinders (E02)")
+    other_loads = sorted({str(slot.get("requiredLoadIdentifier")) for obj, _ in defs.values()
+                          for slot in definition(obj).get("loadSlots") or []
+                          if str(slot.get("requiredLoadIdentifier", "")).casefold() not in ("water", "coal")})
+    if other_loads:
+        pending.append(f"simulation: carries {', '.join(other_loads)}, not coal; DV simulates a coal-fired boiler, review firing")
     caps = load_capacities(d)
     config = {
         "CarId": cid, "CarName": (loco_obj.get("metadata") or {}).get("name") or loco_id, "Version": "0.1.0",
@@ -206,7 +230,8 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
         "WeightEmptyKg": None,
         "Bogies": None,
     }
-    pending += ["WeightEmptyKg: mass ledger needs the boiler's spawn water (boiler size from the probe; E04)",
+    pending += ["WeightEmptyKg: confirm how the source weight is meant (working order, empty, with or without water); "
+                "the mass ledger then needs the boiler's spawn water (boiler size from the probe; E04)",
                 "Bogies: running-gear layout from measured axles (A04)", "CollisionBoxes: from measured geometry (A06)",
                 "boiler diameter/length/capacityMultiplier/spawnWaterLevel: from measured boiler geometry"]
 
@@ -214,15 +239,15 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
         "steamEngine": {"numCylinders": env(2, "count", "source", "guide E02: RR base cylinder count is two"),
                         "cylinderBore": env(bore, "m", "derived", src("pistonDiameterInches"), "guide E02/E03") if bore else None,
                         "pistonStroke": env(stroke, "m", "derived", src("pistonStrokeInches")),
-                        **{k: env(v, "1" if k != "steamChestVolume" else "L", "DV_choice", "accepted profiles S16/G29") for k, v in DV_ENGINE.items()}},
-        "boiler": {"safetyValveOpeningPressure": env(open_bar, "bar", "derived", src("maximumBoilerPressure"), "psig to absolute bar"),
-                   "safetyValveClosingPressure": env(close_bar, "bar", "derived", src("maximumBoilerPressure"), "3 psi reseat"),
+                        **drafts(DRAFT_ENGINE)},
+        "boiler": {"safetyValveOpeningPressure": env(open_bar, "bar absolute", "derived", src("maximumBoilerPressure"), "psig to absolute bar"),
+                   "safetyValveClosingPressure": env(close_bar, "bar absolute", "derived", src("maximumBoilerPressure"), "3 psi reseat"),
                    "maxInjectorRate": env(injector_l_s(hs), "L/s", "analogue_estimate", src("totalHeatingSurface"), "guide E06") if hs else None,
-                   **{k: env(v, "1", "DV_choice", "accepted profiles S16/G29") for k, v in DV_BOILER.items()}},
-        "firebox": {"maxCoalCapacity": env(firebed, "kg", "analogue_estimate", src("totalHeatingSurface"), "guide E06 scaled from G29") if firebed else None,
-                    "burnTime": env(burn, "s", "analogue_estimate", src("totalHeatingSurface"), "guide E06 scaled from G29") if burn else None,
-                    "coalDumpRate": env(5, "kg/s", "DV_choice", "accepted profiles"), "coalConsumptionMultiplier": env(1, "1", "DV_choice", "guide E06")},
-        "exhaust": {"passiveExhaust": env(0.4, "1", "DV_choice", "accepted profiles")},
+                   **drafts(DRAFT_BOILER)},
+        "firebox": {"maxCoalCapacity": env(firebed, "kg", "analogue_estimate", src("totalHeatingSurface"), f"{E06} firebed scaled from G29 by heating surface {hs:g}/{G29_HEATING_FT2:g}") if firebed else None,
+                    "burnTime": env(burn, "s", "analogue_estimate", src("totalHeatingSurface"), f"{E06} firing rate scaled from G29 by heating surface {hs:g}/{G29_HEATING_FT2:g}") if burn else None,
+                    **drafts(DRAFT_FIREBOX)},
+        "exhaust": drafts(DRAFT_EXHAUST),
         "poweredAxles": env({"value": powered}, "count", "derived", src("wheelsets"), f"driven wheelsets {driven} (main driver diameter +/-3%)"),
     }
     record = {"schemaVersion": 1, "vehicleId": loco_id, "config": config, "hooks": {"SimSpec": sim},
@@ -231,6 +256,7 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
                            "massLedger": {"sourceWeightLb": d.get("weightEmpty"),
                                           "sourceWeightKg": (d.get("weightEmpty") or 0) * LB_KG,
                                           "interpretation": "working order incl. boiler water (guide E04); spawn water to subtract is pending"},
+                           "wheelCandidates": wheel_candidates,
                            "audio": inv["audio"], "codeMods": code_mods, "pending": pending}}
     if inv.get("tender"):
         tender_id = inv["tender"]["id"]

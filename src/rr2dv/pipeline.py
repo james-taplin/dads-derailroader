@@ -74,7 +74,8 @@ def extract(run: Run, inv: dict, machine: Machine) -> dict:
 
 
 def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None = None,
-            search: Sequence[Path] = (), audio: str | None = None, livery: str | None = None) -> Outcome:
+            search: Sequence[Path] = (), audio: str | None = None, livery: str | None = None,
+            wheel_radius: float | None = None) -> Outcome:
     input_path = input_path.resolve()
     out_dir = out_dir.resolve()
     kind = input_kind(input_path)
@@ -86,12 +87,13 @@ def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None 
     check_write_target(out_dir, guard + [("app work folder", work_root)])
 
     request = {"input": str(input_path), "input_kind": kind, "locomotive": loco, "output": str(out_dir),
-               "search_roots": [str(p) for p in search], "audio": audio, "livery": livery}
+               "search_roots": [str(p) for p in search], "audio": audio, "livery": livery,
+               "wheel_radius": wheel_radius}
     if kind == "zip":
         request["input_sha256"] = sha256_file(input_path)
     run = Run.create(work_root, loco or input_path.stem, request)
     try:
-        return _stages(run, input_path, kind, loco, search, audio, machine, livery)
+        return _stages(run, input_path, kind, loco, search, audio, machine, livery, wheel_radius)
     except Exception as e:  # record the failure on the run, then let the caller report it
         current = next((n for n, s in run.record["stages"].items() if s["status"] == "running"), None)
         message = f"{type(e).__name__}: {e}"
@@ -102,7 +104,7 @@ def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None 
 
 
 def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Sequence[Path],
-            audio: str | None, machine: Machine, livery: str | None = None) -> Outcome:
+            audio: str | None, machine: Machine, livery: str | None = None, wheel_radius: float | None = None) -> Outcome:
     def fail(stage: str, message: str, code: int = EXIT_FAILED) -> Outcome:
         run.finish(stage, "failed", message)
         run.close("failed", message)
@@ -169,6 +171,8 @@ def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Seq
     probe_out = read_json(probe_out_file) if probe_out_file.exists() else None
     if livery:
         run.record["answers"]["livery"] = livery
+    if wheel_radius:
+        run.record["answers"]["wheelRadius"] = {"value": wheel_radius, "evidence": ["user answer --wheel-radius (reviewed tread band)"]}
     draft = record.draft(run.path, inv, probe_in, probe_out, run.record["answers"])
     write_json(run.path / "record" / "vehicle-record.json", draft)
     pending = draft["metadata"]["pending"]

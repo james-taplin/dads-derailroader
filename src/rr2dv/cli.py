@@ -100,7 +100,8 @@ def cmd_scan(args) -> int:
 
 def cmd_convert(args) -> int:
     machine = machine_mod.load(args.machine)
-    outcome = convert(Path(args.input), Path(args.out), machine, args.loco, _search_roots(args, machine), args.audio, args.livery)
+    outcome = convert(Path(args.input), Path(args.out), machine, args.loco, _search_roots(args, machine), args.audio, args.livery,
+                      args.wheel_radius)
     run = outcome.run
     if run:
         for name, stage in run.record["stages"].items():
@@ -137,6 +138,8 @@ def build_parser() -> argparse.ArgumentParser:
     conv.add_argument("--livery", help="livery name to use (default: the mod's first)")
     conv.add_argument("--audio", choices=["S060", "S282"],
                       help="vanilla Derail Valley sound set to use instead of the boiler-size rule")
+    conv.add_argument("--wheel-radius", type=float, metavar="METRES",
+                      help="driving wheel tread radius you have reviewed (see metadata.wheelCandidates in the draft record)")
     with_search(conv)
     conv.set_defaults(func=cmd_convert)
     return parser

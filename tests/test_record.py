@@ -84,17 +84,40 @@ class Draft(unittest.TestCase):
         for env in (c["SimBasis"], c["RrEndFront"], t["WaterCapacityL"], rec["hooks"]["SimSpec"]["boiler"]["safetyValveOpeningPressure"]):
             self.assertTrue(env["unit"] and env["basis"] and env["evidence"], env)
 
-    def test_measured_radius_fills_the_bore(self):
+    def test_probe_candidate_is_never_taken_as_measured(self):
         run = self.run_convert()
         inv = read_json(run.path / "inventory.json")
         probe_in = read_json(run.path / "unity/project/Assets/Rr2dv/ProbeInput.json")
         probe_out = {"vehicles": [{"id": "ts-260-a", "wheels": [{"clip": "Drivers", "treadCandidate": 0.598}]}]}
         rec = record.draft(run.path, inv, probe_in, probe_out, {})
-        self.assertEqual(rec["config"]["WheelRadius"]["value"], 0.598)
+        self.assertIsNone(rec["config"]["WheelRadius"])
+        self.assertIsNone(rec["hooks"]["SimSpec"]["steamEngine"]["cylinderBore"])
+        self.assertEqual(rec["metadata"]["wheelCandidates"], probe_out["vehicles"][0]["wheels"])
+        self.assertIn("wheelCandidates", " ".join(rec["metadata"]["pending"]))
+
+    def test_reviewed_radius_fills_the_bore(self):
+        run = self.run_convert(wheel_radius=0.598)
+        rec = read_json(run.path / "record" / "vehicle-record.json")
+        self.assertEqual((rec["config"]["WheelRadius"]["value"], rec["config"]["WheelRadius"]["basis"]), (0.598, "measured"))
+        self.assertEqual(run.record["answers"]["wheelRadius"]["value"], 0.598)
         bore = rec["hooks"]["SimSpec"]["steamEngine"]["cylinderBore"]["value"]
         te = 0.85 * 180 * 16 ** 2 * 24 / (1.2 / 0.0254)
         self.assertAlmostEqual(bore, record.equivalent_bore_m(te, 0.598, 180, 24 * 0.0254))
         self.assertNotIn("cylinderBore", " ".join(rec["metadata"]["pending"]))
+
+    def test_draft_values_carry_real_units_and_review_items(self):
+        rec = read_json(self.run_convert().path / "record" / "vehicle-record.json")
+        sim = rec["hooks"]["SimSpec"]
+        units = {k: sim["boiler"][k]["unit"] for k in ("defaultFeedwaterTemperature", "maxBlowdownRate", "maxSafetyValveVentRate",
+                                                       "spawnPressure", "safetyValveOpeningPressure")}
+        self.assertEqual(units, {"defaultFeedwaterTemperature": "degC", "maxBlowdownRate": "L/s", "maxSafetyValveVentRate": "kg/s",
+                                 "spawnPressure": "bar absolute", "safetyValveOpeningPressure": "bar absolute"})
+        self.assertEqual((sim["steamEngine"]["throttleMaxFlow"]["unit"], sim["steamEngine"]["throttleMaxFlow"]["basis"]),
+                         ("kg/s", "analogue_estimate"))
+        self.assertIn("not validated", sim["exhaust"]["passiveExhaust"]["notes"])
+        pending = " ".join(rec["metadata"]["pending"])
+        for item in ("poweredAxles", "source weight", "per-engine calibration"):
+            self.assertIn(item, pending)
 
     def test_livery_choice_is_checked(self):
         with self.assertRaisesRegex(ValueError, "livery 'Green'"):
