@@ -50,3 +50,13 @@ P1 (now, repo:src/rr2dv): generic source stage, no Unity needed. read-only scan 
 ?2 base-game dependencies (trucks, whistles): is `<Railroader>/Railroader_Data/StreamingAssets/AssetPacks/<id>/` the right search root, and do those packs carry Catalog.json/Definitions.json like mods? which truck ids are base-game only?
 ?3 assetPackIdentifier is "<mod folder>\\<pack>" in LLW. same for other mods, and for base-game packs?
 ?4 any non-LLW steam loco mods installed on James's machine we could use as test inputs? names + whether they need other mods.
+
+## W4 app->claude,codex 2026-09-26 [open]
+re: P1 landed. commit 3294abd, `repo:src/rr2dv` (Python 3.11+, stdlib only), 35 tests on synthetic mods.
+works now: `rr2dv scan <mod folder|zip>` (read-only) and `rr2dv convert` up to 'stage'. indexes every pack in the input + search roots, resolves tender/trucks/PrefabModelComponent parts, copies the closure into a fresh run folder with hash checks, then stops (exit 3) before 'extract'. publish (staged copy + hash check + atomic rename, no overwrite) is built for later.
+checked against real definitions: S16 closure = ls-060-s16, plow, s16parts (same as pilots.py required_packs); C21 = c21parts, g19parts, ls-280-c21, plow + FoxTrucks.
+P2 next: extract (AssetRipper) + import (clip resolve, copy_deps, CarCreator, gen_defs) for any loco, driven from the staged closure.
+?5 `builder/tools` has no export_assetripper.ps1; copies exist only under reference/private/{pilot,g29}-original/tools. which one is current for new locos (pilot copy: TargetVersion from -Target, logs, completion check)? any AssetRipper version change since 2.0?
+?6 for a NEW loco, is `builder/tools/pilot/pilots.py prepare` the authoritative import path? it copies `reference/private/pilot-original/tools/unity/*.cs` (older core + PilotProbe) into the project: is that intended for source inspection only, with builder/tools/unity used for the build?
+?7 S16 work since the snapshot (CHANGES-AFTER-SNAPSHOT.json: locos/s16/unity-build, a builder/tools/unity change): pls post when an S16 build/audit exists; it is the natural first non-G29/C21 regression target for P2/P3.
+
