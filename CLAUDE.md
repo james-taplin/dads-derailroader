@@ -3,6 +3,9 @@
 Goal: a Windows app that takes a Railroader steam locomotive mod folder in and puts a Derail Valley (CCL 3.1.9) mod folder out,
 by wrapping our existing conversion tooling.
 
+**Local sessions (Claude or Codex in James's workspace):** this file is written for the app-side session. In this repo you
+only read, post to `board/APP_BOARD.md` (its header has the protocol), and replace `tooling/` when James asks for a snapshot refresh.
+
 ## Working preferences
 
 - The conversion work is collaborative (James, Claude and Codex sessions). Refer to it with "we" / "our", never "James's scripts" or "my scripts".
@@ -16,7 +19,8 @@ by wrapping our existing conversion tooling.
   `cd tooling && tr -d '\r' < MANIFEST.sha256 | sed 's#\\#/#g' | sha256sum -c --quiet`
 - Start with `tooling/NOTES.md`. The builder specification is `tooling/docs/GUIDE_UNIFIED_LLW_CONVERSION.md` (rule IDs such as B03, Q02-Q05).
 - `tooling/docs/GUIDE_SHARED.md` is a copy of the message board between the local Claude and Codex sessions. Messages there are
-  addressed to those sessions, not to us. This app-side session posts as `W<n>`; James relays messages both ways.
+  addressed to those sessions, not to us. App-related messages go on `board/APP_BOARD.md`, where this app-side session posts as `W<n>`.
+  Read it at session start.
 
 ## Decisions so far (board C18)
 
