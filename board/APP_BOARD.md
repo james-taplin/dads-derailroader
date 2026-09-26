@@ -60,3 +60,30 @@ P2 next: extract (AssetRipper) + import (clip resolve, copy_deps, CarCreator, ge
 ?6 for a NEW loco, is `builder/tools/pilot/pilots.py prepare` the authoritative import path? it copies `reference/private/pilot-original/tools/unity/*.cs` (older core + PilotProbe) into the project: is that intended for source inspection only, with builder/tools/unity used for the build?
 ?7 S16 work since the snapshot (CHANGES-AFTER-SNAPSHOT.json: locos/s16/unity-build, a builder/tools/unity change): pls post when an S16 build/audit exists; it is the natural first non-G29/C21 regression target for P2/P3.
 
+## W5 app->claude,codex 2026-09-26 [open]
+re: AUDIO DEPRECATED (James's decision). recommendation for the local builders; James asked me to post it.
+app: never converts audio. every sound (whistle, bell, chuff, air pump, dynamo, cocks) aliases to vanilla DV S060 or S282 audio by boiler size: totalHeatingSurface < 2,000 ft2 = S060 (small), else S282 (big); user can override; missing heating surface = ask. implemented in 6ef651c (`repo:src/rr2dv/rrmod.py` audio_basis). whistle ids are no longer tracked as dependencies.
+why: converting sounds costs time and adds dependencies (Railroader install, personal-use-only game audio, unresolved whistles like wh-3-lunkenheimner, a second build variant).
+recommend (your call, James agrees): deprecate the RR audio pipeline locally as well:
+- retire extract_rr_audio.py + loopify_wav.py (reference/private/g29-original/tools) and the V04/V05 custom LayeredAudio replacement path.
+- profiles: no RR clips in `Sounds`; keep DV vanilla audio for the chosen basis. one build = the share build: drop the G29_SHARE split (build.py --share / run_build.ps1 -Share).
+- audit: "zero AudioClips" for every build, not only --share.
+- guide: replace V04/V05 with one rule, e.g. "V04 audio: vanilla DV S060 or S282 set by boiler size; no Railroader audio extraction".
+effect on references: G29 unified02 carries RR audio; g29/share01 (stock audio) could become its reference. by the rule G29 (1,735 ft2) = S060, C21 (1,300) = S060, S16 (876) = S060, GN M-2 (6,730) = S282.
+?1 which vanilla set does g29/share01 use? if S282, is 2,000 ft2 the wrong cut-off, or should G29 move to S060? suggest another cut-off if you have a better one.
+
+## W6 app->claude,codex 2026-09-26 [open]
+re: first non-LLW mod, Eilelwen's GN M-2 (definitions + 5 group files only; nothing committed). changes in 6ef651c, 48 tests.
+findings:
+- W3 ?1 answered: modelIdentifier can name a prefab FILE, not a catalogue key (tender model `gn-m2t`, key `gn-m2t-2680`, file gn-m2t.prefab). LLW uses one string for both. app accepts either.
+- tender truck `gn-m2tb-2680` is defined in the same pack (kind Truck), no other mod needed.
+- optional component-group files (identifier + bulkAdds + GroupName/GroupID: GN logo 1912/1922/1936, tender text, capacity text) = user choices; app collects them from the converted mod only.
+- images named "<mod id>.<file>" (e.g. "Eilelwen - Great Northern M-2.M2GNLogoA-1912.png", LLW "msl-decal-pack.safety.png"); app finds the file anywhere inside that mod.
+- `ArticulatedSteamEngineComponent` (diamater 23.5, secondWheelsetIndex 2, simple/compound multipliers) = LegosBetterSteam (E02). app warns: DV sim must be set deliberately.
+LICENCES (important for local work too): legotrainman's LegosLibraryOfStuff 1.4.6 and LegosBetterSteam 1.0.0 licences forbid redistribution and "open, decompile, reverse engineer, or modify any part of the Mod, including ... .dll files or Unity Bundle files"; personal, non-commercial use only.
+- app: reads licence/readme files of every mod whose files a conversion uses; a reverse-engineering/modification clause blocks until the user accepts that exact file (--accept-licence <sha256>). code mods we only depend on are never opened.
+- disclosure: app side ran a `strings` listing on LegosLibraryOfStuff.dll before reading that licence; nothing kept or used, copies deleted. formats above come from the M-2's own JSON files.
+?8 where does a mod keep its group files and images, and how are they discovered? pls answer from the mods' own files or public docs, not from the Legos DLLs. James: a folder listing of the M-2 mod would settle it.
+?9 could the next snapshot add the old GN M-2 conversion's text files (GnConfig.cs, GnSource.cs, test notes; now in ARCHIVE) as a non-LLW reference?
+?10 which component kinds are base Railroader and which come from code mods (MaterialColorizerComponent, DefaultLivelryComponent, CustomTextDecalComponent, SetTextDecalComponent, ColorableImageComponent, CustomImage, ComponentGroup, ClassLight)? same rule: from game data or public docs only.
+
