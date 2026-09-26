@@ -76,6 +76,21 @@ class Licences(Base):
         (self.m["search"] / "TruckMod" / "LICENSE").write_text(STRICT)
         self.assertEqual([i["data"]["mod"] for i in blocking(self.inv())], ["TruckMod"])
 
+    def test_mod_supplying_only_images_counts(self):
+        decals = self.m["search"] / "DecalPack"
+        decals.mkdir()
+        (decals / "info.json").write_text('{"Id": "decal-pack"}')
+        (decals / "safety.png").write_bytes(b"x")
+        (decals / "LICENSE.txt").write_text("No derivative works.")
+        group = {"identifier": "tt-260-a", "GroupName": "Safety", "bulkAdds": [{"kind": "CustomImage", "textureName": "decal-pack.safety.png"}]}
+        (self.m["mod"] / "safety.json").write_text(json.dumps(group))
+        self.assertEqual([i["data"]["mod"] for i in blocking(self.inv())], ["decal-pack"])
+
+    def test_no_licence_file_means_no_restriction(self):
+        inv = self.inv()
+        self.assertEqual(blocking(inv), [])
+        self.assertTrue(all(m["licences"] == [] for m in inv["mods"]))
+
     def test_unrelated_installed_mods_do_not_count(self):
         other = self.m["search"] / "SomeOtherMod"
         other.mkdir()
@@ -97,22 +112,11 @@ class GroupsAndImages(Base):
                  "bulkAdds": [{"kind": "CustomImage", "textureName": texture, "name": "Herald", "enabled": True}]}
         (self.m["mod"] / f"TT-{name.replace(' ', '')}.json").write_text(json.dumps(group))
 
-    def setUp(self):
-        super().setUp()
-        # Group files rely on LegosLibraryOfStuff, whose licence stops conversion; test the mechanics without it.
-        from rr2dv import rrmod
-        saved = rrmod.FEATURE_PROVIDERS["component-groups"]
-        rrmod.FEATURE_PROVIDERS["component-groups"] = ("PermissiveGroupsMod", "test")
-        self.addCleanup(rrmod.FEATURE_PROVIDERS.__setitem__, "component-groups", saved)
-        mod = self.m["search"] / "PermissiveGroupsMod"
-        mod.mkdir()
-        (mod / "info.json").write_text('{"Id": "PermissiveGroupsMod"}')
-
-    def test_group_files_imply_legoslibraryofstuff_which_stops_conversion(self):
-        from rr2dv import rrmod
-        rrmod.FEATURE_PROVIDERS["component-groups"] = ("LegosLibraryOfStuff", "guide section C")
+    def test_group_files_note_legoslibraryofstuff_without_blocking(self):
         self.add_group()
-        self.assertEqual([i["data"]["mod"] for i in blocking(self.inv())], ["LegosLibraryOfStuff"])
+        inv = self.inv()
+        self.assertEqual(blocking(inv), [])
+        self.assertEqual([d["id"] for d in inv["railroader_only"]], ["LegosLibraryOfStuff"])
 
     def test_group_files_and_their_images_are_found_and_staged(self):
         self.add_group()
@@ -147,7 +151,7 @@ class GroupsAndImages(Base):
         self.add_group(texture="decal-pack.safety.png")
         inv = self.inv()
         self.assertEqual(inv["textures"][0]["file"], {"root": "search1", "path": "DecalPack/Logos/safety.png"})
-        self.assertEqual([m["id"] for m in inv["mods"]], ["test-loco-mod", "decal-pack", "PermissiveGroupsMod"])  # info.json Id wins
+        self.assertEqual([m["id"] for m in inv["mods"]], ["test-loco-mod", "decal-pack"])  # info.json Id wins over folder name
 
 
 class Definitions(Base):
@@ -169,10 +173,12 @@ class Definitions(Base):
         inv = self.inv()
         self.assertEqual([c["provider"] for c in inv["code_mods"]], ["LegosBetterSteam"])
         self.assertIn("code-mod-component", codes(inv))
-        # LegosBetterSteam's licence forbids modification: a loco that needs it is not converted, installed or not.
-        self.assertEqual([(i["code"], i["data"]["mod"]) for i in blocking(inv)], [("licence-forbids-conversion", "LegosBetterSteam")])
+        # LegosBetterSteam is only needed in Railroader: listed, never opened, never blocking.
+        self.assertEqual(blocking(inv), [])
+        self.assertEqual([(d["id"], d["installed"]) for d in inv["railroader_only"]], [("LegosBetterSteam", False)])
+        self.assertIn("no-modification", inv["railroader_only"][0]["licence_terms"])
 
-    def test_code_mod_dependency_with_unknown_licence_stops(self):
+    def test_code_mod_with_unknown_licence_does_not_block(self):
         from rr2dv import rrmod
         rrmod.CODE_MOD_KINDS["MadeUpComponent"] = ("MadeUpMod", "test")
         self.addCleanup(rrmod.CODE_MOD_KINDS.pop, "MadeUpComponent")
@@ -180,12 +186,9 @@ class Definitions(Base):
                    objects=[loco("ts-260-a", tender="tt-260-a", extra_components=[{"kind": "MadeUpComponent"}]),
                             tender("tt-260-a", truck="test-truck-2s")],
                    assets={"ts-260-a": {"filename": "a.prefab"}, "tt-260-a": {"filename": "t.prefab"}})
-        self.assertEqual([i["code"] for i in blocking(self.inv())], ["licence-unknown-dependency"])
-        mod = self.m["search"] / "MadeUpMod"
-        mod.mkdir()
-        (mod / "info.json").write_text('{"Id": "MadeUpMod"}')
-        (mod / "LICENSE").write_text("MIT License. Permission is hereby granted to use, copy, modify.")
-        self.assertEqual(blocking(self.inv()), [])
+        inv = self.inv()
+        self.assertEqual(blocking(inv), [])
+        self.assertEqual(inv["railroader_only"][0]["licence_terms"], None)
 
 
 class Audio(Base):

@@ -1,7 +1,11 @@
-"""Licence policy. rr2dv will not convert a locomotive when the author of its mod, or of any mod it depends on,
-forbids modifying their work (even for personal use), reverse engineering it, porting or converting it, or
-derivative works. A licence file that cannot be read, or a dependency whose licence cannot be checked, also stops
-the conversion. There is deliberately no override: not a flag, not a setting, not a claimed permission.
+"""Licence policy. rr2dv will not convert a locomotive when the author of any mod whose content would end up in the
+Derail Valley pack (the mod itself, and any mod whose bundles or images are copied) explicitly forbids modifying their
+work (even for personal use), reverse engineering it, porting or converting it, or derivative works. A licence file
+that cannot be read also stops the conversion. There is deliberately no override: not a flag, not a setting, not a
+claimed permission.
+
+Only explicit restrictions count: a mod without a licence file is converted. Code mods the loco uses in Railroader
+(e.g. LegosBetterSteam) are not needed in Derail Valley and are never opened, so their licences do not block.
 
 Matching is by patterns over the licence text and errs towards stopping. A mod that is stopped wrongly is fixed by
 correcting the patterns here, never by letting a user skip the check.
@@ -36,7 +40,7 @@ NOTED = {
 # A readme mixes install notes ("do not edit the folder name") with terms; only its terms paragraphs count.
 TERMS_PARAGRAPH = re.compile(r"licen[cs]|permission|copyright|terms|all rights|redistribut|re-?upload|personal use", re.I)
 
-# Mods whose licences we have read, for dependencies that are not installed where we can read them.
+# Licences we have read of code mods locos use in Railroader; shown for information, never opened or copied.
 KNOWN_LICENCES = {
     "legosbettersteam": {"id": "LegosBetterSteam", "author": "legotrainman",
                          "terms": ["no-modification", "no-reverse-engineering", "no-redistribution", "personal-use-only", "no-commercial-use"],

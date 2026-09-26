@@ -62,12 +62,13 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
 
 ## Licences
 
-- **Strict policy, no override (James).** `licences.py` + `rrmod.inventory`: if the mod being converted, or ANY mod it
-  depends on (packs, images, code mods such as LegosBetterSteam/LegosLibraryOfStuff), forbids modification even for
-  personal use, reverse engineering, porting/conversion or derivative works, the conversion stops. Unreadable licence
-  files and dependencies whose licence can't be checked also stop it. Never add a flag, setting or "permission"
-  path around this; fix wrong matches in the patterns instead. Both legotrainman mods forbid modification, so any loco
-  needing them (e.g. GN M-2) is not converted.
+- **Strict policy, no override (James, W7/W8).** `licences.py` + `rrmod.inventory`: if any mod whose content ends up
+  in the DV pack (the converted mod, mods whose bundles or images we copy) explicitly forbids modification even for
+  personal use, reverse engineering, porting/conversion or derivative works, the conversion stops. An unreadable
+  licence file also stops it. No licence file = no restriction (explicit restrictions only). Code mods used only in
+  Railroader (LegosBetterSteam, LegosLibraryOfStuff) are not needed in DV, never opened, never blocking; they are
+  listed as `railroader_only`. Never add a flag, setting or "permission" path around a block; fix wrong matches in
+  the patterns instead.
 - Never open, decompile or inspect code mods (DLLs) or bundles of mods we only depend on. Learn formats from the data
   files of the mod being converted and from our guides. Uploaded test mods stay in the session container, never in git.
 - Converted packs contain the original authors' work: personal use unless the author agrees otherwise.

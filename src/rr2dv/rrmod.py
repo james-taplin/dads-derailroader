@@ -525,7 +525,9 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                 files.append(entry)
         pack_records.append({**p.describe(), "files": files})
 
-    # Licence policy (licences.py): the mod, every mod whose files we read, and every code mod the loco relies on.
+    # Licence policy (licences.py). Only mods whose content ends up in the Derail Valley pack can stop a conversion:
+    # the converted mod and every mod whose bundles or images we copy. Code mods the loco uses in Railroader are not
+    # needed in Derail Valley and are never opened, so they are listed for information only.
     involved: dict[Path, Mod] = {}
     for p in ordered:
         if p.mod:
@@ -535,22 +537,6 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                     key=lambda m: len(m.path.parts), default=None)
         if owner:
             involved[owner.path] = owner
-    providers = {c["provider"]: c["evidence"] for c in code_mods}
-    if group_records:
-        name, evidence = FEATURE_PROVIDERS["component-groups"]
-        providers.setdefault(name, evidence)
-    known_records = []
-    for provider in sorted(providers):
-        found = index.find_mod(provider)
-        for mod in found.candidates:
-            involved[mod.path] = mod
-        known = licences.KNOWN_LICENCES.get(provider.casefold())
-        if known:
-            known_records.append(known)
-        if not found.candidates and not known:
-            issues.append(Issue("error", "licence-unknown-dependency",
-                                f"needs code mod {provider} ({providers[provider]}), which is not installed where its licence can be read; "
-                                "rr2dv only converts when every dependency's licence has been checked"))
     mod_records = []
     for mod in sorted(involved.values(), key=lambda m: (m.root.rank, m.rel)):
         mod_records.append(mod.describe())
@@ -564,12 +550,18 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                                     {"mod": mod.ident, "file": lic["file"], "sha256": lic["sha256"], "terms": lic["terms"]}))
             elif lic["terms"]:
                 issues.append(Issue("info", "licence-terms", f"{where}: {', '.join(lic['terms'])}; the converted pack is for personal use"))
-    for known in known_records:
-        if licences.forbidding(known["terms"]):
-            issues.append(Issue("error", "licence-forbids-conversion",
-                                f"depends on {known['id']} by {known['author']}, whose licence forbids {licences.describe(licences.forbidding(known['terms']))} "
-                                f"({known['evidence']}); rr2dv will not convert this locomotive",
-                                {"mod": known["id"], "file": None, "sha256": None, "terms": known["terms"]}))
+
+    providers = {c["provider"]: c["evidence"] for c in code_mods}
+    if group_records:
+        name, evidence = FEATURE_PROVIDERS["component-groups"]
+        providers.setdefault(name, evidence)
+    railroader_only = []
+    for provider in sorted(providers):
+        known = licences.KNOWN_LICENCES.get(provider.casefold())
+        railroader_only.append({"id": provider, "installed": bool(index.find_mod(provider).candidates),
+                                "evidence": providers[provider], "licence_terms": known["terms"] if known else None})
+        issues.append(Issue("info", "railroader-only-dependency",
+                            f"uses {provider} in Railroader; not needed in Derail Valley and none of its files are opened or copied"))
 
     audio_choice = audio_basis(ldef, audio)
     audio_choice["replaces"] = sorted(sounds)
@@ -584,7 +576,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         "packs": pack_records,
         "extra_files": sorted(extra.values(), key=lambda r: (r["root"], r["path"])),
         "mods": mod_records,
-        "known_licences": known_records,
+        "railroader_only": railroader_only,
         "optional_groups": group_records,
         "textures": textures,
         "code_mods": code_mods,

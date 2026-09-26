@@ -80,8 +80,8 @@ def cmd_scan(args) -> int:
             lic = "; ".join(f"{l['file']} ({'unreadable' if l.get('unreadable') else ', '.join(l['terms']) or 'no restrictive terms found'})"
                             for l in mod["licences"])
             print(f"  mod {mod['id']}: {lic or 'no licence file found'}")
-        for known in inv.get("known_licences", []):
-            print(f"  depends on {known['id']} by {known['author']}: {', '.join(known['terms'])} ({known['evidence']})")
+        for dep in inv.get("railroader_only", []):
+            print(f"  uses {dep['id']} in Railroader only ({'installed' if dep['installed'] else 'not found'}); not needed in Derail Valley")
         for g in inv["optional_groups"]:
             print(f"  optional group for {g['target']}: {g['group_name']} ({g['file']['path']})")
         found = sum(1 for tex in inv["textures"] if tex["file"])
