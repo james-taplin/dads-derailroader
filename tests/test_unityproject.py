@@ -62,6 +62,20 @@ class Import(unittest.TestCase):
         self.assertIn("builder/tools/unity/LlwVehicleRecord.cs", info["core_scripts"])
         self.assertGreater(info["unique_guids"], 5)
 
+    def test_source_code_is_kept_out_of_the_project(self):
+        run, project = self.convert()
+        assets = project / "Assets"
+        leftovers = [p.relative_to(assets).as_posix() for p in assets.rglob("*")
+                     if p.suffix in (".cs", ".dll", ".asmdef") and not p.relative_to(assets).as_posix().startswith(("Editor/", "CarCreator/"))]
+        self.assertEqual(leftovers, [])
+        excluded = read_json(run / "unity" / "project.json")["excluded_source_code"]
+        self.assertIn("Assets/Plugins/RR.Runtime.dll", excluded)
+        self.assertIn("Assets/Scripts/Assembly-CSharp/AnimationMap.cs", excluded)
+        self.assertIn("RR/input/parts/Plugins/RR.Runtime.dll", excluded)  # followed by copy_deps, then dropped
+        self.assertFalse((assets / "Plugins/RR.Runtime.dll.meta").exists())
+        cache = self.tmp / "work" / "_cache" / "assetripper"
+        self.assertTrue(list(cache.rglob("RR.Runtime.dll")))  # cached export untouched
+
     def test_cached_exports_are_not_modified(self):
         self.convert()
         cache = self.tmp / "work" / "_cache" / "assetripper"
@@ -117,6 +131,29 @@ class Pieces(unittest.TestCase):
         (assets / "y.mat.meta").write_text("guid: abc\n")
         with self.assertRaisesRegex(ProjectError, "duplicate GUID abc"):
             check_guids(assets)
+
+    def test_asset_pipeline_mode_is_normalised(self):
+        project = self.tmp / "p"
+        settings = project / "ProjectSettings"
+        settings.mkdir(parents=True)
+        cases = {"EditorSettings:\n  m_SerializationMode: 2\n  m_AssetPipelineMode: 0\n": 1,
+                 "EditorSettings:\n  m_SerializationMode: 2\n  m_AssetPipelineMode: 1\n": 1,
+                 "EditorSettings:\n  m_SerializationMode: 2\n": 1,
+                 None: 1}
+        for text in cases:
+            with self.subTest(text=text):
+                target = settings / "EditorSettings.asset"
+                target.unlink(missing_ok=True)
+                if text is not None:
+                    target.write_text(text)
+                set_project_settings(project)
+                out = target.read_text()
+                self.assertEqual(out.count("m_AssetPipelineMode"), 1)
+                self.assertIn("m_AssetPipelineMode: 1", out)
+                self.assertIn("m_SerializationMode: 2", out)
+        (settings / "EditorSettings.asset").write_text("Something: else\n")
+        with self.assertRaises(ProjectError):
+            set_project_settings(project)
 
     def test_settings_without_a_manifest(self):
         project = self.tmp / "p"

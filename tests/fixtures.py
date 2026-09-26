@@ -99,11 +99,12 @@ def guid(*parts):
     import hashlib
     return hashlib.md5("|".join(parts).encode()).hexdigest()
 
-def prefab_yaml(root, mat):
+def prefab_yaml(root, mat, dll):
     return ("%YAML 1.1\n--- !u!1 &100\nGameObject:\n  m_Name: " + root + "\n--- !u!4 &101\nTransform:\n"
             "  m_GameObject: {fileID: 100}\n  m_Father: {fileID: 0}\n--- !u!1 &200\nGameObject:\n  m_Name: Wheel\n"
             "--- !u!4 &201\nTransform:\n  m_GameObject: {fileID: 200}\n  m_Father: {fileID: 101}\n"
-            "--- !u!23 &202\nMeshRenderer:\n  m_Materials:\n  - {fileID: 2100000, guid: " + mat + ", type: 2}\n")
+            "--- !u!23 &202\nMeshRenderer:\n  m_Materials:\n  - {fileID: 2100000, guid: " + mat + ", type: 2}\n"
+            "--- !u!114 &203\nMonoBehaviour:\n  m_Script: {fileID: 11500000, guid: " + dll + ", type: 3}\n")
 
 def export_fake_project(bundle, project):
     """Shape of an AssetRipper export: prefabs per catalogue asset (Wheel child, material by GUID),
@@ -115,6 +116,12 @@ def export_fake_project(bundle, project):
     seed = bundle.read_bytes().hex()
     cat = next((f for f in pack.iterdir() if f.name.lower() == "catalog.json"), None)
     names = [a["filename"] for a in json.loads(cat.read_text())["assets"].values()] if cat else [pack.name + ".prefab"]
+    dll = guid(seed, "dll")
+    for rel, body, g in (("Plugins/RR.Runtime.dll", "MZ", dll), ("Scripts/Assembly-CSharp/AnimationMap.cs", "class AnimationMap {}", guid(seed, "cs")),
+                         ("Scripts/Assembly-CSharp/Assembly-CSharp.asmdef", "{}", guid(seed, "asmdef"))):
+        (assets / rel).parent.mkdir(parents=True, exist_ok=True)
+        (assets / rel).write_text(body)
+        (assets / (rel + ".meta")).write_text("guid: " + g + "\n")
     for name in names:
         stem = name.rsplit(".", 1)[0]
         mat = guid(seed, stem, "mat")
@@ -122,7 +129,7 @@ def export_fake_project(bundle, project):
         (assets / "Material" / (stem + "_paint.mat")).write_text("%YAML 1.1\nMaterial:\n  m_Name: paint\n")
         (assets / "Material" / (stem + "_paint.mat.meta")).write_text("guid: " + mat + "\n")
         (assets / "PrefabInstance").mkdir(exist_ok=True)
-        (assets / "PrefabInstance" / name).write_text(prefab_yaml(stem, mat))
+        (assets / "PrefabInstance" / name).write_text(prefab_yaml(stem, mat, dll))
         (assets / "PrefabInstance" / (name + ".meta")).write_text("guid: " + guid(seed, stem, "prefab") + "\n")
     if any(f.name.lower() == "definitions.json" for f in pack.iterdir()):
         (assets / "AnimationClip").mkdir()

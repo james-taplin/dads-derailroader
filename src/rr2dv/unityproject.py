@@ -29,6 +29,13 @@ UNITY_REVISION = "ffc62b691db5"
 PACKAGES_REMOVED = re.compile(r"render-pipelines|shadergraph|visualeffectgraph")
 PACKAGES_ADDED = {"com.unity.textmeshpro": "2.1.6", "com.unity.ugui": "1.0.0"}
 IGNORED_DIRS = ("Library", "Temp", "Logs", "obj")
+# Code from the source export is never compiled into our project (board X27): Railroader mods' scripts are
+# AssetRipper stubs at best and arbitrary code at worst. Meshes, materials, clips and their GUIDs are kept; the
+# cached export keeps everything for later probes. Our trusted CarCreator and builder core are added afterwards.
+SOURCE_CODE_SUFFIXES = {".cs", ".dll", ".asmdef", ".asmref", ".rsp", ".pdb", ".mdb", ".so", ".dylib", ".jslib"}
+ASSET_PIPELINE_MODE = 1  # Asset Database v2 (UnityEditor.AssetPipelineMode.Version2 = 1; board X27)
+MINIMAL_EDITOR_SETTINGS = ("%YAML 1.1\n%TAG !u! tag:unity3d.com,2011:\n--- !u!159 &1\nEditorSettings:\n"
+                           "  m_ObjectHideFlags: 0\n  m_SerializationMode: 2\n  m_AssetPipelineMode: 1\n")
 
 
 class ProjectError(RuntimeError):
@@ -71,13 +78,17 @@ def set_project_settings(project: Path) -> None:
     (settings / "ProjectVersion.txt").write_text(
         f"m_EditorVersion: {UNITY_VERSION}\nm_EditorVersionWithRevision: {UNITY_VERSION} ({UNITY_REVISION})\n", encoding="ascii")
     editor = settings / "EditorSettings.asset"
-    if editor.is_file():
+    if not editor.is_file():
+        editor.write_text(MINIMAL_EDITOR_SETTINGS, encoding="utf-8")
+    else:
         text = editor.read_text(encoding="utf-8")
-        if "m_AssetPipelineMode" not in text:
-            text, n = re.subn(r"(  m_SerializationMode: 2\r?\n)", r"\g<1>  m_AssetPipelineMode: 1\n", text, count=1)
-            if not n:
-                raise ProjectError("EditorSettings.asset has no m_SerializationMode: 2 line to anchor the asset pipeline setting")
-            editor.write_text(text, encoding="utf-8")
+        line = f"  m_AssetPipelineMode: {ASSET_PIPELINE_MODE}"
+        text, n = re.subn(r"^  m_AssetPipelineMode: *\S*[ \t]*$", line, text, count=1, flags=re.M)
+        if not n:
+            text, n = re.subn(r"^(EditorSettings:[ \t]*\r?\n)", r"\g<1>" + line + "\n", text, count=1, flags=re.M)
+        if not n:
+            raise ProjectError("EditorSettings.asset has no EditorSettings: block; refusing to guess its format")
+        editor.write_text(text, encoding="utf-8")
     manifest_path = project / "Packages" / "manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig")) if manifest_path.is_file() else {}
     deps = {k: v for k, v in manifest.get("dependencies", {}).items() if not PACKAGES_REMOVED.search(k)}
@@ -155,7 +166,19 @@ def assemble(run_path: Path, inv: dict, exports: dict[str, dict], car_creator: P
 
     main_pack = inv["locomotive"]["pack"]
     main = export_of(main_pack)
-    shutil.copytree(main, project, ignore=shutil.ignore_patterns(*IGNORED_DIRS))
+    excluded: list[str] = []
+
+    def skip(folder, names):
+        out = {n for n in names if n in IGNORED_DIRS}
+        for n in names:
+            suffix = Path(n[:-5] if n.endswith(".meta") else n).suffix.casefold()
+            if suffix in SOURCE_CODE_SUFFIXES and Path(folder, n).is_file():
+                out.add(n)
+                if not n.endswith(".meta"):
+                    excluded.append(Path(folder, n).relative_to(main).as_posix())
+        return out
+
+    shutil.copytree(main, project, ignore=skip)
     assets = project / "Assets"
     result = {"project": project.relative_to(run_path).as_posix(), "unity": f"{UNITY_VERSION} ({UNITY_REVISION})",
               "clips": {"main": resolve_clips(main / "Assets", assets, reports / "clips-main.json")},
@@ -175,6 +198,11 @@ def assemble(run_path: Path, inv: dict, exports: dict[str, dict], car_creator: P
         prefab = find_prefab(src_assets, filename)
         sub = _subfolder(pack)
         _tool("pilot/copy_deps.py", src_assets, prefab.relative_to(src_assets), assets, sub)
+        for f in sorted((assets / sub).rglob("*")):  # our own fresh folder: drop any code copy_deps followed
+            if f.is_file() and Path(f.name[:-5] if f.name.endswith(".meta") else f.name).suffix.casefold() in SOURCE_CODE_SUFFIXES:
+                if not f.name.endswith(".meta"):
+                    excluded.append(f"{sub}/{f.relative_to(assets / sub).as_posix()}")
+                f.unlink()
         if resolve and sub not in resolved:
             name = re.sub(r"[^A-Za-z0-9_-]", "_", sub)
             result["clips"][sub] = resolve_clips(src_assets, assets / sub, reports / f"clips-{name}.json")
@@ -187,6 +215,7 @@ def assemble(run_path: Path, inv: dict, exports: dict[str, dict], car_creator: P
     for part in inv.get("parts", []):
         result["parts"].append({**part, "unity_prefab": bring(part["pack_ref"], part["filename"], resolve=False)})
 
+    result["excluded_source_code"] = sorted(excluded)
     set_project_settings(project)
     result["car_creator"] = {"file": car_creator.name, "sha256": sha256_file(car_creator),
                              "files": import_unitypackage(car_creator, project)}
