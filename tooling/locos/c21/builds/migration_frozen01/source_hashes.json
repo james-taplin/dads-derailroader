@@ -1,0 +1,12 @@
+{
+  "builder/baseline/c21/CclLocoBuild.cs": "42944097d21832edf3630b72942bb9938b869c612f9ec6d6588cfd64dede91a1",
+  "builder/baseline/c21/LocoConfig.cs": "feb0c3bcc42113cb8bba99879012bfcda32242a32f223bda2b76c0dba05903dc",
+  "builder/baseline/c21/PilotProbe.cs": "6a163be46745709a1d402d3deeedc24052169e9a66bccc0119dca1ab3b3db448",
+  "builder/baseline/c21/RRPlacementValidation.cs": "208625685633597cd722daabceb8f17ff44c9758e1809239cc8c5f51e5446357",
+  "builder/baseline/c21-profile/C21Config.cs": "cf231bba2d0a55d799f4c646a0e0d352751047dbe91885fa623d207d0b23a385",
+  "builder/baseline/c21-profile/C21Defs.cs": "a0a7b1e02cc7400fb9f58f34b533fdafa1ecac747f99894fcda170740fd61643",
+  "builder/baseline/c21-profile/C21OilProbe.cs": "da1722de2aad86886faf1d1754f49527693116405ab65e026c087bcaf1879c2b",
+  "builder/baseline/c21-profile/C21PlacementProbe.cs": "c0c96846d4d4d5856ea10e67159dc9c9b8fd293880382d97cc8ddeb9f1aa89be",
+  "builder/baseline/c21-profile/C21Probe.cs": "2c598e1b2ae87acf555f6b24c3bd7cc3a32ef6d520a400ebdf6e3c8eefeab1d8",
+  "builder/baseline/c21-profile/C21Source.cs": "63158a3312a4b27f949648896d4769aa607d0596c38d3068c794a87e208d71a2"
+}

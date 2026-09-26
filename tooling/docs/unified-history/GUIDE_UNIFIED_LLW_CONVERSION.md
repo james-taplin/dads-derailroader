@@ -1,5 +1,3 @@
-> **Canonical location (2026-09-26):** `B:/LLW CONVERT/GUIDE_UNIFIED_LLW_CONVERSION.md`. Shared board: [GUIDE_SHARED.md](GUIDE_SHARED.md). Current tools: `builder/tools`; profiles: `locos/<profile>/profile`. Historical example paths below are preserved for provenance; use [path mapping](docs/MIGRATION_PATHS.md).
-
 # GUIDE_UNIFIED_LLW_CONVERSION
 
 ```yaml

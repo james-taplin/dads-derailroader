@@ -1,0 +1,55 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LLW audit record v1",
+  "type": "object",
+  "required": [
+    "schema",
+    "audit_kind",
+    "status",
+    "profile",
+    "bundle_sha256",
+    "reference",
+    "warnings",
+    "runtime_validated"
+  ],
+  "properties": {
+    "schema": {
+      "const": 1
+    },
+    "audit_kind": {
+      "enum": [
+        "current_profile",
+        "frozen_semantic_parity"
+      ]
+    },
+    "status": {
+      "enum": [
+        "passed",
+        "failed"
+      ]
+    },
+    "profile": {
+      "enum": [
+        "g29",
+        "c21"
+      ]
+    },
+    "bundle_sha256": {
+      "type": "string",
+      "pattern": "^[a-f0-9]{64}$"
+    },
+    "reference": {
+      "type": "string"
+    },
+    "warnings": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "runtime_validated": {
+      "type": "boolean"
+    }
+  },
+  "additionalProperties": true
+}

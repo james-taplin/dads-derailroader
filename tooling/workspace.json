@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "sourceCatalog": "source/catalog-1.4.3",
+  "oilSurvey": "analysis/catalogue/pilot-history/oil-cup-survey-20260926",
+  "builder": "builder",
+  "profiles": {
+    "g29": {
+      "pack": "LLW G-29",
+      "project": "locos/g29/unity",
+      "profile": "locos/g29/profile",
+      "builds": "locos/g29/builds",
+      "sourceProject": "reference/private/g29-original/unity/G29_CCL",
+      "baselineBuild": "locos/g29/builds/predecessor/prerelease2",
+      "frozenProject": "reference/private/frozen-projects/g29",
+      "unifiedReference": "locos/g29/builds/unified02",
+      "catalogId": "ls-260-g29"
+    },
+    "c21": {
+      "pack": "LLW C-21",
+      "project": "locos/c21/unity",
+      "profile": "locos/c21/profile",
+      "builds": "locos/c21/builds",
+      "sourceProject": "reference/private/pilot-original/unity/C21_CCL",
+      "baselineBuild": "locos/c21/builds/predecessor/test17",
+      "frozenProject": "reference/private/frozen-projects/c21",
+      "unifiedReference": "locos/c21/builds/unified01",
+      "catalogId": "ls-280-c21"
+    }
+  },
+  "sharedBoard": "B:/LLW CONVERT/GUIDE_SHARED.md",
+  "privateRoot": "reference/private",
+  "historicalRoots": [
+    "ARCHIVE/PRIVATE-retired-projects/2026-09-26"
+  ]
+}

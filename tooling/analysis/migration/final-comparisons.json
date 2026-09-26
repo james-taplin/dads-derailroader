@@ -1,0 +1,32 @@
+[
+  {
+    "profile": "g29",
+    "run": "migration_current01",
+    "reference": "unified02",
+    "passed": true
+  },
+  {
+    "profile": "c21",
+    "run": "migration_current01",
+    "reference": "unified01",
+    "passed": true
+  },
+  {
+    "profile": "c21",
+    "run": "migration_frozen01",
+    "reference": "predecessor/test17",
+    "passed": true
+  },
+  {
+    "profile": "g29",
+    "run": "migration_share01",
+    "reference": "share01",
+    "passed": true
+  },
+  {
+    "profile": "g29",
+    "run": "migration_frozen02",
+    "reference": "predecessor/prerelease2",
+    "passed": true
+  }
+]

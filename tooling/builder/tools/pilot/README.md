@@ -1,0 +1,1 @@
+Active entry point: pilots.py. It invokes the canonical ../resolve_clip_paths.py and reads its JSON report. Other copied predecessor helper/test scripts are retained for reference; current builds, audits and installation use ../build.py, ../audit_build.py and ../install_build.py.

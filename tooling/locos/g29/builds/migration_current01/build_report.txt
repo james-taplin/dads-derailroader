@@ -1,0 +1,773 @@
+CclLocoBuild: LLW G-29 (LLW_G29) v0.9.2 + tender LLW G-29 Tender (LLW_G29_Tender)
+
+==== Source placement validation
+RR tender spacing: loco end -3.319 - 1.000 - tender end 3.875 = offset -8.194 m
+no verified mating pin pair; Railroader end spacing governs the joint
+
+==== Generated assets (DV substitutes for RR runtime defaults)
+  dials (pressure 0-20 bar, speed 0-100 km/h, brake 0-10 bar), needle, glass, water column, coal load
+
+==== ######## CAR LLW G-29 (LLW_G29)
+
+==== Clips
+  Drivers (Drivers): loopTime on, length 1.000s = one wheel revolution
+  Pilot (Pilot): loopTime on, length 1.000s = one wheel revolution
+
+==== Materials (Lined)
+  AirPump                      livery tint #000000
+  aluminum                     untinted
+  black                        untinted
+  black                        untinted
+  blackwood_0                  untinted
+  Boiler                       livery tint #000000
+  boilerbands                  livery tint #000000
+  brass                        untinted
+  copper                       untinted
+  Cylinders                    livery tint #000000
+  Domes                        livery tint #000000
+  Doors                        livery tint #000000
+  fabric                       untinted
+  graphite                     untinted
+  green                        untinted
+  metal                        untinted
+  metal                        untinted
+  NumberPlate                  livery tint #000000
+  NumberPlate 1                livery tint #5D000B
+  polished_0                   untinted
+  red                          untinted
+  rods                         livery tint #000000
+  Roof                         livery tint #5D000B
+  rope                         untinted
+  RRR Window Glass             URP Lit -> transparent colour RGBA(0.000, 0.000, 0.000, 0.000)
+  RRR Window Glass_0           URP Lit -> transparent colour RGBA(0.000, 0.000, 0.000, 0.000)
+  rubber                       untinted
+  Stripe                       livery tint #FFFFFF
+  Stripe 1                     livery tint #FFFFFF
+  tyres                        untinted
+  white                        untinted
+  white                        untinted
+  Whitewalls                   livery tint #FFFFFF
+  Windows                      livery tint #5D000B
+34 materials converted
+
+==== Car Wizard
+deleted previous build folder Assets/_CCL_CARS/LLW G-29
+car folder Assets/_CCL_CARS/LLW G-29
+  created Assets/_CCL_CARS/LLW G-29/LLW_G29_cartype.asset
+  created Assets/_CCL_CARS/LLW G-29/LLW_G29_interactables.prefab
+  created Assets/_CCL_CARS/LLW G-29/LLW_G29_livery.asset
+  created Assets/_CCL_CARS/LLW G-29/LLW_G29_pack.asset
+  created Assets/_CCL_CARS/LLW G-29/LLW_G29_scene.unity
+  created Assets/_CCL_CARS/LLW G-29/LLW_G29_template.prefab
+
+==== Exterior prefab
+removed 2 RR components (0 missing-script) from G29_body
+  extra part headlight2 at (0.000, 2.408, 2.709)
+  extra part handrail at (-0.744, 2.404, 4.615)
+  extra part markers at (-0.793, 2.836, 4.514)
+materials applied to 82 renderers
+  Injector: wheel island (-0.314, 3.379, -3.329) cut out of Cylinder.002 (now an interior control)
+  Blowdown: wheel island (-0.182, 3.378, -3.332) cut out of Cylinder.002 (now an interior control)
+  Blower: wheel island (-0.051, 3.378, -3.333) cut out of Cylinder.002 (now an interior control)
+  Air pump: wheel island (0.182, 3.378, -3.332) cut out of Cylinder.002 (now an interior control)
+  Dynamo: wheel island (0.314, 3.379, -3.329) cut out of Cylinder.002 (now an interior control)
+  Sander: wheel island (0.660, 2.839, -3.225) cut out of Cylinder.002 (now an interior control)
+body renderer bounds centre (0.000, 2.207, 0.370) size (3.230, 4.471, 10.741)
+
+==== Colliders
+  no walkable copy of moving part Cube.031
+  no walkable copy of moving part Cube.293
+  no walkable copy of moving part Cube.299
+  no walkable copy of moving part Cube.022
+  no walkable copy of moving part Cube.294
+  no walkable copy of moving part Cube.028
+  no walkable copy of moving part Cylinder.045
+[walkable]/[items]: 1 static MeshColliders from the RR collider meshes (+ rear steps), 0 RR box/capsule colliders; all colliders removed from the model
+  collision box frame      centre (0.000, 1.000, 0.680) size (2.900, 1.300, 9.240)
+  collision box boiler     centre (0.000, 2.500, 1.300) size (1.900, 1.800, 6.600)
+  collision box cab        centre (0.000, 3.050, -3.000) size (3.000, 2.800, 2.300)
+  collision box chimney    centre (0.000, 3.750, 3.400) size (0.500, 0.950, 0.500)
+  collision box dome1      centre (0.000, 3.850, 2.300) size (0.800, 1.000, 0.800)
+  collision box dome2      centre (0.000, 3.850, 0.050) size (0.800, 1.000, 0.800)
+
+==== Running gear
+BogieF z 2.051 axles 2.321,0.000
+BogieR z -2.064 axles 2.064,0.000
+RR wheelsets: Pilot off 4.38 len 0 dia 0.68; Drivers off 0 len 4.1 dia 1.3; Wrench off 0 len 0 dia 3
+  [anim] drivers 1: under 'Main', clip 'drivers 1' re-rooted (17 objects, 17 top-level), state speed 1.000 x SpeedMultiplier
+  [anim] drivers 2: under 'Main/Armature', clip 'drivers 2' re-rooted (2 objects, 1 top-level), state speed 1.000 x SpeedMultiplier
+  [anim] drivers 3: under 'Main/Armature.001', clip 'drivers 3' re-rooted (2 objects, 1 top-level), state speed 1.000 x SpeedMultiplier
+  [anim] drivers 4: under 'Main/Armature.002', clip 'drivers 4' re-rooted (6 objects, 1 top-level), state speed 1.000 x SpeedMultiplier
+  [anim] drivers 5: under 'Main/Armature.003', clip 'drivers 5' re-rooted (6 objects, 1 top-level), state speed 1.000 x SpeedMultiplier
+  [anim] drivers 6: under 'Main/Armature.004', clip 'drivers 6' re-rooted (2 objects, 1 top-level), state speed 1.000 x SpeedMultiplier
+  [anim] drivers 7: under 'Main/Armature.005', clip 'drivers 7' re-rooted (2 objects, 1 top-level), state speed 1.000 x SpeedMultiplier
+  [anim] drivers 8: under 'Main/Armature.024', clip 'drivers 8' re-rooted (2 objects, 1 top-level), state speed 1.000 x SpeedMultiplier
+  [anim] pony front: under 'PilotTruck', clip 'pony front' re-rooted (1 objects, 1 top-level), state speed 1.000 x SpeedMultiplier
+powered wheels: 3 axles z 2.051, 0.000, -2.064; engine unit offsets 0 (RR phase)
+pony wheels: WheelRotationViaAnimation radius 0.345
+  [anim] lubricator ratchet: under 'Main/Armature.023', clip 'lubricator ratchet' re-rooted (2 objects, 2 top-level), state speed 1.000 x SpeedMultiplier
+  wheel clip Wrench: 1 animator(s), WheelRotationViaAnimation radius 1.5
+  [anim] reverser 1: under 'Main', clip 'reverser 1' re-rooted (3 objects, 3 top-level), port-driven, speed 0
+  [anim] reverser 2: under 'Main/Armature.008', clip 'reverser 2' re-rooted (2 objects, 1 top-level), port-driven, speed 0
+  [anim] reverser 1: reverser.REVERSER -> normalized time x0.4995 + 0.4995
+  [anim] reverser 2: reverser.REVERSER -> normalized time x0.4995 + 0.4995
+
+==== Cab and load animations
+  [anim] whistle linkage 1: under 'Main', clip 'whistle linkage 1' re-rooted (4 objects, 3 top-level), port-driven, speed 0
+  [anim] whistle linkage 2: under 'Main/Armature.010', clip 'whistle linkage 2' re-rooted (2 objects, 1 top-level), port-driven, speed 0
+  [anim] whistle linkage 1: whistle.EXT_IN -> normalized time x0.999 + 0
+  [anim] whistle linkage 2: whistle.EXT_IN -> normalized time x0.999 + 0
+  rod oilers: 'Connecting Rod Left' front oiler at z 2.053 left modelled (no cup)
+  rod oilers: 'Connecting Rod Left.001' front oiler at z 2.379 left modelled (no cup)
+  MOP 1: Connecting Rod Left oiler 77x103x84 mm (top 0.551) cut; cup base 0.481 on 0.484, pivot (-0.952, 0.498, -2.064), provider under the rod
+  MOP 2: Connecting Rod Left oiler 77x103x84 mm (top 0.551) cut; cup base 0.481 on 0.484, pivot (-0.952, 0.498, 0.000), provider under the rod
+  MOP 3: Main Rod Left oiler 63x100x60 mm (top 0.522) cut; cup base 0.419 on 0.422, pivot (-1.097, 0.437, -0.012), provider under the rod
+  MOP 4: Connecting Rod Left.001 oiler 77x103x84 mm (top 0.878) cut; cup base 0.808 on 0.811, pivot (0.952, 0.825, -1.737), provider under the rod
+  MOP 5: Connecting Rod Left.001 oiler 77x103x84 mm (top 0.878) cut; cup base 0.808 on 0.811, pivot (0.952, 0.825, 0.327), provider under the rod
+  MOP 6: Main Rod Left.001 oiler 63x95x56 mm (top 0.849) cut; cup base 0.751 on 0.754, pivot (1.097, 0.768, 0.335), provider under the rod
+  6 oil cups on the rods (PositionSyncProviders ride with the rods)
+  [anim] throttle 1: under 'body', clip 'throttle 1' re-rooted (1 objects, 1 top-level), port-driven, speed 0
+  [anim] throttle 2: under 'Main', clip 'throttle 2' re-rooted (1 objects, 0 top-level), port-driven, speed 0
+  [anim] throttle 1: throttle.EXT_IN -> normalized time x0.999 + 0
+  [anim] throttle 2: throttle.EXT_IN -> normalized time x0.999 + 0
+  [anim] cocks 1: under 'Main', clip 'cocks 1' re-rooted (4 objects, 3 top-level), port-driven, speed 0
+  [anim] cocks 2: under 'Main/Armature.007', clip 'cocks 2' re-rooted (2 objects, 1 top-level), port-driven, speed 0
+  [anim] cocks 1: cylinderCock.EXT_IN -> normalized time x0.999 + 0
+  [anim] cocks 2: cylinderCock.EXT_IN -> normalized time x0.999 + 0
+  [anim] fbdoor: under 'Main/Armature.014', clip 'fbdoor' re-rooted (3 objects, 3 top-level), port-driven, speed 0
+  [anim] fbdoor: fireboxDoor.EXT_IN -> normalized time x0.999 + 0
+  [anim] de 1: under 'Main', clip 'de 1' re-rooted (3 objects, 3 top-level), port-driven, speed 0
+  [anim] de 2: under 'Main/Armature.016', clip 'de 2' re-rooted (2 objects, 1 top-level), port-driven, speed 0
+  [anim] de 1: doorR.EXT_IN -> normalized time x0.999 + 0
+  [anim] de 2: doorR.EXT_IN -> normalized time x0.999 + 0
+  [anim] df 1: under 'Main', clip 'df 1' re-rooted (3 objects, 3 top-level), port-driven, speed 0
+  [anim] df 2: under 'Main/Armature.017', clip 'df 2' re-rooted (2 objects, 1 top-level), port-driven, speed 0
+  [anim] df 1: doorL.EXT_IN -> normalized time x0.999 + 0
+  [anim] df 2: doorL.EXT_IN -> normalized time x0.999 + 0
+  [anim] wlf: under 'Main', clip 'wlf' re-rooted (1 objects, 1 top-level), port-driven, speed 0
+  [anim] wlf: windowLF.EXT_IN -> normalized time x0.999 + 0
+  [anim] wlr: under 'Main', clip 'wlr' re-rooted (1 objects, 1 top-level), port-driven, speed 0
+  [anim] wlr: windowLR.EXT_IN -> normalized time x0.999 + 0
+  [anim] wrf: under 'Main', clip 'wrf' re-rooted (1 objects, 1 top-level), port-driven, speed 0
+  [anim] wrf: windowRF.EXT_IN -> normalized time x0.999 + 0
+  [anim] wrr: under 'Main', clip 'wrr' re-rooted (1 objects, 1 top-level), port-driven, speed 0
+  [anim] wrr: windowRR.EXT_IN -> normalized time x0.999 + 0
+  [anim] rh: under 'Main/RoofVent.001', clip 'rh' re-rooted (2 objects, 1 top-level), port-driven, speed 0
+  [anim] rh: roofVent.EXT_IN -> normalized time x0.999 + 0
+  [anim] bell: under 'Main/Armature.009', clip 'bell' re-rooted (7 objects, 7 top-level), state speed 0.950 x SpeedMultiplier
+  loop Bell: 1 animator(s), SpeedMultiplier = bell.BELL_NORMALIZED x 0.8 cycles/s
+  [anim] pump: under 'Main/Armature.011', clip 'pump' re-rooted (2 objects, 2 top-level), state speed 1.000 x SpeedMultiplier
+  loop Pump: 1 animator(s), SpeedMultiplier = compressor.PRODUCTION_RATE_NORMALIZED x 1.5 cycles/s
+  brake hanger Main/Brakes: 14.0 deg about (1.000, 0.000, 0.000) over 0..3.5 bar brake cylinder
+  brake hanger Main/Empty.017: 3.8 deg about (1.000, 0.000, 0.000) over 0..3.5 bar brake cylinder
+  brake hanger Main/Empty.038: 3.8 deg about (1.000, 0.000, 0.000) over 0..3.5 bar brake cylinder
+  brake hanger Main/Empty.039: 3.8 deg about (1.000, 0.000, 0.000) over 0..3.5 bar brake cylinder
+[coupler_rig_front] at (0.000, 1.050, 5.484): end beam z 5.175 (41/65 rays on it (Cylinder.002); 24 rays hit parts proud of it, up to 5.426 (Cylinder.002)) + 0.309 m as on DV wagons; live coupler z 5.733; DV buffer/hook-plate meshes hidden
+WARN [coupler_rig_front] hook: 20/25 rays meet the model inside its box, up to 251 mm out from the beam (Cylinder.002 at y 0.93 x -0.08)
+WARN [coupler_rig_front] screw chain: 15/25 rays meet the model inside its box, up to 121 mm out from the beam (Cylinder.002 at y 0.46 x 0.00)
+WARN [coupler_rig_front] cock valve: 1/25 rays meet the model inside its box, up to 30 mm out from the beam (Cylinder.002 at y 0.91 x -0.33)
+WARN [coupler_rig_front] air hose: 7/25 rays meet the model inside its box, up to 98 mm out from the beam (Cylinder.002 at y 0.57 x -0.38)
+  rlw_collision/frame: end 5.300 trimmed to the end beam 5.175
+  rlw_camera/frame: end 5.300 trimmed to the end beam 5.175
+[coupler_rig_rear] at (0.000, 1.050, -3.519): drawbar plane from RR (car end -3.319 - 0.5 m) z -3.819, inset 0.3 (DV coupler height 1.05); DV buffer/hook meshes hidden, model buffers kept
+[car plate anchor1] -> (-1.462, 2.063, -3.104) (RR decal Decal 1 (-1.445, 2.063, -3.104), surface x 1.452); yaw 180 (plate faces -x, outward)
+[car plate anchor2] -> (1.462, 2.063, -3.104) (RR decal Decal 2 (1.445, 2.063, -3.104), surface x 1.452); yaw 0 (plate faces +x, outward)
+  cab teleport volume: centre (0.000, 2.800, -3.050) size (2.800, 2.500, 1.900) (trigger, grab pass-through)
+[cab] at (0.000, 1.496, -3.600) (floor raycast y 1.496)
+sim components: brake, brakeCutout, indBrake, headlightDecoder, blower, whistle, damper, cylinderCock, fireboxDoor, injector, blowdown, reverser, throttle, poweredAxles, sand, sander, waterDetector, coalDumpControl, firebox, steamConsumptionCalculator, boiler, compressorControl, compressor, dynamoControl, dynamo, electronicsFuseController, oil, lubricatorControl, lubricator, oilingPoints, bellControl, bell, steamEngine, exhaust, traction, tenderWater, tenderCoal, fuseboxDummy, oilGearsLamp, oilingPointsLamp
+  spec steamEngine: numCylinders=2, cylinderBore=0.468, pistonStroke=0.66, minCutoff=0.1, maxCutoff=0.85, throttleMaxFlow=4, steamChestVolume=600, maxCondensationRate=0.008
+  spec boiler: diameter=1.7, length=5.6, capacityMultiplier=0.629, maxInjectorRate=3.5, defaultFeedwaterTemperature=25, waterConsumptionMultiplier=1, maxBlowdownRate=20, safetyValveOpeningPressure=12.734, safetyValveClosingPressure=12.528, maxSafetyValveVentRate=3, spawnWaterLevel=6080
+  spec firebox: maxCoalCapacity=65, burnTime=154.762, coalDumpRate=10, coalConsumptionMultiplier=1
+  spec exhaust: passiveExhaust=0.4
+  spec poweredAxles: value=3
+  pull: RR start 29362 lbf (0.85 P d2 S / D; LLW class G-29 = 29,000 lbf); DV 2 x 0.4684 m bore x 0.6604 m at r 0.65 (bore sized so DV's pull, which has no 0.85 factor, equals it); factor of adhesion 4.09
+  boiler: dia 1.7 m, length 5.600 m (barrel + half firebox), DV volume 8000 L (capacityMultiplier 0.629), spawn water 6080 L; safety 12.73/12.53 bar abs (170/167 psig); injector 3.5 L/s
+  firing: grate 2.69 m2 (~29 sq ft), fire bed 65 kg, max 0.42 kg/s = 3333 lb/h (115 lb/sq ft/h) -> 6.7 MW -> ~2.51 kg/s steam (~19901 lb/h); real saturated max ~20,000 lb/h
+  mass: car 56062 kg + boiler water = RR 62142 kg
+  sim controls (saved, no DV function): doorR.EXT_IN, doorL.EXT_IN, windowLF.EXT_IN, windowLR.EXT_IN, windowRF.EXT_IN, windowRR.EXT_IN, roofVent.EXT_IN
+  rod oilers: 'Connecting Rod Left' front oiler at z 2.053 left modelled (no cup)
+  rod oilers: 'Connecting Rod Left.001' front oiler at z 2.379 left modelled (no cup)
+oilingPoints: count 6
+  port ref boiler.FEEDWATER_TEMPERATURE: 'steamEngine.EXHAUST_TEMPERATURE' -> ''
+
+==== Lights (dynamo-powered via fuseboxDummy.ELECTRONICS_MAIN; ports headlightDecoder.FRONT_HEADLIGHTS_EXT_IN / headlightDecoder.REAR_HEADLIGHTS_EXT_IN)
+  lamp Head glass [extra prefabs]/headlight2#RRR Window Glass: (0.000, 3.429, 4.980) size (0.383, 0.383, 0.020) -> lens (0.000, 3.429, 4.993) dia 0.364
+  front: low [Head], high [Head], red [], lights at (0.000, 3.429, 5.043)
+  rear: no lamps (6 off setups)
+  cab light: sim control cabLight (execution order 49 components), bulb at (0.000, 4.055, -3.600) (ceiling y 4.075)
+tender coupling: CarAutoCoupler + RigidCoupler (rear, kind Tender), VirtualHandbrakeOverrider on [sim]
+  particle [particles]/CylCockWaterDrip -> (1.524, 0.260, 3.797)
+  particle [particles]/CylCockWaterDrip/CylCockWaterDrip L -> (-1.524, 0.260, 3.797)
+  particle [particles]/CylCockWaterDrip/CylCockWaterDrip R -> (1.524, 0.260, 3.797)
+  particle [particles]/CylCockSteam -> (1.524, 0.260, 3.797)
+  particle [particles]/CylCockSteam/CylCockSteam FR -> (1.524, 0.260, 3.797)
+  particle [particles]/CylCockSteam/CylCockSteam RR -> (1.524, 0.260, 2.697)
+  particle [particles]/CylCockSteam/CylCockSteam FL -> (-1.524, 0.260, 3.797)
+  particle [particles]/CylCockSteam/CylCockSteam RL -> (-1.524, 0.260, 2.697)
+  particle [particles]/SteamSmoke -> (0.000, 4.319, 3.389)
+  particle [particles]/Blowdown -> (1.400, 1.000, -2.600)
+  particle [particles]/Whistle -> (-0.578, 4.053, 0.031)
+  particle [particles]/SteamSafetyRelease -> (0.000, 4.400, 0.000)
+  particle [particles]/Crack -> (0.000, 0.500, 3.300)
+  particle [particles]/DynamoSteam -> (0.030, 4.070, -0.710)
+  particle [particles]/RandomLeaks -> (0.000, 0.500, 3.300)
+  particle [particles]/BlowbackParticles -> (0.000, 4.319, 3.389)
+AOShadow -> pos (0.000, -0.200, 0.982) scale (3.200, 1.000, 10.003)
+  articulated: Model/G29_body/PilotTruck -> BogieF/bogie_car (pivot z 2.051)
+  sim check (saved prefab): 49 components, all IDs unique
+--- exterior hierarchy (depth 2)
+LLW_G29_template  (0.000, 0.000, 0.000)  MagicShovellingProxy,DamageControllerProxy,CarAutoCoupler,RigidCoupler
+  [sim]  (0.000, 0.000, 0.000)  SimConnectionsDefinitionProxy,BaseControlsOverriderProxy,BasePortsOverriderProxy,VirtualHandbrakeOverrider
+    brake  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy,OverridableControlProxy
+    brakeCutout  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy,OverridableControlProxy
+    indBrake  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy,OverridableControlProxy
+    headlightDecoder  (0.000, 0.000, 0.000)  MultiplePortDecoderEncoderDefinitionProxy,OverridableControlProxy,OverridableControlProxy,BroadcastPortValueProviderProxy,BroadcastPortValueProviderProxy
+    blower  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    whistle  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy,HornControlProxy
+    damper  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    cylinderCock  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    fireboxDoor  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    injector  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    blowdown  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    reverser  (0.000, 0.000, 0.000)  ReverserDefinitionProxy,OverridableControlProxy
+    throttle  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy,OverridableControlProxy
+    poweredAxles  (0.000, 0.000, 0.000)  ConfigurablePortDefinitionProxy
+    sand  (0.000, 0.000, 0.000)  ResourceContainerProxy
+    sander  (0.000, 0.000, 0.000)  SanderDefinitionProxy,OverridableControlProxy
+    waterDetector  (0.000, 0.000, 0.000)  WaterDetectorDefinitionProxy,WaterDetectorPortFeederProxy
+    coalDumpControl  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    firebox  (0.000, 0.000, 0.000)  FireboxDefinitionProxy,FireboxSimControllerProxy,EngineOnReaderProxy,PowerOffControlProxy,EnvironmentDamagerProxy,ResourceMassPortReaderProxy
+    steamConsumptionCalculator  (0.000, 0.000, 0.000)  MultiplePortSumDefinitionProxy
+    boiler  (0.000, 0.000, 0.000)  BoilerDefinitionProxy,BoilerSimControllerProxy,ExplosionActivationOnSignalProxy,ResourceMassPortReaderProxy
+    compressorControl  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy,OverridableControlProxy
+    compressor  (0.000, 0.000, 0.000)  SteamCompressorDefinitionProxy,CompressorSimControllerProxy
+    dynamoControl  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy,OverridableControlProxy
+    dynamo  (0.000, 0.000, 0.000)  DynamoDefinitionProxy,BroadcastPortValueProviderProxy
+    electronicsFuseController  (0.000, 0.000, 0.000)  FuseControllerDefinitionProxy
+    oil  (0.000, 0.000, 0.000)  ResourceContainerProxy
+    lubricatorControl  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy,SmoothedOutputDefinitionProxy
+    lubricator  (0.000, 0.000, 0.000)  MechanicalLubricatorDefinitionProxy
+    oilingPoints  (0.000, 0.000, 0.000)  ManualOilingPointsDefinitionProxy
+    bellControl  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    bell  (0.000, 0.000, 0.000)  SteamBellDefinitionProxy
+    steamEngine  (0.000, 0.000, 0.000)  ReciprocatingSteamEngineDefinitionProxy
+    exhaust  (0.000, 0.000, 0.000)  SteamExhaustDefinitionProxy
+    traction  (0.000, 0.000, 0.000)  TractionDefinitionProxy,TractionPortFeedersProxy,WheelslipControllerProxy
+    tenderWater  (0.000, 0.000, 0.000)  ConfigurablePortsDefinitionProxy,BroadcastPortValueConsumerProxy,BroadcastPortValueConsumerProxy,BroadcastPortValueConsumerProxy,BroadcastPortValueProviderProxy
+    tenderCoal  (0.000, 0.000, 0.000)  ConfigurablePortsDefinitionProxy,BroadcastPortValueConsumerProxy,BroadcastPortValueConsumerProxy
+    fuseboxDummy  (0.000, 0.000, 0.000)  IndependentFusesDefinitionProxy
+    oilGearsLamp  (0.000, 0.000, 0.000)  LampLogicDefinitionProxy
+    oilingPointsLamp  (0.000, 0.000, 0.000)  LampLogicDefinitionProxy
+    doorR  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    doorL  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    windowLF  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    windowLR  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    windowRF  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    windowRR  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    roofVent  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+    cabLight  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+  [coupler_rig_front]  (0.000, 1.050, 5.484)  
+    Buffer_FL  (-0.864, 0.000, 0.215)  MeshFilter,MeshRenderer
+    Buffer_FR  (0.864, 0.000, 0.215)  MeshFilter,MeshRenderer
+    HookPlate_F  (0.000, -0.078, -0.332)  MeshFilter,MeshRenderer
+    BuffersAndChainRig  (0.000, 0.000, 0.000)  
+    [coupler front]  (0.000, 0.000, 0.250)  
+  [coupler_rig_rear]  (0.000, 1.050, -3.519)  
+    Buffer_RL  (0.864, 0.000, -0.214)  MeshFilter,MeshRenderer
+    Buffer_RR  (-0.864, 0.000, -0.214)  MeshFilter,MeshRenderer
+    HookPlate_R  (0.000, -0.078, 0.332)  MeshFilter,MeshRenderer
+    BuffersAndChainRig  (0.000, 0.000, 0.000)  
+    [coupler rear]  (0.000, 0.000, -0.250)  
+  [car plate anchor1]  (-1.462, 2.063, -3.104)  
+    DummyPlate  (0.000, 0.000, 0.000)  MeshFilter,MeshRenderer
+  [car plate anchor2]  (1.462, 2.063, -3.104)  
+    DummyPlate  (0.000, 0.000, 0.000)  MeshFilter,MeshRenderer
+  [colliders]  (0.000, 0.000, 0.000)  
+    [collision]  (0.000, 0.000, 0.000)  
+    [walkable] [inactive]  (0.000, 0.000, 0.000)  
+    [items] [inactive]  (0.000, 0.000, 0.000)  
+    [camera dampening] [inactive]  (0.000, 0.000, 0.000)  
+    [bogies] [inactive]  (0.000, 0.000, 0.000)  
+  BogieF  (0.000, 0.000, 2.051)  
+    bogie_car  (0.000, 0.000, 0.000)  
+  BogieR  (0.000, 0.000, -2.064)  
+    bogie_car  (0.000, 0.000, 0.000)  
+  Model  (0.000, 0.000, 0.000)  
+    G29_body  (0.000, 0.000, 0.000)  
+    [axle]  (0.000, 0.650, 2.051)  PoweredWheelProxy
+    [axle]  (0.000, 0.650, 0.000)  PoweredWheelProxy
+    [axle]  (0.000, 0.650, -2.064)  PoweredWheelProxy
+    [explosion anchor]  (0.000, 3.300, -1.000)  
+  AOShadow  (0.000, -0.200, 0.982)  VehicleAOShadow
+  [powered wheels]  (0.000, 0.000, 0.000)  PoweredWheelsManagerProxy,PoweredWheelRotationViaAnimationProxy
+  [pony wheels]  (0.000, 0.000, 0.000)  WheelRotationViaAnimationProxy
+  [wheel clip] lubricator ratchet  (0.000, 0.000, 0.000)  WheelRotationViaAnimationProxy
+  [wheelsparks]  (0.000, 0.000, 0.000)  CustomWheelSlideSparks,WheelslipSparksControllerProxy
+  [cab]  (0.000, 1.496, -3.600)  CabTeleportDestinationProxy
+    CabHighlightGlow  (0.000, 1.000, 0.000)  TeleportHoverGlowProxy
+    RoomscalePosition  (0.000, 0.000, 0.000)  
+    teleport_indicator  (0.000, 1.304, 0.550)  BoxCollider,GrabberRaycastPassThroughProxy
+  [headlights]  (0.000, 0.000, 0.000)  HeadlightsMainControllerProxy,CarLightsOptimizerProxy,HeadlightBeamControllerProxy
+    FrontSide  (0.000, 0.000, 0.000)  HeadlightSetup,HeadlightSetup,HeadlightSetup,HeadlightSetup,HeadlightSetup,HeadlightSetup
+    RearSide  (0.000, 0.000, 0.000)  HeadlightSetup,HeadlightSetup,HeadlightSetup,HeadlightSetup,HeadlightSetup,HeadlightSetup
+  [cab lights]  (0.000, 0.000, 0.000)  CabLightsControllerProxy
+    bulb  (0.000, 4.055, -3.600)  MeshFilter,MeshRenderer
+    Point Light  (0.000, 3.955, -3.600)  Light,ItemLightProxy
+  [particles]  (0.000, 0.000, 0.000)  ParticlesPortReadersControllerProxy,TunnelParticleDampeningProxy
+    CylCockWaterDrip  (1.524, 0.260, 3.797)  
+    CylCockSteam  (1.524, 0.260, 3.797)  CylinderCockParticlePortReaderProxy
+    SteamSmoke  (0.000, 4.319, 3.389)  SteamSmokeParticlePortReaderProxy
+    Blowdown  (1.400, 1.000, -2.600)  
+    Whistle  (-0.578, 4.053, 0.031)  
+    SteamSafetyRelease  (0.000, 4.400, 0.000)  
+    Crack  (0.000, 0.500, 3.300)  
+    DynamoSteam  (0.030, 4.070, -0.710)  
+    RandomLeaks [inactive]  (0.000, 0.500, 3.300)  
+    BlowbackParticles  (0.000, 4.319, 3.389)  BlowbackParticlePortReaderProxy,BoxCollider
+  [interior LOD]  (0.000, 0.000, 0.000)  
+
+==== Interior prefab (DV gauges, sight glasses, firebox)
+  gauge BPG    BoilerPressure         at (0.238, 3.175, -3.266) dia 0.228 (RR scale 1.2); nearest model part Cylinder.143 c (0.080, 2.994, -3.248) s (0.204, 0.090, 0.434) (d 0.241)
+  gauge RMG    DualBrakeCylinderLine  at (0.756, 3.291, -2.180) dia 0.081 (RR scale 0.425); nearest model part none
+  gauge RMG 1  DualReservoirMainEq    at (0.657, 3.291, -2.180) dia 0.081 (RR scale 0.425); nearest model part none
+  HUD-only gauge for speed (traction.WHEEL_SPEED_KMH_EXT_IN): the model has no instrument for it
+  HUD-only gauge for chestPressure (steamEngine.STEAM_CHEST_PRESSURE): the model has no instrument for it
+  sight glass SightGlassFireman: column 0.372 m from y 2.749; nearest model part none
+firebox: backhead z -3.150, door centre (0.000, 2.000, -3.180) -> I_Firebox (0.000, 1.550, -2.400)
+  firebox indicator capacity 65 kg (matches configured simulation)
+  HUD indicators: steam, chest, speed, brake pipe/cylinder/main res, boiler water, firebox coal + HUD-only fire temp, tank water, bunker coal, sand, oil, lubrication
+
+==== Interior controls
+  lever C_Throttle               throttle.EXT_IN            axis (0.166, 0.986, 0.017) 0..32.7 deg, pivot (-0.101, 2.988, -3.422), 21 notches, grip box (0.928, 2.759, -3.184) size (0.029, 0.025, 0.056)
+  lever C_Reverser               reverser.CONTROL_EXT_IN    axis (1.000, 0.000, 0.000) 0..31.9 deg, pivot (1.003, 1.292, -2.852), 41 notches, grip box (1.016, 2.577, -3.253) size (0.042, 0.053, 0.101)
+  lever C_TrainBrake             brake.EXT_IN               axis (0.000, -1.000, 0.000) 0..75.0 deg, pivot (1.279, 2.456, -2.844), 11 notches, grip box (1.079, 2.416, -2.958) size (0.024, 0.031, 0.029)
+  lever C_LocoBrake              indBrake.EXT_IN            axis (0.000, -1.000, 0.000) 0..110.0 deg, pivot (1.257, 2.623, -2.655), 11 notches, grip box (1.136, 2.594, -2.655) size (0.101, 0.027, 0.030)
+  lever C_Whistle                whistle.EXT_IN             axis (-1.000, 0.000, 0.000) 0..25.0 deg, pivot (0.281, 3.601, -2.216), spring return, grip box (0.987, 3.510, -2.577) size (0.120, 0.250, 0.120) (config)
+  lever C_Cocks                  cylinderCock.EXT_IN        axis (1.000, 0.000, 0.000) 0..40.0 deg, pivot (0.649, 1.632, -3.204), 2 notches, grip box (0.649, 1.667, -3.228) size (0.035, 0.311, 0.234)
+  lever C_Peddle.002             fireboxDoor.EXT_IN         axis (-1.000, 0.000, 0.000) 0..30.0 deg, pivot (-0.266, 1.669, -3.215), 10 notches, grip box (-0.266, 1.596, -3.373) size (0.058, 0.045, 0.095)
+  lever C_DoorEngineer           (hidden) doorR.EXT_IN               axis (0.000, 1.000, 0.000) 0..90.0 deg, pivot (1.404, 2.705, -2.124), 5 notches, grip box (1.050, 2.700, -2.130) size (0.100, 0.600, 0.120) (config)
+  lever C_DoorFireman            (hidden) doorL.EXT_IN               axis (0.000, -1.000, 0.000) 0..90.0 deg, pivot (-1.404, 2.705, -2.124), 5 notches, grip box (-1.050, 2.700, -2.130) size (0.100, 0.600, 0.120) (config)
+  lever C_Bone                   (hidden) roofVent.EXT_IN            axis (1.000, 0.000, 0.000) 0..26.0 deg, pivot (-0.003, 4.181, -2.982), 5 notches, grip box (0.000, 3.920, -3.190) size (0.080, 0.200, 0.100) (config)
+  puller C_Window left front    windowLF.EXT_IN          slides 0.579 m along (0.000, 0.000, 1.000) from (-1.430, 2.829, -3.084) (clip WLF), grip (0.018, 0.700, 0.550)
+  puller C_Window left rear     windowLR.EXT_IN          slides 1.204 m along (0.000, 0.000, 1.000) from (-1.407, 2.829, -3.673) (clip WLR), grip (0.018, 0.700, 0.550)
+  puller C_Window right front   windowRF.EXT_IN          slides 0.579 m along (0.000, 0.000, 1.000) from (1.430, 2.829, -3.084) (clip WRF), grip (0.018, 0.700, 0.550)
+  puller C_Window right rear    windowRR.EXT_IN          slides 1.204 m along (0.000, 0.000, 1.000) from (1.407, 2.829, -3.673) (clip WRR), grip (0.018, 0.700, 0.550)
+  RR wheel C_Injector          injector.EXT_IN              at (-0.314, 3.379, -3.329) size (0.089, 0.089, 0.023) (Cylinder.002 island, 592 tris), 18 notches
+  RR wheel C_Blowdown          blowdown.EXT_IN              at (-0.182, 3.378, -3.332) size (0.089, 0.089, 0.021) (Cylinder.002 island, 592 tris), 10 notches
+  RR wheel C_Blower            blower.EXT_IN                at (-0.051, 3.378, -3.333) size (0.089, 0.089, 0.020) (Cylinder.002 island, 592 tris), 18 notches
+  RR wheel C_Air pump          compressorControl.EXT_IN     at (0.182, 3.378, -3.332) size (0.089, 0.089, 0.021) (Cylinder.002 island, 592 tris), 2 notches
+  RR wheel C_Dynamo            dynamoControl.EXT_IN         at (0.314, 3.379, -3.329) size (0.089, 0.089, 0.023) (Cylinder.002 island, 592 tris), 2 notches
+  RR wheel C_Sander            sander.CONTROL_EXT_IN        at (0.660, 2.839, -3.225) size (0.078, 0.078, 0.011) (Cylinder.002 island, 592 tris), 2 notches
+  lever C_Damper               damper.EXT_IN                      at (-0.780, 2.350, -3.167) on Cylinder.002, 8 notches
+  lever C_Coal dump            coalDumpControl.EXT_IN             at (-0.680, 2.350, -3.167) on Cylinder.002, 3 notches
+  lever C_Cab light            cabLight.EXT_IN                    at (-0.580, 2.350, -3.167) on Cylinder.002, 2 notches
+  lever C_Headlights           headlightDecoder.HEADLIGHTS_EXT_IN at (-0.700, 2.050, -3.167) on Cylinder.002, 7 notches
+  lever C_Lubricator           lubricatorControl.EXT_IN           at (-0.600, 2.050, -3.167) on Cylinder.002, 2 notches
+  lever C_Brake cutout         brakeCutout.EXT_IN                 at (0.460, 2.350, -3.167) on Cylinder.002, 2 notches
+  lever C_Bell                 bellControl.EXT_IN                 at (0.560, 2.350, -3.167) on Cylinder.002, 2 notches
+  LocoControlsReader: cylinderCock, injector, fireboxDoor, blower, damper, blowdown, coalDumpControl, lubricatorControl, headlightDecoder, cabLight, bellControl
+  control sweep (cab collider): C_Cocks (0..40 deg) meets RR Cube.232 at 28, 30, 33, 35, 38, 40 deg
+  control sweep (cab collider): C_Cocks (0..40 deg) meets RR Cylinder.002 at 0, 3, 5, 8, 10, 13, 15, 18, 20, 23, 25, 28, 30, 33, 35, 38, 40 deg
+  control sweep (cab collider): C_Peddle.002 (0..30 deg) meets RR Cylinder.002 at 26, 28, 30 deg
+  control sweep (cab collider): C_Peddle.002 (0..30 deg) meets RR Peddle.002 at 0, 2, 4, 6, 9, 11, 13, 15, 17, 19 deg
+  control sweep (cab collider): C_DoorEngineer (0..90 deg) meets RR Cube.031 at 0, 6, 11 deg
+  control sweep (cab collider): C_DoorEngineer (0..90 deg) meets RR Cylinder.002 at 0, 6, 11 deg
+  control sweep (cab collider): C_DoorFireman (0..90 deg) meets RR Cube.293 at 0, 6, 11 deg
+  control sweep (cab collider): C_DoorFireman (0..90 deg) meets RR Cylinder.002 at 0, 6, 11 deg
+  control sweep (cab collider): C_Bone (0..26 deg) meets RR Cylinder.045 at 0, 2, 3, 5, 6, 8, 10, 11, 13, 15, 16, 18, 19, 21, 23, 24, 26 deg
+  control sweep: 27 control colliders, 0 clashes
+  not built: bell / wipers (the model has neither)
+--- interior hierarchy (depth 2)
+LLW_G29_interior  (0.000, 0.000, 0.000)  LocoIndicatorReaderProxy,LocoControlsReaderProxy
+  gauge BPG  (0.238, 3.175, -3.266)  
+    face  (0.000, 0.000, 0.002)  MeshFilter,MeshRenderer
+    glass  (0.000, 0.000, 0.012)  MeshFilter,MeshRenderer
+    needle  (0.000, 0.000, 0.006)  IndicatorGaugeProxy,IndicatorPortReaderProxy
+  gauge RMG  (0.756, 3.291, -2.180)  
+    face  (0.000, 0.000, 0.002)  MeshFilter,MeshRenderer
+    glass  (0.000, 0.000, 0.012)  MeshFilter,MeshRenderer
+    needle cylinder  (0.000, 0.000, 0.006)  IndicatorGaugeProxy,IndicatorBrakeCylinderReaderProxy
+    needle pipe  (0.000, 0.000, 0.008)  IndicatorGaugeProxy,IndicatorBrakePipeReaderProxy
+  gauge RMG 1  (0.657, 3.291, -2.180)  
+    face  (0.000, 0.000, 0.002)  MeshFilter,MeshRenderer
+    glass  (0.000, 0.000, 0.012)  MeshFilter,MeshRenderer
+    needle main res  (0.000, 0.000, 0.006)  IndicatorGaugeProxy,IndicatorBrakeReservoirReaderProxy
+    needle eq (pipe)  (0.000, 0.000, 0.008)  IndicatorGaugeProxy,IndicatorBrakePipeReaderProxy
+  HUD-only speed  (0.000, 0.000, 0.000)  IndicatorGaugeProxy,IndicatorPortReaderProxy
+  HUD-only chestPressure  (0.000, 0.000, 0.000)  IndicatorGaugeProxy,IndicatorPortReaderProxy
+  sight glass SightGlassFireman  (-0.458, 2.749, -3.250)  
+    scaler  (0.000, 0.000, 0.000)  IndicatorScalerProxy,IndicatorPortReaderProxy
+  I_Firebox  (0.000, 1.550, -2.400)  FireProxy,InteriorNonStandardLayerProxy,ItemUseTargetProxy
+    scaler  (0.000, 0.000, 0.000)  IndicatorScalerProxy,IndicatorPortReaderProxy
+    sparks  (0.000, 0.150, 0.000)  CopyVanillaParticleSystem
+    Coal Collider  (0.000, 0.200, 0.000)  BoxCollider,InteriorNonStandardLayerProxy,NonPhysicsCoalTargetProxy,InteractablePortFeederProxy
+    Coal Collider VR Helper  (0.000, 0.250, -0.500)  BoxCollider,InteriorNonStandardLayerProxy,NonPhysicsCoalTargetProxy
+    ignition collider  (0.000, 0.150, 0.000)  SphereCollider,InteriorNonStandardLayerProxy,InteractablePortFeederProxy
+    light  (0.000, 0.350, 0.000)  Light
+  FIRE FEED  (0.000, 2.000, -3.200)  BoxCollider,ItemUseRedirectProxy
+  Indicators (HUD only)  (0.000, 0.000, 0.000)  
+    fireTemperature  (0.000, 0.000, 0.000)  IndicatorScalerProxy,IndicatorPortReaderProxy
+    tenderWaterLevel  (0.000, 0.000, 0.000)  IndicatorScalerProxy,IndicatorPortReaderProxy
+    tenderCoalLevel  (0.000, 0.000, 0.000)  IndicatorScalerProxy,IndicatorPortReaderProxy
+    sand  (0.000, 0.000, 0.000)  IndicatorScalerProxy,IndicatorPortReaderProxy
+    oil  (0.000, 0.000, 0.000)  IndicatorScalerProxy,IndicatorPortReaderProxy
+    transmissionOil  (0.000, 0.000, 0.000)  IndicatorScalerProxy,IndicatorPortReaderProxy
+  Controls  (0.000, 0.000, 0.000)  
+    C_Throttle  (-0.101, 2.988, -3.422)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy
+    C_Reverser  (1.003, 1.292, -2.852)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy
+    C_TrainBrake  (1.279, 2.456, -2.844)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy
+    C_LocoBrake  (1.257, 2.623, -2.655)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy
+    C_Whistle  (0.281, 3.601, -2.216)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy
+    C_Cocks  (0.649, 1.632, -3.204)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy,ToggleValueKeyboardInputProxy
+    label cyl_cock  (0.649, 1.587, -3.228)  LabelLocalizer
+    C_Peddle.002  (-0.266, 1.669, -3.215)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy,ToggleValueKeyboardInputProxy
+    label fire_door  (-0.266, 1.516, -3.373)  LabelLocalizer
+    C_DoorEngineer  (1.404, 2.705, -2.124)  LeverProxy,InteractablePortFeederProxy
+    C_DoorFireman  (-1.404, 2.705, -2.124)  LeverProxy,InteractablePortFeederProxy
+    C_Bone  (-0.003, 4.181, -2.982)  LeverProxy,InteractablePortFeederProxy
+    S_Window left front  (-1.430, 2.829, -3.084)  
+    S_Window left rear  (-1.407, 2.829, -3.673)  
+    S_Window right front  (1.430, 2.829, -3.084)  
+    S_Window right rear  (1.407, 2.829, -3.673)  
+    C_Injector  (-0.314, 3.379, -3.329)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy,ToggleValueKeyboardInputProxy
+    label injector  (-0.314, 3.294, -3.142)  LabelLocalizer
+    C_Blowdown  (-0.182, 3.378, -3.332)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy,ToggleValueKeyboardInputProxy
+    label water_dump  (-0.182, 3.294, -3.160)  LabelLocalizer
+    C_Blower  (-0.051, 3.378, -3.333)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy,ToggleValueKeyboardInputProxy
+    label blower  (-0.051, 3.294, -3.163)  LabelLocalizer
+    C_Air pump  (0.182, 3.378, -3.332)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,ToggleValueKeyboardInputProxy
+    label air_pump  (0.182, 3.294, -3.160)  LabelLocalizer
+    C_Dynamo  (0.314, 3.379, -3.329)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,ToggleValueKeyboardInputProxy
+    label dynamo  (0.314, 3.294, -3.142)  LabelLocalizer
+    C_Sander  (0.660, 2.839, -3.225)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy,ToggleValueKeyboardInputProxy
+    label sander  (0.660, 2.760, -3.163)  LabelLocalizer
+    C_Damper  (-0.780, 2.350, -3.167)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy,ToggleValueKeyboardInputProxy
+    label damper  (-0.780, 2.315, -3.163)  LabelLocalizer
+    C_Coal dump  (-0.680, 2.350, -3.167)  LeverProxy,InteractablePortFeederProxy
+    label ash_pan  (-0.680, 2.315, -3.163)  LabelLocalizer
+    C_Cab light  (-0.580, 2.350, -3.167)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,ToggleValueKeyboardInputProxy
+    label cab_lights  (-0.580, 2.315, -3.163)  LabelLocalizer
+    C_Headlights  (-0.700, 2.050, -3.167)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy
+    label headlights  (-0.700, 2.015, -3.163)  LabelLocalizer
+    C_Lubricator  (-0.600, 2.050, -3.167)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy
+    label lubricator  (-0.600, 2.015, -3.163)  LabelLocalizer
+    C_Brake cutout  (0.460, 2.350, -3.167)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy,ToggleValueKeyboardInputProxy
+    label brake_cutout  (0.460, 2.315, -3.163)  LabelLocalizer
+    C_Bell  (0.560, 2.350, -3.167)  LeverProxy,InteractablePortFeederProxy,MouseScrollKeyboardInputProxy,AnalogSetValueJoystickInputProxy,ToggleValueKeyboardInputProxy
+    label bell  (0.560, 2.315, -3.163)  LabelLocalizer
+
+==== Interior LOD
+[interior LOD]: 34 renderers, 171 components removed
+
+==== Interactables prefab
+[brake release] template local rot (5.357, 90.000, 0.000)
+  brake release: exact pose (config)
+LLW_G29 final stock release: outward handle, valve behind skin; scaled bracket .431255 m checked at (0.6, 1.2, -3.9) (exact)
+[brake small] -, [brake release] (0.551, 1.240, -3.850)
+  rod oilers: 'Connecting Rod Left' front oiler at z 2.053 left modelled (no cup)
+  rod oilers: 'Connecting Rod Left.001' front oiler at z 2.379 left modelled (no cup)
+6 oil cups, synced to the body providers
+--- interactables hierarchy (depth 2)
+LLW_G29_interactables  (0.000, 0.000, 0.000)  
+  [brake release]  (0.551, 1.240, -3.850)  
+    Cube  (0.000, 0.000, 0.034)  MeshFilter,MeshRenderer
+    Cylinder  (0.000, 0.000, 0.544)  MeshFilter,MeshRenderer
+    Cube (1)  (0.000, 0.000, 1.032)  MeshFilter,MeshRenderer
+    Cylinder (1)  (0.000, 0.212, 0.798)  MeshFilter,MeshRenderer
+  Water  (0.000, 0.000, 0.000)  
+  ManualOilingPoints  (0.000, 0.000, 0.000)  
+    MOP 1  (-0.952, 0.498, -2.064)  ManualOilingPoint
+    MOP 2  (-0.952, 0.498, 0.000)  ManualOilingPoint
+    MOP 3  (-1.097, 0.437, -0.012)  ManualOilingPoint
+    MOP 4  (0.952, 0.825, -1.737)  ManualOilingPoint
+    MOP 5  (0.952, 0.825, 0.327)  ManualOilingPoint
+    MOP 6  (1.097, 0.768, 0.335)  ManualOilingPoint
+
+==== Sound prefab
+  vanilla systems replaced: Whistle, Airpump, Dynamo, BellRing, BellPump
+  sound RR Whistle   g29_whistle_cnj3.wav (4.60 s loop) on exhaust.WHISTLE_FLOW_NORMALIZED x1, mixer 12, at (-0.578, 4.050, 0.031), 20..1200 m
+  sound RR Bell      g29_bell_rope.wav (3.35 s loop) on bell.BELL_NORMALIZED x1, mixer 12, at (0.000, 3.900, 1.230), 8..600 m
+  sound RR Air pump  g29_airpump.wav (16.67 s loop) on compressor.PRODUCTION_RATE_NORMALIZED x1, mixer 21, at (-1.200, 2.400, 0.000), 3..250 m
+  sound RR Dynamo    g29_dynamo.wav (4.61 s loop) on dynamo.DYNAMO_FLOW_NORMALIZED x1, mixer 7, at (0.030, 4.070, -0.710), 3..150 m
+saved Assets/_CCL_CARS/LLW G-29/LLW_G29_Sound.prefab (18 vanilla audio systems incl. steam bell, 4 RR sounds; RR whistle/chuff anchors)
+
+==== Assets
+pack LLW_G29
+mass 56062 kg, wheel radius 0.65, license SH282, HUD 20, wheelslip coef 0.292, no handbrake (tender's)
+type id LLW_G29; livery LLW_G29; hide couplers front False back True
+
+==== ######## CAR LLW G-29 Tender (LLW_G29_Tender) - tender
+
+==== Clips
+
+==== Materials (Lined )
+  black_0                      untinted
+  blackwood                    untinted
+  coal                         untinted
+  color                        livery tint #FFFFFF
+  color 1                      livery tint #FFFFFF
+  deck                         livery tint #000000
+  Fox Truck Main               untinted
+  metal_0                      untinted
+  polished                     untinted
+  RRR Window Glass             URP Lit -> transparent colour RGBA(0.000, 0.000, 0.000, 0.000)
+  Rubber_0                     untinted
+  TrucksColor                  livery tint #000000
+  water                        untinted
+  Whitewalls                   livery tint #FFFFFF
+14 materials converted
+
+==== Car Wizard
+deleted previous build folder Assets/_CCL_CARS/LLW G-29 Tender
+car folder Assets/_CCL_CARS/LLW G-29 Tender
+  created Assets/_CCL_CARS/LLW G-29 Tender/LLW_G29_Tender_cartype.asset
+  created Assets/_CCL_CARS/LLW G-29 Tender/LLW_G29_Tender_interactables.prefab
+  created Assets/_CCL_CARS/LLW G-29 Tender/LLW_G29_Tender_livery.asset
+  created Assets/_CCL_CARS/LLW G-29 Tender/LLW_G29_Tender_scene.unity
+  created Assets/_CCL_CARS/LLW G-29 Tender/LLW_G29_Tender_template.prefab
+
+==== Exterior prefab
+removed 2 RR components (0 missing-script) from G29_tender_body
+materials applied to 13 renderers
+body renderer bounds centre (0.000, 1.780, 0.204) size (3.071, 3.453, 8.540)
+
+==== Colliders
+  no walkable copy of moving part Cylinder.190
+[walkable]/[items]: 1 static MeshColliders from the RR collider meshes (+ rear steps), 0 RR box/capsule colliders; all colliders removed from the model
+  collision box frame      centre (0.000, 0.850, 0.060) size (2.600, 0.500, 7.580)
+  collision box tank       centre (0.000, 1.950, 0.020) size (3.000, 1.800, 6.900)
+
+==== Running gear
+BogieF z 1.950 axles 0.838,-0.838
+BogieR z -1.950 axles 0.838,-0.838
+removed 2 RR components (0 missing-script) from Fox-Truck-2s
+  truck Fox-Truck-2s wheelset Wheel1 at z 1.112 (y 0.418) -> [axle] z 1.112 (off -0.000)
+  truck Fox-Truck-2s wheelset Wheel2 at z 2.788 (y 0.418) -> [axle] z 2.788 (off +0.000)
+removed 2 RR components (0 missing-script) from Fox-Truck-2s
+  truck Fox-Truck-2s wheelset Wheel1 at z -2.788 (y 0.418) -> [axle] z -2.788 (off -0.000)
+  truck Fox-Truck-2s wheelset Wheel2 at z -1.112 (y 0.418) -> [axle] z -1.112 (off +0.000)
+RR wheelsets: 
+
+==== Cab and load animations
+  [anim] water: under 'Main', clip 'water' re-rooted (1 objects, 1 top-level), port-driven, speed 0
+  [anim] water: water.NORMALIZED -> normalized time x0.999 + 0
+  [anim] coal: under 'Main', clip 'coal' re-rooted (1 objects, 1 top-level), port-driven, speed 0
+  [anim] coal: coal.NORMALIZED -> normalized time x0.999 + 0
+  [anim] waterhatch: under 'Main', clip 'waterhatch' re-rooted (1 objects, 1 top-level), port-driven, speed 0
+  [anim] waterhatch: waterHatch.EXT_IN -> normalized time x0.999 + 0
+[coupler_rig_front] at (0.000, 1.050, 4.075): drawbar plane from RR (car end 3.875 + 0.5 m) z 4.375, inset 0.3 (DV coupler height 1.05); DV buffer/hook meshes hidden, model buffers kept
+[coupler_rig_rear] at (0.000, 1.050, -4.047): end beam z -3.738 (46/65 rays on it (Cube.115); 17 rays hit parts proud of it, up to -3.986 (Cube.115)) + 0.309 m as on DV wagons; live coupler z -4.296; DV buffer/hook-plate meshes hidden
+WARN [coupler_rig_rear] hook: 15/25 rays meet the model inside its box, up to 38 mm out from the beam (Cube.115 at y 0.87 x -0.08)
+WARN [coupler_rig_rear] screw chain: 10/25 rays meet the model inside its box, up to 247 mm out from the beam (Cube.115 at y 0.74 x -0.08)
+WARN [coupler_rig_rear] cock valve: 4/25 rays meet the model inside its box, up to 31 mm out from the beam (Cube.115 at y 0.96 x 0.47)
+  air hose    clear of the model
+[car plate anchor1] -> (1.456, 1.792, 0.000) (RR decal lettering2 (1.455, 1.792, 0.000), surface x 1.446); yaw 0 (plate faces +x, outward)
+[car plate anchor2] -> (-1.456, 1.792, 0.000) (RR decal lettering1 (-1.455, 1.792, 0.000), surface x 1.446); yaw 180 (plate faces -x, outward)
+sim components: coal, water, headlightsControlFront, headlightsControlRear, dynamoFlowDummy, electronicsFuseControllerDummy, fusebox
+  water: capacity 22712 (RR load slot)
+  coal: capacity 8165 (RR load slot)
+  sim controls (saved, no DV function): waterHatch.EXT_IN
+tender: KeepCoupledInteriorLoaded (front)
+AOShadow -> pos (0.000, -0.200, 0.014) scale (3.200, 1.000, 9.122)
+  sim check (saved prefab): 8 components, all IDs unique
+--- exterior hierarchy (depth 2)
+LLW_G29_Tender_template  (0.000, 0.000, 0.000)  DamageControllerProxy,KeepCoupledInteriorLoaded
+  [sim]  (0.000, 0.000, 0.000)  SimConnectionsDefinitionProxy,BaseControlsOverriderProxy
+    coal  (0.000, 0.000, 0.000)  ResourceContainerProxy,CoalPileSimControllerProxy,BroadcastPortValueProviderProxy,BroadcastPortValueProviderProxy
+    water  (0.000, 0.000, 0.000)  ResourceContainerProxy,BroadcastPortValueProviderProxy,BroadcastPortValueProviderProxy,BroadcastPortValueProviderProxy,BroadcastPortValueConsumerProxy
+    headlightsControlFront  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy,OverridableControlProxy,BroadcastPortValueConsumerProxy
+    headlightsControlRear  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy,OverridableControlProxy,BroadcastPortValueConsumerProxy
+    dynamoFlowDummy  (0.000, 0.000, 0.000)  ConfigurablePortDefinitionProxy,BroadcastPortValueConsumerProxy
+    electronicsFuseControllerDummy  (0.000, 0.000, 0.000)  FuseControllerDefinitionProxy
+    fusebox  (0.000, 0.000, 0.000)  IndependentFusesDefinitionProxy
+    waterHatch  (0.000, 0.000, 0.000)  ExternalControlDefinitionProxy
+  [coupler_rig_front]  (0.000, 1.050, 4.075)  
+    Buffer_FL  (-0.864, 0.000, 0.215)  MeshFilter,MeshRenderer
+    Buffer_FR  (0.864, 0.000, 0.215)  MeshFilter,MeshRenderer
+    HookPlate_F  (0.000, -0.078, -0.332)  MeshFilter,MeshRenderer
+    BuffersAndChainRig  (0.000, 0.000, 0.000)  
+    [coupler front]  (0.000, 0.000, 0.250)  
+  [coupler_rig_rear]  (0.000, 1.050, -4.047)  
+    Buffer_RL  (0.864, 0.000, -0.214)  MeshFilter,MeshRenderer
+    Buffer_RR  (-0.864, 0.000, -0.214)  MeshFilter,MeshRenderer
+    HookPlate_R  (0.000, -0.078, 0.332)  MeshFilter,MeshRenderer
+    BuffersAndChainRig  (0.000, 0.000, 0.000)  
+    [coupler rear]  (0.000, 0.000, -0.250)  
+  [car plate anchor1]  (1.456, 1.792, 0.000)  
+    DummyPlate  (0.000, 0.000, 0.000)  MeshFilter,MeshRenderer
+  [car plate anchor2]  (-1.456, 1.792, 0.000)  
+    DummyPlate  (0.000, 0.000, 0.000)  MeshFilter,MeshRenderer
+  [colliders]  (0.000, 0.000, 0.000)  
+    [collision]  (0.000, 0.000, 0.000)  
+    [walkable] [inactive]  (0.000, 0.000, 0.000)  
+    [items] [inactive]  (0.000, 0.000, 0.000)  
+    [camera dampening] [inactive]  (0.000, 0.000, 0.000)  
+    [bogies] [inactive]  (0.000, 0.000, 0.000)  
+  BogieF  (0.000, 0.000, 1.950)  
+    bogie_car  (0.000, 0.000, 0.000)  
+  BogieR  (0.000, 0.000, -1.950)  
+    bogie_car  (0.000, 0.000, 0.000)  
+  Model  (0.000, 0.000, 0.000)  
+    G29_tender_body  (0.000, 0.000, 0.000)  
+  AOShadow  (0.000, -0.200, 0.014)  VehicleAOShadow
+  [wheelsparks]  (0.000, 0.000, 0.000)  CustomWheelSlideSparks
+
+==== Interactables prefab
+[brake small] template local rot (0.000, 90.000, 0.000)
+  handbrake wheel: hint (-1.050, 2.350, 3.620), face looks (0.000, 0.000, 1.000) -> (-1.140, 2.350, 3.582): moved -0.09 m sideways onto the face's crest (surface 3.542 along the normal, crest-to-hub gap 12 mm); rim 68 mm clear, shaft 22 mm into the mount
+  lever C_WaterHatch             (hidden) waterHatch.EXT_IN          axis (1.000, 0.000, 0.000) 0..131.0 deg, pivot (-0.002, 2.679, -2.193), 5 notches, grip box (0.000, 2.720, -2.480) size (0.350, 0.120, 0.150) (config)
+[brake release] template local rot (5.357, 90.000, 0.000)
+  brake release: z -0.300 (hint -0.300), rod y 0.940 = 0.16 m under the side edge (x 1.446, bottom y 1.100); valve body at x 0.529 behind the face at x 1.279; handle 1.386..1.596, 0.150 m out past the edge
+LLW_G29_Tender stock handbrake: +z outward, shaft mount 0.0400 m, rotating rim clearance >= 0.0707 m (24/24 samples)
+LLW_G29_Tender final stock release: outward handle, valve behind skin; scaled bracket .431255 m checked at (0.5, 0.9, -0.3) (automatic)
+[brake small] (-1.140, 2.350, 3.582), [brake release] (0.529, 0.940, -0.300)
+coal pile trigger at (0.000, 2.300, 2.750) size (2.200, 0.900, 1.700)
+coal target at (0.000, 2.865, 0.557) (RR LoadTarget LoadTarget Coal)
+water target LoadTarget Water 1 at (0.000, 2.780, -2.467) (RR LoadTarget)
+0 oil cups, synced to the body providers
+--- interactables hierarchy (depth 2)
+LLW_G29_Tender_interactables  (0.000, 0.000, 0.000)  
+  [brake release]  (0.529, 0.940, -0.300)  
+    Cube  (0.000, 0.000, 0.034)  MeshFilter,MeshRenderer
+    Cylinder  (0.000, 0.000, 0.544)  MeshFilter,MeshRenderer
+    Cube (1)  (0.000, 0.000, 1.032)  MeshFilter,MeshRenderer
+    Cylinder (1)  (0.000, 0.212, 0.798)  MeshFilter,MeshRenderer
+  [brake small]  (-1.140, 2.350, 3.582)  
+    Cylinder  (0.000, 0.000, 0.059)  MeshFilter,MeshRenderer
+    Cylinder (1)  (0.000, 0.000, -0.012)  MeshFilter,MeshRenderer
+  C_WaterHatch  (-0.002, 2.679, -2.193)  LeverProxy,InteractablePortFeederProxy
+    collider  (0.002, 0.041, -0.287)  BoxCollider
+    IA_WaterHatch [inactive]  (0.002, 0.041, -0.287)  BoxCollider,StaticInteractionAreaProxy
+  Coal  (0.000, 2.300, 2.750)  
+    pile_trigger  (0.000, 0.000, 0.000)  BoxCollider,InteriorNonStandardLayerProxy,ShovelCoalPileProxy,ItemUseTargetProxy
+  Coal target  (0.000, 2.865, 0.557)  BoxCollider,InteriorNonStandardLayerProxy,LocoResourceReceiverProxy
+  Water  (0.000, 0.000, 0.000)  
+    target (LoadTarget Water 1)  (0.000, 2.780, -2.467)  BoxCollider,InteriorNonStandardLayerProxy,LocoResourceReceiverProxy
+  ManualOilingPoints  (0.000, 0.000, 0.000)  
+
+==== Assets
+mass 25401 kg, wheel radius 0.418, license -, HUD -, wheelslip coef 0.2
+type id LLW_G29_Tender; livery LLW_G29_Tender; hide couplers front True back False
+
+==== Loco + tender
+pack cars: LLW_G29 + LLW_G29_Tender; trainset [LLW_G29, LLW_G29_Tender]; spawn tracks [300, 400, 1100, 1400, 1700] with the tender
+
+==== Render check
+built exterior renderer bounds centre (0.000, 2.207, 0.370) size (3.230, 4.471, 10.741)
+render built_left.png
+render built_front34.png
+render built_rear34.png
+render built_gear_front_left.png
+render built_gear_rear_left.png
+render built_cab_backhead.png
+render built_backhead_left.png
+render built_backhead_right.png
+render built_backhead_centre.png
+render built_cab_driver.png
+render built_gauges.png
+render grab_built_cab_backhead.png
+render grab_built_backhead_left.png
+render grab_built_backhead_right.png
+render grab_built_backhead_centre.png
+render grab_built_cab_driver.png
+render grab_built_gauges.png
+render built_lamps_front_lit.png
+render markers_left.png
+render markers_right.png
+render markers_top.png
+render markers_release.png
+  rod oilers: 'Connecting Rod Left' front oiler at z 2.053 left modelled (no cup)
+  rod oilers: 'Connecting Rod Left.001' front oiler at z 2.379 left modelled (no cup)
+render oilcups_left_stand_0.png
+render oilcups_left_low_0.png
+render oilcups_right_stand_0.png
+render oilcups_right_low_0.png
+  rod oil cups at phase 0.00: MOP 3 (-1.097, 0.437, -0.012); MOP 6 (1.097, 0.768, 0.335); MOP 1 (-0.952, 0.498, -2.064); MOP 2 (-0.952, 0.498, 0.000); MOP 4 (0.952, 0.825, -1.737); MOP 5 (0.952, 0.825, 0.327)
+render oilcups_left_stand_25.png
+render oilcups_left_low_25.png
+render oilcups_right_stand_25.png
+render oilcups_right_low_25.png
+  rod oil cups at phase 0.25: MOP 3 (-1.097, 0.764, -0.319); MOP 6 (1.097, 0.441, -0.012); MOP 1 (-0.952, 0.825, -2.390); MOP 2 (-0.952, 0.825, -0.327); MOP 4 (0.952, 0.498, -2.064); MOP 5 (0.952, 0.498, 0.000)
+render oilcups_left_stand_50.png
+render oilcups_left_low_50.png
+render oilcups_right_stand_50.png
+render oilcups_right_low_50.png
+  rod oil cups at phase 0.50: MOP 3 (-1.097, 1.087, 0.027); MOP 6 (1.097, 0.768, -0.318); MOP 1 (-0.952, 1.152, -2.064); MOP 2 (-0.952, 1.152, 0.000); MOP 4 (0.952, 0.825, -2.390); MOP 5 (0.952, 0.825, -0.327)
+render oilcups_left_stand_75.png
+render oilcups_left_low_75.png
+render oilcups_right_stand_75.png
+render oilcups_right_low_75.png
+  rod oil cups at phase 0.75: MOP 3 (-1.097, 0.764, 0.334); MOP 6 (1.097, 1.092, 0.029); MOP 1 (-0.952, 0.825, -1.737); MOP 2 (-0.952, 0.825, 0.327); MOP 4 (0.952, 1.152, -2.064); MOP 5 (0.952, 1.152, 0.000)
+oil phase validation: 6 animated rod providers, four phases, source seat proximity passed
+render articulation_front34.png
+render articulation_top.png / articulation_front34.png (articulated bogies turned 4 deg)
+render collision_left.png
+render coupler_front_34.png
+render coupler_front_side.png
+render coupler_front_end.png
+tender placed at z -8.194 (loco rear rig -3.519, tender front rig 4.075)
+  RR places this tender at z -8.194 (loco end -3.319 - 1 m - tender end 3.875)
+
+==== Loco-tender coupling check (coupled position, visual meshes)
+coupling plane z -3.819; loco origin z 0.000, tender origin z -8.194
+  loco   Cylinder.002       solid free end (-1.302, 2.100, -3.992) (size (0.500, 0.409, 0.660)): nothing of the other car within 250 mm
+  loco   Cylinder.002       bar   free end (-1.295, 1.691, -4.029) (size (0.493, 1.184, 0.059)): nothing of the other car within 250 mm
+  loco   Cylinder.002       bar   free end (-1.115, 0.680, -3.930) (size (0.291, 2.299, 1.534)): nothing of the other car within 250 mm
+  loco   Cylinder.002       bar   free end (-1.099, 0.627, -3.934) (size (0.055, 0.451, 0.055)): nothing of the other car within 250 mm
+  loco   Cylinder.002       solid free end (-1.058, 0.713, -3.938) (size (0.104, 0.090, 0.063)): nothing of the other car within 250 mm
+  loco   Cylinder.002       solid free end (-0.923, 1.473, -4.035) (size (0.037, 0.070, 0.115)): 230 mm from the other car
+  loco   Cylinder.002       plate free end (-0.822, 1.476, -4.475) (size (1.953, 0.023, 0.517)): meets the other car (31 mm)
+  loco   Cylinder.002       bar   free end (-0.680, 1.674, -4.126) (size (0.789, 0.046, 2.090)): nothing of the other car within 250 mm
+  loco   Cylinder.002       hose  free end (-0.412, 1.365, -5.001) (size (0.850, 1.106, 1.085)): 66 mm from the other car
+  loco   Cylinder.002       solid free end (0.243, 0.729, -4.105) (size (0.646, 0.281, 0.402), draw gear): meets the other car (6 mm)
+  loco   Cylinder.002       hose  free end (0.412, 1.365, -5.001) (size (0.850, 1.106, 1.085)): 66 mm from the other car
+  loco   Cylinder.002       solid free end (0.488, 0.740, -3.936) (size (0.976, 0.582, 0.238), draw gear): nothing of the other car within 250 mm
+  loco   Cylinder.002       bar   free end (0.680, 1.720, -4.126) (size (0.789, 0.046, 2.090)): nothing of the other car within 250 mm
+  loco   Cylinder.002       solid free end (0.692, 1.006, -3.951) (size (0.090, 0.104, 0.054)): meets the other car (31 mm)
+  loco   Cylinder.002       solid free end (0.923, 1.473, -4.035) (size (0.037, 0.070, 0.115)): 230 mm from the other car
+  loco   Cylinder.002       hose  free end (1.015, 1.231, -3.873) (size (0.420, 0.097, 0.360)): nothing of the other car within 250 mm
+  loco   Cylinder.002       solid free end (1.058, 0.713, -3.938) (size (0.104, 0.090, 0.063)): nothing of the other car within 250 mm
+  loco   Cylinder.002       bar   free end (1.099, 0.816, -3.934) (size (0.055, 0.451, 0.055)): nothing of the other car within 250 mm
+  loco   Cylinder.002       bar   free end (1.115, 0.680, -3.930) (size (0.291, 2.299, 1.534)): nothing of the other car within 250 mm
+  loco   Cylinder.002       bar   free end (1.295, 1.691, -4.029) (size (0.493, 1.184, 0.059)): nothing of the other car within 250 mm
+  loco   Cylinder.002       solid free end (1.302, 1.691, -3.992) (size (0.500, 0.409, 0.660)): nothing of the other car within 250 mm
+  loco   Cylinder.002       solid free end (1.427, 1.700, -3.943) (size (2.855, 0.815, 1.090)): nothing of the other car within 250 mm
+  tender Cube.115           bar   free end (-0.146, 0.561, -3.747) (size (0.109, 0.066, 0.797), draw gear): meets the other car (51 mm)
+  tender Cube.115           bar   free end (0.074, 0.541, -3.720) (size (0.167, 0.106, 0.827), draw gear): meets the other car (23 mm)
+  tender Cube.115           bar   free end (0.127, 0.561, -3.747) (size (0.109, 0.066, 0.797), draw gear): meets the other car (51 mm)
+draw gear meets: loco Cylinder.002 at z -4.105, tender Cube.115 at z -3.720, tender Cube.115 at z -3.747
+solid overlap: 0 cells (+61 where a hose, rail, plate or fitting passes into the other car)
+drawbar pins: loco 0, tender 3
+  tender Cube.115           pin at (-0.187, 0.634, -4.408) (d 105 mm, h 189 mm): 316 mm from the other car
+  tender Cube.115           pin at (0.000, 0.641, -4.408) (d 82 mm, h 321 mm): 316 mm from the other car
+  tender Cube.115           pin at (0.187, 0.634, -4.408) (d 105 mm, h 189 mm): 316 mm from the other car
+  no pin modelled on both cars (no loco and tender pins within 0.5 m): the draw gear meeting (above) is the test
+sensitivity (tender further + / closer -): -300 mm: 78 solid-overlap cells, draw gear meets; -100 mm: 66 solid-overlap cells, draw gear meets; +100 mm: no overlap, draw gear does not meet; +300 mm: no overlap, draw gear does not meet
+render consist_left.png
+render consist_drawbar.png
+render consist_drawgear_side.png
+render consist_drawgear_34.png
+render consist_drawgear_below.png
+render consist_handbrake_from_cab.png
+render consist_rear34.png
+render tender_left.png
+render tender_front34.png
+render tender_rear34.png
+render tender_wheels_left.png
+render tender_front_face.png
+render tender_handbrake.png
+render tender_handbrake_side.png
+render tender_release.png
+render tender_coupler_rear_34.png
+render tender_coupler_rear_side.png
+render tender_coupler_rear_end.png
+
+==== Export
+  Info.json DisplayName labelled 'pre-release'
+  ccl_bundle 42,095,909 bytes
+  ccl_bundle.manifest 11,342 bytes
+  Info.json 259 bytes
+  LLW G-29 1,028 bytes
+  LLW G-29.manifest 138 bytes
+
+warnings: 7

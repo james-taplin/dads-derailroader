@@ -1,0 +1,24 @@
+{
+  "schema": 1,
+  "audit_kind": "frozen_semantic_parity",
+  "status": "passed",
+  "profile": "g29",
+  "reference": "B:\\LLW CONVERT\\locos\\g29\\builds\\share01",
+  "bundle_sha256": "be145cdf25fa7306e4ac91bf9d69443605dd59737ff64602803f321793a14792",
+  "reference_bundle_sha256": "3635faeb1f18f58cbf9f04b82b85c98044b9cf80127939fb33604b57b96c12b2",
+  "differing_objects": [],
+  "object_groups": 3534,
+  "warnings": [
+    "WARN [coupler_rig_front] hook: 20/25 rays meet the model inside its box, up to 251 mm out from the beam (Cylinder.002 at y 0.93 x -0.08)",
+    "WARN [coupler_rig_front] screw chain: 15/25 rays meet the model inside its box, up to 121 mm out from the beam (Cylinder.002 at y 0.46 x 0.00)",
+    "WARN [coupler_rig_front] cock valve: 1/25 rays meet the model inside its box, up to 30 mm out from the beam (Cylinder.002 at y 0.91 x -0.33)",
+    "WARN [coupler_rig_front] air hose: 7/25 rays meet the model inside its box, up to 98 mm out from the beam (Cylinder.002 at y 0.57 x -0.38)",
+    "WARN [coupler_rig_rear] hook: 15/25 rays meet the model inside its box, up to 38 mm out from the beam (Cube.115 at y 0.87 x -0.08)",
+    "WARN [coupler_rig_rear] screw chain: 10/25 rays meet the model inside its box, up to 247 mm out from the beam (Cube.115 at y 0.74 x -0.08)",
+    "WARN [coupler_rig_rear] cock valve: 4/25 rays meet the model inside its box, up to 31 mm out from the beam (Cube.115 at y 0.96 x 0.47)"
+  ],
+  "warnings_match": true,
+  "comparator_version": 2,
+  "comparison": "All serialized object fields except AssetBundle directory metadata; local IDs resolved to semantic names; external file indices resolved to path/GUID/type; floats rounded to 6 decimals.",
+  "runtime_validated": false
+}

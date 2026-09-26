@@ -1,13 +1,5 @@
-# Third-party Python packages imported by the scripts in this folder.
-# Found by parsing all 43 .py files with Python's ast module; everything else they import is standard library.
-#
-# Versions are the ones recorded for the original working environment (a Python 3.12.10 virtual environment):
-#   UnityPy 1.25.3 and PyYAML 6.0.3: g29_handover/REBUILD.md lines 13-14
-#   numpy 2.5.3: g29_handover/updates/test5-ancillary-and-audio/README.md line 35
-#   Pillow 12.3.0: that environment's installed-package metadata (checked locally, not written in any document)
-# They were not re-installed or re-tested for this snapshot.
-# pilots.py and catalogue_design.py need Python 3.11 or newer (hashlib.file_digest).
-UnityPy==1.25.3   # 12 files: unified_builder/tools/audit_build.py, pilot_workflows/tools/{audit_c21,oil_cup_survey}.py, dump_ccl_bundle.py and dump_ccl_transforms.py (2 copies), extract_rr_audio.py (2 copies), pilot_workflows/analysis/.../{extract_stock,find_stock,inspect_stock_cup}.py
-numpy==2.5.3      # 9 files: pilot_workflows/tools/oil_cup_survey.py, loopify_wav.py (2 copies), 6 pilot_workflows/analysis scripts
-Pillow==12.3.0    # 2 files: pilot_workflows/tools/{oil_cup_survey_report,validate_oil_cup_survey}.py (imported as PIL)
-PyYAML==6.0.3     # 4 files: analyze_export.py (3 copies), pilot_workflows/analysis/c21/oil-anchors/offline_oil_probe.py (imported as yaml)
+# Versions read from the existing local UnityPy Python environment; no dependencies installed for this delivery.
+PyYAML==6.0.3
+UnityPy==1.25.3
+numpy==2.5.3
+pillow==12.3.0
