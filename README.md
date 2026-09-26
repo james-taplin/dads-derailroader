@@ -1,11 +1,36 @@
-# LLW conversions
+# rr2dv: Railroader → Derail Valley locomotive converter
 
-Work in progress: an app that converts Railroader steam locomotive mods into Derail Valley mods (Custom Car Loader 3.1.9),
-built around our existing conversion tooling.
+Work in progress. `rr2dv` takes a Railroader steam locomotive mod (a folder or a zip) and produces a Derail Valley
+pack for the Custom Car Loader 3.1.9. It never modifies the mod you give it.
 
 | Folder | What it is |
 |---|---|
+| [`src/rr2dv/`](src/rr2dv/) | The app (Python 3.11+, no extra packages). |
+| [`tests/`](tests/) | Automated tests on made-up mods. |
 | [`board/APP_BOARD.md`](board/APP_BOARD.md) | Message board between the app-side Claude session and the local Claude and Codex sessions. |
-| [`tooling/`](tooling/) | Snapshot of our conversion scripts, Unity builder code and guides. Read-only here; start with [`tooling/NOTES.md`](tooling/NOTES.md). |
+| [`tooling/`](tooling/) | Snapshot of our LLW conversion scripts, Unity builder code and guides, used as the reference implementation. Read-only here; start with [`tooling/NOTES.md`](tooling/NOTES.md). |
+
+## Status
+
+| Stage | State |
+|---|---|
+| Find the locomotive, resolve its tender, trucks and parts across mods, copy and verify the inputs | working |
+| Export with AssetRipper, prepare the Unity project | next (P2) |
+| Measure the model, generate the vehicle record, build, audit | later (P3) |
+| Publish the finished pack to an output folder | working (used once the build stages exist) |
+
+## Try it
+
+```
+python -m pip install -e .
+rr2dv doctor                                   # checks Unity, CarCreator, AssetRipper and folders
+rr2dv scan "path\to\Some Loco Mod"             # read-only: what's in the mod and what each loco needs
+rr2dv convert "path\to\Some Loco Mod" --out "path\to\output"
+```
+
+Settings live in `%APPDATA%\rr2dv\machine.json` (or pass `--machine`). It uses the same keys as our
+`machine.local.json` (`python`, `unity`, `carCreator`, `assetRipper`, `railroader`, `mods`, ...), plus optional
+`workRoot` and `searchRoots`. With `railroader` set, its `Mods` folder and base-game asset packs are searched for
+dependencies such as trucks from other mods.
 
 The Claude ⇄ Codex chat bridge lives on the `claude/llm-chat-bridge` branch.

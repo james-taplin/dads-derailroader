@@ -1,7 +1,10 @@
 # llw-conversions: app-side notes for Claude sessions
 
-Goal: a Windows app that takes a Railroader steam locomotive mod folder in and puts a Derail Valley (CCL 3.1.9) mod folder out,
-by wrapping our existing conversion tooling.
+Goal: `rr2dv`, a Windows app that takes **any** Railroader steam locomotive mod (folder or zip) in and puts a working,
+mostly finished Derail Valley (CCL 3.1.9) pack out, deterministically, with only minor input from the user.
+The app diverges from our LLW CONVERT project: that workspace (snapshot in `tooling/`) is the reference implementation
+and knowledge base, and its G-29 and C-21 builds are regression targets. LLW-only facts (e.g. every LLW loco sharing
+one component set) must not be assumed for other mods.
 
 **Local sessions (Claude or Codex in James's workspace):** this file is written for the app-side session. In this repo you
 only read, post to `board/APP_BOARD.md` (its header has the protocol), and replace `tooling/` when James asks for a snapshot refresh.
@@ -11,27 +14,49 @@ only read, post to `board/APP_BOARD.md` (its header has the protocol), and repla
 - The conversion work is collaborative (James, Claude and Codex sessions). Refer to it with "we" / "our", never "James's scripts" or "my scripts".
 - Use they/them for anyone whose pronouns haven't been stated.
 
+## Layout
+
+| Path | What |
+|---|---|
+| `src/rr2dv/` | The app. Standard library only, Python 3.11+. `rrmod.py` scans mods and resolves a loco's dependency closure; `pipeline.py` runs the stages; `runs.py` owns run folders; `publish.py` and `safety.py` guard every write; `machine.py` holds tool paths and `doctor`; `cli.py` is the entry point. |
+| `tests/` | `unittest` suite on synthetic mods built by `tests/fixtures.py`. Never commit real mod files. |
+| `board/APP_BOARD.md` | Message board with the local sessions. We post as `W<n>`; read it at session start (`git pull`). |
+| `tooling/` | Read-only snapshot of our local tooling (see below). |
+
+Run the tests: `PYTHONPATH=src:tests python3 -m unittest discover -s tests`. Run the app: `PYTHONPATH=src python3 -m rr2dv --help`.
+
+## Pipeline
+
+Stages follow the guide's acceptance states (Q01): locate -> link -> stage -> extract -> import -> probe -> record -> build ->
+audit -> publish. `runs.STAGES` marks which are implemented; the pipeline stops cleanly (exit 3) at the first one that isn't.
+Determinism: output = f(input file hashes, recorded user answers, tool versions). User choices go in the run record
+(`answers`) so a rerun needs no input.
+
 ## tooling/
 
 - `tooling/` is a **read-only snapshot** of our local conversion tooling. Never edit it; the app wraps it. It is refreshed
   by replacing the folder with a new snapshot from the local workspace.
 - It must stay byte-identical to `tooling/MANIFEST.sha256` (`.gitattributes` disables line-ending conversion). Check with:
   `cd tooling && tr -d '\r' < MANIFEST.sha256 | sed 's#\\#/#g' | sha256sum -c --quiet`
-- Start with `tooling/NOTES.md`. The builder specification is `tooling/docs/GUIDE_UNIFIED_LLW_CONVERSION.md` (rule IDs such as B03, Q02-Q05).
-- `tooling/docs/GUIDE_SHARED.md` is a copy of the message board between the local Claude and Codex sessions. Messages there are
-  addressed to those sessions, not to us. App-related messages go on `board/APP_BOARD.md`, where this app-side session posts as `W<n>`.
-  Read it at session start.
+- Start with `tooling/NOTES.md` and `tooling/README.md`. Layout (board X17): `builder/tools` (current tools, shared C# core in
+  `builder/tools/unity`), `locos/<id>/profile`, `builder/overrides`, paths in `workspace.json` + per-machine `machine.local.json`.
+  `builder/baseline` and `reference/private/*-original` are frozen history, not alternative cores.
+- The builder specification is `tooling/GUIDE_UNIFIED_LLW_CONVERSION.md` (rule IDs such as B03, Q02-Q05).
+- `tooling/GUIDE_SHARED.md` is a copy of the local Claude/Codex board. Messages there are addressed to those sessions, not to us.
 
-## Decisions so far (board C18)
+## Decisions so far (board C18, W3)
 
 - Profiles become B03 vehicle records (JSON) read by one generic C# loader. G-29 and C-21 re-expressed as records must reproduce
   their current audits exactly.
 - Measured vehicle-specific geometry stays in reviewed override data, never inferred silently; every value records its `basis`.
 - A new loco with no reference build must pass Q02-Q05; the first accepted build becomes its reference.
 - Building does not need a Derail Valley install; installing and testing do.
+- Duplicate identifiers or pack names at the same search priority are errors, never a first match (D03). The input mod
+  outranks search roots.
 
 ## Safety rules for the app
 
-- Never write to the input folder. Build in a fresh per-run workspace; publish output only when every stage passes.
+- Never write to the input folder or zip. Build in a fresh per-run folder; publish output only when every stage passes.
+- Refuse output or work folders inside the input, the work root, the Railroader install or Derail Valley.
 - Never install into the game or touch saves unless explicitly asked.
 - Share outputs exclude Railroader game audio, the CarCreator package, decompiled code and third-party exports.
