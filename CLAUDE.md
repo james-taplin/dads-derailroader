@@ -80,6 +80,13 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
   Railroader (LegosBetterSteam, LegosLibraryOfStuff) are not needed in DV, never opened, never blocking; they are
   listed as `railroader_only`. Never add a flag, setting or "permission" path around a block; fix wrong matches in
   the patterns instead.
+- **Problematic assets are left out, not copied (James, W22).** Parts and images that are Railroader game content
+  (under `Railroader_Data`) or come from another mod whose licence forbids modification or cannot be read are left
+  out: never staged, exported or opened, not placed by the record (`inventory.left_out`, `metadata.leftOut`, a
+  review item). Their licences then no longer stop the conversion, because nothing of theirs is in the pack. Still
+  blocking: the converted mod's own licence, and a tender that is game content or from a restricting mod (no vanilla
+  DV tender to substitute). DV has no loose vanilla steam fittings to swap in (CCL's MeshGrabber list has none), so
+  nothing is substituted except trucks (vanilla bogies) and sounds (vanilla S060/S282).
 - Never open, decompile or inspect code mods (DLLs) or bundles of mods we only depend on. Learn formats from the data
   files of the mod being converted and from our guides. Uploaded test mods stay in the session container, never in git.
 - Converted packs contain the original authors' work: personal use unless the author agrees otherwise.

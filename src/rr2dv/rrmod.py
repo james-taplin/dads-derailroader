@@ -103,6 +103,14 @@ class Issue:
         return out
 
 
+GAME_DATA = "railroader_data"
+
+
+def is_game_content(path: Path) -> bool:
+    """Railroader's own asset packs live under Railroader_Data (StreamingAssets/AssetPacks)."""
+    return any(part.casefold() == GAME_DATA for part in path.parts)
+
+
 def _rel(root: Root, path: Path) -> str:
     rel = path.relative_to(root.path).as_posix()
     return "" if rel == "." else rel
@@ -417,12 +425,34 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
     packs: dict[Path, Pack] = {loco_pack.path: loco_pack}
     vehicles = [(loco_pack, loco)]  # objects whose models and parts we follow
 
+    # Problematic assets are left out, never copied (James, W22): Railroader game content, and anything from another
+    # mod whose licence forbids modification or cannot be read. Their files are never staged, exported or opened, so
+    # those mods' licences do not stop the conversion. DV has no vanilla equivalent for loose steam fittings (CCL's
+    # mesh list has no stacks, pilots, lamps or rails), so a left-out part or image is reported for review, not swapped.
+    converted = loco_pack.mod
+    left_out: list[dict] = []
+
+    def problem(path: Path, mod: Mod | None) -> str | None:
+        if is_game_content(path):
+            return "Railroader game content"
+        if mod is None or (converted is not None and mod.path == converted.path):
+            return None
+        for lic in mod.licences:
+            if lic.get("unreadable"):
+                return f"mod {mod.ident}: licence {lic['file']} cannot be read"
+            if licences.forbidding(lic["terms"]):
+                return f"mod {mod.ident} ({lic['file']}) forbids {licences.describe(licences.forbidding(lic['terms']))}"
+        return None
+
     tender_info = None
     tender_id = ldef.get("tenderIdentifier")
     if isinstance(tender_id, str) and tender_id:
         tres = index.find_object(tender_id)
         if tres.hit:
             tpack, tender = tres.hit
+            if is_game_content(tpack.path):
+                issues.append(Issue("error", "game-content", f"tender {tender_id} is Railroader game content; rr2dv does not copy it "
+                                    "and Derail Valley has no vanilla tender to put in its place"))
             packs[tpack.path] = tpack
             vehicles.append((tpack, tender))
             tender_info = {"id": tender_id, "pack": tpack.describe()}
@@ -474,7 +504,12 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                 continue
             tres, mod = index.find_texture(name)
             entry = {"id": name, "owner": owner, "via": via, "file": None}
-            if tres.hit:
+            reason = problem(tres.hit, mod) if tres.hit else None
+            if reason:
+                entry["left_out"] = reason
+                left_out.append({"what": "image", "owner": owner, "id": name, "via": via, "reason": reason})
+                issues.append(Issue("warning", "left-out", f"{owner}: image {name!r} left out: {reason}"))
+            elif tres.hit:
                 path = tres.hit
                 entry["file"] = {"root": mod.root.label, "path": _rel(mod.root, path)}
                 extra.setdefault(path, _file_record(mod.root, path, "texture", hash_files))
@@ -528,6 +563,12 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                     issues.append(Issue("error", "missing-part-pack", f"{label}: pack {pack_ident!r} not found"))
                 continue
             ppack = pres.hit
+            reason = problem(ppack.path, ppack.mod)
+            if reason:
+                left_out.append({"what": "part", "owner": vid, "component": comp.get("name"), "pack_identifier": pack_ident,
+                                 "asset": asset_ident, "pack": ppack.describe(), "reason": reason})
+                issues.append(Issue("warning", "left-out", f"{label}: part {asset_ident!r} from {ppack.name} left out: {reason}"))
+                continue
             if CATALOG in ppack.errors:
                 packs[ppack.path] = ppack  # reported as pack-unreadable below
                 continue
@@ -625,6 +666,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         "trucks": trucks,
         "vehicles": vehicle_records,
         "parts": parts,
+        "left_out": left_out,
         "packs": pack_records,
         "extra_files": sorted(extra.values(), key=lambda r: (r["root"], r["path"])),
         "mods": mod_records,

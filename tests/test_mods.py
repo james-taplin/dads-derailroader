@@ -77,13 +77,65 @@ class Licences(Base):
         (self.m["mod"] / "LICENSE.pdf").write_bytes(b"%PDF-1.4")
         self.assertIn("licence-unreadable", codes(self.inv()))
 
-    def test_a_dependency_mod_whose_bundle_we_use_counts(self):
-        write_pack(self.m["search"] / "PartsMod" / "extras", assets={"horn": {"filename": "horn.prefab"}})
-        (self.m["search"] / "PartsMod" / "info.json").write_text('{"Id": "PartsMod"}')
-        (self.m["search"] / "PartsMod" / "LICENSE").write_text(STRICT)
+    def parts_mod(self, licence: str | None = STRICT, where=None):
+        base = where or (self.m["search"] / "PartsMod")
+        write_pack(base / "extras", assets={"horn": {"filename": "horn.prefab"}})
+        (base / "info.json").write_text('{"Id": "PartsMod"}')
+        if licence:
+            (base / "LICENSE").write_text(licence)
         (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [
-            loco("ts-260-a", tender="tt-260-a", parts=[part("PartsMod\\extras", "horn", "horn1")]), tender("tt-260-a")]}))
-        self.assertEqual([i["data"]["mod"] for i in blocking(self.inv())], ["PartsMod"])
+            loco("ts-260-a", tender="tt-260-a", parts=[part("Test Loco Mod\\parts", "bell", "bell1"), part("PartsMod\\extras", "horn", "horn1")]),
+            tender("tt-260-a", truck="test-truck-2s")]}))
+
+    def test_a_restricted_dependency_mods_parts_are_left_out_not_copied(self):
+        self.parts_mod()
+        inv = self.inv()
+        self.assertEqual(blocking(inv), [])
+        self.assertEqual([p["asset"] for p in inv["parts"]], ["bell"])
+        self.assertEqual([(l["what"], l["asset"]) for l in inv["left_out"]], [("part", "horn")])
+        self.assertIn("forbids", inv["left_out"][0]["reason"])
+        self.assertNotIn("extras", [p["name"] for p in inv["packs"]])
+        self.assertNotIn("PartsMod", [m["id"] for m in inv["mods"]])
+        self.assertIn("left-out", codes(inv))
+
+    def test_unrestricted_dependency_mods_parts_are_used(self):
+        self.parts_mod(licence=None)
+        inv = self.inv()
+        self.assertEqual(([p["asset"] for p in inv["parts"]], inv["left_out"]), (["bell", "horn"], []))
+        self.assertIn("PartsMod", [m["id"] for m in inv["mods"]])
+
+    def test_unreadable_dependency_licence_leaves_its_parts_out(self):
+        self.parts_mod(licence=None)
+        (self.m["search"] / "PartsMod" / "LICENSE.pdf").write_bytes(b"%PDF-1.4")
+        inv = self.inv()
+        self.assertEqual(blocking(inv), [])
+        self.assertIn("cannot be read", inv["left_out"][0]["reason"])
+
+    def test_railroader_game_parts_are_left_out(self):
+        game = self.tmp / "Railroader" / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
+        self.parts_mod(licence=None, where=game / "PartsMod")
+        inv = inventory(Index(self.m["mod"], [self.m["search"], game]), "ts-260-a")
+        self.assertEqual(blocking(inv), [])
+        self.assertEqual([(l["asset"], l["reason"]) for l in inv["left_out"]], [("horn", "Railroader game content")])
+
+    def test_left_out_parts_are_never_staged_or_placed(self):
+        self.parts_mod()
+        out = convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]])
+        self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)
+        self.assertFalse((out.run.path / "inputs" / "search1").exists())
+        rec = read_json(out.run.path / "record" / "vehicle-record.json")
+        placed = [c["name"] for c in rec["config"]["Components"]["value"]]
+        self.assertIn("bell1", placed)
+        self.assertNotIn("horn1", placed)
+        self.assertEqual([l["asset"] for l in rec["metadata"]["leftOut"]], ["horn"])
+        self.assertIn("left out: 1", " ".join(rec["metadata"]["pending"]))
+
+    def test_a_restricted_tender_still_stops_the_conversion(self):
+        write_pack(self.m["search"] / "TenderMod" / "Tenders", objects=[tender("tt-ext")], assets={"tt-ext": {"filename": "tt-ext.prefab"}})
+        (self.m["search"] / "TenderMod" / "info.json").write_text('{"Id": "TenderMod"}')
+        (self.m["search"] / "TenderMod" / "LICENSE").write_text(STRICT)
+        (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [loco("ts-260-a", tender="tt-ext")]}))
+        self.assertEqual([i["data"]["mod"] for i in blocking(self.inv())], ["TenderMod"])
 
     def test_a_truck_mod_never_counts_because_trucks_are_replaced(self):
         (self.m["search"] / "TruckMod" / "info.json").write_text('{"Id": "TruckMod"}')
@@ -93,7 +145,7 @@ class Licences(Base):
         self.assertNotIn("TruckMod", [m["id"] for m in inv["mods"]])
         self.assertEqual(inv["trucks"][0]["replaced_by"], "vanilla Derail Valley bogies")
 
-    def test_mod_supplying_only_images_counts(self):
+    def test_restricted_mods_images_are_left_out(self):
         decals = self.m["search"] / "DecalPack"
         decals.mkdir()
         (decals / "info.json").write_text('{"Id": "decal-pack"}')
@@ -101,7 +153,14 @@ class Licences(Base):
         (decals / "LICENSE.txt").write_text("No derivative works.")
         group = {"identifier": "tt-260-a", "GroupName": "Safety", "bulkAdds": [{"kind": "CustomImage", "textureName": "decal-pack.safety.png"}]}
         (self.m["mod"] / "safety.json").write_text(json.dumps(group))
-        self.assertEqual([i["data"]["mod"] for i in blocking(self.inv())], ["decal-pack"])
+        inv = self.inv()
+        self.assertEqual(blocking(inv), [])
+        self.assertEqual([(l["what"], l["id"]) for l in inv["left_out"]], [("image", "decal-pack.safety.png")])
+        self.assertEqual(inv["extra_files"][0]["role"], "component-group")
+        self.assertEqual(len(inv["extra_files"]), 1)
+        (decals / "LICENSE.txt").unlink()
+        inv = self.inv()
+        self.assertEqual((inv["left_out"], len(inv["extra_files"])), ([], 2))
 
     def test_no_licence_file_means_no_restriction(self):
         inv = self.inv()

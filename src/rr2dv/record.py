@@ -120,10 +120,23 @@ def load_capacities(d: dict) -> dict:
     return out
 
 
-def component_list(d: dict) -> list[dict]:
+def left_out_component(c: dict, owner: str, left_out: list[dict]) -> bool:
+    """A part or image the inventory left out (game content or a forbidding licence): the builder must not place it."""
+    model = c.get("model") or {}
+    for item in left_out:
+        if item["owner"] != owner:
+            continue
+        if item["what"] == "part" and (model.get("assetPackIdentifier"), model.get("assetIdentifier")) == (item["pack_identifier"], item["asset"]):
+            return True
+        if item["what"] == "image" and c.get("textureName") == item["id"]:
+            return True
+    return False
+
+
+def component_list(d: dict, owner: str = "", left_out: list[dict] | None = None) -> list[dict]:
     out = []
     for c in components(d):
-        if c.get("kind") == "DefaultLivelryComponent":
+        if c.get("kind") == "DefaultLivelryComponent" or left_out_component(c, owner, left_out or []):
             continue
         t = c.get("transform") or {}
         parent = c.get("parent") or {}
@@ -203,6 +216,9 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
                    "equal diameter alone does not prove they are coupled, check the rods")
     pending.append("simulation: draft engine, boiler, firebox and exhaust choices need per-engine calibration "
                    "(throttleMaxFlow, steamChestVolume, blowdown, vent rate, firing, exhaust, cutoff range)")
+    if inv.get("left_out"):
+        pending.append(f"left out: {len(inv['left_out'])} part(s)/image(s) that are Railroader game content or restricted "
+                       "(metadata.leftOut); check the loco still looks right without them")
     code_mods = sorted({c["provider"] for c in inv.get("code_mods", [])})
     if code_mods:
         pending.append(f"simulation: nonstandard running gear ({', '.join(sorted({c['kind'] for c in inv['code_mods']}))} from "
@@ -227,7 +243,7 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
         "Work": f"Assets/RR2DV/{cid}/loco",
         "Livery": answers.get("livery") or (liveries(d)[0][0] if liveries(d) else None), "Liveries": liveries(d),
         "AnimationMap": _maps(probe_by_id[loco_id], "animationMap"), "MaterialMap": _maps(probe_by_id[loco_id], "materialMap"),
-        "Components": env(component_list(d), "mixed", "source", src("components")),
+        "Components": env(component_list(d, loco_id, inv.get("left_out")), "mixed", "source", src("components")),
         "Wheelsets": env([[w["offset"], w["length"], w["diameter"], w["numberOfAxles"], (w.get("animation") or {}).get("clipName", "")]
                           for w in d.get("wheelsets") or []], "mixed m/count", "source", src("wheelsets")),
         "WheelRadius": wheel_radius,
@@ -267,7 +283,7 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
                            "massLedger": {"sourceWeightLb": d.get("weightEmpty"),
                                           "sourceWeightKg": (d.get("weightEmpty") or 0) * LB_KG,
                                           "interpretation": "working order incl. boiler water (guide E04); spawn water to subtract is pending"},
-                           "wheelCandidates": wheel_candidates,
+                           "wheelCandidates": wheel_candidates, "leftOut": inv.get("left_out", []),
                            "audio": inv["audio"], "codeMods": code_mods, "pending": pending}}
     if inv.get("tender"):
         tender_id = inv["tender"]["id"]
@@ -281,7 +297,7 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
             "SrcPrefab": probe_by_id[tender_id]["prefab"], "Work": f"Assets/RR2DV/{cid}/tender",
             "Liveries": liveries(td), "AnimationMap": _maps(probe_by_id[tender_id], "animationMap"),
             "MaterialMap": _maps(probe_by_id[tender_id], "materialMap"),
-            "Components": env(component_list(td), "mixed", "source", tsrc("components")),
+            "Components": env(component_list(td, tender_id, inv.get("left_out")), "mixed", "source", tsrc("components")),
             "RrEndFront": env(td.get("positionHead", (td.get("length") or 0) / 2), "m", "source", tsrc("positionHead/length")),
             "RrEndRear": env(td.get("positionTail", -(td.get("length") or 0) / 2), "m", "source", tsrc("positionTail/length")),
             "WaterCapacityL": env(tcaps.get("WaterCapacityL"), "L", "derived", tsrc("loadSlots")) if "WaterCapacityL" in tcaps else None,

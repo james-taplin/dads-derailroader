@@ -42,10 +42,11 @@ Railroader game mesh ends up in the pack.
 Sounds are never converted: every converted loco uses vanilla Derail Valley S060 sounds (small boiler, under
 1,500 ft² heating surface) or S282 sounds (big boiler). `--audio S060|S282` overrides the rule.
 
-Mod licences are checked before converting: the mod itself and every mod whose models or images would end up in the
-Derail Valley pack. If any of them explicitly forbids modifying, decompiling, porting or deriving from its work, even
-for personal use, `rr2dv` stops and will not convert that locomotive. There is no override. A licence file it cannot
-read also stops it. Mods without a licence file are converted. Code mods a loco uses only in Railroader (such as
+Mod licences are checked before converting. If the mod itself, or the mod its tender comes from, explicitly forbids
+modifying, decompiling, porting or deriving from its work, even for personal use, `rr2dv` stops and will not convert
+that locomotive. There is no override. A licence file it cannot read also stops it. Parts and images that come from
+Railroader's own game files, or from another mod with such a licence, are left out of the pack (and listed for you
+to review) rather than copied. Mods without a licence file are converted. Code mods a loco uses only in Railroader (such as
 LegosBetterSteam) are not needed in Derail Valley and are never opened. Converted packs contain the original authors'
 work and are for your own use.
 
