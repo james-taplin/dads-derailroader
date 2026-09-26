@@ -1,0 +1,14 @@
+[
+  {
+    "line": "WARN [coupler_rig_front] cock valve: 3/25 rays meet the model inside its box, up to 23 mm out from the beam (Cylinder.018 at y 0.91 x -0.47)",
+    "reason": "Reviewed against actual installed stock collider/mesh geometry. The coarse hardware box touches the retained footboard bracket, but the front cock's actual base and full sampled lever travel are clear. Its enabled grab trigger has 54/54 unobstructed centre/inset-corner approach samples. See locos/s16/analysis/coupler-review/stock_grab_access.json and stock_cock_screen.json. James explicitly accepts coupling-mesh overlaps provided grabbable colliders remain available and are not buried. This is static geometry evidence, not a runtime playtest."
+  },
+  {
+    "line": "WARN [coupler_rig_rear] hook: 5/25 rays meet the model inside its box, up to 22 mm out from the beam (Cylinder.018 at y 1.05 x -0.09)",
+    "reason": "The stock hook shank overlaps the sloped rear cab panel near its mounting area. James explicitly accepts coupling-mesh overlaps provided grabbable colliders remain available and are not buried. Actual stock rear hook snap/grab region has 42/42 unobstructed sampled approaches; the screw control has 54/54. Retain the native coupling pose and stock mounting plate rather than move the rig for a visual overlap. Evidence: locos/s16/analysis/coupler-review/stock_grab_access.json. Dynamic coupling remains an in-game acceptance check."
+  },
+  {
+    "line": "WARN [coupler_rig_rear] cock valve: 13/25 rays meet the model inside its box, up to 44 mm out from the beam (Cylinder.018 at y 1.12 x 0.33)",
+    "reason": "The static stock valve body partly intersects the sloped rear cab panel; the moving lever's sampled travel remains clear. Its actual enabled grab trigger has 54/54 unobstructed centre/inset-corner approach samples, so the control is exposed. James explicitly accepts coupling-mesh overlaps provided grabbable colliders remain available and are not buried. Retain the unchanged native hose placement. Evidence: locos/s16/analysis/coupler-review/stock_grab_access.json and stock_cock_screen.json. Runtime hose handling still requires a game test."
+  }
+]

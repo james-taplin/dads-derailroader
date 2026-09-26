@@ -27,6 +27,7 @@ def main():
     a=p.parse_args()
     if not re.fullmatch(r'[A-Za-z0-9_-]+',a.run) or a.run.upper() in {'CON','PRN','AUX','NUL',*[f'COM{i}' for i in range(1,10)],*[f'LPT{i}' for i in range(1,10)]}:raise ValueError('Invalid run name')
     if a.frozen and (a.tests or a.share):raise ValueError('Frozen replay cannot alter tests/audio')
+    if a.frozen and 'frozenProject' not in CONFIG['profiles'][a.profile]:raise ValueError('This new locomotive has no frozen reference')
     output=profile_path(a.profile,'builds')/a.run
     if output.exists():raise FileExistsError('Choose a new run name: '+str(output))
     if a.frozen:project,hashes=frozen_project(a.profile)
@@ -34,8 +35,15 @@ def main():
         project=prepare(a.profile);hashes=json.loads((project/'unified-scripts.json').read_text())
     if (project/'Temp/UnityLockfile').exists():raise ValueError('Project has an active/stale Unity lock; inspect before launch')
     output.mkdir(parents=True);dump(output/'source_hashes.json',hashes)
-    method='UnifiedBuilderTests.Run' if a.tests else a.profile.upper()+'Config.Build'
+    vehicle_record=CONFIG['profiles'][a.profile].get('vehicleRecord')
+    method='UnifiedBuilderTests.Run' if a.tests else CONFIG['profiles'][a.profile].get('buildMethod',a.profile.upper()+'Config.Build')
     env=os.environ.copy();env.update(CCL_BUILD_OUT=str(output),RLW_PROBE_OUT=str(output),G29_SHARE='1' if a.share else '0')
+    env['CCL_SHARE']='1' if a.share else '0'
+    env['CCL_NEW_LOCO']='1' if CONFIG['profiles'][a.profile].get('auditMode')=='new_locomotive' else '0'
+    if vehicle_record and not a.frozen:
+        env['CCL_VEHICLE_RECORD']=str(WORKSPACE/vehicle_record)
+        shutil.copy2(WORKSPACE/vehicle_record,output/'vehicle_record.json')
+    else:env.pop('CCL_VEHICLE_RECORD',None)
     if not a.frozen:
         record=ROOT/'catalog'/(CONFIG['profiles'][a.profile]['catalogId']+'.json')
         env['CCL_CATALOG_RECORD']=str(record);shutil.copy2(record,output/'catalog_record.json')

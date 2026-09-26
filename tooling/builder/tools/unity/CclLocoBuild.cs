@@ -17,7 +17,7 @@ using Object = UnityEngine.Object;
 // Source: AssetRipper export of the RR asset bundle, version-changed to 2019.4, clip paths restored from CRC32.
 // Run windowed (Personal licence refuses -batchmode):
 //   Unity.exe -projectPath <project> -executeMethod RgbConfig.Build     env CCL_BUILD_OUT (or RLW_BUILD_OUT) = output folder
-public static class CclLocoBuild
+public static partial class CclLocoBuild
 {
     static LocoConfig Cfg;                      // the car being built (loco or tender)
     static LocoConfig Loco;                     // the pack's loco (owns the pack; Loco.Tender is built after it)
@@ -54,7 +54,7 @@ public static class CclLocoBuild
     {
         int exitCode = 0;
         Loco = Cfg = cfg;
-        Report.Clear(); warnings = 0; ownMats.Clear(); refBody = null; builtFolders.Clear();
+        Report.Clear(); warnings = 0; ownMats.Clear(); refBody = null; builtFolders.Clear(); meshIslandSources.Clear();
         Line($"CclLocoBuild: {CarName} ({CarId}) v{Cfg.Version}{(cfg.Tender != null ? $" + tender {cfg.Tender.CarName} ({cfg.Tender.CarId})" : "")}");
         outDir = Environment.GetEnvironmentVariable("CCL_BUILD_OUT") ?? Environment.GetEnvironmentVariable("RLW_BUILD_OUT") ?? Path.GetFullPath("BuildOut");
         Directory.CreateDirectory(outDir);
@@ -72,6 +72,8 @@ public static class CclLocoBuild
             EditorSceneManager.SaveOpenScenes();
             AssetDatabase.SaveAssets();
             RenderCheck();
+            if (Environment.GetEnvironmentVariable("CCL_NEW_LOCO") == "1")
+                NewLocoBuildGate.ValidateAndWrite(cfg, outDir);
             Export();
         }
         catch (Exception e)
@@ -371,6 +373,7 @@ public static class CclLocoBuild
         }
         ApplyMaterials(body);
         if (Cfg.BodyExtras != null) { Folder($"{Work}/Generated"); Cfg.BodyExtras(body, $"{Work}/Generated"); Line("  body extras added (config)"); }
+        ReviewedMeshIslandRemoval.Apply(body, Cfg.RemovedMeshIslands, Islands, SubMesh, SaveMesh, Line);
         CutFittings(body);
         var bounds = RendererBounds(body);
         Line($"body renderer bounds centre {V(bounds.center)} size {V(bounds.size)}");
@@ -870,6 +873,7 @@ public static class CclLocoBuild
     static void BuildBrakeShoes(GameObject body)
     {
         if (Cfg.BrakeHangerClip == null) return;
+        BuildBrakeSlidingParts(body);
         var clip = Clip(Cfg.BrakeHangerClip);
         foreach (var n in Cfg.BrakeHangers)
         {
@@ -884,6 +888,29 @@ public static class CclLocoBuild
     }
 
     // Wraps t in an identity pivot at its origin; returns the clip's t=0 -> t=end rotation of t as angle/axis in pivot-parent space.
+    static void BuildBrakeSlidingParts(GameObject body)
+    {
+        if (Cfg.BrakeSlidingParts.Length == 0) return;
+        var clip = Clip(Cfg.BrakeHangerClip);
+        foreach (var path in Cfg.BrakeSlidingParts)
+        {
+            var t = body.transform.Find(path);
+            if (!t) throw new InvalidOperationException("Missing brake translation source: " + path);
+            clip.SampleAnimation(body, 0f); var start = t.localPosition;
+            clip.SampleAnimation(body, clip.length); var end = t.localPosition;
+            clip.SampleAnimation(body, 0f);
+            if (Vector3.Distance(t.parent.TransformPoint(start), t.parent.TransformPoint(end)) < 0.0001f)
+                throw new InvalidOperationException("Configured brake slider has no source travel: " + path);
+            var reader = new GameObject("[brake slide] " + t.name).transform;
+            reader.SetParent(t.parent, false);
+            var slider = Add(reader.gameObject, "CCL.Types.Proxies.Indicators.IndicatorSliderProxy");
+            Set(slider, "pointer", t); Set(slider, "startPosition", start); Set(slider, "endPosition", end);
+            Set(slider, "minValue", 0f); Set(slider, "maxValue", Cfg.BrakeHangerMaxBar);
+            Add(reader.gameObject, "CCL.Types.Proxies.Indicators.IndicatorBrakeCylinderReaderProxy");
+            Line($"  brake slider {path}: {V(start)} -> {V(end)} parent-local, over 0..{Cfg.BrakeHangerMaxBar} bar brake cylinder");
+        }
+    }
+
     static Transform Pivot(Transform t, AnimationClip clip, GameObject body, out float angle, out Vector3 axis)
     {
         var parent = t.parent;
@@ -1273,8 +1300,10 @@ public static class CclLocoBuild
     {
         rig.localPosition = new Vector3(0, Cfg.CouplerHeight, z);
         foreach (var r in rig.GetComponentsInChildren<MeshRenderer>(true))
-            if (r.name.StartsWith("Buffer_") || r.name.StartsWith("HookPlate")) r.enabled = false;
-        Line($"{rig.name} at {V(rig.localPosition)}: {what} z {face:F3}, inset {Cfg.CouplerInset} (DV coupler height {Cfg.CouplerHeight}); DV buffer/hook meshes hidden, model buffers kept");
+            if (r.name.StartsWith("Buffer_")) r.enabled = false;
+            else if (r.name.StartsWith("HookPlate")) r.enabled = !Cfg.HideHookPlates;
+        Line($"{rig.name} at {V(rig.localPosition)}: {what} z {face:F3}, inset {Cfg.CouplerInset} (DV coupler height {Cfg.CouplerHeight}); " +
+            (Cfg.HideHookPlates ? "DV buffer/hook meshes hidden, model buffers kept" : "DV buffers hidden, stock hook plates retained, model buffers kept"));
     }
 
     // ---- DV coupler hardware, measured from resources.assets (CarFlatcar, whose rig CCL builds at [coupler_rig_*] for custom
@@ -1294,10 +1323,14 @@ public static class CclLocoBuild
     // z most rays stop at (1 cm bins), so a narrow modelled coupler head or lift bar does not count as the beam.
     static float EndBeam(GameObject body, int dir, out string detail)
     {
+        var probe = Cfg.EndBeamProbeHeight ?? new Vector2(Cfg.CouplerHeight - 0.2f, Cfg.CouplerHeight);
+        if (Cfg.EndBeamProbeHeight.HasValue && (float.IsNaN(probe.x) || float.IsNaN(probe.y) || float.IsInfinity(probe.x) || float.IsInfinity(probe.y) ||
+            probe.x < 0 || probe.y > 2 || probe.y - probe.x < 0.09999f || probe.y - probe.x > 0.40001f))
+            throw new InvalidOperationException(CarId + " invalid end-beam probe height: " + probe);
         var hits = new List<(float z, string part)>();
         using (var vh = new VisualHits(body.transform))
             for (float x = -0.6f; x <= 0.601f; x += 0.1f)
-                for (float y = Cfg.CouplerHeight - 0.2f; y <= Cfg.CouplerHeight + 0.001f; y += 0.05f)
+                for (float y = probe.x; y <= probe.y + 0.001f; y += 0.05f)
                     if (vh.Ray(new Vector3(x, y, dir * 30f), new Vector3(0, 0, -dir), 30f, out var h)) hits.Add((h.point.z, h.collider.transform.parent.name));
         if (hits.Count < 20) throw new InvalidOperationException(CarId + " insufficient end-beam rays: " + hits.Count);
         float outer = hits.Max(h => dir * h.z);
@@ -1318,8 +1351,10 @@ public static class CclLocoBuild
         float z = beam + dir * DvBeamToRig;
         rig.localPosition = new Vector3(0, Cfg.CouplerHeight, z);
         foreach (var r in rig.GetComponentsInChildren<MeshRenderer>(true))
-            if (r.name.StartsWith("Buffer_") || r.name.StartsWith("HookPlate")) r.enabled = false;
-        Line($"{rig.name} at {V(rig.localPosition)}: end beam z {beam:F3} ({detail}) + {DvBeamToRig} m as on DV wagons; live coupler z {z + dir * DvRigToCoupler:F3}; DV buffer/hook-plate meshes hidden");
+            if (r.name.StartsWith("Buffer_")) r.enabled = false;
+            else if (r.name.StartsWith("HookPlate")) r.enabled = !Cfg.HideHookPlates;
+        Line($"{rig.name} at {V(rig.localPosition)}: end beam z {beam:F3} ({detail}) + {DvBeamToRig} m as on DV wagons; live coupler z {z + dir * DvRigToCoupler:F3}; " +
+            (Cfg.HideHookPlates ? "DV buffer/hook-plate meshes hidden" : "DV buffers hidden; stock hook plates retained"));
         // DV hardware must be clear of the model to be seen and grabbed: rays along the hardware's depth through each part's box
         using (var vh = new VisualHits(body.transform))
             foreach (var (name, c, size) in DvCouplerParts)
@@ -2421,6 +2456,7 @@ public static class CclLocoBuild
         // RR levers outside the cab (tender handbrake, filler lid)
         foreach (var l in Cfg.RrLevers.Where(l => l.External)) RrLever(root.transform, l);
         foreach (var p in Cfg.Pullers.Where(p => p.External)) RrPuller(root.transform, p);
+        BuildAnimatedToggles(root.transform);
         // brake-cylinder release: the DV rod runs 1.07 m along its local +z, valve body at the root, red handle at the far end
         var release = root.transform.Find("[brake release]");
         if (release && Cfg.BrakeRelease != null)
@@ -2607,7 +2643,7 @@ public static class CclLocoBuild
         Set(livery, "RearBogie", 10000);
         Set(livery, "BufferType", 10000);
         Set(livery, "UseCustomHosePositions", false);
-        Set(livery, "HideHookPlates", true);
+        Set(livery, "HideHookPlates", Cfg.HideHookPlates);
         Set(livery, "HasMUCable", false);
         Set(livery, "HideFrontCoupler", Cfg.HideFrontCoupler);
         Set(livery, "HideBackCoupler", Cfg.HideBackCoupler);
@@ -3078,14 +3114,34 @@ public static class CclLocoBuild
     }
     static string lastHitName;
 
-    // Mesh islands: triangles connected through shared vertex positions (welded at 1e-4 local units, as the backhead probe).
+    // Mesh islands: triangles connected through shared vertex positions. Keep the historical 1e-4 local grid unless
+    // a reviewed source-mesh override accounts for an imported scale (a x100 mesh otherwise welds across 10 mm).
+    // AssetDatabase.CreateAsset may rename a generated mesh to its filename. Keep source identity separately so
+    // later sequential cuts use the same reviewed weld grid without changing persisted asset names.
+    static readonly Dictionary<Mesh, string> meshIslandSources = new Dictionary<Mesh, string>();
+    static string MeshIslandSourceName(Mesh mesh)
+    {
+        string source; return meshIslandSources.TryGetValue(mesh, out source) ? source : mesh.name;
+    }
+    static float MeshIslandWeldScale(Mesh mesh)
+    {
+        float tolerance;
+        if (Cfg == null || Cfg.MeshIslandWeldTolerances == null || !Cfg.MeshIslandWeldTolerances.TryGetValue(MeshIslandSourceName(mesh), out tolerance)) return 10000f;
+        if (tolerance <= 0 || float.IsNaN(tolerance) || float.IsInfinity(tolerance))
+            throw new InvalidOperationException("Invalid mesh island weld tolerance for " + mesh.name);
+        float scale = 1f / tolerance;
+        if (float.IsInfinity(scale)) throw new InvalidOperationException("Mesh island weld tolerance too small for " + mesh.name);
+        return scale;
+    }
+
     static List<List<(int sub, int a, int b, int c)>> Islands(Mesh mesh)
     {
         var verts = mesh.vertices;
+        float weldScale = MeshIslandWeldScale(mesh);
         var key = new Dictionary<Vector3Int, int>(); var id = new int[verts.Length];
         for (int i = 0; i < verts.Length; i++)
         {
-            var k = Vector3Int.RoundToInt(verts[i] * 10000f);
+            var k = Vector3Int.RoundToInt(verts[i] * weldScale);
             if (!key.TryGetValue(k, out id[i])) { id[i] = key.Count; key[k] = id[i]; }
         }
         var parent = Enumerable.Range(0, key.Count).ToArray();
@@ -3143,6 +3199,7 @@ public static class CclLocoBuild
         m.subMeshCount = src.subMeshCount;
         for (int s = 0; s < subs.Length; s++) m.SetTriangles(subs[s], s);
         m.RecalculateBounds();
+        meshIslandSources[m] = MeshIslandSourceName(src);
         return m;
     }
 
@@ -3280,7 +3337,18 @@ public static class CclLocoBuild
     }
 
     // cab floor height under (x, z): raycast down against temporary colliders on the visible meshes
-    static float FloorY(GameObject body, float x, float z) => Probe(body, new Vector3(x, 3.5f, z), Vector3.down, 3.5f, h => h.point.y, 1.7f);
+    static float FloorY(GameObject body, float x, float z)
+    {
+        if (!Cfg.CabFloorProbeHeight.HasValue)
+            return Probe(body, new Vector3(x, 3.5f, z), Vector3.down, 3.5f, h => h.point.y, 1.7f);
+        float start = Cfg.CabFloorProbeHeight.Value;
+        if (float.IsNaN(start) || float.IsInfinity(start) || start <= 0f || start > 5f)
+            throw new InvalidOperationException("CabFloorProbeHeight must be finite and in (0, 5] metres");
+        float floor = Probe(body, new Vector3(x, start, z), Vector3.down, start, h => h.point.y, float.NaN);
+        if (float.IsNaN(floor) || floor <= 0f || floor >= start)
+            throw new InvalidOperationException("Measured cab floor probe did not hit a floor below its origin");
+        return floor;
+    }
 
     static float SurfaceX(GameObject body, float y, float z, float side) => Probe(body, new Vector3(side * 3f, y, z), new Vector3(-side, 0, 0), 3f, h => h.point.x * side, 0f);
 
@@ -3477,15 +3545,17 @@ public static class CclLocoBuild
     }
 
     // triangle -> island (welded as Islands) and each island's mesh-local bounds, cached per mesh
-    static readonly Dictionary<Mesh, (int[] tri, Bounds[] box)> islandIndex = new Dictionary<Mesh, (int[], Bounds[])>();
+    static readonly Dictionary<(Mesh mesh, float weldScale), (int[] tri, Bounds[] box)> islandIndex = new Dictionary<(Mesh, float), (int[], Bounds[])>();
     static (int[] tri, Bounds[] box) IslandIndex(Mesh mesh)
     {
-        if (islandIndex.TryGetValue(mesh, out var r)) return r;
+        float weldScale = MeshIslandWeldScale(mesh);
+        var cacheKey = (mesh, weldScale);
+        if (islandIndex.TryGetValue(cacheKey, out var r)) return r;
         var verts = mesh.vertices; var t = mesh.triangles;
         var key = new Dictionary<Vector3Int, int>(); var id = new int[verts.Length];
         for (int i = 0; i < verts.Length; i++)
         {
-            var k = Vector3Int.RoundToInt(verts[i] * 10000f);
+            var k = Vector3Int.RoundToInt(verts[i] * weldScale);
             if (!key.TryGetValue(k, out id[i])) { id[i] = key.Count; key[k] = id[i]; }
         }
         var parent = Enumerable.Range(0, key.Count).ToArray();
@@ -3499,7 +3569,7 @@ public static class CclLocoBuild
             var b = boxes[ix]; b.Encapsulate(verts[t[i]]); b.Encapsulate(verts[t[i + 1]]); b.Encapsulate(verts[t[i + 2]]); boxes[ix] = b;
             tri[i / 3] = ix;
         }
-        return islandIndex[mesh] = (tri, boxes.ToArray());
+        return islandIndex[cacheKey] = (tri, boxes.ToArray());
     }
 
     // Is the mesh island a ray hit a compact solid (casting, beam, tank, cab), rather than a tube, wire, plate or small

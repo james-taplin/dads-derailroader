@@ -1,5 +1,5 @@
 param(
-    [Parameter(Mandatory=$true)][ValidateSet('g29','c21')][string]$Profile,
+    [Parameter(Mandatory=$true)][string]$Profile,
     [Parameter(Mandatory=$true)][string]$Run,
     [switch]$Frozen,
     [switch]$Tests,

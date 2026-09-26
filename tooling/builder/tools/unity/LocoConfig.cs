@@ -36,6 +36,7 @@ public class LocoConfig
 
     // ---- physics / DV assets
     public float WheelRadius, CouplerHeight = 1.05f, CouplerInset = 0.30f;
+    public Vector2? EndBeamProbeHeight;          // measured beam sampling min/max y (m); null retains CouplerHeight-0.2..CouplerHeight
     public string License = "SH282";            // DV GeneralLicenseType id (null for a tender)
     public int HudType = 20;                    // CCL BaseHUD: S060 25, S282 20, Custom 1000
     public Dictionary<string, int> HudCustom;   // non-null: custom HUD (1000) = CCL's steam preset + these "Section.Field" -> enum value overrides
@@ -52,8 +53,12 @@ public class LocoConfig
 
     // ---- body clean-up and fixed parts
     public string[] RemoveObjects = new string[0];      // stray RR objects
+    public RemovedMeshIslandCfg[] RemovedMeshIslands = new RemovedMeshIslandCfg[0];
     public string[] ExtraWalkableParts = new string[0]; // visible meshes that need walkable colliders (RR climbs via Ladder)
     public string[] NoWalkParts = new string[0];        // RR MeshColliders on moving parts (rods): no static walkable copy
+    // Mesh-name-specific connectivity grid in mesh-local units. Default remains 1e-4; scaled source meshes may need
+    // a finer reviewed value (S16 Cylinder.018 x100: 1e-7 local = 10 micrometres in car space). SubMesh preserves names.
+    public Dictionary<string, float> MeshIslandWeldTolerances = new Dictionary<string, float>();
     public Func<Transform, List<(string name, Vector3 centre, Vector3 size)>> CollisionBoxes;  // body -> [collision] boxes
     public string BufferFront, BufferRear;               // renderers whose bounds give the buffer faces
     public float? CouplingFaceFront, CouplingFaceRear;   // explicit coupling planes (z) where there are no buffers (drawbar end)
@@ -63,9 +68,11 @@ public class LocoConfig
     public float? RrEndFront, RrEndRear;
     public ModelPin CoupledPin;
     public bool HideFrontCoupler, HideBackCoupler;       // DV screw-link coupler visuals (hidden on the loco-tender drawbar)
+    public bool HideHookPlates = true;                  // set false to retain stock mounting plates when source drawgear is replaced
     public (string anchor, string decalComp)[] PlateDecals = new (string, string)[0];
     public string CabSeatComp; public float CabSeatOffsetZ = 0.3f;
     public float? CabZ;                                  // [cab] teleport z when the RR seats are not in the cab
+    public float? CabFloorProbeHeight;                   // car-space y inside low cabs, below their roof; null retains the legacy probe
     public (Vector3 centre, Vector3 size)? CabTeleportVolume;   // car-space box the teleport pointer hits (default 2.6 x 2.2 x 1.8 m above [cab])
     public Vector3 ExplosionAnchor;
     public Action<GameObject, string> BodyExtras;          // (body, generated asset folder): add static parts, e.g. RR decal images
@@ -95,6 +102,7 @@ public class LocoConfig
     public Vector3? BellSound;                          // steam bell audio anchor (sim bell = SteamerSimCreator 'bell'); null: no bell sound
     public List<(string path, string bogie)> ArticulatedParts = new List<(string, string)>();   // car-root paths hung on a DV bogie (Mallet front engine swings with it)
     public string[] BrakeHangers = new string[0]; public string BrakeHangerClip; public float BrakeHangerMaxBar = 3.5f;
+    public string[] BrakeSlidingParts = new string[0]; // source brake links driven by translation rather than rotation
     public Func<Transform, IEnumerable<(string tag, Vector3 pos)>> OilPoints;   // RefBody -> oil cup anchors
     // oil cups on the rods' modelled oilers (replaces OilPoints): rod renderer name, and whether to leave its frontmost oiler
     // modelled (no cup). Each cup replaces its oiler island and rides with the rod (provider parented to it).
@@ -109,6 +117,7 @@ public class LocoConfig
     //      looks right from outside and with the interior unloaded
     public string[] SimControls = new string[0];
     public List<PullerCfg> Pullers = new List<PullerCfg>();          // sliding parts (cab windows) as DV Pullers
+    public List<AnimatedToggleCfg> AnimatedToggles = new List<AnimatedToggleCfg>();
     public List<(string animKey, string group, float radius)> WheelClips = new List<(string, string, float)>();   // extra clips that turn with the car (RR 'Wrench' wheelset: lubricator ratchet)
 
     // ---- sound: looped clips from the RR pack / game (Assets paths) on sim ports; RemoveVanillaSounds drops stock systems by name
@@ -173,6 +182,12 @@ public class EngineUnit { public string[] DriverParts; public string AnimKey, Gr
 // Rigid frames: pivot on the end axles, so the body follows the chord between the outermost axles as the real frame does.
 public class BogieCfg { public string Bogie, BogieCollider; public string[] AxleParts; public float[] Axles; public int PivotAxle = -1; }
 // RR truck prefab placed at z (RR truck origin), optionally turned 180 deg; renderers named Wheelset* go under the nearest axle.
+public class RemovedMeshIslandCfg
+{
+    public string Part, Name;
+    public Vector3 Centre, Size;
+    public int ExpectedTriangles;
+}
 public class TruckCfg { public string Prefab, Wheelset; public float Z; public bool Reversed; public string[] Remove = new string[0]; }
 public class CoalLoadCfg { public string Comp, BunkerPart; public float FullHeight = 1.4f, EmptyFraction = 0.07f; public Vector3? Pivot; public Vector2 Footprint; }
 // Grip: world centre of the lever's collider box (default: the handle end found from the mesh); Toggle: keyboard toggles it.
@@ -182,6 +197,8 @@ public class CoalLoadCfg { public string Comp, BunkerPart; public float FullHeig
 public class RrLeverCfg { public string Path, AnimKey, Port; public int Ctl = -1; public Action<Component, float> Phys; public bool External, Handbrake, Toggle, Hidden; public string Label; public Vector3? Grip; public Vector3 GripSize = new Vector3(0.12f, 0.12f, 0.12f); public Vector3? Axis, Pivot; public float Angle; }
 // RR part that its clip slides (t=0 closed): a hidden DV Puller along the clip's translation, feeding Port (0 closed .. 1 open).
 public class PullerCfg { public string Path, AnimKey, Port, Name; public bool External; public Vector3? Grip; public Vector3 GripSize = new Vector3(0.1f, 0.3f, 0.3f); public float Step = 0.1f; }
+// The full source transform clip moves this hidden click toggle with the visible exterior part.
+public class AnimatedToggleCfg { public string Name, Path, AnimKey, Port; public Vector3 Grip; public Vector3 GripSize = new Vector3(0.12f, 0.12f, 0.12f); }
 // Looped clip on a port (DV continuous LayeredAudio: plays while the volume >= 0.01). Mixer = CCL DVAudioMixerGroup
 // (Cab 3, Chuffs 4, Compressor 21, Engine 7, Horn 12). Volume/pitch curves over the port value (after multiplier).
 public class SoundCfg { public string Name, Clip, Port; public int Mixer = 7; public Vector3 Pos; public float Volume = 1f, MinDistance = 3f, MaxDistance = 300f, Inertia = 0f, Multiplier = 1f; public Vector2[] VolumeCurve = { new Vector2(0, 0), new Vector2(1, 1) }; public Vector2[] PitchCurve; }

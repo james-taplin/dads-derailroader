@@ -1,0 +1,19 @@
+﻿PASS identity, numeric fields, explicit zero
+PASS nullable remains unknown, nested vector tuple
+PASS source vectors, quaternion and dictionary
+PASS nested tuple arrays
+PASS constructor-backed Shot and collision hook
+PASS simulation values use core-supported int/float types
+PASS pose and lever hooks
+PASS null physical radius rejected [$record.config.WheelRadius: unknown/null cannot populate Single]
+PASS misspelled config field rejected [$record.config.WheelRaduis: unknown or readonly LocoConfig field]
+PASS invalid mass rejected [$record: mass/radius must be positive; resource capacities cannot be negative]
+PASS invalid basis rejected [$record.config: invalid or missing basis]
+PASS unsafe generation folder rejected [$record.config.Work: must be a dedicated Assets/<conversion>/<car> subtree]
+PASS duplicate JSON key rejected [JSON offset 42: duplicate key schemaVersion]
+PASS nonfinite number rejected [JSON offset 561: invalid/nonfinite number]
+PASS trailing comma rejected [JSON offset 749: expected string]
+PASS unprovenanced number rejected [$record.config.WheelRadius: numeric setting requires value/unit/basis/evidence]
+PASS missing resource capacity rejected [$record.config.WaterCapacityL: required and must be known]
+PASS actual record validates: LLW_S16
+RESULT 18 passed

@@ -25,6 +25,28 @@
       "frozenProject": "reference/private/frozen-projects/c21",
       "unifiedReference": "locos/c21/builds/unified01",
       "catalogId": "ls-280-c21"
+    },
+    "s16": {
+      "pack": "LLW S16",
+      "project": "locos/s16/unity-build",
+      "profile": "locos/s16/profile",
+      "builds": "locos/s16/builds",
+      "sourceProject": "locos/s16/unity",
+      "catalogId": "ls-060-s16",
+      "vehicleRecord": "locos/s16/profile/vehicle-record.json",
+      "buildMethod": "LlwVehicleRecord.Build",
+      "auditMode": "new_locomotive"
+    },
+    "s16-062": {
+      "pack": "LLW S16 0-6-2T",
+      "project": "locos/s16-062/unity-build",
+      "profile": "locos/s16-062/profile",
+      "builds": "locos/s16-062/builds",
+      "sourceProject": "locos/s16-062/unity",
+      "catalogId": "ls-062-s16",
+      "vehicleRecord": "locos/s16-062/profile/vehicle-record.json",
+      "buildMethod": "LlwVehicleRecord.Build",
+      "auditMode": "new_locomotive"
     }
   },
   "sharedBoard": "B:/LLW CONVERT/GUIDE_SHARED.md",

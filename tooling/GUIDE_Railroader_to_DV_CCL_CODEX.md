@@ -2,6 +2,8 @@
 
 # Railroader → Derail Valley (CCL 3.1.9) conversion guide
 
+> Current route: the shared core is merged under `builder/tools`; S16 uses the generic JSON loader. Historical examples below are superseded where section 11 says otherwise. S16 installation is complete; runtime acceptance is pending.
+
 > **Codex working copy (2026-09-26).** Maintain Codex edits here; read `GUIDE_Railroader_to_DV_CCL.md` and `GUIDE_SHARED.md` for Claude findings, but edit only this guide. C-21: Railroader tender origin -7.445 m is supported by the joint probe; the old -7.057 m setting overlaps the draw gear. See section 9 and `LLW Pilot Workflows/analysis/c21/joint-pin-check-20260926/joint_check.txt` *(claude)*.
 
 Learned converting Railroader (Unity 2022.3 URP) steam locos into working DV CCL locos. Worked examples, each with probes, per-build test notes and a data sheet:
@@ -176,7 +178,7 @@ Railroader spawns these at runtime; DV/CCL needs them built:
     - RLW RBBM-1t: 32.4k vanilla → 39.4k compound / 50.8k simple
     - The falloff uses the same heating-surface curves, so pull at speed barely changes; only the low-speed pull rises.
     - `Car.TractiveForceMultiplier` 1.1 is vanilla RR's global balance factor; leave it out.
-- **Matching Railroader's pull in DV:** size "equivalent cylinders" so DV's formula gives Railroader's figure. Choose the cylinder count for the exhaust beat you want (beats per turn = 2 × cylinders): a Mallet keeps 4 cylinders (8 beats, needs the audio mod below); a 4-cylinder engine with paired cranks (4 beats) becomes 2 cylinders of the same swept volume, which fits DV's stock chuff slots.
+- **Matching Railroader's pull in DV:** size "equivalent cylinders" so DV's formula gives Railroader's figure. Choose the cylinder count for the exhaust beat you want (beats per turn = 2 × cylinders): a Mallet with 4 cylinders produces 8 beats (verify compatibility with the selected native chuff system before accepting that mapping); a 4-cylinder engine with paired cranks (4 beats) becomes 2 cylinders of the same swept volume, which fits DV's stock chuff slots.
 - **Other DV sim facts:**
   - firebox max burn rate = capacity / burnTime; heat = coal × 32 MJ × efficiency
   - boiler volume = πr²·L·capacityMultiplier
@@ -196,13 +198,18 @@ Railroader spawns these at runtime; DV/CCL needs them built:
 - **New sim control** (e.g. `cabLight`, an `ExternalControlDefinitionProxy`): **don't add it to `executionOrder` by hand.** CCL adds it automatically, and a duplicate makes DV's `SimulationFlow` throw "same key" on spawn. Check the saved prefab for duplicate IDs after saving.
 - **Firebox lights:** the 3 m point light plus fill and bounce lights lit the whole cab through the backhead. Keep the fire light at ≤0.6 m range inside the firebox, and set the fill and bounce multipliers to 0.
 
-### Audio
+### Audio: native DV S060/S282 aliases
+
+**Required policy, James 2026-09-26 (app board W5/W9):** all conversions use native DV/CCL S060 or S282 audio aliases. Finished packs must load and operate without Railroader installed or any RR runtime libraries, code mods, source bundles or external audio files. Source geometry dependencies are conversion inputs; DV/CCL are the target runtime requirements.
+
+Use the selected family for whistle, bell, chuffs, air pump, dynamo and cylinder cocks. Select **S060 below 1,500 ft2** `totalHeatingSurface`, **S282 at or above 1,500 ft2**. Record the source value and chosen basis. Missing heating surface requires a recorded user choice; an explicit recorded S060/S282 override is allowed. Examples: S16 876 and C21 1,300 => S060; G29 1,735 => S282. Read each loco's definition independently.
+
+Preserve native audio systems and their control/simulation bindings. Check that each required sound responds to its port and plays once. Audio-family selection must not silently change locomotive physics or controls. Every deliverable must contain **zero serialized AudioClips**; audit alias selection and bindings as well as clip count. Validate sound operation, load/spawn and save/reload with RR unavailable before declaring runtime independence. Source-model distribution permissions remain separate.
+
+Current build command: select `-Share`/`--share`, then verify the required family and zero-AudioClip audit explicitly. The flag alone does not establish compliance. Enforcement in code and per-profile compliance still need verification; installed-pack acceptance is tracked in each loco's delivery/status record.
+
 - **Vanilla systems:** `CopyVanillaAudioSystem` ids 3000–3018 (steam systems), 3050 S060 whistle, 3100 S282 whistle. `CopyChuffSystem.LocomotiveType` 0=S060, 1=S282.
 - **Chuff slots:** DV's `ChuffClipsSimReader` has one clip slot per beat (S060/S282 = 4). Any other cylinder count throws `IndexOutOfRange` in `OnChuff`, so half the beats go silent.
-- **No pitch control in CCL.** Use a tiny Harmony mod (`audio_mod\`):
-  - prefix `ChuffClipsSimReader.Init`: extend the clip slots, multiply `*ChuffConfig.pitch`, and `chuffLoop.PitchMultiply`
-  - postfix `LayeredAudioPortReader.Init`: `layeredAudio.PitchMultiply` for the whistle
-  - filter on `car.carLivery.parentType.id`, apply once per instance, and list the mod in the pack's Info.json `Requirements`
 
 ### Particles
 - **Cylinder cocks:** `CylinderCockParticlePortReaderProxy.cylinderSetups` = one entry per sim cylinder (front and rear jets), each gated by that cylinder's inlet-valve bit.
@@ -317,15 +324,45 @@ Worked example: `ALCo_Mikado1610_Conversion` (Greenninja2404's Large ALCo Loggin
 - **Empty glass meshes.** The pack's headlight glass exported with 0 triangles (and the core deletes empty meshes), so lenses come from `LampLenses` at the RR Headlight component's position.
 - **LegosLibraryOfStuff packs** keep option groups in `LegosLibraryOfStuff\Definitions\*.json` (`bulkAdds`: PrefabModelComponents, decals, CustomImages). The option prefabs are in the pack's own bundle and are modelled in car space (`ExtraParts`). CustomImage logos are baked as alpha-cutout quads (`BodyExtras`).
 - **Saddle tank:** the backhead sits inside the cab (z -4.05) with crew space behind it and beside the boiler. Probe the backhead from a ray start inside the cab (`RayZ`), not from the bunker.
-- **An empty `defaultWhistleIdentifier` is not silent.** RR's `WhistleCustomizationSettings` falls back to `wh-5-drg-st` (5-chime, base-game `audio.whistles01`); it does the same for `a.w.default`. `extract_rr_audio.py <out> [names]` extracts any listed clip (ALCo test2).
 - **Clips that nest, grouped for SimControls** (the roof hatch `Empty.048` and its prop rod `Empty.048/Empty.049` in a second clip): list the child's clip first in `LoadAnimations`. Its animator then goes inside the hatch, which the hatch's own group moves afterwards. In the other order, the hatch has already moved and the rod's host path is gone.
 
-### Cab parts with no DV function, and Railroader's own sounds (G-29 test5)
-Core fields: `SimControls`, `RrLeverCfg.Hidden`, `Pullers`, `WheelClips`, `Sounds`, `RemoveVanillaSounds`.
+### Cab parts with no DV function (G-29 test5)
+Core control fields: `SimControls`, `RrLeverCfg.Hidden`, `Pullers`, `WheelClips`.
 - **Doors, windows, vents, hatches:** give each a saved sim control (`SimControls`: an `ExternalControlDefinitionProxy` with `saveState`). A *hidden* DV control (grab box only, no mesh copy) feeds `ID.EXT_IN`, and the RR part **stays on the exterior** and follows the port through its own clip (`LoadAnimations`). It then looks right from outside and with the interior unloaded, and keeps its state across saves. Take the parts off the static walkable colliders (`NoWalkParts`).
 - **Sliding parts are DV Pullers.** DV `PullerBase`: a ConfigurableJoint limited along the control's local y, value = |localPosition.y| / (2 x `linearLimit`), pulled towards -y, local pose (0, identity) at value 0 (CCL's validation checks this). So: a slot node at the closed position with its -y along the clip's travel, the control at its origin, `useCustomConnectionAnchor` with the anchor mid-travel. Travel and direction come from the clip (t=0 closed).
 - **Control rigidbodies collide with each other**, sliding ones too: two sashes that pass each other need grab boxes that don't overlap across their gap (G-29: 1.8 cm boxes, sashes 2.3 cm apart).
 - **RR wheelsets without wheels** (the G-29's 3 m 'Wrench' = lubricator ratchet) are clips that turn with the car: `WheelRotationViaAnimationProxy` at that radius.
-- **What RR sounds exist:** RR *synthesises* its chuffs (`Audio.DynamicChuff`), so there is nothing to copy; keep DV's chuffs. The whistle is one clip per `defaultWhistleIdentifier` (base game `Railroader_Data\StreamingAssets\AssetPacks\audio.whistles01`, or a whistle mod such as Greenninja's Whistles), looped at runtime by `AudioUtilities.Loopify` (second half + start, 4096-sample crossfade) with pitch ramping 0.9 -> 1 (`WhistlePlayer`). The bell, steam air pump and dynamo are single looped clips in `sharedassets3.assets` (CNR brass rope bell, TVRM compressor, TVRM dynamo). Extract with UnityPy (`tools\extract_rr_audio.py`), loopify offline (`tools\loopify_wav.py`).
-- **Custom looped sound in CCL:** `LayeredAudioProxy` (type Continuous, mixer group) + one child layer with an `AudioSource` (clip, loop) and `AudioLayerProxy` (volume/pitch curves over the port value, `source`), plus a `LayeredAudioPortReaderProxy` (portId) on the same object. DV plays a layer while its volume >= 0.01. Ports: whistle `exhaust.WHISTLE_FLOW_NORMALIZED`, bell `bell.BELL_NORMALIZED` (1 while ringing, then smooths to 0), air pump `compressor.PRODUCTION_RATE_NORMALIZED`, dynamo `dynamo.DYNAMO_FLOW_NORMALIZED`. Mixer groups (CCL `DVAudioMixerGroup`): Horn 12, Compressor 21, Engine 7, Cab 3.
-- These are game assets: fine in your own install, don't publish a pack containing them.
+
+## 11. S16: JSON records and scaled source geometry (2026-09-26)
+
+These findings come from editor probes, geometry regression tests and serialized bundle audits. S16 prerelease2 is installed for testing; driving, servicing, save/reload and VR acceptance remain pending. It is not an accepted baseline. Evidence: [build status](locos/s16/analysis/BUILD_STATUS.md), [measurements](locos/s16/profile/S16_MEASUREMENTS.md), [delivery receipt](locos/s16/analysis/delivery.json).
+
+### Current build route
+
+The shared core is now `builder/tools/unity`. S16 is the first authoritative JSON profile, `locos/s16/profile/vehicle-record.json`, loaded by `LlwVehicleRecord.Build`. G29/C21 retain their existing C# entry points; JSON parity for those profiles has not been demonstrated. The older starting recipe above is historical. New records should follow [the schema contract](builder/VEHICLE_RECORD.md), retain reviewed geometry overrides and use the canonical launcher with a fresh run name.
+
+Numeric record values require value/unit/basis/evidence envelopes. Evidence presence is validated; its scientific correctness still needs review. Units are documentation, not automatic conversion. Unknown fields, duplicate keys and invalid values fail rather than being silently ignored. Source-parent positions are baked into car coordinates once. The loader has 18 contract tests; it is not an automatic arbitrary-locomotive measurement system.
+
+### Geometry and interaction lessons
+
+- **Weld tolerance is mesh-local.** S16's Cylinder.018 has scale 100: a 0.0001 local tolerance welds across 10 mm in car space and merges valves into pipes. Its reviewed 0.0000001 override gives 10 micrometres and separates six 592-triangle valve wheels. Cache by source mesh plus tolerance, and retain original mesh identity across SaveMesh/CreateAsset renaming. Test sequential saved cuts, not only temporary meshes. Evidence: `builder/tools/unity/ReviewedMeshIslandRemoval.cs`, `locos/s16/analysis/mesh-weld-tests04` (28 tests).
+- **Animated controls must follow the complete source transform.** The tank hatches translate as well as rotate. A transform-only animation rig follows the same saved port and 0.999 normalization as the exterior. Native CCL toggles use no joints, rigidbody or push offset. Five sampled phases per hatch aligned within 0.2 micrometres; runtime save/reload still needs testing. Full-turn bell animation also needs an explicit control angle because quaternion endpoints can be identical. Evidence: `builder/tools/unity/CclLocoBuild.AnimatedToggles.cs`, final `build_report.txt`.
+- **Translation is not zero travel.** Source brake links with no endpoint rotation can still slide. Use the slider and brake-cylinder reader on the same node, with measured local start/end positions. Evidence: S16 record and `S16_MEASUREMENTS.md`.
+- **Probe height can select the wrong surface.** The default floor ray hit the roof at 3.43 m; a reviewed 2.2 m start inside the cab finds the floor at 1.039 m. Keep missing-hit failures strict. A separate end-beam probe range measures low wooden beams without lowering DV's coupling height. These are profile overrides, not new global heuristics. Evidence: `locos/s16/analysis/measure01/measure_report.txt`, S16 record.
+- **Remove source islands only by reviewed identity.** Match centroid, bounds and triangle count within tolerance; never delete merely the nearest island. S16 removed 28 coupling-hardware islands while retaining beams and footboards. Evidence: `locos/s16/analysis/coupler-review`.
+- **Judge couplings by usable grab volumes.** James accepts cosmetic coupling-mesh overlap when interaction colliders remain available and not buried. Keep the three exact warnings and their written dispositions. All ten stock grab-target centres were exposed from six sampled approaches. Inspect actual parked chain/hose poses, not only editor placeholders; dynamic hoses and VR reach still require playtesting. Evidence: `profile/warning_dispositions.json`, `analysis/coupler-review/stock_grab_access.json` under S16.
+- **Scaled collider probes can produce false intersections.** Tiny local meshes under the source's 100x transform made MeshCollider ray tests report spurious oil-cup collisions. Bake sampled animated geometry into car coordinates on identity probe colliders and cross-check triangles. The actual stock lid opens 90 degrees, not the assumed 180. Six selected cups passed 32 phases x 3 reverser settings = 576 samples with no sampled cup/lid surface crossing. Visibility is not proof of nozzle or VR reach. Evidence: `locos/s16/analysis/oil-screen-test05-six`; final `oil_geometry_fingerprint.json` proves the delivered geometry/animation matches the screen.
+
+### Audit and provenance lessons
+
+For a new loco, use source closure and serialized build gates without inventing a parity baseline. Check actual CCL ports, unique simulation IDs, animation registration, axles/resources, oil tags/order, controls, identity and scripts; each warning needs an exact disposition. A configured simulation field may belong to a sibling controller on the same GameObject as its execution definition. Resolve it uniquely on that exact node; reject missing, ambiguous or unrelated-node matches. Evidence: `builder/tools/unity/NewLocoBuildGate.cs`, `builder/tools/audit_new_loco.py`, `locos/s16/analysis/audit-tests-final.txt` (16 mutation/negative tests).
+
+Do not equate a litre of boiler water to a kilogram. The verified DV 1-bar specific volume is 1.049301 L/kg: S16's 3,040 L contributes 2,897.16678 kg. Its 80,000 lb source mass is explicitly interpreted as operating locomotive mass including boiler water but excluding load slots, giving 33,390.222819 kg dry. This is a documented assumption; heat/fuel calibration still needs driving. Evidence: S16 measurements and `analysis/migration/E04-mass-ledger.md`.
+
+Completed build manifests are immutable. Correct evidence links in a new run, retain prior runs, and verify the installed bundle hash. Prerelease2 was installed on 2026-09-26 using `install_build.py --allow-game`, with a fresh audit and matching hash; see delivery.json for the private receipt. No game acceptance has been inferred from installation.
+
+### App-board decisions and remaining work
+
+James requires complete native S060/S282 audio aliases using the 1,500 ft2 threshold and RR-independent finished packs. See the Audio section for the build and acceptance requirements.
+
+The app now has an AssetRipper extraction stage, but its requested real-machine smoke test (W10) remains outstanding. Our local S16 success does not validate the app pipeline. The published tooling snapshot predates the final S16 changes; a fresh reviewed snapshot is still needed before the app can consume them. Keep game assets, audio, private reports and catalogue records out of the public repository.

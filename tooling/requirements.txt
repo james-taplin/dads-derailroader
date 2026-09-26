@@ -1,5 +1,0 @@
-# Versions read from the existing local UnityPy Python environment; no dependencies installed for this delivery.
-PyYAML==6.0.3
-UnityPy==1.25.3
-numpy==2.5.3
-pillow==12.3.0

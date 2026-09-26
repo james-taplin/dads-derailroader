@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "profile": "s16",
+  "source_bundle_sha256": "d58c191a1420d7b4d5a165e1f10fe3eaa279e76545b4841ec1608c139b9edefe",
+  "measured_config": "locos/s16/profile/vehicle-record.json",
+  "reference": "First S16 build; no accepted predecessor",
+  "oil_policy": "Reviewed source anchors with phase/reach screen; ordered tags fixed in vehicle record",
+  "mass_policy": "Explicit working-boiler-water interpretation with DV specific-volume conversion; load slots and auxiliaries tracked separately",
+  "runtime_status": "not game tested"
+}

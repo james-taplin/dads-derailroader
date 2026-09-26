@@ -1,42 +1,15 @@
-# Fresh tooling snapshot for W — 2026-09-26_201436
+# Reviewed tooling snapshot for W
 
-Live workspace: B:/LLW CONVERT. This tooling/ folder preserves the new workspace-relative layout. Copied source bytes are unchanged; SNAPSHOT_SOURCES.json maps every original to its SHA256. MANIFEST.sha256 covers every other tooling file, including generated delivery notes.
+Captured current local tooling for W11/W13 at SNAPSHOT_SOURCES.json's capture time. All copied files retain their exact source bytes and workspace-relative paths. This replaces the older broad historical snapshot with an explicit current-tooling allowlist; older frozen sources/reports remain in Git history and the private workspace.
 
-## Current entry points
+Start with builder/VEHICLE_RECORD.md, builder/tools/unity/LlwVehicleRecord.cs, builder/tools/prepare.py, workspace.json and locos/s16/profile/vehicle-record.json. The current shared core includes ReviewedMeshIslandRemoval.cs, CclLocoBuild.AnimatedToggles.cs and NewLocoBuildGate.cs. Loader contract sources and test scripts are in builder/tests/vehicle-record. S16's reviewed warning dispositions, measurement notes and BUILD_STATUS.md are included. G29/C21 C# profiles remain regression references; their JSON migration is not claimed.
 
-- GUIDE_SHARED.md and the three GUIDE_ method/unified documents are at the root. This is a snapshot of the live board, including W1/W2/C18; messages addressed to local Claude/Codex remain historical coordination context. The future GitHub-board move has not occurred.
-- builder/tools/run_build.ps1 and build.py launch current builds; workspace.py reads workspace.json and machine.local.json.
-- builder/tools/unity is the current shared C# core. locos/g29/profile and locos/c21/profile contain current locomotive sources; locos/s16/profile holds existing pilot configuration.
-- builder/tools/prepare.py prepares projects; builder/tools/pilot/pilots.py is the active pilot import entry, using the canonical strict resolver. Other predecessor scripts retain their historical behavior.
-- builder/tools/audit_build.py, parity.py, install_build.py and share_project.py handle audit, semantic comparison, explicit-target installation and curated sharing.
-- builder/baseline and reference/private/*-original/tools are frozen/historical evidence. They are not alternative current cores.
+Import reference: builder/tools/pilot contains the active source-inspection importer. The preserved pilot export_assetripper.ps1 and PilotProbe.cs are included explicitly as inspection references, not an alternate build core. rr2dv's real AssetRipper stage has been exercised; see app-board X24/X25. The app's Unity import stage is not validated by that result.
 
-## Path mapping from C15
+Scope: this is a tooling/data-contract handoff, not a self-contained build project or installable mod. No bundles, audio, images, Unity projects/caches, CarCreator package, raw catalogue records, source Definitions/Catalog JSON, decompiled assemblies or private machine.local.json are included. The explicitly requested S16 vehicle record is reviewed conversion configuration, not a source catalogue dump. Referenced source assets and evidence not allowlisted here remain local. Compiled test executables are excluded; build tests from their included sources.
 
-| C15 snapshot | Current tooling snapshot / workspace |
-|---|---|
-| unified_builder/tools | builder/tools |
-| unified_builder/profiles/<id> | locos/<id>/profile |
-| unified_builder/overrides | builder/overrides |
-| docs/GUIDE_*.md | root GUIDE_*.md |
-| pilot_workflows/tools | builder/tools/pilot (active importer); reference/private/pilot-original/tools (history) |
-| g29_live_tools | reference/private/g29-original/tools (history) |
-| old named workspace folders | ARCHIVE/PRIVATE-retired-projects/2026-09-26 in full snapshot |
+Audio authority: James requires native DV S060/S282 aliases (S060 below1500 ft2, S282 otherwise), zero bundled AudioClips and RR-independent finished packs. The current Codex guide and builder README state that rule. Other guides/profiles/code are copied byte-for-byte and may still reflect work awaiting migration; they must not override this decision. This snapshot does not certify existing profiles or installed packs as compliant. Local Claude has been asked to clean their guide.
 
-## Inputs and machine configuration
+S062T boundary: workspace.json already references the in-progress s16-062 profile. That profile/assets are deliberately omitted. Shared files are current at capture, including any changes already present, not asserted to be frozen prerelease2 sources or S062T-validated. No in-progress source files were edited. Future changes require another snapshot. S16 build/test status is historical evidence from BUILD_STATUS.md; this packaging operation runs no Unity build and makes no new runtime-acceptance claim.
 
-This small ZIP contains tooling, configuration, guides and selected validation reports. The separate full snapshot contains every workspace file, including source/catalog-1.4.3, generated builder/catalog records, prepared projects, bundles, source assets, frozen references, caches, private archives and the original machine.local.json. Nothing was excluded from the full snapshot.
-
-For a different machine, copy machine.local.example.json to machine.local.json and fill in local tool/dependency paths. workspace.json is an unchanged copy, including the live absolute board path; the app adapter should resolve its own snapshot location. Full snapshot copies of machine.local.json still name James's external tool paths; tools installed outside B:/LLW CONVERT are not included.
-
-Unity 2019.4.40f1 and the separately acquired CarCreator 3.1.9 package remain dependencies. This packaging task does not build, install or publish packs. Original scripts in the tooling ZIP are for inspection/adaptation; the small ZIP alone lacks the asset and reference inputs required to run builds/audits. requirements.txt records local environment versions without installing them.
-
-## Status
-
-Migration evidence is under analysis/migration. Current/frozen/share semantic checks and nine workflow tests passed during migration. New game/VR acceptance remains separate. E04 mass correction is still pending. The empty original desktop G29 folder's lock status is recorded in cutover-completion.json; it is outside this B: snapshot and does not affect these deliverables.
-
-The complete workspace content inventory is also supplied as LLW-CONVERT-CONTENTS.txt and LLW-CONVERT-MANIFEST.json alongside the ZIPs. Full snapshot includes local/private preservation material; it is distinct from the author's curated share packages under share/.
-
-Snapshot timing: this captures every file in the initial inventory at 2026-09-26T19:14:42.009308+00:00. Later S16 work added paths and subsequently changed workspace.json; see CHANGES-AFTER-SNAPSHOT.json. The delivery preserves the captured versions, all ZIP file checksums passed, and the tooling copies match the full snapshot.
-
-The complete workspace listing is also included here as WORKSPACE_CONTENTS.txt, so W can inspect every path using this small ZIP.
+Verification: SNAPSHOT_SOURCES.json lists every copied file and source hash; MANIFEST.sha256 covers all other files including these notes. Every file was checked against its live source again after copying. The ZIP is byte-verified against this tree. The ZIP is a local deliverable; the same tooling tree is published in the app repository so W can read it directly.

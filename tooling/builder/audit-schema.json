@@ -19,7 +19,8 @@
     "audit_kind": {
       "enum": [
         "current_profile",
-        "frozen_semantic_parity"
+        "frozen_semantic_parity",
+        "new_locomotive"
       ]
     },
     "status": {
@@ -31,7 +32,8 @@
     "profile": {
       "enum": [
         "g29",
-        "c21"
+        "c21",
+        "s16"
       ]
     },
     "bundle_sha256": {

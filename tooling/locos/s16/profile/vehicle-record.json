@@ -1,0 +1,6952 @@
+{
+  "schemaVersion": 1,
+  "vehicleId": "ls-060-s16",
+  "config": {
+    "CarId": "LLW_S16",
+    "CarName": "LLW S16",
+    "Version": "0.1.0",
+    "ReleaseLabel": "pre-release",
+    "Author": "MarquetteCreations (Railroader assets), personal CCL conversion",
+    "Livery": "Lined",
+    "SrcPrefab": "Assets/shrimpy/ls-060-s16.prefab",
+    "Work": "Assets/S16_DV/loco",
+    "BodyName": "S16_body",
+    "BaseCarType": {
+      "value": 6,
+      "unit": "1",
+      "basis": "DV_choice",
+      "evidence": [
+        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+      ]
+    },
+    "ReportTitle": "S16 measured 0-6-0T conversion",
+    "ExtraParts": [
+      "Assets/LLWParts/s16parts/shrimpydetailmodels/headlight1.prefab",
+      "Assets/LLWParts/s16parts/shrimpydetailmodels/stack1.prefab",
+      "Assets/LLWParts/s16parts/shrimpydetailmodels/ladders.prefab"
+    ],
+    "Components": {
+      "value": [
+        {
+          "kind": "Whistle",
+          "name": "Whistle",
+          "parentPath": "",
+          "extra": "{\"defaultWhistleIdentifier\":\"wh-1-reading\",\"enabled\":true}",
+          "pos": [
+            0.4076929,
+            3.09240723,
+            -0.30422917
+          ],
+          "rot": [
+            3.4564053e-12,
+            8.30118836e-08,
+            0.000141125274,
+            1.00000012
+          ],
+          "scale": [
+            0.7,
+            0.7,
+            0.7
+          ]
+        },
+        {
+          "kind": "Bell",
+          "name": "Bell",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"Bell1\"},\"enabled\":true}",
+          "pos": [
+            -5.12045226e-05,
+            0.0,
+            -2.178852
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Chuff",
+          "name": "Chuff",
+          "parentPath": "",
+          "extra": "{\"enabled\":true}",
+          "pos": [
+            -5.053387e-06,
+            3.63989258,
+            2.28818631
+          ],
+          "rot": [
+            -7.388238e-15,
+            0.0,
+            -1.38197818e-08,
+            1.0
+          ],
+          "scale": [
+            0.8,
+            0.8,
+            0.8
+          ]
+        },
+        {
+          "kind": "LoadAnimation",
+          "name": "Coal Animation",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"Coal\"},\"slotIndex\":0,\"loadIdentifier\":\"coal\",\"loadObject\":null,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Dynamo",
+          "name": "Dynamo",
+          "parentPath": "",
+          "extra": "{\"enabled\":true}",
+          "pos": [
+            -0.7965752,
+            3.39019775,
+            -0.559086263
+          ],
+          "rot": [
+            -0.537299633,
+            4.152268e-09,
+            6.976457e-10,
+            0.8433914
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Window Right",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"RW\"},\"speed\":0.8,\"key\":\"window.r\",\"targetColliderObject\":{\"path\":[\"Main\",\"Empty.060\",\"Cube.077\"]},\"title\":\"Window\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.00000012
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Window Left",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"LW\"},\"speed\":0.8,\"key\":\"window.l\",\"targetColliderObject\":{\"path\":[\"Main\",\"Empty.032\",\"Cube.013\"]},\"title\":\"Window\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            -1.437583,
+            3.005859,
+            -2.492403
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.00000012
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Cab Door Right",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"DR\"},\"speed\":0.5,\"key\":\"door.r\",\"targetColliderObject\":{\"path\":[\"Main\",\"DoorR\",\"Cube.076\"]},\"title\":\"Door\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Cab Door Left",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"DL\"},\"speed\":0.5,\"key\":\"door.l\",\"targetColliderObject\":{\"path\":[\"Main\",\"DoorL\",\"Cube.058\"]},\"title\":\"Door\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Cab Front Right",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"FRW\"},\"speed\":0.5,\"key\":\"door.f.r\",\"targetColliderObject\":{\"path\":[\"Main\",\"Empty.059\",\"Cube.080\"]},\"title\":\"Window\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            -0.988724768,
+            3.23022461,
+            -1.42127919
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.00000012
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Cab Front Left",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"FLW\"},\"speed\":0.5,\"key\":\"door.f.l\",\"targetColliderObject\":{\"path\":[\"Main\",\"Empty.038\",\"Cube.002\"]},\"title\":\"Window\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            0.9887248,
+            3.230225,
+            -1.421279
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Ladder",
+          "name": "Left Ladder",
+          "parentPath": "",
+          "extra": "{\"height\":1.0,\"enabled\":true}",
+          "pos": [
+            -1.31863666,
+            0.6696167,
+            -2.721657
+          ],
+          "rot": [
+            0.0001344838,
+            0.7070827,
+            0.000134472954,
+            -0.7071309
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Ladder",
+          "name": "Right Ladder",
+          "parentPath": "",
+          "extra": "{\"height\":1.0,\"enabled\":true}",
+          "pos": [
+            1.293458,
+            0.6690674,
+            -2.721657
+          ],
+          "rot": [
+            6.683897e-09,
+            0.7071068,
+            -4.971366e-09,
+            0.7071068
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Seat",
+          "name": "Engineer Seat",
+          "parentPath": "",
+          "extra": "{\"priority\":0,\"enabled\":true}",
+          "pos": [
+            1.04020882,
+            1.95812988,
+            -2.28121138
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.00000012
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Seat",
+          "name": "Fireman Seat",
+          "parentPath": "",
+          "extra": "{\"priority\":0,\"enabled\":true}",
+          "pos": [
+            -1.017771,
+            2.089722,
+            -2.281211
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Gauge",
+          "name": "BPG",
+          "parentPath": "",
+          "extra": "{\"style\":\"BoilerPressure\",\"enabled\":true}",
+          "pos": [
+            9.499362e-05,
+            2.850647,
+            -1.71872222
+          ],
+          "rot": [
+            0.0,
+            1.00000012,
+            0.0,
+            -6.992446e-06
+          ],
+          "scale": [
+            1.25,
+            1.25,
+            0.68
+          ]
+        },
+        {
+          "kind": "PrefabControl",
+          "name": "BS6CO",
+          "parentPath": "",
+          "extra": "{\"prefab\":\"BrakeStand6CutOut\",\"enabled\":true}",
+          "pos": [
+            1.1888417,
+            1.76928711,
+            -1.5999527
+          ],
+          "rot": [
+            1.0,
+            -4.37113847e-08,
+            -4.88248837e-08,
+            1.08308843e-15
+          ],
+          "scale": [
+            0.8,
+            0.8,
+            0.8
+          ]
+        },
+        {
+          "kind": "PrefabControl",
+          "name": "SightGlassFireman",
+          "parentPath": "",
+          "extra": "{\"prefab\":\"SightGlass\",\"enabled\":true}",
+          "pos": [
+            -0.338644326,
+            2.37591553,
+            -2.196698
+          ],
+          "rot": [
+            3.3638945e-09,
+            0.0,
+            -1.59997364e-16,
+            1.0
+          ],
+          "scale": [
+            0.6,
+            0.9,
+            0.6
+          ]
+        },
+        {
+          "kind": "PrefabControl",
+          "name": "HCBD",
+          "parentPath": "",
+          "extra": "{\"prefab\":\"HeadlightControlBidirectionalDimming\",\"enabled\":true}",
+          "pos": [
+            1.30155277,
+            2.99438477,
+            -2.43101358
+          ],
+          "rot": [
+            -6.89431356e-09,
+            3.01012215e-10,
+            0.0436193869,
+            0.999048233
+          ],
+          "scale": [
+            0.6,
+            0.6,
+            0.6
+          ]
+        },
+        {
+          "kind": "Gauge",
+          "name": "RMG",
+          "parentPath": "",
+          "extra": "{\"style\":\"DualBrakeCylinderLine\",\"enabled\":true}",
+          "pos": [
+            0.4888422,
+            2.858887,
+            -1.135496
+          ],
+          "rot": [
+            0.0,
+            1.0,
+            0.0,
+            -8.301325e-08
+          ],
+          "scale": [
+            0.425,
+            0.425,
+            0.36
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Cab Rear Right",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"WBR\"},\"speed\":0.5,\"key\":\"door.r.r\",\"targetColliderObject\":{\"path\":[\"Main\",\"WBR\",\"Cube.015\"]},\"title\":\"Window\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            -0.988724768,
+            3.23022461,
+            -1.42127919
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.00000012
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Cab Rear Left",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"WBL\"},\"speed\":0.5,\"key\":\"door.r.l\",\"targetColliderObject\":{\"path\":[\"Main\",\"WBL\",\"Cube.078\"]},\"title\":\"Window\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            -0.988724768,
+            3.23022461,
+            -1.42127919
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.00000012
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Roof Vent",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"RV\"},\"speed\":0.5,\"key\":\"roof.l\",\"targetColliderObject\":{\"path\":[\"RoofVent\",\"Bone\",\"Bone.001\",\"Cylinder.163\"]},\"title\":\"Vent\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            -0.988724768,
+            3.23022461,
+            -1.42127919
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.00000012
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "Decal 1",
+          "parentPath": "",
+          "extra": "{\"size\":[1.0,0.4,0.05],\"content\":\"RoadNumber\",\"forceColor\":\"\",\"enabled\":true}",
+          "pos": [
+            -1.3510561,
+            1.6774292,
+            -1.70852983
+          ],
+          "rot": [
+            0.0,
+            0.707103848,
+            0.0,
+            0.7071098
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "let1",
+          "parentPath": "",
+          "extra": "{\"size\":[2.75,0.8,0.05],\"content\":\"Lettering\",\"forceColor\":\"\",\"enabled\":true}",
+          "pos": [
+            -1.3686204,
+            1.727417,
+            0.391581446
+          ],
+          "rot": [
+            0.0,
+            0.707103848,
+            0.0,
+            0.7071098
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Firebox1",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"FBD\"},\"speed\":0.5,\"key\":\"fire.b\",\"targetColliderObject\":{\"path\":[\"Main\",\"FireboxDoor\",\"Empty.051\",\"Cylinder.160\"]},\"title\":\"Firebox\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            -0.988724768,
+            3.23022461,
+            -1.42127919
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.00000012
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Firebox2",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"FBD2\"},\"speed\":1.0,\"key\":\"fire.b\",\"targetColliderObject\":{\"path\":[\"Main\",\"FireboxDoor\",\"Empty.051\",\"Cylinder.160\"]},\"title\":\"Firebox\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            -0.988724768,
+            3.23022461,
+            -1.42127919
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.00000012
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Hatch Left",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"HatchLeft\"},\"speed\":1.0,\"key\":\"hatch.l\",\"targetColliderObject\":{\"path\":[\"Main\",\"WaterHatch1\",\"BezierCurve.019\"]},\"title\":\"Water Hatch\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            -0.988724768,
+            3.23022461,
+            -1.42127919
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.00000012
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "Hatch Right",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"HatchRight\"},\"speed\":0.5,\"key\":\"hatch.r\",\"targetColliderObject\":{\"path\":[\"Main\",\"WaterHatch2\",\"BezierCurve.023\"]},\"title\":\"Water Hatch\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            -0.988724768,
+            3.23022461,
+            -1.42127919
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.00000012
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "RadialControl",
+          "name": "Throttle",
+          "parentPath": "Main/Throttle/Cylinder.059",
+          "extra": "{\"animation\":{\"clipName\":\"Throttle\"},\"purpose\":\"Throttle\",\"displayName\":\"Throttle\",\"radius\":0.9,\"rotationDegrees\":45.0,\"momentary\":false,\"homePosition\":0.0,\"collider\":{\"kind\":\"Capsule\",\"axis\":0,\"center\":[0.7,0.0,0.0],\"radius\":0.05,\"height\":0.3},\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            5.412293e-11,
+            -2.4193719e-08,
+            1.50476929e-08,
+            1.0
+          ],
+          "scale": [
+            0.01,
+            0.01,
+            0.01
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "Decal 5",
+          "parentPath": "",
+          "extra": "{\"size\":[0.8,0.5,0.05],\"content\":\"RoadNumber\",\"forceColor\":\"\",\"enabled\":true}",
+          "pos": [
+            0.000122726255,
+            1.67315674,
+            -3.64607739
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Compressor",
+          "name": "Compressor 1",
+          "parentPath": "",
+          "extra": "{\"style\":0,\"animation\":{\"clipName\":\"AP\"},\"animationSpeed\":0.5,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Compressor",
+          "name": "Compressor 2",
+          "parentPath": "",
+          "extra": "{\"style\":1,\"animation\":{\"clipName\":\"Lube2\"},\"animationSpeed\":0.045,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "FireboxEffect",
+          "name": "FireboxEffect 1",
+          "parentPath": "",
+          "extra": "{\"enabled\":true}",
+          "pos": [
+            -0.0001919313,
+            1.40844727,
+            -2.0733192
+          ],
+          "rot": [
+            0.0,
+            1.0,
+            0.0,
+            -4.88248837e-08
+          ],
+          "scale": [
+            1.5,
+            1.5,
+            1.5
+          ]
+        },
+        {
+          "kind": "RadialControl",
+          "name": "Reverser",
+          "parentPath": "Main/Empty.052/Reverser.001",
+          "extra": "{\"animation\":{\"clipName\":\"Reverser\"},\"purpose\":\"Reverser\",\"displayName\":\"Johnson Bar\",\"radius\":0.5,\"rotationDegrees\":45.0,\"momentary\":false,\"homePosition\":0.0,\"collider\":{\"kind\":\"Capsule\",\"axis\":0,\"center\":[-1.3,0.0,0.04],\"radius\":0.05,\"height\":0.4},\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.01,
+            0.01,
+            0.01
+          ]
+        },
+        {
+          "kind": "CylinderCock",
+          "name": "CylinderCock 1",
+          "parentPath": "",
+          "extra": "{\"radius\":1.1,\"forwardOffset\":0.45,\"enabled\":true}",
+          "pos": {
+            "value": [
+              1.0683,
+              0.17882,
+              2.53186
+            ],
+            "unit": "m",
+            "basis": "measured",
+            "evidence": [
+              "locos/s16/analysis/measure01/measure_report.txt#Cylinder.018 drain-pipe islands +/-1.0683m"
+            ]
+          },
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "ToggleAnimation 1",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"Cocks\"},\"speed\":1.0,\"key\":\"cylCock\",\"targetColliderObject\":{\"path\":[\"Main\",\"Empty.068\",\"Cube.073\"]},\"title\":\"Cylinder Cocks\",\"messageTrue\":\"Click to Close\",\"messageFalse\":\"Click to Open\",\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "RadialControl",
+          "name": "Independent Brake",
+          "parentPath": "Main/LocoBrake/Cylinder.371",
+          "extra": "{\"animation\":{\"clipName\":\"Indy\"},\"purpose\":\"LocomotiveBrake\",\"displayName\":\"Independent Brake\",\"radius\":0.1,\"rotationDegrees\":45.0,\"momentary\":false,\"homePosition\":0.0,\"collider\":{\"kind\":\"Capsule\",\"axis\":0,\"center\":[-0.1,0.0,0.0],\"radius\":0.025,\"height\":0.15},\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.707106769,
+            -0.707106769,
+            -3.090862e-08,
+            -3.090862e-08
+          ],
+          "scale": [
+            0.01,
+            0.01,
+            0.01
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "Decal 6",
+          "parentPath": "",
+          "extra": "{\"size\":[0.25,0.25,0.05],\"content\":\"RoadNumber\",\"forceColor\":\"878787\",\"enabled\":true}",
+          "pos": [
+            -1.4752226e-05,
+            2.007141,
+            3.21930528
+          ],
+          "rot": [
+            0.0,
+            1.0,
+            0.0,
+            6.047111e-05
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "RadialControl",
+          "name": "Train Brake",
+          "parentPath": "Main/TrainBrake/Cylinder.369",
+          "extra": "{\"animation\":{\"clipName\":\"TB\"},\"purpose\":\"TrainBrake\",\"displayName\":\"Train Brake\",\"radius\":0.1,\"rotationDegrees\":45.0,\"momentary\":false,\"homePosition\":0.0,\"collider\":{\"kind\":\"Capsule\",\"axis\":0,\"center\":[-0.15,0.0,0.0],\"radius\":0.025,\"height\":0.2},\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.707106769,
+            -0.707106769,
+            -3.090862e-08,
+            3.090862e-08
+          ],
+          "scale": [
+            0.01,
+            0.01,
+            0.01
+          ]
+        },
+        {
+          "kind": "RadialControl",
+          "name": "Whistle",
+          "parentPath": "Main/Whistle/Cylinder.186",
+          "extra": "{\"animation\":{\"clipName\":\"Whistle\"},\"purpose\":\"Whistle\",\"displayName\":\"Whistle\",\"radius\":0.8,\"rotationDegrees\":10.0,\"momentary\":true,\"homePosition\":0.0,\"collider\":{\"kind\":\"Capsule\",\"axis\":0,\"center\":[-0.62,0.0,0.0],\"radius\":0.05,\"height\":0.2},\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            1.0,
+            0.0,
+            -4.371139e-08
+          ],
+          "scale": [
+            0.01,
+            0.01,
+            0.01
+          ]
+        },
+        {
+          "kind": "LoadAnimation",
+          "name": "Water Animation",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"Water\"},\"slotIndex\":1,\"loadIdentifier\":\"water\",\"loadObject\":null,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "LoadTarget",
+          "name": "Water Target",
+          "parentPath": "",
+          "extra": "{\"radius\":0.5,\"slotIndex\":1,\"enabled\":true}",
+          "pos": [
+            -7.992716e-05,
+            2.93328857,
+            1.36245656
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "LoadTarget",
+          "name": "Coal Target",
+          "parentPath": "",
+          "extra": "{\"radius\":0.5,\"slotIndex\":0,\"enabled\":true}",
+          "pos": [
+            5.50848781e-05,
+            2.93328857,
+            -3.43495965
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Colorizer",
+          "name": "Colorizer 1",
+          "parentPath": "",
+          "extra": "{\"hexColors\":[],\"material\":null,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 1",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"AirPump\",\"material\":{\"materialName\":\"AirPump\"},\"materialName\":\"AirPump\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 2",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Boiler\",\"material\":{\"materialName\":\"Boiler\"},\"materialName\":\"Boiler\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 13",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Bands\",\"material\":{\"materialName\":\"Bands\"},\"materialName\":\"Bands\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 3",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Cab\",\"material\":{\"materialName\":\"Cab\"},\"materialName\":\"Cab\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 4",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Plate\",\"material\":{\"materialName\":\"Plate\"},\"materialName\":\"Plate\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 12",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Plate2\",\"material\":{\"materialName\":\"Plate2\"},\"materialName\":\"Plate2\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 14",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Domes\",\"material\":{\"materialName\":\"Domes\"},\"materialName\":\"Domes\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 15",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Rods\",\"material\":{\"materialName\":\"Rods\"},\"materialName\":\"Rods\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 5",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Cylinders\",\"material\":{\"materialName\":\"Cylinders\"},\"materialName\":\"Cylinders\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 6",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Doors\",\"material\":{\"materialName\":\"Doors\"},\"materialName\":\"Doors\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 7",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Roof\",\"material\":{\"materialName\":\"Roof\"},\"materialName\":\"Roof\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 8",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Stripe\",\"material\":{\"materialName\":\"Stripe\"},\"materialName\":\"Stripe\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 9",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Tanks\",\"material\":{\"materialName\":\"Tanks\"},\"materialName\":\"Tanks\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 10",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Whitewalls\",\"material\":{\"materialName\":\"Whitewalls\"},\"materialName\":\"Whitewalls\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MaterialColorizerComponent",
+          "name": "MaterialColorizerComponent 11",
+          "parentPath": "",
+          "extra": "{\"colorID\":\"Windows\",\"material\":{\"materialName\":\"Windows\"},\"materialName\":\"Windows\",\"matchNameExact\":false,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ToggleAnimation",
+          "name": "ToggleAnimation 2",
+          "parentPath": "",
+          "extra": "{\"animation\":{\"clipName\":\"Bell2\"},\"speed\":1.0,\"key\":\"bell\",\"targetColliderObject\":{\"path\":[\"Main\",\"Empty.058\",\"Cube.005\"]},\"title\":\"Bell\",\"messageTrue\":\"Click to Stop\",\"messageFalse\":\"Click to Ring\",\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Gauge",
+          "name": "RMG 1",
+          "parentPath": "",
+          "extra": "{\"style\":\"DualReservoirMainEq\",\"enabled\":true}",
+          "pos": [
+            0.5912854,
+            2.85888672,
+            -1.13549626
+          ],
+          "rot": [
+            0.0,
+            1.0,
+            0.0,
+            -8.301325e-08
+          ],
+          "scale": [
+            0.425,
+            0.425,
+            0.36
+          ]
+        },
+        {
+          "kind": "Ladder",
+          "name": "Left Ladder 1",
+          "parentPath": "",
+          "extra": "{\"height\":2.0,\"enabled\":true}",
+          "pos": [
+            -1.34777236,
+            1.41937256,
+            1.42542994
+          ],
+          "rot": [
+            0.0001344792,
+            0.707106769,
+            0.000134477523,
+            -0.7071068
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Ladder",
+          "name": "Right Ladder 1",
+          "parentPath": "",
+          "extra": "{\"height\":2.0,\"enabled\":true}",
+          "pos": [
+            1.347772,
+            1.419373,
+            1.42543
+          ],
+          "rot": [
+            8.283256e-10,
+            0.707106769,
+            8.283256e-10,
+            0.707106769
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "Decal 2",
+          "parentPath": "",
+          "extra": "{\"size\":[1.0,0.4,0.05],\"content\":\"RoadNumber\",\"forceColor\":\"\",\"enabled\":true}",
+          "pos": [
+            1.351056,
+            1.677429,
+            -1.70853
+          ],
+          "rot": [
+            0.0,
+            -0.707106769,
+            0.0,
+            0.707106769
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "let2",
+          "parentPath": "",
+          "extra": "{\"size\":[2.75,0.8,0.05],\"content\":\"Lettering\",\"forceColor\":\"\",\"enabled\":true}",
+          "pos": [
+            1.36862,
+            1.727417,
+            0.3915814
+          ],
+          "rot": [
+            0.0,
+            -0.707106769,
+            0.0,
+            0.707106769
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "LightFixture",
+          "name": "LightFixture 1",
+          "parentPath": "",
+          "extra": "{\"key\":\"cab\",\"enabled\":true}",
+          "pos": [
+            1.331322,
+            3.00750732,
+            -2.24303079
+          ],
+          "rot": [
+            -0.0308435652,
+            0.7064338,
+            -0.0308435652,
+            -0.706433833
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "LightFixture",
+          "name": "LightFixture 2",
+          "parentPath": "",
+          "extra": "{\"key\":\"cab\",\"enabled\":true}",
+          "pos": [
+            -1.331322,
+            3.007507,
+            -2.243031
+          ],
+          "rot": [
+            0.0308435652,
+            0.7064338,
+            -0.0308435615,
+            0.7064338
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "SetTextDecalComponent",
+          "name": "SetTextDecalComponent 1",
+          "parentPath": "",
+          "extra": "{\"size\":[0.75,0.15,0.05],\"text\":\"1000 GALS\",\"forceColor\":\"\",\"id\":\"lettering\",\"font\":\"Default\",\"debug\":false,\"enabled\":true}",
+          "pos": [
+            -1.017282,
+            2.153625,
+            -3.665444
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "SetTextDecalComponent",
+          "name": "SetTextDecalComponent 2",
+          "parentPath": "",
+          "extra": "{\"size\":[0.5,0.15,0.05],\"text\":\"1 TON\",\"forceColor\":\"\",\"id\":\"lettering\",\"font\":\"Default\",\"debug\":false,\"enabled\":true}",
+          "pos": [
+            -1.12659454,
+            2.05584717,
+            -3.66222763
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "CustomTextDecalComponent",
+          "name": "CustomTextDecalComponent 1",
+          "parentPath": "",
+          "extra": "{\"size\":[1.0,0.25,0.02],\"forceColor\":\"\",\"defaultText\":\"\",\"id\":\"lettering\",\"font\":\"Default\",\"copyToCoupled\":false,\"debug\":false,\"enabled\":true}",
+          "pos": [
+            -1.35797548,
+            1.3638916,
+            -1.70701838
+          ],
+          "rot": [
+            0.0,
+            0.707106769,
+            0.0,
+            0.707106769
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "CustomTextDecalComponent",
+          "name": "CustomTextDecalComponent 2",
+          "parentPath": "",
+          "extra": "{\"size\":[1.0,0.25,0.05],\"forceColor\":\"\",\"defaultText\":\"\",\"id\":\"lettering\",\"font\":\"Default\",\"copyToCoupled\":false,\"debug\":false,\"enabled\":true}",
+          "pos": [
+            1.357975,
+            1.363892,
+            -1.708524
+          ],
+          "rot": [
+            0.0,
+            -0.707106769,
+            0.0,
+            0.707106769
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "CustomTextDecalComponent",
+          "name": "CustomTextDecalComponent 3",
+          "parentPath": "",
+          "extra": "{\"size\":[1.0,0.25,0.05],\"forceColor\":\"\",\"defaultText\":\"\",\"id\":\"Name\",\"font\":\"Default\",\"copyToCoupled\":false,\"debug\":false,\"enabled\":true}",
+          "pos": [
+            1.357975,
+            1.974182,
+            -1.708526
+          ],
+          "rot": [
+            0.0,
+            -0.707106769,
+            0.0,
+            0.707106769
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "CustomTextDecalComponent",
+          "name": "CustomTextDecalComponent 4",
+          "parentPath": "",
+          "extra": "{\"size\":[1.0,0.25,0.05],\"forceColor\":\"\",\"defaultText\":\"\",\"id\":\"Name\",\"font\":\"Default\",\"copyToCoupled\":false,\"debug\":false,\"enabled\":true}",
+          "pos": [
+            -1.357975,
+            1.974182,
+            -1.708526
+          ],
+          "rot": [
+            0.0,
+            0.707106769,
+            0.0,
+            0.707106769
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MarkerLight",
+          "name": "MF",
+          "parentPath": "",
+          "extra": "{\"radius\":0.65,\"end\":0,\"enabled\":true}",
+          "pos": [
+            -0.000107855187,
+            2.09063721,
+            3.1455214
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "MarkerLight",
+          "name": "MR",
+          "parentPath": "",
+          "extra": "{\"radius\":1.41,\"end\":1,\"enabled\":true}",
+          "pos": [
+            -8.431424e-05,
+            2.17419434,
+            -3.707414
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ComponentGroup",
+          "name": "Markers",
+          "parentPath": "",
+          "extra": "{\"id\":\"Markers\",\"activateComponents\":[\"MF\",\"MR\"],\"deactivateComponents\":[],\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "FireboxEffect",
+          "name": "FireboxEffect 2",
+          "parentPath": "",
+          "extra": "{\"enabled\":true}",
+          "pos": [
+            -0.451409727,
+            1.39324951,
+            -1.40228248
+          ],
+          "rot": [
+            0.0,
+            -0.707106769,
+            0.0,
+            0.707106769
+          ],
+          "scale": [
+            2.5,
+            1.5,
+            1.5
+          ]
+        },
+        {
+          "kind": "FireboxEffect",
+          "name": "FireboxEffect 3",
+          "parentPath": "",
+          "extra": "{\"enabled\":true}",
+          "pos": [
+            0.4514097,
+            1.39325,
+            -1.402282
+          ],
+          "rot": [
+            0.0,
+            0.707106769,
+            0.0,
+            0.707106769
+          ],
+          "scale": [
+            2.5,
+            1.5,
+            1.5
+          ]
+        },
+        {
+          "kind": "FireboxEffect",
+          "name": "FireboxEffect 4",
+          "parentPath": "",
+          "extra": "{\"enabled\":true}",
+          "pos": [
+            -5.234489e-05,
+            1.39324951,
+            -0.776024163
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.9,
+            1.5,
+            1.5
+          ]
+        },
+        {
+          "kind": "FireboxEffect",
+          "name": "FireboxEffect 5",
+          "parentPath": "",
+          "extra": "{\"enabled\":true}",
+          "pos": [
+            -4.087048e-05,
+            1.39324951,
+            -2.02605677
+          ],
+          "rot": [
+            0.0,
+            1.0,
+            0.0,
+            -4.88248837e-08
+          ],
+          "scale": [
+            1.9,
+            1.5,
+            1.5
+          ]
+        },
+        {
+          "kind": "ColorableImageComponent",
+          "name": "safety",
+          "parentPath": "",
+          "extra": "{\"size\":[0.4,0.15,0.05],\"priority\":0,\"colorID\":\"lettering\",\"overrideSmoothness\":true,\"smoothness\":0.8,\"debug\":false,\"textureName\":\"msl-decal-pack.safety.png\",\"enabled\":true}",
+          "pos": [
+            -0.7405497,
+            0.755188,
+            3.35836363
+          ],
+          "rot": [
+            0.0,
+            1.0,
+            0.0,
+            -4.88248837e-08
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ColorableImageComponent",
+          "name": "safety2",
+          "parentPath": "",
+          "extra": "{\"size\":[0.4,0.15,0.05],\"priority\":0,\"colorID\":\"lettering\",\"overrideSmoothness\":true,\"smoothness\":0.8,\"debug\":false,\"textureName\":\"msl-decal-pack.safety.png\",\"enabled\":true}",
+          "pos": [
+            0.7405497,
+            0.755188,
+            3.358364
+          ],
+          "rot": [
+            0.0,
+            1.0,
+            0.0,
+            -4.88248837e-08
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ColorableImageComponent",
+          "name": "safety3",
+          "parentPath": "",
+          "extra": "{\"size\":[0.4,0.15,0.05],\"priority\":0,\"colorID\":\"lettering\",\"overrideSmoothness\":true,\"smoothness\":0.8,\"debug\":false,\"textureName\":\"msl-decal-pack.safety.png\",\"enabled\":true}",
+          "pos": [
+            -0.7405512,
+            0.755188,
+            -3.59591985
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ColorableImageComponent",
+          "name": "safety4",
+          "parentPath": "",
+          "extra": "{\"size\":[0.4,0.15,0.05],\"priority\":0,\"colorID\":\"lettering\",\"overrideSmoothness\":true,\"smoothness\":0.8,\"debug\":false,\"textureName\":\"msl-decal-pack.safety.png\",\"enabled\":true}",
+          "pos": [
+            0.7405512,
+            0.755188,
+            -3.59592
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ColorableImageComponent",
+          "name": "smoke",
+          "parentPath": "",
+          "extra": "{\"size\":[0.75,0.1,0.05],\"priority\":0,\"colorID\":\"1\",\"overrideSmoothness\":true,\"smoothness\":0.8,\"debug\":false,\"textureName\":\"msl-decal-pack.smoke.png\",\"enabled\":true}",
+          "pos": [
+            -0.000135425667,
+            3.06140137,
+            -3.129325
+          ],
+          "rot": [
+            0.0,
+            1.0,
+            0.0,
+            -4.88248837e-08
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "dome1",
+          "parentPath": "",
+          "extra": "{\"size\":[0.5,0.2,0.1],\"content\":\"RoadNumber\",\"forceColor\":\"\",\"enabled\":true}",
+          "pos": [
+            -0.2526859,
+            2.90667725,
+            1.205561
+          ],
+          "rot": [
+            0.0,
+            0.707103848,
+            0.0,
+            0.7071098
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "dome2",
+          "parentPath": "",
+          "extra": "{\"size\":[0.5,0.2,0.1],\"content\":\"RoadNumber\",\"forceColor\":\"\",\"enabled\":true}",
+          "pos": [
+            0.2526859,
+            2.906677,
+            1.205561
+          ],
+          "rot": [
+            0.0,
+            -0.707106769,
+            0.0,
+            0.707106769
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ComponentGroup",
+          "name": "safety decals",
+          "parentPath": "",
+          "extra": "{\"id\":\"safetydecal\",\"activateComponents\":[\"safety\",\"safety2\",\"safety3\",\"safety4\"],\"deactivateComponents\":[],\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ComponentGroup",
+          "name": "Sand Dome Numbers",
+          "parentPath": "",
+          "extra": "{\"id\":\"sdn\",\"activateComponents\":[\"dome1\",\"dome2\"],\"deactivateComponents\":[],\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "CustomImage",
+          "name": "gauge",
+          "parentPath": "",
+          "extra": "{\"size\":[0.215,0.215,0.01],\"textureName\":\"msl-decal-pack.llwgauge.png\",\"priority\":0,\"overrideSmoothness\":true,\"smoothness\":0.8,\"debug\":false,\"enabled\":true}",
+          "pos": [
+            2.31023587e-05,
+            2.85638428,
+            -1.71463656
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "PrefabModelComponent",
+          "name": "pt3",
+          "parentPath": "",
+          "extra": "{\"model\":{\"assetPackIdentifier\":\"LLW Generic Locomotive Catalog\\\\plow\",\"assetIdentifier\":\"plow\"},\"offset\":[0.0,0.0,0.0],\"count\":1,\"enabled\":true}",
+          "pos": [
+            -0.00010028101,
+            0.05657959,
+            3.91990566
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "PrefabModelComponent",
+          "name": "pt 4",
+          "parentPath": "",
+          "extra": "{\"model\":{\"assetPackIdentifier\":\"LLW Generic Locomotive Catalog\\\\plow\",\"assetIdentifier\":\"plow\"},\"offset\":[0.0,0.0,0.0],\"count\":1,\"enabled\":true}",
+          "pos": [
+            -0.000215865715,
+            0.05657959,
+            -4.190347
+          ],
+          "rot": [
+            0.0,
+            1.0,
+            0.0,
+            -4.88248837e-08
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ComponentGroup",
+          "name": "Plow",
+          "parentPath": "",
+          "extra": "{\"id\":\"plow\",\"activateComponents\":[\"pt3\"],\"deactivateComponents\":[],\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ComponentGroup",
+          "name": "Plow Rear",
+          "parentPath": "",
+          "extra": "{\"id\":\"plow rear\",\"activateComponents\":[\"pt 4\"],\"deactivateComponents\":[],\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "PrefabModelComponent",
+          "name": "hl1",
+          "parentPath": "",
+          "extra": "{\"model\":{\"assetPackIdentifier\":\"LLW Generic Locomotive Catalog\\\\s16parts\",\"assetIdentifier\":\"headlight1\"},\"offset\":[0.0,0.0,0.0],\"count\":1,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Headlight",
+          "name": "hl2",
+          "parentPath": "",
+          "extra": "{\"forward\":true,\"lightEnabled\":true,\"enabled\":true}",
+          "pos": [
+            0.0118668349,
+            2.919983,
+            3.2390132
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.95,
+            0.95,
+            0.95
+          ]
+        },
+        {
+          "kind": "Headlight",
+          "name": "hl3",
+          "parentPath": "",
+          "extra": "{\"forward\":false,\"lightEnabled\":true,\"enabled\":true}",
+          "pos": [
+            -0.00051829603,
+            3.145813,
+            -3.49429274
+          ],
+          "rot": [
+            1.00000012,
+            2.60373248e-15,
+            1.459977e-08,
+            -4.37113954e-08
+          ],
+          "scale": [
+            0.95,
+            0.95,
+            0.9
+          ]
+        },
+        {
+          "kind": "PrefabModelComponent",
+          "name": "st1",
+          "parentPath": "",
+          "extra": "{\"model\":{\"assetPackIdentifier\":\"LLW Generic Locomotive Catalog\\\\s16parts\",\"assetIdentifier\":\"stack1\"},\"offset\":[0.0,0.0,0.0],\"count\":1,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "PrefabModelComponent",
+          "name": "st2",
+          "parentPath": "",
+          "extra": "{\"model\":{\"assetPackIdentifier\":\"LLW Generic Locomotive Catalog\\\\s16parts\",\"assetIdentifier\":\"stack2\"},\"offset\":[0.0,0.0,0.0],\"count\":1,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "PrefabModelComponent",
+          "name": "st3",
+          "parentPath": "",
+          "extra": "{\"model\":{\"assetPackIdentifier\":\"LLW Generic Locomotive Catalog\\\\s16parts\",\"assetIdentifier\":\"stack3\"},\"offset\":[0.0,0.0,0.0],\"count\":1,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ComponentGroup",
+          "name": "Shotgun Stack",
+          "parentPath": "",
+          "extra": "{\"id\":\"s1\",\"activateComponents\":[\"st1\"],\"deactivateComponents\":[],\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ComponentGroup",
+          "name": "Capped Stack",
+          "parentPath": "",
+          "extra": "{\"id\":\"s2\",\"activateComponents\":[\"st2\"],\"deactivateComponents\":[],\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ComponentGroup",
+          "name": "Diamond Stack",
+          "parentPath": "",
+          "extra": "{\"id\":\"s3\",\"activateComponents\":[\"st3\"],\"deactivateComponents\":[],\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ComponentGroup",
+          "name": "Small Electric Headlight",
+          "parentPath": "",
+          "extra": "{\"id\":\"hl1\",\"activateComponents\":[\"hl1\",\"hl2\",\"hl3\"],\"deactivateComponents\":[],\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ComponentGroup",
+          "name": "Converted Oil Headlight",
+          "parentPath": "",
+          "extra": "{\"id\":\"hl2\",\"activateComponents\":[\"hl4\",\"hl5\",\"hl6\",\"nb1\",\"nb2\",\"nb3\",\"nb4\"],\"deactivateComponents\":[],\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ComponentGroup",
+          "name": "Large Electric Headlight",
+          "parentPath": "",
+          "extra": "{\"id\":\"hl3\",\"activateComponents\":[\"hl7\",\"hl8\",\"hl9\",\"nb5\",\"nb6\",\"nb7\",\"nb8\"],\"deactivateComponents\":[],\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "ComponentGroup",
+          "name": "Ladders",
+          "parentPath": "",
+          "extra": "{\"id\":\"l1\",\"activateComponents\":[\"lad\"],\"deactivateComponents\":[],\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "PrefabModelComponent",
+          "name": "lad",
+          "parentPath": "",
+          "extra": "{\"model\":{\"assetPackIdentifier\":\"LLW Generic Locomotive Catalog\\\\s16parts\",\"assetIdentifier\":\"ladders\"},\"offset\":[0.0,0.0,0.0],\"count\":1,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "PrefabModelComponent",
+          "name": "hl4",
+          "parentPath": "",
+          "extra": "{\"model\":{\"assetPackIdentifier\":\"LLW Generic Locomotive Catalog\\\\s16parts\",\"assetIdentifier\":\"headlight2\"},\"offset\":[0.0,0.0,0.0],\"count\":1,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Headlight",
+          "name": "hl5",
+          "parentPath": "",
+          "extra": "{\"forward\":true,\"lightEnabled\":true,\"enabled\":true}",
+          "pos": [
+            -3.88765329e-05,
+            2.93157959,
+            3.121172
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            0.88,
+            0.88,
+            0.95
+          ]
+        },
+        {
+          "kind": "Headlight",
+          "name": "hl6",
+          "parentPath": "",
+          "extra": "{\"forward\":false,\"lightEnabled\":true,\"enabled\":true}",
+          "pos": [
+            -6.780113e-05,
+            2.4395752,
+            -4.03922558
+          ],
+          "rot": [
+            1.0,
+            2.9924827e-15,
+            0.0,
+            -4.37113918e-08
+          ],
+          "scale": [
+            0.88,
+            0.88,
+            0.9
+          ]
+        },
+        {
+          "kind": "PrefabModelComponent",
+          "name": "hl7",
+          "parentPath": "",
+          "extra": "{\"model\":{\"assetPackIdentifier\":\"LLW Generic Locomotive Catalog\\\\s16parts\",\"assetIdentifier\":\"headlight3\"},\"offset\":[0.0,0.0,0.0],\"count\":1,\"enabled\":true}",
+          "pos": [
+            0.0,
+            0.0,
+            0.0
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Headlight",
+          "name": "hl8",
+          "parentPath": "",
+          "extra": "{\"forward\":true,\"lightEnabled\":true,\"enabled\":true}",
+          "pos": [
+            -0.000186687015,
+            2.91278076,
+            3.17198563
+          ],
+          "rot": [
+            0.0,
+            0.0,
+            0.0,
+            1.0
+          ],
+          "scale": [
+            1.05,
+            1.05,
+            1.0
+          ]
+        },
+        {
+          "kind": "Headlight",
+          "name": "hl9",
+          "parentPath": "",
+          "extra": "{\"forward\":false,\"lightEnabled\":true,\"enabled\":true}",
+          "pos": [
+            -4.61688469e-05,
+            2.44348145,
+            -4.15124273
+          ],
+          "rot": [
+            1.0,
+            2.9924827e-15,
+            0.0,
+            -4.37113918e-08
+          ],
+          "scale": [
+            1.05,
+            1.05,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "nb1",
+          "parentPath": "",
+          "extra": "{\"size\":[0.225,0.12,0.05],\"content\":\"RoadNumber\",\"forceColor\":\"FFFF\",\"enabled\":true}",
+          "pos": [
+            -0.217195585,
+            2.998291,
+            2.908734
+          ],
+          "rot": [
+            0.0,
+            0.707103848,
+            0.0,
+            0.7071098
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "nb2",
+          "parentPath": "",
+          "extra": "{\"size\":[0.225,0.12,0.05],\"content\":\"RoadNumber\",\"forceColor\":\"FFFF\",\"enabled\":true}",
+          "pos": [
+            0.2171956,
+            2.998291,
+            2.908734
+          ],
+          "rot": [
+            0.0,
+            -0.7071038,
+            0.0,
+            0.707109749
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "nb3",
+          "parentPath": "",
+          "extra": "{\"size\":[0.225,0.12,0.05],\"content\":\"RoadNumber\",\"forceColor\":\"FFFF\",\"enabled\":true}",
+          "pos": [
+            0.217189968,
+            2.507019,
+            -3.829098
+          ],
+          "rot": [
+            0.0,
+            -0.707103848,
+            0.0,
+            0.707109869
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "nb4",
+          "parentPath": "",
+          "extra": "{\"size\":[0.225,0.12,0.05],\"content\":\"RoadNumber\",\"forceColor\":\"FFFF\",\"enabled\":true}",
+          "pos": [
+            -0.21719,
+            2.507019,
+            -3.829098
+          ],
+          "rot": [
+            0.0,
+            0.707106769,
+            0.0,
+            0.707106769
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "nb5",
+          "parentPath": "",
+          "extra": "{\"size\":[0.28,0.15,0.05],\"content\":\"RoadNumber\",\"forceColor\":\"FFFF\",\"enabled\":true}",
+          "pos": [
+            -0.275236547,
+            2.91174316,
+            2.908716
+          ],
+          "rot": [
+            0.0,
+            0.707103848,
+            0.0,
+            0.7071098
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "nb7",
+          "parentPath": "",
+          "extra": "{\"size\":[0.28,0.15,0.05],\"content\":\"RoadNumber\",\"forceColor\":\"FFFF\",\"enabled\":true}",
+          "pos": [
+            -0.275180846,
+            2.44360352,
+            -3.883631
+          ],
+          "rot": [
+            0.0,
+            0.707106769,
+            0.0,
+            0.707106769
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "nb6",
+          "parentPath": "",
+          "extra": "{\"size\":[0.28,0.15,0.05],\"content\":\"RoadNumber\",\"forceColor\":\"FFFF\",\"enabled\":true}",
+          "pos": [
+            0.2752365,
+            2.911743,
+            2.908716
+          ],
+          "rot": [
+            0.0,
+            -0.707106769,
+            0.0,
+            0.707106769
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        {
+          "kind": "Decal",
+          "name": "nb8",
+          "parentPath": "",
+          "extra": "{\"size\":[0.28,0.15,0.05],\"content\":\"RoadNumber\",\"forceColor\":\"FFFF\",\"enabled\":true}",
+          "pos": [
+            0.2751808,
+            2.443604,
+            -3.883631
+          ],
+          "rot": [
+            0.0,
+            0.707106769,
+            0.0,
+            -0.707106769
+          ],
+          "scale": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        }
+      ],
+      "unit": "mixed m/quaternion/scale/source extras",
+      "basis": "source",
+      "evidence": [
+        "locos/s16/profile/s16.json#source_objects[0].definition"
+      ]
+    },
+    "MaterialMap": {
+      "AirPump": "Assets/Material/AirPump.mat",
+      "Boiler": "Assets/Material/Boiler.mat",
+      "Bands": "Assets/Material/boilerbands.mat",
+      "Cab": "Assets/Material/cab.mat",
+      "Cylinders": "Assets/Material/Cylinders.mat",
+      "Domes": "Assets/Material/Domes.mat",
+      "Doors": "Assets/Material/Doors.mat",
+      "Plate": "Assets/Material/NumberPlate.mat",
+      "Plate2": "Assets/Material/NumberPlate 1.mat",
+      "Rods": "Assets/Material/rods.mat",
+      "Roof": "Assets/Material/Roof.mat",
+      "Stripe": "Assets/Material/Stripe.mat",
+      "Tanks": "Assets/Material/tanks.mat",
+      "Whitewalls": "Assets/Material/Whitewalls.mat",
+      "Windows": "Assets/Material/Windows.mat"
+    },
+    "AnimationMap": {
+      "AP": "Assets/AnimationClip/AirPump.anim",
+      "Bell1": "Assets/AnimationClip/Bell1.anim",
+      "Bell2": "Assets/AnimationClip/Bell2.anim",
+      "Brake": "Assets/AnimationClip/Brake.anim",
+      "Coal": "Assets/AnimationClip/Coal.anim",
+      "Cocks": "Assets/AnimationClip/CylCock.anim",
+      "DL": "Assets/AnimationClip/DL.anim",
+      "DR": "Assets/AnimationClip/DR.anim",
+      "Drivers": "Assets/AnimationClip/Drivers.anim",
+      "FBD": "Assets/AnimationClip/FBDoor.anim",
+      "FBD2": "Assets/AnimationClip/FBDoor2.anim",
+      "FLW": "Assets/AnimationClip/FLW.anim",
+      "FRW": "Assets/AnimationClip/FRW.anim",
+      "Indy": "Assets/AnimationClip/LocoBrake.anim",
+      "Lube2": "Assets/AnimationClip/Lubricator2.anim",
+      "LW": "Assets/AnimationClip/LW.anim",
+      "Reverser": "Assets/AnimationClip/Reverser.anim",
+      "RV": "Assets/AnimationClip/RoofVent.anim",
+      "RW": "Assets/AnimationClip/RW.anim",
+      "Throttle": "Assets/AnimationClip/Throttle.anim",
+      "TB": "Assets/AnimationClip/TrainBrake.anim",
+      "Water": "Assets/AnimationClip/Water.anim",
+      "WBL": "Assets/AnimationClip/WBL.anim",
+      "WBR": "Assets/AnimationClip/WBR.anim",
+      "Whistle": "Assets/AnimationClip/Whistle.anim",
+      "HatchLeft": "Assets/AnimationClip/WHL.anim",
+      "HatchRight": "Assets/AnimationClip/WHR.anim"
+    },
+    "Liveries": [
+      [
+        "Black",
+        [
+          [
+            "AirPump",
+            "0000"
+          ],
+          [
+            "Boiler",
+            "0000"
+          ],
+          [
+            "Cab",
+            "0000"
+          ],
+          [
+            "Plate",
+            "0000"
+          ],
+          [
+            "Cylinders",
+            "0000"
+          ],
+          [
+            "Doors",
+            "0000"
+          ],
+          [
+            "Roof",
+            "0000"
+          ],
+          [
+            "Stripe",
+            "0000"
+          ],
+          [
+            "Tanks",
+            "0000"
+          ],
+          [
+            "Whitewalls",
+            "0000"
+          ],
+          [
+            "Windows",
+            "0000"
+          ],
+          [
+            "Bands",
+            "0000"
+          ],
+          [
+            "Domes",
+            "0000"
+          ],
+          [
+            "Plate2",
+            "0000"
+          ],
+          [
+            "Rods",
+            "0000"
+          ]
+        ]
+      ],
+      [
+        "Lined",
+        [
+          [
+            "AirPump",
+            "0000"
+          ],
+          [
+            "Boiler",
+            "0000"
+          ],
+          [
+            "Cab",
+            "0000"
+          ],
+          [
+            "Plate",
+            "0000"
+          ],
+          [
+            "Cylinders",
+            "0000"
+          ],
+          [
+            "Doors",
+            "721D1D"
+          ],
+          [
+            "Roof",
+            "721D1D"
+          ],
+          [
+            "Stripe",
+            "FFFFFF"
+          ],
+          [
+            "Tanks",
+            "0000"
+          ],
+          [
+            "Whitewalls",
+            "FFFFFF"
+          ],
+          [
+            "Windows",
+            "721D1D"
+          ],
+          [
+            "Bands",
+            "0000"
+          ],
+          [
+            "Domes",
+            "0000"
+          ],
+          [
+            "Rods",
+            "0000"
+          ],
+          [
+            "Plate2",
+            "721D1D"
+          ]
+        ]
+      ],
+      [
+        "Tankin Dankin",
+        [
+          [
+            "AirPump",
+            "0094FF"
+          ],
+          [
+            "Boiler",
+            "0094FF"
+          ],
+          [
+            "Cab",
+            "0094FF"
+          ],
+          [
+            "Plate",
+            "0094FF"
+          ],
+          [
+            "Cylinders",
+            "0000"
+          ],
+          [
+            "Doors",
+            "0094FF"
+          ],
+          [
+            "Roof",
+            "0000"
+          ],
+          [
+            "Stripe",
+            "FF0000"
+          ],
+          [
+            "Tanks",
+            "0094FF"
+          ],
+          [
+            "Whitewalls",
+            "0000"
+          ],
+          [
+            "Windows",
+            "FFD800"
+          ],
+          [
+            "Bands",
+            "FF0000"
+          ],
+          [
+            "Domes",
+            "0094FF"
+          ],
+          [
+            "Rods",
+            "FF0000"
+          ],
+          [
+            "Plate2",
+            "0094FF"
+          ]
+        ]
+      ],
+      [
+        "SMAL \"Shrimpy\"",
+        [
+          [
+            "AirPump",
+            "1E4E2F"
+          ],
+          [
+            "Boiler",
+            "1E4E2F"
+          ],
+          [
+            "Cab",
+            "0000"
+          ],
+          [
+            "Plate",
+            "7A2228"
+          ],
+          [
+            "Cylinders",
+            "1E4E2F"
+          ],
+          [
+            "Doors",
+            "7A2228"
+          ],
+          [
+            "Roof",
+            "7A2228"
+          ],
+          [
+            "Stripe",
+            "7A2228"
+          ],
+          [
+            "Tanks",
+            "0000"
+          ],
+          [
+            "Whitewalls",
+            "0000"
+          ],
+          [
+            "Windows",
+            "7A2228"
+          ],
+          [
+            "lettering",
+            "DCA83B"
+          ],
+          [
+            "Bands",
+            "1E4E2F"
+          ],
+          [
+            "Domes",
+            "0000"
+          ],
+          [
+            "Plate2",
+            "7A2228"
+          ],
+          [
+            "Rods",
+            "0000"
+          ]
+        ]
+      ],
+      [
+        "Black (Russian Iron)",
+        [
+          [
+            "AirPump",
+            "22282B"
+          ],
+          [
+            "Boiler",
+            "22282B"
+          ],
+          [
+            "Cab",
+            "0000"
+          ],
+          [
+            "Plate",
+            "0000"
+          ],
+          [
+            "Cylinders",
+            "0000"
+          ],
+          [
+            "Doors",
+            "0000"
+          ],
+          [
+            "Roof",
+            "0000"
+          ],
+          [
+            "Stripe",
+            "0000"
+          ],
+          [
+            "Tanks",
+            "0000"
+          ],
+          [
+            "Whitewalls",
+            "0000"
+          ],
+          [
+            "Windows",
+            "0000"
+          ],
+          [
+            "Bands",
+            "22282B"
+          ],
+          [
+            "Domes",
+            "0000"
+          ],
+          [
+            "Plate2",
+            "0000"
+          ],
+          [
+            "Rods",
+            "0000"
+          ]
+        ]
+      ]
+    ],
+    "Wheelsets": {
+      "value": [
+        [
+          0.0,
+          2.45,
+          0.98,
+          3,
+          "Drivers"
+        ]
+      ],
+      "unit": "mixed m/count",
+      "basis": "source",
+      "evidence": [
+        "locos/s16/profile/s16.json#source_objects[0].definition"
+      ]
+    },
+    "WeightEmptyKg": {
+      "value": 33390.222819448,
+      "unit": "kg",
+      "basis": "DV_choice",
+      "evidence": [
+        "locos/s16/profile/s16.json#source_objects[0].definition.weightEmpty",
+        "analysis/migration/E04-mass-ledger.md",
+        "metadata.massLedger"
+      ]
+    },
+    "WaterCapacityL": {
+      "value": 3785.411784,
+      "unit": "L",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/profile/s16.json#source_objects[0].definition.loadSlots#1000 US gallons"
+      ]
+    },
+    "CoalCapacityKg": {
+      "value": 907.18474,
+      "unit": "kg",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/profile/s16.json#source_objects[0].definition.loadSlots#2000 lb"
+      ]
+    },
+    "WheelRadius": {
+      "value": 0.488783,
+      "unit": "m",
+      "basis": "measured",
+      "evidence": [
+        "locos/s16/analysis/wheel-measure01/wheel_details.txt#tyres x.726 and .801 mean radial tread .488783m (flange .512028m)"
+      ]
+    },
+    "CouplerHeight": {
+      "value": 1.05,
+      "unit": "m",
+      "basis": "DV_choice",
+      "evidence": [
+        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+      ]
+    },
+    "CouplerInset": {
+      "value": 0.3,
+      "unit": "m",
+      "basis": "DV_choice",
+      "evidence": [
+        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+      ]
+    },
+    "License": "SH060",
+    "HudType": {
+      "value": 25,
+      "unit": "1",
+      "basis": "DV_choice",
+      "evidence": [
+        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+      ]
+    },
+    "SimBasis": {
+      "value": 0,
+      "unit": "1",
+      "basis": "DV_choice",
+      "evidence": [
+        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+      ]
+    },
+    "WheelslipFriction": {
+      "value": 0.25,
+      "unit": "1",
+      "basis": "DV_choice",
+      "evidence": [
+        "GUIDE_UNIFIED_LLW_CONVERSION.md#E05",
+        "all 3 physical axles driven"
+      ]
+    },
+    "WheelsHP": {
+      "value": 500,
+      "unit": "hp",
+      "basis": "analogue_estimate",
+      "evidence": [
+        "GUIDE_UNIFIED_LLW_CONVERSION.md#E06 heating-surface-scaled estimate"
+      ]
+    },
+    "MechanicalPowertrainHP": {
+      "value": 500,
+      "unit": "hp",
+      "basis": "analogue_estimate",
+      "evidence": [
+        "GUIDE_UNIFIED_LLW_CONVERSION.md#E06 heating-surface-scaled estimate"
+      ]
+    },
+    "PortRefOverrides": {
+      "boiler.FEEDWATER_TEMPERATURE": ""
+    },
+    "Requirements": [
+      "DVCustomCarLoader"
+    ],
+    "NestedClipGroups": true,
+    "SpawnTracks": {
+      "value": [
+        300,
+        400,
+        1100,
+        1400,
+        1700
+      ],
+      "unit": "1",
+      "basis": "DV_choice",
+      "evidence": [
+        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+      ]
+    },
+    "RrEndFront": {
+      "value": 3.45,
+      "unit": "m",
+      "basis": "source",
+      "evidence": [
+        "locos/s16/profile/s16.json#source_objects[0].definition"
+      ]
+    },
+    "RrEndRear": {
+      "value": -3.7,
+      "unit": "m",
+      "basis": "source",
+      "evidence": [
+        "locos/s16/profile/s16.json#source_objects[0].definition"
+      ]
+    },
+    "PlateDecals": [
+      [
+        "[car plate anchor1]",
+        "Decal 1"
+      ],
+      [
+        "[car plate anchor2]",
+        "Decal 2"
+      ]
+    ],
+    "CabZ": {
+      "value": -2.65,
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#placement from measured source geometry"
+      ]
+    },
+    "CabTeleportVolume": {
+      "value": [
+        [
+          0,
+          2.15,
+          -2.64
+        ],
+        [
+          2.6,
+          2.2,
+          0.88
+        ]
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#placement from measured source geometry"
+      ]
+    },
+    "ExplosionAnchor": {
+      "value": [
+        0,
+        2,
+        0
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#placement from measured source geometry"
+      ]
+    },
+    "EngineUnits": [
+      {
+        "DriverParts": [
+          "Main/Driver1",
+          "Main/Driver2",
+          "Main/Driver3"
+        ],
+        "AnimKey": "Drivers",
+        "GroupName": "drivers",
+        "StartOffset": {
+          "value": 0,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        }
+      }
+    ],
+    "Bogies": [
+      {
+        "Bogie": "BogieF",
+        "BogieCollider": "front",
+        "AxleParts": [
+          "Main/Driver1"
+        ],
+        "PivotAxle": {
+          "value": 0,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        }
+      },
+      {
+        "Bogie": "BogieR",
+        "BogieCollider": "rear",
+        "AxleParts": [
+          "Main/Driver2",
+          "Main/Driver3"
+        ],
+        "PivotAxle": {
+          "value": 1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        }
+      }
+    ],
+    "ReverserHandle": "Main/Empty.052/Reverser.001",
+    "ReverserClip": "Reverser",
+    "SparksX": {
+      "value": 0.72,
+      "unit": "m",
+      "basis": "measured",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "BrakeHangers": [
+      "Main/Brakes",
+      "Main/Empty.043",
+      "Main/Empty.044",
+      "Main/Empty.045",
+      "Main/Armature.006/Bone/Bone.001",
+      "Main/Armature.006/Bone"
+    ],
+    "BrakeHangerClip": "Brake",
+    "BrakeHangerMaxBar": {
+      "value": 3.5,
+      "unit": "bar",
+      "basis": "DV_choice",
+      "evidence": [
+        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+      ]
+    },
+    "CabControlObjects": [
+      "Main/Throttle",
+      "Main/TrainBrake",
+      "Main/LocoBrake",
+      "Main/Whistle",
+      "Main/Empty.068",
+      "Main/Empty.058"
+    ],
+    "WhistleLinkageClip": "Whistle",
+    "NoWalkParts": [
+      "Main/DoorL",
+      "Main/DoorR",
+      "Main/Empty.032",
+      "Main/Empty.060",
+      "Main/Empty.038",
+      "Main/Empty.059",
+      "Main/WBL",
+      "Main/WBR",
+      "RoofVent",
+      "Main/WaterHatch1",
+      "Main/WaterHatch2",
+      "Main/FireboxDoor"
+    ],
+    "LoopAnimations": {
+      "value": [
+        [
+          "Bell1",
+          "bell.BELL_NORMALIZED",
+          0.8
+        ],
+        [
+          "AP",
+          "compressor.PRODUCTION_RATE_NORMALIZED",
+          1.0169491525423728
+        ],
+        [
+          "Lube2",
+          "compressor.PRODUCTION_RATE_NORMALIZED",
+          0.09
+        ]
+      ],
+      "unit": "Hz",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/profile/s16.json#Compressor1 animationSpeed.5/AP clip59/120sec; Compressor2 animationSpeed.045/Lube2 clip.5sec",
+        "Bell speed.8cycles/s DV choice"
+      ]
+    },
+    "BellSound": {
+      "value": [
+        0,
+        2.91,
+        0.59
+      ],
+      "unit": "m",
+      "basis": "measured",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "MainPressureGauge": "BPG",
+    "BackheadZ": {
+      "value": -2.09076,
+      "unit": "m",
+      "basis": "measured",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "FireDoorCentre": {
+      "value": [
+        0.0159,
+        1.4742,
+        -2.1318
+      ],
+      "unit": "m",
+      "basis": "measured",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "BackheadRayStartZ": {
+      "value": -2.55,
+      "unit": "m",
+      "basis": "measured",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "LeverMaterial": "black",
+    "ChimneyComp": "Chuff",
+    "WhistleComp": "Whistle",
+    "SafetyPos": {
+      "value": [
+        -0.18,
+        3.5,
+        -0.32
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#placement from measured source geometry"
+      ]
+    },
+    "BlowdownPos": {
+      "value": [
+        0.7,
+        0.7,
+        -1.5
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#placement from measured source geometry"
+      ]
+    },
+    "DynamoPos": {
+      "value": [
+        -0.7965752,
+        3.39019775,
+        -0.559086263
+      ],
+      "unit": "m",
+      "basis": "source",
+      "evidence": [
+        "locos/s16/profile/s16.json#source_objects[0].definition"
+      ]
+    },
+    "CrackPos": {
+      "value": [
+        0,
+        0.49,
+        2.3
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#placement from measured source geometry"
+      ]
+    },
+    "CylinderLength": {
+      "value": 0.4961899999999999,
+      "unit": "m",
+      "basis": "measured",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "ChuffType": {
+      "value": 0,
+      "unit": "1",
+      "basis": "DV_choice",
+      "evidence": [
+        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+      ]
+    },
+    "WhistleSystem": {
+      "value": 3050,
+      "unit": "1",
+      "basis": "DV_choice",
+      "evidence": [
+        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+      ]
+    },
+    "SndCab": {
+      "value": [
+        0,
+        2.4,
+        -2.65
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "SndCylinders": {
+      "value": [
+        0,
+        0.49,
+        2.3
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "SndWheels": {
+      "value": [
+        0,
+        0.49,
+        0
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "SndFire": {
+      "value": [
+        0,
+        1.474,
+        -2.13
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "SndAirPump": {
+      "value": [
+        -0.758,
+        1.94,
+        2.294
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "SndCoalDump": {
+      "value": [
+        0,
+        0.8,
+        -1.5
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "SndCrownSheet": {
+      "value": [
+        0,
+        2.2,
+        -1.5
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "SndSafety": {
+      "value": [
+        -0.18,
+        3.5,
+        -0.32
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "SndSand": {
+      "value": [
+        0,
+        0.6,
+        1.2
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "CoalTargetComp": "Coal Target",
+    "WaterFillerParts": [
+      "Main/WaterHatch1/BezierCurve.019",
+      "Main/WaterHatch2/BezierCurve.023"
+    ],
+    "RodOilers": [
+      [
+        "Connecting Rod Left",
+        true
+      ],
+      [
+        "Main Rod Left",
+        false
+      ],
+      [
+        "Connecting Rod Left.001",
+        true
+      ],
+      [
+        "Main Rod Left.001",
+        false
+      ]
+    ],
+    "CabLightProbe": {
+      "value": [
+        0,
+        3.2,
+        -2.6
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#placement from measured source geometry"
+      ]
+    },
+    "RenderCabLight": {
+      "value": [
+        0,
+        3.2,
+        -2.6
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#placement from measured source geometry"
+      ]
+    },
+    "LampLenses": {
+      "value": [
+        [
+          "Head",
+          [
+            0.0119,
+            2.92,
+            3.239
+          ],
+          {
+            "value": 0.28,
+            "unit": "m",
+            "basis": "analogue_estimate",
+            "evidence": [
+              "Existing LLW small electric headlight integration diameter; source position used, radius awaits rendered fit"
+            ]
+          },
+          true
+        ],
+        [
+          "Rear",
+          [
+            -0.0005,
+            3.1458,
+            -3.4943
+          ],
+          {
+            "value": 0.28,
+            "unit": "m",
+            "basis": "analogue_estimate",
+            "evidence": [
+              "Existing LLW small electric headlight integration diameter; source position used, radius awaits rendered fit"
+            ]
+          },
+          false
+        ]
+      ],
+      "unit": "mixed m/bool",
+      "basis": "source",
+      "evidence": [
+        "locos/s16/profile/s16.json#source_objects[0].definition#Headlight hl2 and hl3, lens diameter analogue"
+      ]
+    },
+    "FrontLow": [
+      "Head"
+    ],
+    "FrontHigh": [
+      "Head"
+    ],
+    "RearLow": [
+      "Rear"
+    ],
+    "RearHigh": [
+      "Rear"
+    ],
+    "SimControls": [
+      "doorR",
+      "doorL",
+      "windowFR",
+      "windowFL",
+      "roofVent",
+      "hatchL",
+      "hatchR",
+      "windowR",
+      "windowL",
+      "windowBR",
+      "windowBL"
+    ],
+    "RrLevers": [
+      {
+        "Path": "Main/Throttle",
+        "AnimKey": "Throttle",
+        "Port": "throttle.EXT_IN",
+        "Ctl": {
+          "value": 0,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false,
+        "Hidden": false,
+        "External": false,
+        "GripSize": {
+          "value": [
+            0.085,
+            0.085,
+            0.085
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Grip": {
+          "value": [
+            0.875,
+            2.435,
+            -1.92
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        }
+      },
+      {
+        "Path": "Main/Empty.052/Reverser.001",
+        "AnimKey": "Reverser",
+        "Port": "reverser.CONTROL_EXT_IN",
+        "Ctl": {
+          "value": 1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false,
+        "Hidden": false,
+        "External": false,
+        "GripSize": {
+          "value": [
+            0.085,
+            0.085,
+            0.085
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Grip": {
+          "value": [
+            0.78,
+            2.1,
+            -2.2
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        }
+      },
+      {
+        "Path": "Main/TrainBrake",
+        "AnimKey": "TB",
+        "Port": "brake.EXT_IN",
+        "Ctl": {
+          "value": 2,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false,
+        "Hidden": false,
+        "External": false,
+        "GripSize": {
+          "value": [
+            0.085,
+            0.085,
+            0.085
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Grip": {
+          "value": [
+            1.0,
+            2.17,
+            -1.57
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        }
+      },
+      {
+        "Path": "Main/LocoBrake",
+        "AnimKey": "Indy",
+        "Port": "indBrake.EXT_IN",
+        "Ctl": {
+          "value": 3,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false,
+        "Hidden": false,
+        "External": false,
+        "GripSize": {
+          "value": [
+            0.085,
+            0.085,
+            0.085
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Grip": {
+          "value": [
+            1.015,
+            2.34,
+            -1.37
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        }
+      },
+      {
+        "Path": "Main/Whistle",
+        "AnimKey": "Whistle",
+        "Port": "whistle.EXT_IN",
+        "Ctl": {
+          "value": 14,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false,
+        "Hidden": false,
+        "External": false,
+        "GripSize": {
+          "value": [
+            0.1,
+            0.1,
+            0.13
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Grip": {
+          "value": [
+            0.801,
+            3.13,
+            -1.8
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        }
+      },
+      {
+        "Path": "Main/Empty.068",
+        "AnimKey": "Cocks",
+        "Port": "cylinderCock.EXT_IN",
+        "Ctl": {
+          "value": 22,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": true,
+        "Hidden": false,
+        "External": false,
+        "GripSize": {
+          "value": [
+            0.085,
+            0.085,
+            0.085
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Grip": {
+          "value": [
+            0.64,
+            1.69,
+            -1.97
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        },
+        "Label": "car/cyl_cock"
+      },
+      {
+        "Path": "Main/Empty.058",
+        "AnimKey": null,
+        "Port": "bellControl.EXT_IN",
+        "Ctl": {
+          "value": 15,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": true,
+        "Hidden": false,
+        "External": false,
+        "GripSize": {
+          "value": [
+            0.085,
+            0.085,
+            0.085
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Grip": {
+          "value": [
+            -0.636,
+            2.194,
+            -2.1
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        },
+        "Label": "car/bell",
+        "Axis": {
+          "value": [
+            0,
+            0,
+            1
+          ],
+          "unit": "1",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#Bell2 source valve wheel normal"
+          ]
+        },
+        "Angle": {
+          "value": 90,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "Bell2 source clip closes at same angular pose after one cycle; saved on/off bell valve uses90deg direct joint"
+          ]
+        },
+        "Pivot": {
+          "value": [
+            -0.6365,
+            2.19372,
+            -2.10568
+          ],
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#Main/Empty.058 pivot"
+          ]
+        }
+      },
+      {
+        "Path": "Main/DoorR",
+        "AnimKey": "DR",
+        "Port": "doorR.EXT_IN",
+        "Ctl": {
+          "value": -1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false,
+        "Hidden": true,
+        "External": false,
+        "GripSize": {
+          "value": [
+            0.07,
+            0.18,
+            0.1
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Grip": {
+          "value": [
+            1.34,
+            2.0,
+            -2.98
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        }
+      },
+      {
+        "Path": "Main/DoorL",
+        "AnimKey": "DL",
+        "Port": "doorL.EXT_IN",
+        "Ctl": {
+          "value": -1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false,
+        "Hidden": true,
+        "External": false,
+        "GripSize": {
+          "value": [
+            0.07,
+            0.18,
+            0.1
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Grip": {
+          "value": [
+            -1.34,
+            2,
+            -2.98
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        }
+      },
+      {
+        "Path": "Main/Empty.059",
+        "AnimKey": "FRW",
+        "Port": "windowFR.EXT_IN",
+        "Ctl": {
+          "value": -1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false,
+        "Hidden": true,
+        "External": false,
+        "GripSize": {
+          "value": [
+            0.07,
+            0.18,
+            0.1
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Grip": {
+          "value": [
+            0.85,
+            2.71,
+            -1.079
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        }
+      },
+      {
+        "Path": "Main/Empty.038",
+        "AnimKey": "FLW",
+        "Port": "windowFL.EXT_IN",
+        "Ctl": {
+          "value": -1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false,
+        "Hidden": true,
+        "External": false,
+        "GripSize": {
+          "value": [
+            0.07,
+            0.18,
+            0.1
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Grip": {
+          "value": [
+            -0.85,
+            2.71,
+            -1.079
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        }
+      },
+      {
+        "Path": "RoofVent/Bone",
+        "AnimKey": "RV",
+        "Port": "roofVent.EXT_IN",
+        "Ctl": {
+          "value": -1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false,
+        "Hidden": true,
+        "External": false,
+        "GripSize": {
+          "value": [
+            0.07,
+            0.18,
+            0.1
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Grip": {
+          "value": [
+            0.0045,
+            3.245,
+            -1.7287
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        }
+      }
+    ],
+    "Pullers": [
+      {
+        "Path": "Main/Empty.060",
+        "AnimKey": "RW",
+        "Port": "windowR.EXT_IN",
+        "Name": "windowR",
+        "Grip": {
+          "value": [
+            1.315,
+            2.52,
+            -2.07
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        },
+        "GripSize": {
+          "value": [
+            0.018,
+            0.35,
+            0.25
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Step": {
+          "value": 0.1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        }
+      },
+      {
+        "Path": "Main/Empty.032",
+        "AnimKey": "LW",
+        "Port": "windowL.EXT_IN",
+        "Name": "windowL",
+        "Grip": {
+          "value": [
+            -1.315,
+            2.52,
+            -2.07
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        },
+        "GripSize": {
+          "value": [
+            0.018,
+            0.35,
+            0.25
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Step": {
+          "value": 0.1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        }
+      },
+      {
+        "Path": "Main/WBR",
+        "AnimKey": "WBR",
+        "Port": "windowBR.EXT_IN",
+        "Name": "windowBR",
+        "Grip": {
+          "value": [
+            0.37,
+            2.59,
+            -3.095
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        },
+        "GripSize": {
+          "value": [
+            0.3,
+            0.35,
+            0.018
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Step": {
+          "value": 0.1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        }
+      },
+      {
+        "Path": "Main/WBL",
+        "AnimKey": "WBL",
+        "Port": "windowBL.EXT_IN",
+        "Name": "windowBL",
+        "Grip": {
+          "value": [
+            -0.37,
+            2.59,
+            -3.095
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        },
+        "GripSize": {
+          "value": [
+            0.3,
+            0.35,
+            0.018
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        },
+        "Step": {
+          "value": 0.1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        }
+      }
+    ],
+    "LoadAnimations": [
+      [
+        "FBD2",
+        "",
+        "fireboxDoor.EXT_IN",
+        false
+      ],
+      [
+        "Throttle",
+        "",
+        "throttle.EXT_IN",
+        false
+      ],
+      [
+        "Cocks",
+        "",
+        "cylinderCock.EXT_IN",
+        false
+      ],
+      [
+        "FBD",
+        "",
+        "fireboxDoor.EXT_IN",
+        false
+      ],
+      [
+        "Coal",
+        "",
+        "coal.NORMALIZED",
+        false
+      ],
+      [
+        "Water",
+        "",
+        "water.NORMALIZED",
+        false
+      ],
+      [
+        "DR",
+        "",
+        "doorR.EXT_IN",
+        false
+      ],
+      [
+        "DL",
+        "",
+        "doorL.EXT_IN",
+        false
+      ],
+      [
+        "FRW",
+        "",
+        "windowFR.EXT_IN",
+        false
+      ],
+      [
+        "FLW",
+        "",
+        "windowFL.EXT_IN",
+        false
+      ],
+      [
+        "RV",
+        "",
+        "roofVent.EXT_IN",
+        false
+      ],
+      [
+        "HatchLeft",
+        "",
+        "hatchL.EXT_IN",
+        false
+      ],
+      [
+        "HatchRight",
+        "",
+        "hatchR.EXT_IN",
+        false
+      ],
+      [
+        "RW",
+        "",
+        "windowR.EXT_IN",
+        false
+      ],
+      [
+        "LW",
+        "",
+        "windowL.EXT_IN",
+        false
+      ],
+      [
+        "WBR",
+        "",
+        "windowBR.EXT_IN",
+        false
+      ],
+      [
+        "WBL",
+        "",
+        "windowBL.EXT_IN",
+        false
+      ]
+    ],
+    "Placed": [
+      {
+        "Name": "Damper",
+        "X": {
+          "value": -0.5,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Y": {
+          "value": 1.55,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Wheel": false,
+        "Port": "damper.EXT_IN",
+        "Ctl": {
+          "value": 20,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Label": "car/damper",
+        "Notches": {
+          "value": 8,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": true
+      },
+      {
+        "Name": "Fire door",
+        "X": {
+          "value": 0.4,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Y": {
+          "value": 1.55,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Wheel": false,
+        "Port": "fireboxDoor.EXT_IN",
+        "Ctl": {
+          "value": 21,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Label": "car/fire_door",
+        "Notches": {
+          "value": 2,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": true
+      },
+      {
+        "Name": "Coal dump",
+        "X": {
+          "value": -0.5,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Y": {
+          "value": 1.33,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Wheel": false,
+        "Port": "coalDumpControl.EXT_IN",
+        "Ctl": {
+          "value": -1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Label": "car/ash_pan",
+        "Notches": {
+          "value": 3,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false
+      },
+      {
+        "Name": "Cab light",
+        "X": {
+          "value": -0.18,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Y": {
+          "value": 2.14,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Wheel": false,
+        "Port": "cabLight.EXT_IN",
+        "Ctl": {
+          "value": 12,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Label": "car/cab_lights",
+        "Notches": {
+          "value": 2,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": true
+      },
+      {
+        "Name": "Headlights",
+        "X": {
+          "value": -0.52,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Y": {
+          "value": 2.25,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Wheel": false,
+        "Port": "headlightDecoder.HEADLIGHTS_EXT_IN",
+        "Ctl": {
+          "value": 10,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Label": "car/headlights",
+        "Notches": {
+          "value": 7,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false
+      },
+      {
+        "Name": "Lubricator",
+        "X": {
+          "value": 0.1,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Y": {
+          "value": 2.14,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Wheel": false,
+        "Port": "lubricatorControl.EXT_IN",
+        "Ctl": {
+          "value": 25,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Label": "car/lubricator",
+        "Notches": {
+          "value": 2,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": false
+      },
+      {
+        "Name": "Brake cutout",
+        "X": {
+          "value": 0.49,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Y": {
+          "value": 1.9,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Wheel": false,
+        "Port": "brakeCutout.EXT_IN",
+        "Ctl": {
+          "value": 5,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Label": "car/brake_cutout",
+        "Notches": {
+          "value": 2,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Toggle": true
+      }
+    ],
+    "ExteriorShots": [
+      {
+        "Pos": {
+          "value": [
+            -18,
+            2.2,
+            0
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Look": {
+          "value": [
+            0,
+            1.7,
+            0
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Fov": {
+          "value": 35,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "File": "built_left.png"
+      },
+      {
+        "Pos": {
+          "value": [
+            10,
+            4.5,
+            13
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Look": {
+          "value": [
+            0,
+            1.8,
+            0
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Fov": {
+          "value": 35,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "File": "built_front34.png"
+      },
+      {
+        "Pos": {
+          "value": [
+            -9,
+            4.5,
+            -13
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Look": {
+          "value": [
+            0,
+            1.8,
+            -0.4
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Fov": {
+          "value": 35,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "File": "built_rear34.png"
+      },
+      {
+        "Pos": {
+          "value": [
+            -6,
+            0.9,
+            0
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Look": {
+          "value": [
+            0,
+            0.65,
+            0
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Fov": {
+          "value": 35,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "File": "built_gear_left.png"
+      },
+      {
+        "Pos": {
+          "value": [
+            6,
+            0.9,
+            0
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Look": {
+          "value": [
+            0,
+            0.65,
+            0
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Fov": {
+          "value": 35,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "File": "built_gear_right.png"
+      }
+    ],
+    "CabShots": [
+      {
+        "Pos": {
+          "value": [
+            0,
+            2.6,
+            -3.0
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Look": {
+          "value": [
+            0,
+            2.3,
+            -1.4
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Fov": {
+          "value": 65,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "File": "built_cab_backhead.png"
+      },
+      {
+        "Pos": {
+          "value": [
+            -0.2,
+            2.5,
+            -2.9
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Look": {
+          "value": [
+            -0.4,
+            2.1,
+            -1.9
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Fov": {
+          "value": 60,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "File": "built_backhead_left.png"
+      },
+      {
+        "Pos": {
+          "value": [
+            0.2,
+            2.5,
+            -2.9
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Look": {
+          "value": [
+            0.7,
+            2.2,
+            -1.5
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Fov": {
+          "value": 60,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "File": "built_backhead_right.png"
+      }
+    ],
+    "LampShots": [
+      {
+        "Pos": {
+          "value": [
+            3,
+            3.2,
+            9
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Look": {
+          "value": [
+            0,
+            2.9,
+            3.2
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Fov": {
+          "value": 40,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "File": "built_lamps_front_lit.png"
+      },
+      {
+        "Pos": {
+          "value": [
+            -3,
+            3.2,
+            -10
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Look": {
+          "value": [
+            0,
+            3.1,
+            -3.5
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Fov": {
+          "value": 40,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "File": "built_lamps_rear_lit.png"
+      }
+    ],
+    "MarkerShots": [
+      {
+        "Pos": {
+          "value": [
+            5,
+            1.2,
+            -1
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Look": {
+          "value": [
+            1.1,
+            0.7,
+            -1
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Fov": {
+          "value": 40,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "File": "markers_release.png"
+      },
+      {
+        "Pos": {
+          "value": [
+            -4,
+            2,
+            -8
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Look": {
+          "value": [
+            -1,
+            1.7,
+            -3.6
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "Fov": {
+          "value": 40,
+          "unit": "degrees",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "File": "markers_handbrake.png"
+      }
+    ],
+    "Fittings": [
+      {
+        "Part": "Cylinder.018",
+        "Name": "Injector",
+        "Centre": {
+          "value": [
+            -0.14583,
+            2.71618,
+            -1.78098
+          ],
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Port": "injector.EXT_IN",
+        "Ctl": {
+          "value": 17,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Label": "car/injector",
+        "Notches": {
+          "value": 11,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Toggle": false
+      },
+      {
+        "Part": "Cylinder.018",
+        "Name": "Blower",
+        "Centre": {
+          "value": [
+            -0.05066,
+            2.71618,
+            -1.75117
+          ],
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Port": "blower.EXT_IN",
+        "Ctl": {
+          "value": 19,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Label": "car/blower",
+        "Notches": {
+          "value": 11,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Toggle": false
+      },
+      {
+        "Part": "Cylinder.018",
+        "Name": "Air pump",
+        "Centre": {
+          "value": [
+            0.07479,
+            2.71618,
+            -1.75117
+          ],
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Port": "compressorControl.EXT_IN",
+        "Ctl": {
+          "value": 23,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Label": "car/air_pump",
+        "Notches": {
+          "value": 2,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Toggle": true
+      },
+      {
+        "Part": "Cylinder.018",
+        "Name": "Dynamo",
+        "Centre": {
+          "value": [
+            0.14583,
+            2.71618,
+            -1.78098
+          ],
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Port": "dynamoControl.EXT_IN",
+        "Ctl": {
+          "value": 24,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Label": "car/dynamo",
+        "Notches": {
+          "value": 2,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Toggle": true
+      },
+      {
+        "Part": "Cylinder.018",
+        "Name": "Sander",
+        "Centre": {
+          "value": [
+            0.24099,
+            2.71618,
+            -1.52482
+          ],
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Port": "sander.CONTROL_EXT_IN",
+        "Ctl": {
+          "value": 13,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Label": "car/sander",
+        "Notches": {
+          "value": 2,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Toggle": true
+      },
+      {
+        "Part": "Cylinder.018",
+        "Name": "Blowdown",
+        "Centre": {
+          "value": [
+            0.39388,
+            2.27494,
+            -2.16643
+          ],
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "Port": "blowdown.EXT_IN",
+        "Ctl": {
+          "value": 18,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Label": "car/water_dump",
+        "Notches": {
+          "value": 2,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Toggle": true
+      }
+    ],
+    "RemoveVanillaSounds": [
+      "Whistle",
+      "Airpump",
+      "Dynamo",
+      "BellRing",
+      "BellPump"
+    ],
+    "Sounds": [
+      {
+        "Name": "RR Whistle",
+        "Clip": "Assets/S16Audio/whistle.wav",
+        "Port": "exhaust.WHISTLE_FLOW_NORMALIZED",
+        "Mixer": {
+          "value": 12,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Pos": {
+          "value": [
+            0.4076929,
+            3.09240723,
+            -0.30422917
+          ],
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "MinDistance": {
+          "value": 20,
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "MaxDistance": {
+          "value": 1200,
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "VolumeCurve": {
+          "value": [
+            [
+              0,
+              0
+            ],
+            [
+              0.05,
+              0.3
+            ],
+            [
+              0.5,
+              0.85
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "PitchCurve": {
+          "value": [
+            [
+              0,
+              0.9
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Inertia": {
+          "value": 0.08,
+          "unit": "s",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        }
+      },
+      {
+        "Name": "RR Bell",
+        "Clip": "Assets/S16Audio/bell.wav",
+        "Port": "bell.BELL_NORMALIZED",
+        "Mixer": {
+          "value": 12,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Pos": {
+          "value": [
+            0,
+            2.91,
+            0.59
+          ],
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "MinDistance": {
+          "value": 8,
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "MaxDistance": {
+          "value": 600,
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "VolumeCurve": {
+          "value": [
+            [
+              0,
+              0
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        }
+      },
+      {
+        "Name": "RR Air pump",
+        "Clip": "Assets/S16Audio/compressor.wav",
+        "Port": "compressor.PRODUCTION_RATE_NORMALIZED",
+        "Mixer": {
+          "value": 21,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Pos": {
+          "value": [
+            -0.7577,
+            1.9414,
+            2.2941
+          ],
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "MinDistance": {
+          "value": 3,
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "MaxDistance": {
+          "value": 250,
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "VolumeCurve": {
+          "value": [
+            [
+              0,
+              0
+            ],
+            [
+              0.05,
+              0.6
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "PitchCurve": {
+          "value": [
+            [
+              0,
+              0.85
+            ],
+            [
+              1,
+              1.05
+            ]
+          ],
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        }
+      },
+      {
+        "Name": "RR Dynamo",
+        "Clip": "Assets/S16Audio/dynamo.wav",
+        "Port": "dynamo.DYNAMO_FLOW_NORMALIZED",
+        "Mixer": {
+          "value": 7,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "Pos": {
+          "value": [
+            -0.7965752,
+            3.39019775,
+            -0.559086263
+          ],
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "MinDistance": {
+          "value": 3,
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "MaxDistance": {
+          "value": 150,
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "VolumeCurve": {
+          "value": [
+            [
+              0,
+              0
+            ],
+            [
+              0.1,
+              0.7
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        },
+        "PitchCurve": {
+          "value": [
+            [
+              0,
+              0.9
+            ],
+            [
+              1,
+              1
+            ]
+          ],
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        }
+      }
+    ],
+    "MeshIslandWeldTolerances": {
+      "Cylinder.018": {
+        "value": 1e-07,
+        "unit": "source mesh units",
+        "basis": "derived",
+        "evidence": [
+          "locos/s16/analysis/measure01/measure_report.txt#Cylinder.018 and rod scale100; 10um world divided by100",
+          "builds/test01/build_report.txt#legacy10mm world weld fused source wheel to pipes"
+        ]
+      }
+    },
+    "EndBeamProbeHeight": {
+      "value": [
+        0.7,
+        0.85
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#front wood beam island67567 y.57816..94172 zfront3.34452; rear island67523 y.57816..97354 zrear-3.59906"
+      ]
+    },
+    "BrakeSlidingParts": [
+      "Main/Empty.041",
+      "Main/Empty.042"
+    ],
+    "RemovedMeshIslands": {
+      "value": [
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_uncoupling_bar_support_17680",
+          "Centre": [
+            -1.15118,
+            1.07731,
+            -3.64589
+          ],
+          "Size": [
+            0.0175,
+            0.03383,
+            0.05436
+          ],
+          "ExpectedTriangles": 36
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_uncoupling_bar_support_17700",
+          "Centre": [
+            -0.32313,
+            1.07731,
+            -3.64589
+          ],
+          "Size": [
+            0.0175,
+            0.03383,
+            0.05436
+          ],
+          "ExpectedTriangles": 36
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_uncoupling_bar_support_17720",
+          "Centre": [
+            0.32313,
+            1.07731,
+            -3.64589
+          ],
+          "Size": [
+            0.0175,
+            0.03383,
+            0.05436
+          ],
+          "ExpectedTriangles": 36
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_uncoupling_bar_support_17740",
+          "Centre": [
+            1.15118,
+            1.07731,
+            -3.64589
+          ],
+          "Size": [
+            0.0175,
+            0.03383,
+            0.05436
+          ],
+          "ExpectedTriangles": 36
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_uncoupling_bar_18056",
+          "Centre": [
+            0.0,
+            0.90619,
+            -3.78638
+          ],
+          "Size": [
+            2.45778,
+            0.36628,
+            0.28356
+          ],
+          "ExpectedTriangles": 684
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_uncoupling_bar_30217",
+          "Centre": [
+            0.0,
+            0.9161,
+            3.46517
+          ],
+          "Size": [
+            2.45778,
+            0.36628,
+            0.31074
+          ],
+          "ExpectedTriangles": 684
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_uncoupling_bar_support_30268",
+          "Centre": [
+            -1.15118,
+            0.97187,
+            3.32078
+          ],
+          "Size": [
+            0.0175,
+            0.27233,
+            0.03383
+          ],
+          "ExpectedTriangles": 36
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_uncoupling_bar_support_30288",
+          "Centre": [
+            -0.32313,
+            1.01054,
+            3.32078
+          ],
+          "Size": [
+            0.0175,
+            0.19499,
+            0.03383
+          ],
+          "ExpectedTriangles": 36
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_uncoupling_bar_support_30308",
+          "Centre": [
+            0.32313,
+            1.01054,
+            3.32078
+          ],
+          "Size": [
+            0.0175,
+            0.19499,
+            0.03384
+          ],
+          "ExpectedTriangles": 36
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_uncoupling_bar_support_30328",
+          "Centre": [
+            1.15118,
+            0.97187,
+            3.32078
+          ],
+          "Size": [
+            0.0175,
+            0.27233,
+            0.03383
+          ],
+          "ExpectedTriangles": 36
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_drawgear_housing_45223",
+          "Centre": [
+            0.0,
+            0.78784,
+            3.45857
+          ],
+          "Size": [
+            0.51824,
+            0.34611,
+            0.28023
+          ],
+          "ExpectedTriangles": 392
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_drawgear_bolt_45156",
+          "Centre": [
+            0.20278,
+            0.66882,
+            3.39959
+          ],
+          "Size": [
+            0.06347,
+            0.07329,
+            0.07852
+          ],
+          "ExpectedTriangles": 16
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_drawgear_bolt_45168",
+          "Centre": [
+            0.20278,
+            0.87821,
+            3.39959
+          ],
+          "Size": [
+            0.06347,
+            0.07329,
+            0.07852
+          ],
+          "ExpectedTriangles": 16
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_drawgear_bolt_cap_45184",
+          "Centre": [
+            0.20278,
+            0.87821,
+            3.44213
+          ],
+          "Size": [
+            0.05235,
+            0.05235,
+            0.01963
+          ],
+          "ExpectedTriangles": 22
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_drawgear_bolt_cap_45200",
+          "Centre": [
+            0.20278,
+            0.66882,
+            3.44213
+          ],
+          "Size": [
+            0.05235,
+            0.05235,
+            0.01963
+          ],
+          "ExpectedTriangles": 22
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_drawgear_bolt_45232",
+          "Centre": [
+            -0.20277,
+            0.66882,
+            3.39959
+          ],
+          "Size": [
+            0.06347,
+            0.07329,
+            0.07852
+          ],
+          "ExpectedTriangles": 16
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_drawgear_bolt_45244",
+          "Centre": [
+            -0.20277,
+            0.87821,
+            3.39959
+          ],
+          "Size": [
+            0.06347,
+            0.07329,
+            0.07852
+          ],
+          "ExpectedTriangles": 16
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_drawgear_bolt_cap_45260",
+          "Centre": [
+            -0.20277,
+            0.87821,
+            3.44213
+          ],
+          "Size": [
+            0.05235,
+            0.05235,
+            0.01963
+          ],
+          "ExpectedTriangles": 22
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "front_drawgear_bolt_cap_45276",
+          "Centre": [
+            -0.20277,
+            0.66882,
+            3.44213
+          ],
+          "Size": [
+            0.05235,
+            0.05235,
+            0.01963
+          ],
+          "ExpectedTriangles": 22
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_drawgear_housing_45545",
+          "Centre": [
+            0.0,
+            0.78785,
+            -3.71219
+          ],
+          "Size": [
+            0.51824,
+            0.34611,
+            0.28023
+          ],
+          "ExpectedTriangles": 392
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_drawgear_bolt_45482",
+          "Centre": [
+            0.20278,
+            0.66882,
+            -3.65321
+          ],
+          "Size": [
+            0.06347,
+            0.07329,
+            0.07852
+          ],
+          "ExpectedTriangles": 16
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_drawgear_bolt_45494",
+          "Centre": [
+            0.20278,
+            0.87821,
+            -3.65321
+          ],
+          "Size": [
+            0.06347,
+            0.07329,
+            0.07852
+          ],
+          "ExpectedTriangles": 16
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_drawgear_bolt_cap_45510",
+          "Centre": [
+            0.20278,
+            0.87821,
+            -3.69574
+          ],
+          "Size": [
+            0.05235,
+            0.05235,
+            0.01963
+          ],
+          "ExpectedTriangles": 22
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_drawgear_bolt_cap_45526",
+          "Centre": [
+            0.20278,
+            0.66882,
+            -3.69574
+          ],
+          "Size": [
+            0.05235,
+            0.05235,
+            0.01963
+          ],
+          "ExpectedTriangles": 22
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_drawgear_bolt_45558",
+          "Centre": [
+            -0.20277,
+            0.66882,
+            -3.65321
+          ],
+          "Size": [
+            0.06347,
+            0.07329,
+            0.07852
+          ],
+          "ExpectedTriangles": 16
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_drawgear_bolt_45570",
+          "Centre": [
+            -0.20277,
+            0.87821,
+            -3.65321
+          ],
+          "Size": [
+            0.06347,
+            0.07329,
+            0.07852
+          ],
+          "ExpectedTriangles": 16
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_drawgear_bolt_cap_45586",
+          "Centre": [
+            -0.20277,
+            0.87821,
+            -3.69574
+          ],
+          "Size": [
+            0.05235,
+            0.05235,
+            0.01963
+          ],
+          "ExpectedTriangles": 22
+        },
+        {
+          "Part": "Cylinder.018",
+          "Name": "rear_drawgear_bolt_cap_45602",
+          "Centre": [
+            -0.20277,
+            0.66882,
+            -3.69574
+          ],
+          "Size": [
+            0.05235,
+            0.05235,
+            0.01963
+          ],
+          "ExpectedTriangles": 22
+        }
+      ],
+      "unit": "mixed (m,triangle count)",
+      "basis": "measured",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#28 reviewed coupler hardware islands",
+        "locos/s16/analysis/coupler-review/coupler_island_review.json#unique centroid+bounds+triangles selectors",
+        "locos/s16/builds/test04/coupler_front_34.png#original drawgear overlaps DV hardware",
+        "locos/s16/builds/test04/coupler_rear_34.png#original drawgear overlaps DV hardware"
+      ]
+    },
+    "CabFloorProbeHeight": {
+      "value": 2.2,
+      "unit": "m",
+      "basis": "DV_choice",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#floor ray y1.03924; chosen cast origin below roof and above floor",
+        "locos/s16/builds/test04/build_report.txt#legacy cast from y3.5 hit roof y3.430"
+      ]
+    },
+    "AnimatedToggles": [
+      {
+        "Name": "WaterHatchLeft",
+        "Path": "Main/WaterHatch1",
+        "AnimKey": "HatchLeft",
+        "Port": "hatchL.EXT_IN",
+        "Grip": {
+          "value": [
+            -1.07,
+            2.5,
+            1.36
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        },
+        "GripSize": {
+          "value": [
+            0.07,
+            0.18,
+            0.1
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        }
+      },
+      {
+        "Name": "WaterHatchRight",
+        "Path": "Main/WaterHatch2",
+        "AnimKey": "HatchRight",
+        "Port": "hatchR.EXT_IN",
+        "Grip": {
+          "value": [
+            1.065,
+            2.5,
+            1.36
+          ],
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#handhold positioned from source renderer bounds and backhead render"
+          ]
+        },
+        "GripSize": {
+          "value": [
+            0.07,
+            0.18,
+            0.1
+          ],
+          "unit": "m",
+          "basis": "DV_choice",
+          "evidence": [
+            "Control interaction box chosen to enclose handhold, based on source mesh bounds; not source-authored dimensions"
+          ]
+        }
+      }
+    ],
+    "HideHookPlates": false
+  },
+  "hooks": {
+    "LampKey": {},
+    "CollisionBoxes": {
+      "value": [
+        [
+          "frame",
+          [
+            0,
+            0.74,
+            -0.127
+          ],
+          [
+            2.72,
+            0.55,
+            7.12
+          ]
+        ],
+        [
+          "tanks",
+          [
+            0,
+            1.72,
+            0.426
+          ],
+          [
+            2.76,
+            1.191,
+            2.876
+          ]
+        ],
+        [
+          "cab",
+          [
+            0,
+            2.0,
+            -2.2907
+          ],
+          [
+            2.751,
+            2.074,
+            2.73
+          ]
+        ],
+        [
+          "boiler",
+          [
+            0,
+            2.0,
+            0.4
+          ],
+          [
+            1.3,
+            1.3,
+            5.15
+          ]
+        ]
+      ],
+      "unit": "m",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#material bounds; simplified rigid collision envelope"
+      ]
+    },
+    "CoalPile": {
+      "value": {
+        "centre": [
+          0,
+          1.45,
+          -3.07
+        ],
+        "size": [
+          1.5,
+          0.6,
+          0.28
+        ]
+      },
+      "unit": "m",
+      "basis": "DV_choice",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#Main/Coal geometry and source bunker position; cabinet aperture fitting"
+      ]
+    },
+    "BrakeRelease": {
+      "value": {
+        "pos": [
+          1.1,
+          0.7,
+          -1.0
+        ],
+        "euler": [
+          0,
+          90,
+          0
+        ]
+      },
+      "unit": "mixed m/degrees",
+      "basis": "derived",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt#running board behind tank/cab front z-1.0; avoid low cab steps atz-2.6",
+        "locos/s16/builds/test03/build_report.txt#former under-step auto seat violates .3m hardware floor"
+      ]
+    },
+    "HandbrakeWheel": {
+      "value": {
+        "pos": [
+          -1.0,
+          1.7,
+          -3.65
+        ],
+        "euler": [
+          0,
+          180,
+          0
+        ]
+      },
+      "unit": "mixed m/degrees",
+      "basis": "measured",
+      "evidence": [
+        "locos/s16/analysis/measure01/measure_report.txt"
+      ]
+    },
+    "LeverPhysics": [
+      {
+        "value": {
+          "path": "Main/Throttle",
+          "min": 0,
+          "notches": 11,
+          "spring": 50,
+          "damper": 15,
+          "mass": 15,
+          "drag": 10,
+          "angularDrag": 0,
+          "scroll": 1,
+          "scrollSpring": 400
+        },
+        "unit": "mixed degrees/kg/DV coefficients",
+        "basis": "DV_choice",
+        "evidence": [
+          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        ]
+      },
+      {
+        "value": {
+          "path": "Main/Empty.052/Reverser.001",
+          "min": 0,
+          "notches": 21,
+          "spring": 85,
+          "damper": 15,
+          "mass": 30,
+          "drag": 15,
+          "angularDrag": 0,
+          "scroll": 1,
+          "scrollSpring": 200
+        },
+        "unit": "mixed degrees/kg/DV coefficients",
+        "basis": "DV_choice",
+        "evidence": [
+          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        ]
+      },
+      {
+        "value": {
+          "path": "Main/TrainBrake",
+          "min": 0,
+          "notches": 11,
+          "spring": 85,
+          "damper": 15,
+          "mass": 30,
+          "drag": 16,
+          "angularDrag": 0,
+          "scroll": 1,
+          "scrollSpring": 100
+        },
+        "unit": "mixed degrees/kg/DV coefficients",
+        "basis": "DV_choice",
+        "evidence": [
+          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        ]
+      },
+      {
+        "value": {
+          "path": "Main/LocoBrake",
+          "min": 0,
+          "notches": 11,
+          "spring": 65,
+          "damper": 0,
+          "mass": 30,
+          "drag": 16,
+          "angularDrag": 0,
+          "scroll": 1,
+          "scrollSpring": 100
+        },
+        "unit": "mixed degrees/kg/DV coefficients",
+        "basis": "DV_choice",
+        "evidence": [
+          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        ]
+      },
+      {
+        "value": {
+          "path": "Main/Whistle",
+          "min": 0,
+          "notches": 0,
+          "spring": 50,
+          "damper": 5,
+          "mass": 5,
+          "drag": 5,
+          "angularDrag": 0,
+          "scroll": 1,
+          "scrollSpring": 100,
+          "scrollAngleFraction": 0.25
+        },
+        "unit": "mixed degrees/kg/DV coefficients",
+        "basis": "DV_choice",
+        "evidence": [
+          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        ]
+      },
+      {
+        "value": {
+          "path": "Main/Empty.068",
+          "min": 0,
+          "notches": 2,
+          "spring": 85,
+          "damper": 15,
+          "mass": 10,
+          "drag": 15,
+          "angularDrag": 0,
+          "scroll": 1,
+          "scrollSpring": 0
+        },
+        "unit": "mixed degrees/kg/DV coefficients",
+        "basis": "DV_choice",
+        "evidence": [
+          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        ]
+      },
+      {
+        "value": {
+          "path": "Main/Empty.058",
+          "min": 0,
+          "notches": 2,
+          "spring": 85,
+          "damper": 15,
+          "mass": 10,
+          "drag": 15,
+          "angularDrag": 0,
+          "scroll": 1,
+          "scrollSpring": 0
+        },
+        "unit": "mixed degrees/kg/DV coefficients",
+        "basis": "DV_choice",
+        "evidence": [
+          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        ]
+      },
+      {
+        "value": {
+          "path": "Main/DoorR",
+          "min": 0,
+          "notches": 5,
+          "spring": 40,
+          "damper": 5,
+          "mass": 10,
+          "drag": 10,
+          "angularDrag": 0,
+          "scroll": 1,
+          "scrollSpring": 0
+        },
+        "unit": "mixed degrees/kg/DV coefficients",
+        "basis": "DV_choice",
+        "evidence": [
+          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        ]
+      },
+      {
+        "value": {
+          "path": "Main/DoorL",
+          "min": 0,
+          "notches": 5,
+          "spring": 40,
+          "damper": 5,
+          "mass": 10,
+          "drag": 10,
+          "angularDrag": 0,
+          "scroll": 1,
+          "scrollSpring": 0
+        },
+        "unit": "mixed degrees/kg/DV coefficients",
+        "basis": "DV_choice",
+        "evidence": [
+          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        ]
+      },
+      {
+        "value": {
+          "path": "Main/Empty.059",
+          "min": 0,
+          "notches": 5,
+          "spring": 40,
+          "damper": 5,
+          "mass": 10,
+          "drag": 10,
+          "angularDrag": 0,
+          "scroll": 1,
+          "scrollSpring": 0
+        },
+        "unit": "mixed degrees/kg/DV coefficients",
+        "basis": "DV_choice",
+        "evidence": [
+          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        ]
+      },
+      {
+        "value": {
+          "path": "Main/Empty.038",
+          "min": 0,
+          "notches": 5,
+          "spring": 40,
+          "damper": 5,
+          "mass": 10,
+          "drag": 10,
+          "angularDrag": 0,
+          "scroll": 1,
+          "scrollSpring": 0
+        },
+        "unit": "mixed degrees/kg/DV coefficients",
+        "basis": "DV_choice",
+        "evidence": [
+          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        ]
+      },
+      {
+        "value": {
+          "path": "RoofVent/Bone",
+          "min": 0,
+          "notches": 5,
+          "spring": 40,
+          "damper": 5,
+          "mass": 10,
+          "drag": 10,
+          "angularDrag": 0,
+          "scroll": 1,
+          "scrollSpring": 0
+        },
+        "unit": "mixed degrees/kg/DV coefficients",
+        "basis": "DV_choice",
+        "evidence": [
+          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        ]
+      }
+    ],
+    "SimSpec": {
+      "steamEngine": {
+        "numCylinders": {
+          "value": 2,
+          "unit": "count",
+          "basis": "source",
+          "evidence": [
+            "locos/s16/profile/s16.json#source_objects[0].definition"
+          ]
+        },
+        "cylinderBore": {
+          "value": 0.32743955050496004,
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/profile/s16.json#source_objects[0].definition#RR TE formula",
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#E02/E03"
+          ]
+        },
+        "pistonStroke": {
+          "value": 0.5588,
+          "unit": "m",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/profile/s16.json#source_objects[0].definition.pistonStrokeInches"
+          ]
+        },
+        "minCutoff": {
+          "value": 0.1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "maxCutoff": {
+          "value": 0.85,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "throttleMaxFlow": {
+          "value": 2.3,
+          "unit": "kg/s",
+          "basis": "analogue_estimate",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06"
+          ]
+        },
+        "steamChestVolume": {
+          "value": 300,
+          "unit": "L",
+          "basis": "analogue_estimate",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06"
+          ]
+        },
+        "maxCondensationRate": {
+          "value": 0.008,
+          "unit": "1",
+          "basis": "analogue_estimate",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06"
+          ]
+        }
+      },
+      "boiler": {
+        "diameter": {
+          "value": 1.26843,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "length": {
+          "value": 3.89015,
+          "unit": "m",
+          "basis": "measured",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt"
+          ]
+        },
+        "capacityMultiplier": {
+          "value": 813.7120590234966,
+          "unit": "1",
+          "basis": "analogue_estimate",
+          "evidence": [
+            "locos/s16/analysis/measure01/measure_report.txt#Boiler submesh envelope; 4000L engineering internal steam/water volume"
+          ]
+        },
+        "maxInjectorRate": {
+          "value": 1.8,
+          "unit": "L/s",
+          "basis": "analogue_estimate",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06 scaled 876/1735 sq ft"
+          ]
+        },
+        "defaultFeedwaterTemperature": {
+          "value": 25,
+          "unit": "degC",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "waterConsumptionMultiplier": {
+          "value": 1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "maxBlowdownRate": {
+          "value": 10,
+          "unit": "L/s",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "safetyValveOpeningPressure": {
+          "value": 12.389603999999999,
+          "unit": "bar absolute",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/profile/s16.json#source_objects[0].definition.maximumBoilerPressure"
+          ]
+        },
+        "safetyValveClosingPressure": {
+          "value": 12.182761199999998,
+          "unit": "bar absolute",
+          "basis": "derived",
+          "evidence": [
+            "locos/s16/profile/s16.json#source_objects[0].definition.maximumBoilerPressure minus 3 psi hysteresis"
+          ]
+        },
+        "maxSafetyValveVentRate": {
+          "value": 1.5,
+          "unit": "kg/s",
+          "basis": "analogue_estimate",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06"
+          ]
+        },
+        "spawnWaterLevel": {
+          "value": 3040.0,
+          "unit": "L",
+          "basis": "analogue_estimate",
+          "evidence": [
+            "metadata.simulationEstimates"
+          ]
+        },
+        "spawnPressure": {
+          "value": 1,
+          "unit": "bar absolute",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+          ]
+        }
+      },
+      "firebox": {
+        "maxCoalCapacity": {
+          "value": 33,
+          "unit": "kg",
+          "basis": "analogue_estimate",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06 firebed scaled heating surface876/1735"
+          ]
+        },
+        "burnTime": {
+          "value": 155.61806914546642,
+          "unit": "s",
+          "basis": "analogue_estimate",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06 firing rate scaled heating surface876/1735"
+          ]
+        },
+        "coalDumpRate": {
+          "value": 5,
+          "unit": "kg/s",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        },
+        "coalConsumptionMultiplier": {
+          "value": 1,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        }
+      },
+      "exhaust": {
+        "passiveExhaust": {
+          "value": 0.4,
+          "unit": "1",
+          "basis": "DV_choice",
+          "evidence": [
+            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          ]
+        }
+      },
+      "poweredAxles": {
+        "value": {
+          "value": 3,
+          "unit": "count",
+          "basis": "source",
+          "evidence": [
+            "locos/s16/profile/s16.json#source_objects[0].definition.wheelsets"
+          ]
+        }
+      }
+    }
+  },
+  "metadata": {
+    "status": "Measured profile ready for first build; final fitting/renders and gameplay validation pending",
+    "sourceProfile": "locos/s16/profile/s16.json",
+    "selectedOptions": {
+      "livery": "Lined",
+      "headlight": "Small Electric Headlight",
+      "stack": "Shotgun Stack",
+      "ladders": true,
+      "plows": false
+    },
+    "massLedger": {
+      "sourceWeightLb": 80000,
+      "sourceWeightKg": 36287.3896,
+      "interpretation": "Explicit DV design assumption: RR empty locomotive mass contains working boiler water but excludes separately counted coal/water load slots. This is not established historical dry-mass evidence.",
+      "boilerWaterSubtractedKg": 2897.1667805520055,
+      "baseDryKg": 33390.222819448,
+      "onboardWaterAddedByDVKg": 3785.411784,
+      "onboardCoalAddedByDVKg": 907.18474,
+      "auxiliaries": "Firebox coal, sand and oil remain additional DV masses. Current source does not give their inclusion or historical dry weight.",
+      "boilerWaterVolumeSubtractedL": 3040,
+      "boilerSpawnPressureBarAbsolute": 1,
+      "waterSpecificVolumeLPerKg": 1.049301
+    },
+    "simulationEstimates": {
+      "barrelDiameterM": 1.26843,
+      "effectiveLengthM": 3.89015,
+      "waterSteamVolumeL": 4000,
+      "workingWaterFraction": 0.76,
+      "teTargetLbf": 15674.339999999998,
+      "warning": "Boiler water/steam volume and heat release are engineering starting points, not source-authored physical specs."
+    },
+    "oiling": "Six functional cups on the accessible side/main rod bearing bosses. The front side-rod oilers on both sides remain source cosmetic geometry. All eight candidate cups and actual 90degree lids clear geometry across32phases x3reversers; the two omitted front candidates have only36/96 external visibility samples, retainedsix90..96/96. Selection is for service access, not geometry collision. Core derives OilingPointCount and aggregate consumption from the selected6; stock per-point rates preserved.",
+    "pending": [
+      "Saved build must validate geometry, controls, lamps, fittings, oil sync/reach and onboard resource routing.",
+      "Runtime validation in Derail Valley required."
+    ],
+    "expectedOilPoints": {
+      "value": 6,
+      "unit": "count",
+      "basis": "DV_choice",
+      "evidence": [
+        "locos/s16/analysis/oil-screen-test04c#corrected32phase x3reverser visibility screen; front points3/7 clear36of96 vs retained6 clear90..96of96",
+        "metadata.oiling"
+      ]
+    },
+    "audio": {
+      "whistle": "Exact Railroader wh-1-reading from Greenninja whistle source, extracted by root",
+      "packaging": "personal use only; share mode restores stock DV sounds and strips imported audio"
+    },
+    "controlProvenance": "Main controls and all cosmetic source clips retained; six 592-triangle source valve wheel islands are interactive. Remaining ancillary functions use DV controls placed on measured backhead.",
+    "measuredWheelRadiusM": 0.488783,
+    "couplerGeometryDecision": "Remove obsolete Railroader drawgear housings, their fasteners and uncoupling bars/supports because stock DV coupling hardware occupies the same space. Retain wooden beams, footboards and footboard brackets; front cock conservative box overlap is assessed separately.",
+    "waterHatchOperation": "Source integration payloads explicitly say Click to Open / Click to Close. Use DV animated button toggles with grip motion following the full original source tracks, including translations and asymmetric left/right travel. A fixed-axis rotary lever could not follow those tracks. Source clips remain unchanged.",
+    "hookPlateSupport": "Stock CarFlatcar HookPlate_F mesh3816 atscale0.81 spansx +/-0.308676m,y0.850604..1.092568m. Rearface24.3mm inside measured woodbeam,frontface46.6mm proud. Itslower90.1mm height overlapsfrontwoodbeamtop0.94172m (rear122.9mm). Retain actualstockplates tosupportreplacementhook afteroriginaldrawgearremoval."
+  }
+}

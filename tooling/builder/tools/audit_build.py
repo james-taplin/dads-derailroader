@@ -4,7 +4,7 @@ import argparse, collections, hashlib, json, math, re, sys
 from workspace import ROOT, WORKSPACE, CONFIG, profile_path, enable_unitypy
 enable_unitypy()
 import UnityPy
-REF={p:profile_path(p,'baselineBuild') for p in CONFIG['profiles']}
+REF={p:profile_path(p,'baselineBuild') for p,v in CONFIG['profiles'].items() if 'baselineBuild' in v}
 PACK={'g29':'LLW G-29','c21':'LLW C-21'}
 
 def load(bundle):
@@ -27,6 +27,9 @@ def load(bundle):
     return objects,kinds,scripts,classes,transforms,name,path
 
 def audit(profile,run,share=False):
+    if CONFIG['profiles'][profile].get('auditMode')=='new_locomotive':
+        from audit_new_loco import audit as audit_new
+        return audit_new(profile,run,share)
     pack=run/PACK[profile];bundle=pack/'ccl_bundle';report=(run/'build_report.txt').read_text()
     baseline=REF[profile];oldreport=(baseline/'build_report.txt').read_text();errors=[]
     def check(ok,message):
@@ -122,5 +125,5 @@ def audit(profile,run,share=False):
     return not errors
 
 if __name__=='__main__':
-    p=argparse.ArgumentParser();p.add_argument('profile',choices=REF);p.add_argument('run',type=Path);p.add_argument('--share',action='store_true');a=p.parse_args()
+    p=argparse.ArgumentParser();p.add_argument('profile',choices=CONFIG['profiles']);p.add_argument('run',type=Path);p.add_argument('--share',action='store_true');a=p.parse_args()
     sys.exit(0 if audit(a.profile,a.run.resolve(),a.share) else 1)
