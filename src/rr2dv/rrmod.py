@@ -1,10 +1,14 @@
-"""Read-only index of Railroader asset packs and per-locomotive dependency closure.
+"""Read-only index of Railroader mods and per-locomotive dependency closure.
 
-A Railroader mod holds one or more asset packs: folders with Definitions.json and/or Catalog.json plus a
-`bundle`. Objects in Definitions.json reference each other by identifier (tender, truck) and reference assets
-in other packs through PrefabModelComponent models. This module finds every pack and object a steam
-locomotive needs, from the input mod first and then from extra search roots (the Railroader Mods folder,
-base-game asset packs). Nothing here writes to disk.
+A Railroader mod is a folder with an info.json. It holds one or more asset packs: folders with Definitions.json
+and/or Catalog.json plus a `bundle`. Objects in Definitions.json reference each other by identifier (tender,
+truck) and reference assets in other packs through PrefabModelComponent models. Mods can also carry optional
+component-group files (an object `identifier` plus `bulkAdds`, e.g. alternative heralds) and images referenced
+as "<mod id>.<file name>".
+
+This module finds every pack, group file and image a steam locomotive needs, from the input first and then from
+extra search roots (the Railroader Mods folder, base-game asset packs), and reads each involved mod's licence
+files for terms that forbid opening or modifying its files. Nothing here writes to disk.
 
 Resolution is deterministic: the input root outranks search roots, and search roots rank in the order given.
 Two candidates at the same rank are an error, never a first match (guide rule D03).
@@ -12,6 +16,7 @@ Two candidates at the same rank are an error, never a first match (guide rule D0
 from __future__ import annotations
 
 import os
+import re
 from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -23,16 +28,62 @@ from .safety import is_link
 DEFINITIONS = "definitions.json"
 CATALOG = "catalog.json"
 BUNDLE = "bundle"
+INFO = "info.json"
 MAX_DEPTH = 4  # Mods/<mod>/<pack> is depth 2; allow a little extra nesting
 SKIP_DIRS = {".git", "__pycache__", "library", "temp", "logs", "obj"}
 
 STEAM_LOCOMOTIVE = "SteamLocomotive"
 TENDER = "Tender"
 
+# Component kinds that only work with a code mod installed in Railroader. Each entry needs evidence.
+CODE_MOD_KINDS = {
+    "ArticulatedSteamEngineComponent": ("LegosBetterSteam",
+                                        "guide E02: LegosBetterSteam components change pull and steam use ('diamater' spelling)"),
+}
+
+# Audio is never converted: every sound (whistle, bell, chuff, pumps...) aliases to vanilla Derail Valley S060 or
+# S282 audio, chosen by boiler size. Heating surface below the cut-off counts as a small boiler.
+AUDIO_BASES = ("S060", "S282")
+SMALL_BOILER_MAX_HEATING_FT2 = 2000.0
+SOUND_KINDS = {"Whistle", "Bell", "Chuff", "Compressor", "Dynamo"}
+
+LICENCE_FILE = re.compile(r"^(licen[cs]e|copying|readme|terms|eula|permissions?)([ ._-].*)?$", re.I)
+LICENCE_TEXT_SUFFIXES = {"", ".txt", ".md", ".rtf"}
+# Clauses that make a conversion (which opens and rebuilds the mod's bundle) contrary to the licence as written.
+BLOCKING_TERMS = {
+    "no-reverse-engineering": re.compile(r"reverse[\s-]*engineer|decompil", re.I),
+    "no-modification": re.compile(r"\b(no|not|never|prohibit\w*)\b[^.\n]{0,80}\bmodif", re.I),
+}
+OTHER_TERMS = {
+    "no-redistribution": re.compile(r"redistribut|re-?upload", re.I),
+    "personal-use-only": re.compile(r"personal[\s,]+(non-commercial\s+)?(use|purposes)", re.I),
+    "no-commercial-use": re.compile(r"no\s+commercial|non-commercial", re.I),
+}
+
+
+def audio_basis(loco_definition: dict, override: str | None = None) -> dict:
+    """Which vanilla DV loco's sounds a conversion uses. Deterministic; `override` records a user answer."""
+    hs = loco_definition.get("totalHeatingSurface")
+    if override:
+        if override not in AUDIO_BASES:
+            raise ValueError(f"audio must be one of {', '.join(AUDIO_BASES)}")
+        return {"basis": override, "rule": "chosen by the user"}
+    if isinstance(hs, (int, float)) and not isinstance(hs, bool) and hs > 0:
+        small = hs < SMALL_BOILER_MAX_HEATING_FT2
+        return {"basis": "S060" if small else "S282",
+                "rule": f"totalHeatingSurface {hs:g} ft2 {'<' if small else '>='} {SMALL_BOILER_MAX_HEATING_FT2:g} ft2 "
+                        f"({'small' if small else 'big'} boiler)"}
+    return {"basis": None, "rule": "no totalHeatingSurface in the definition"}
+
 
 def definition(obj: dict) -> dict:
     d = obj.get("definition")
     return d if isinstance(d, dict) else {}
+
+
+def components(d: dict) -> list[dict]:
+    comps = d.get("components")
+    return [c for c in comps if isinstance(c, dict)] if isinstance(comps, list) else []
 
 
 @dataclass(frozen=True)
@@ -47,9 +98,33 @@ class Issue:
     severity: str  # error: blocks conversion; warning: needs review; info
     code: str
     message: str
+    data: dict | None = None
 
     def as_dict(self) -> dict:
-        return {"severity": self.severity, "code": self.code, "message": self.message}
+        out = {"severity": self.severity, "code": self.code, "message": self.message}
+        if self.data:
+            out["data"] = self.data
+        return out
+
+
+def _rel(root: Root, path: Path) -> str:
+    rel = path.relative_to(root.path).as_posix()
+    return "" if rel == "." else rel
+
+
+@dataclass
+class Mod:
+    root: Root
+    path: Path
+    ident: str  # info.json Id, else the folder name
+    licences: list[dict] = field(default_factory=list)
+
+    @property
+    def rel(self) -> str:
+        return _rel(self.root, self.path)
+
+    def describe(self) -> dict:
+        return {"id": self.ident, "root": self.root.label, "path": self.rel, "licences": self.licences}
 
 
 @dataclass
@@ -59,6 +134,7 @@ class Pack:
     files: dict[str, Path]  # lower-cased known file name -> actual path
     objects: list[dict] = field(default_factory=list)
     assets: dict[str, dict] = field(default_factory=dict)
+    mod: Mod | None = None
 
     @property
     def name(self) -> str:
@@ -66,17 +142,40 @@ class Pack:
 
     @property
     def rel(self) -> str:
-        rel = self.path.relative_to(self.root.path).as_posix()
-        return "" if rel == "." else rel
+        return _rel(self.root, self.path)
 
     @property
-    def mod(self) -> str:
+    def folder_above(self) -> str:
         """Folder name directly above the pack, the prefix assetPackIdentifier uses."""
-        parent = self.path.parent
-        return parent.name if parent != self.path else ""
+        return self.path.parent.name
 
     def describe(self) -> dict:
         return {"name": self.name, "root": self.root.label, "path": self.rel}
+
+    def has_model(self, model: str) -> bool:
+        """A model identifier names a catalogue key or a prefab file (LLW uses one string for both; others don't)."""
+        if model in self.assets:
+            return True
+        stems = {Path(str(a.get("filename", ""))).stem.casefold() for a in self.assets.values() if isinstance(a, dict)}
+        return model.casefold() in stems
+
+
+@dataclass
+class GroupFile:
+    """Optional component group added to an object by a separate JSON file (identifier + bulkAdds)."""
+    root: Root
+    path: Path
+    data: dict
+
+    @property
+    def target(self) -> str:
+        return self.data["identifier"]
+
+    def describe(self) -> dict:
+        comps = [c for c in self.data.get("bulkAdds", []) if isinstance(c, dict)]
+        return {"target": self.target, "group_id": self.data.get("GroupID"), "group_name": self.data.get("GroupName"),
+                "file": {"root": self.root.label, "path": _rel(self.root, self.path)},
+                "component_kinds": dict(sorted(Counter(str(c.get("kind", "?")) for c in comps).items()))}
 
 
 class Resolution:
@@ -95,27 +194,36 @@ def _rank_pick(candidates: list, rank_of) -> Resolution:
     return Resolution(top[0], top) if len(top) == 1 else Resolution(None, top)
 
 
-def _find_packs(root: Root) -> Iterable[Path]:
+def _walk(root: Root) -> Iterable[tuple[Path, list[str], bool]]:
+    """Yield (folder, file names, is_pack) down to MAX_DEPTH, never following links, never into a pack."""
     base_depth = len(root.path.parts)
     for current, dirs, files in os.walk(root.path, followlinks=False):
         here = Path(current)
         names = {f.casefold() for f in files}
-        if DEFINITIONS in names or CATALOG in names:
-            dirs[:] = []  # packs do not nest
-            yield here
-            continue
-        if len(here.parts) - base_depth >= MAX_DEPTH:
+        is_pack = DEFINITIONS in names or CATALOG in names
+        yield here, sorted(files), is_pack
+        if is_pack or len(here.parts) - base_depth >= MAX_DEPTH:
             dirs[:] = []
         dirs[:] = sorted(d for d in dirs if d.casefold() not in SKIP_DIRS and not is_link(here / d))
 
 
-def _pack_files(path: Path) -> dict[str, Path]:
+def _known_files(path: Path, names: Iterable[str]) -> dict[str, Path]:
     found = {}
-    for entry in sorted(path.iterdir()):
-        key = entry.name.casefold()
-        if key in (DEFINITIONS, CATALOG, BUNDLE) and entry.is_file() and not entry.is_symlink():
+    for name in names:
+        key = name.casefold()
+        entry = path / name
+        if key in (DEFINITIONS, CATALOG, BUNDLE) and entry.is_file() and not is_link(entry):
             found[key] = entry
     return found
+
+
+def read_licence_terms(path: Path) -> list[str]:
+    try:
+        text = path.read_text(encoding="utf-8-sig", errors="replace")
+    except OSError:
+        return ["unreadable"]
+    terms = [name for name, rx in BLOCKING_TERMS.items() if rx.search(text)]
+    return terms + [name for name, rx in OTHER_TERMS.items() if rx.search(text)]
 
 
 class Index:
@@ -123,24 +231,61 @@ class Index:
         self.roots = [Root(0, "input", input_path.resolve())]
         self.roots += [Root(i, f"search{i}", p.resolve()) for i, p in enumerate(search_paths, start=1)]
         self.packs: list[Pack] = []
+        self.mods: list[Mod] = []
+        self.groups: list[GroupFile] = []
         self.issues: list[Issue] = []
         self._objects: dict[str, list[tuple[Pack, dict]]] = defaultdict(list)
         self._packs_by_name: dict[str, list[Pack]] = defaultdict(list)
+        self._mods_by_ident: dict[str, list[Mod]] = defaultdict(list)
+        self._mod_files: dict[Path, dict[str, list[Path]]] = {}
         seen: set[Path] = set()
         for root in self.roots:
             if not root.path.is_dir():
                 sev = "error" if root.rank == 0 else "warning"
                 self.issues.append(Issue(sev, "root-missing", f"{root.label} folder not found: {root.path}"))
                 continue
-            for path in _find_packs(root):
-                resolved = path.resolve()
-                if resolved in seen:  # e.g. input folder sits inside a search root
+            mods_here: dict[Path, Mod] = {}
+            for folder, files, is_pack in _walk(root):
+                resolved = folder.resolve()
+                if resolved in seen:  # e.g. the input folder sits inside a search root
                     continue
                 seen.add(resolved)
-                self._load(Pack(root, path, _pack_files(path)))
+                lowered = {f.casefold() for f in files}
+                # The input folder counts as a mod even without info.json; a search root (e.g. Mods) never does.
+                if INFO in lowered or (folder == root.path and root.rank == 0):
+                    mods_here[folder] = self._load_mod(root, folder, files)
+                if is_pack:
+                    self._load_pack(root, folder, files, mods_here)
+                if root.rank == 0:  # optional groups apply only from the mod being converted
+                    self._load_groups(root, folder, files)
 
-    def _load(self, pack: Pack) -> None:
-        where = f"{pack.root.label}:{pack.rel or '.'}"
+    # ---- loading ------------------------------------------------------------------------------------------
+
+    def _load_mod(self, root: Root, folder: Path, files: list[str]) -> Mod:
+        ident = folder.name
+        info = next((folder / f for f in files if f.casefold() == INFO), None)
+        if info:
+            try:
+                data = read_json_lenient(info)
+                if isinstance(data, dict) and isinstance(data.get("Id") or data.get("id"), str):
+                    ident = data.get("Id") or data.get("id")
+            except SourceError as e:
+                self.issues.append(Issue("warning", "info-unreadable", str(e)))
+        mod = Mod(root, folder, ident)
+        for f in files:
+            p = folder / f
+            if LICENCE_FILE.match(f) and p.suffix.casefold() in LICENCE_TEXT_SUFFIXES and p.is_file():
+                mod.licences.append({"file": f, "sha256": sha256_file(p), "terms": read_licence_terms(p)})
+        self.mods.append(mod)
+        self._mods_by_ident[ident.casefold()].append(mod)
+        if ident.casefold() != folder.name.casefold():
+            self._mods_by_ident[folder.name.casefold()].append(mod)
+        return mod
+
+    def _load_pack(self, root: Root, folder: Path, files: list[str], mods_here: dict[Path, Mod]) -> None:
+        pack = Pack(root, folder, _known_files(folder, files))
+        pack.mod = next((mods_here[p] for p in [folder, *folder.parents] if p in mods_here), None)
+        where = f"{root.label}:{pack.rel or '.'}"
         try:
             if DEFINITIONS in pack.files:
                 objects = read_json_lenient(pack.files[DEFINITIONS]).get("objects", [])
@@ -149,13 +294,24 @@ class Index:
                 assets = read_json_lenient(pack.files[CATALOG]).get("assets", {})
                 pack.assets = assets if isinstance(assets, dict) else {}
         except (SourceError, AttributeError) as e:
-            sev = "error" if pack.root.rank == 0 else "warning"
+            sev = "error" if root.rank == 0 else "warning"
             self.issues.append(Issue(sev, "pack-unreadable", f"{where}: {e}"))
             return
         self.packs.append(pack)
         self._packs_by_name[pack.name.casefold()].append(pack)
         for obj in pack.objects:
             self._objects[obj["identifier"]].append((pack, obj))
+
+    def _load_groups(self, root: Root, folder: Path, files: list[str]) -> None:
+        for f in files:
+            if not f.casefold().endswith(".json") or f.casefold() in (INFO, DEFINITIONS, CATALOG):
+                continue
+            try:
+                data = read_json_lenient(folder / f)
+            except SourceError:
+                continue  # not every JSON file is ours to understand
+            if isinstance(data, dict) and isinstance(data.get("identifier"), str) and isinstance(data.get("bulkAdds"), list):
+                self.groups.append(GroupFile(root, folder / f, data))
 
     # ---- lookups --------------------------------------------------------------------------------------
 
@@ -170,9 +326,28 @@ class Index:
             return Resolution()
         candidates = self._packs_by_name.get(segments[-1].casefold(), [])
         if len(candidates) > 1 and len(segments) > 1:
-            narrowed = [p for p in candidates if p.mod.casefold() == segments[-2].casefold()]
+            narrowed = [p for p in candidates if p.folder_above.casefold() == segments[-2].casefold()]
             candidates = narrowed or candidates
         return _rank_pick(candidates, lambda p: p.root.rank)
+
+    def find_texture(self, texture_name: str) -> tuple[Resolution, Mod | None]:
+        """Images are named "<mod id>.<file name>"; find the mod, then the file anywhere inside it."""
+        pieces = texture_name.split(".")
+        for i in range(len(pieces) - 1, 0, -1):
+            ident, filename = ".".join(pieces[:i]), ".".join(pieces[i:])
+            mres = _rank_pick(self._mods_by_ident.get(ident.casefold(), []), lambda m: m.root.rank)
+            if mres.hit is None:
+                continue
+            mod = mres.hit
+            if mod.path not in self._mod_files:
+                listing: dict[str, list[Path]] = defaultdict(list)
+                for folder, files, _ in _walk(Root(mod.root.rank, mod.root.label, mod.path)):
+                    for f in files:
+                        listing[f.casefold()].append(folder / f)
+                self._mod_files[mod.path] = listing
+            hits = self._mod_files[mod.path].get(filename.casefold(), [])
+            return (Resolution(hits[0], hits) if len(hits) == 1 else Resolution(None, hits)), mod
+        return Resolution(), None
 
     def objects_of_kind(self, kind: str) -> list[tuple[Pack, dict]]:
         hits = [(p, o) for p in self.packs for o in p.objects if definition(o).get("kind") == kind]
@@ -196,22 +371,21 @@ class Index:
 
 
 def _ambiguous(what: str, res: Resolution) -> str:
-    places = ", ".join(f"{p.root.label}:{p.rel}" for p in (c[0] if isinstance(c, tuple) else c for c in res.candidates))
-    return f"{what} matches more than one pack at the same priority ({places}); remove the duplicate or pass it as the input"
+    places = []
+    for c in res.candidates:
+        item = c[0] if isinstance(c, tuple) else c
+        places.append(f"{item.root.label}:{item.rel}" if hasattr(item, "root") else str(item))
+    return f"{what} matches more than one candidate at the same priority ({', '.join(places)}); remove the duplicate or pass it as the input"
 
 
-def _external_refs(owner: str, component: dict) -> list[dict]:
-    refs = []
-    whistle = component.get("defaultWhistleIdentifier")
-    if isinstance(whistle, str) and whistle:
-        refs.append({"kind": "whistle", "id": whistle, "owner": owner})
-    texture = component.get("textureName")
-    if isinstance(texture, str) and texture:
-        refs.append({"kind": "decal_texture", "id": texture, "owner": owner})
-    return refs
+def _file_record(root: Root, path: Path, role: str, hash_files: bool) -> dict:
+    rec = {"root": root.label, "path": _rel(root, path), "role": role, "bytes": path.stat().st_size}
+    if hash_files:
+        rec["sha256"] = sha256_file(path)
+    return rec
 
 
-def inventory(index: Index, loco_id: str, hash_files: bool = True) -> dict:
+def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | None = None) -> dict:
     """Dependency closure of one steam locomotive, as a deterministic JSON-ready dict."""
     issues: list[Issue] = []
     res = index.find_object(loco_id)
@@ -259,30 +433,59 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True) -> dict:
             issues.append(Issue("error", "missing-truck",
                                 f"truck {truck_id} (used by {vehicle['identifier']}) not found; add the folder of the mod that provides it"))
 
-    parts, external = [], []
+    car_ids = {loco_id} | ({tender_info["id"]} if tender_info else set())
+    groups = sorted((g for g in index.groups if g.target in car_ids), key=lambda g: _rel(g.root, g.path))
+
+    parts, textures, code_mods = [], [], []
+    sounds: set[str] = set()
+    extra: dict[Path, dict] = {}
     kinds: Counter = Counter()
     radial, toggles = [], []
+
+    def follow_textures(owner: str, comps: list[dict], via: str) -> None:
+        for comp in comps:
+            name = comp.get("textureName")
+            if not (isinstance(name, str) and name) or any(x["id"] == name and x["owner"] == owner for x in textures):
+                continue
+            tres, mod = index.find_texture(name)
+            entry = {"id": name, "owner": owner, "via": via, "file": None}
+            if tres.hit:
+                path = tres.hit
+                entry["file"] = {"root": mod.root.label, "path": _rel(mod.root, path)}
+                extra.setdefault(path, _file_record(mod.root, path, "texture", hash_files))
+            elif tres.candidates:
+                issues.append(Issue("warning", "ambiguous-texture", f"{owner}: image {name!r} matches several files in mod {mod.ident}; it will be left out"))
+            else:
+                where = f"mod {mod.ident}" if mod else "any indexed mod"
+                issues.append(Issue("warning", "missing-texture", f"{owner}: image {name!r} not found in {where}; it will be left out"))
+            textures.append(entry)
+
     for vpack, vehicle in vehicles:
         vdef = definition(vehicle)
+        vid = vehicle["identifier"]
         model = vdef.get("modelIdentifier")
-        if isinstance(model, str) and model and vpack.assets and model not in vpack.assets:
-            issues.append(Issue("warning", "model-not-in-catalog", f"{vehicle['identifier']}: model {model!r} is not listed in {vpack.name}/Catalog.json"))
-        is_car = vehicle is loco or (tender_info and vehicle["identifier"] == tender_info["id"])
-        for comp in vdef.get("components", []) or []:
-            if not isinstance(comp, dict):
-                continue
+        if isinstance(model, str) and model and vpack.assets and not vpack.has_model(model):
+            issues.append(Issue("warning", "model-not-in-catalog", f"{vid}: model {model!r} matches no key or prefab in {vpack.name}/Catalog.json"))
+        is_car = vid in car_ids
+        comps = components(vdef)
+        for comp in comps:
+            kind = str(comp.get("kind", "?"))
             if is_car:
-                kinds[str(comp.get("kind", "?"))] += 1
-                if comp.get("kind") == "RadialControl":
-                    radial.append({"owner": vehicle["identifier"], "purpose": comp.get("purpose"), "name": comp.get("name")})
-                elif comp.get("kind") == "ToggleAnimation":
-                    toggles.append({"owner": vehicle["identifier"], "name": comp.get("name")})
-            external += _external_refs(vehicle["identifier"], comp)
-            if comp.get("kind") != "PrefabModelComponent":
+                kinds[kind] += 1
+                if kind == "RadialControl":
+                    radial.append({"owner": vid, "purpose": comp.get("purpose"), "name": comp.get("name")})
+                elif kind == "ToggleAnimation":
+                    toggles.append({"owner": vid, "name": comp.get("name")})
+                if kind in SOUND_KINDS:
+                    sounds.add(kind)
+                if kind in CODE_MOD_KINDS:
+                    provider, evidence = CODE_MOD_KINDS[kind]
+                    code_mods.append({"kind": kind, "provider": provider, "owner": vid, "evidence": evidence})
+            if kind != "PrefabModelComponent":
                 continue
             m = comp.get("model") or {}
             pack_ident, asset_ident = m.get("assetPackIdentifier"), m.get("assetIdentifier")
-            label = f"{vehicle['identifier']}/{comp.get('name')}"
+            label = f"{vid}/{comp.get('name')}"
             if not (isinstance(pack_ident, str) and isinstance(asset_ident, str)):
                 issues.append(Issue("error", "bad-part", f"{label}: PrefabModelComponent without assetPackIdentifier/assetIdentifier"))
                 continue
@@ -295,16 +498,32 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True) -> dict:
                 continue
             ppack = pres.hit
             prefix = [s for s in pack_ident.replace("\\", "/").split("/") if s][:-1]
-            if prefix and ppack.mod.casefold() != prefix[-1].casefold():
+            if prefix and ppack.folder_above.casefold() != prefix[-1].casefold():
                 issues.append(Issue("warning", "pack-folder-mismatch",
-                                    f"{label}: {pack_ident!r} matched pack {ppack.root.label}:{ppack.rel} by name only (its mod folder is {ppack.mod!r})"))
+                                    f"{label}: {pack_ident!r} matched pack {ppack.root.label}:{ppack.rel} by name only (its mod folder is {ppack.folder_above!r})"))
             asset = ppack.assets.get(asset_ident)
             if not isinstance(asset, dict):
                 issues.append(Issue("error", "missing-part-asset", f"{label}: asset {asset_ident!r} not in {ppack.name}/Catalog.json"))
                 continue
             packs[ppack.path] = ppack
-            parts.append({"owner": vehicle["identifier"], "component": comp.get("name"), "pack": ppack.name,
+            parts.append({"owner": vid, "component": comp.get("name"), "pack": ppack.name,
                           "asset": asset_ident, "filename": asset.get("filename"), "enabled": comp.get("enabled", True)})
+        if is_car:
+            follow_textures(vid, comps, "definition")
+
+    group_records = []
+    for g in groups:
+        extra.setdefault(g.path, _file_record(g.root, g.path, "component-group", hash_files))
+        follow_textures(g.target, [c for c in g.data.get("bulkAdds", []) if isinstance(c, dict)], f"group {g.data.get('GroupID')}")
+        group_records.append(g.describe())
+    if group_records:
+        issues.append(Issue("info", "optional-groups", f"{len(group_records)} optional component group(s) to choose from: "
+                            + ", ".join(str(g["group_name"]) for g in group_records)))
+    for provider in sorted({c["provider"] for c in code_mods}):
+        used = sorted({f"{c['owner']}:{c['kind']}" for c in code_mods if c["provider"] == provider})
+        issues.append(Issue("warning", "code-mod-component",
+                            f"uses {provider} ({', '.join(used)}): Railroader's figures for this loco depend on that mod; "
+                            "the Derail Valley simulation must be set deliberately (guide E02)"))
 
     ordered = sorted(packs.values(), key=lambda p: (p.root.rank, p.rel))
     pack_records = []
@@ -321,21 +540,65 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True) -> dict:
                 files.append(entry)
         pack_records.append({**p.describe(), "files": files})
 
-    unique_external = sorted({(r["kind"], r["id"], r["owner"]) for r in external})
-    result = {
+    # Licences of every mod whose files the conversion reads. Converting opens and rebuilds pack bundles, so
+    # terms against reverse engineering or modification block it until the user accepts that licence file.
+    involved: dict[Path, Mod] = {}
+    for p in ordered:
+        if p.mod:
+            involved[p.mod.path] = p.mod
+    for path, rec in extra.items():
+        owner = max((m for m in index.mods if m.root.label == rec["root"] and path.is_relative_to(m.path)),
+                    key=lambda m: len(m.path.parts), default=None)
+        if owner:
+            involved[owner.path] = owner
+    mod_records = []
+    for mod in sorted(involved.values(), key=lambda m: (m.root.rank, m.rel)):
+        mod_records.append(mod.describe())
+        opens_bundles = any(p.mod is mod for p in ordered)
+        for lic in mod.licences:
+            blocking_terms = [t for t in lic["terms"] if t in BLOCKING_TERMS]
+            if blocking_terms and opens_bundles:
+                issues.append(Issue("error", "licence-restricts-conversion",
+                                    f"mod {mod.ident}: {lic['file']} forbids {' and '.join(t.replace('no-', '').replace('-', ' ') for t in blocking_terms)}; "
+                                    f"converting opens its bundles. Read it; if you have the author's permission, accept it with "
+                                    f"--accept-licence {lic['sha256'][:16]}",
+                                    {"mod": mod.ident, "file": lic["file"], "sha256": lic["sha256"]}))
+            elif lic["terms"]:
+                issues.append(Issue("info", "licence-terms", f"mod {mod.ident}: {lic['file']} says {', '.join(lic['terms'])}; "
+                                    "the converted pack is for personal use"))
+
+    audio_choice = audio_basis(ldef, audio)
+    audio_choice["replaces"] = sorted(sounds)
+    if audio_choice["basis"] is None:
+        issues.append(Issue("error", "needs-answer", f"{loco_id}: {audio_choice['rule']}; choose the vanilla sound set with --audio S060 (small boiler) or --audio S282 (big boiler)"))
+    return {
         "schema": 1,
         "locomotive": {"id": loco_id, "name": (loco.get("metadata") or {}).get("name"), "pack": loco_pack.describe()},
         "tender": tender_info,
         "trucks": trucks,
         "parts": parts,
         "packs": pack_records,
-        "external_refs": [{"kind": k, "id": i, "owner": o} for k, i, o in unique_external],
+        "extra_files": sorted(extra.values(), key=lambda r: (r["root"], r["path"])),
+        "mods": mod_records,
+        "optional_groups": group_records,
+        "textures": textures,
+        "code_mods": code_mods,
+        "audio": {"source": "vanilla Derail Valley", **audio_choice},
         "controls": {"radial": radial, "toggles": toggles},
         "component_kinds": dict(sorted(kinds.items())),
         "issues": list({(i.severity, i.code, i.message): i.as_dict() for i in issues}.values()),
     }
-    return result
 
 
-def blocking(inv: dict) -> list[dict]:
-    return [i for i in inv.get("issues", []) if i["severity"] == "error"]
+def blocking(inv: dict, accepted_licences: Iterable[str] = ()) -> list[dict]:
+    """Errors that stop a conversion. A licence error clears only when that exact licence file (by SHA-256
+    prefix of at least 12 hex digits) was accepted."""
+    prefixes = [a.lower() for a in accepted_licences if len(a) >= 12]
+    out = []
+    for i in inv.get("issues", []):
+        if i["severity"] != "error":
+            continue
+        if i["code"] == "licence-restricts-conversion" and any(i["data"]["sha256"].startswith(p) for p in prefixes):
+            continue
+        out.append(i)
+    return out

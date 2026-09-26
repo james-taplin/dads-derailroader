@@ -76,11 +76,16 @@ def cmd_scan(args) -> int:
               f"parts: {len(inv['parts'])}; packs: {', '.join(p['name'] for p in inv['packs'])}")
         purposes = sorted({c['purpose'] for c in inv['controls']['radial'] if c.get('purpose')})
         print(f"  controls: {', '.join(purposes) or 'none'}; toggles: {len(inv['controls']['toggles'])}")
-        refs: dict = {}
-        for ref in inv["external_refs"]:
-            refs.setdefault((ref["kind"], ref["id"]), []).append(ref["owner"])
-        for (kind, ident), owners in refs.items():
-            print(f"  external {kind}: {ident} (used by {', '.join(owners)}; not in the mod, substituted or left out later)")
+        for mod in inv["mods"]:
+            lic = "; ".join(f"{l['file']} ({', '.join(l['terms']) or 'no restrictive terms found'})" for l in mod["licences"])
+            print(f"  mod {mod['id']}: {lic or 'no licence file found'}")
+        for g in inv["optional_groups"]:
+            print(f"  optional group for {g['target']}: {g['group_name']} ({g['file']['path']})")
+        found = sum(1 for tex in inv["textures"] if tex["file"])
+        if inv["textures"]:
+            print(f"  images: {found} of {len(inv['textures'])} found")
+        audio = inv["audio"]
+        print(f"  sounds: vanilla {audio['basis'] or '(choose S060 or S282)'} - {audio['rule']}")
         for issue in inv["issues"]:
             print(f"  [{MARK[issue['severity']]}] {issue['message']}")
     if args.json:
@@ -92,7 +97,8 @@ def cmd_scan(args) -> int:
 
 def cmd_convert(args) -> int:
     machine = machine_mod.load(args.machine)
-    outcome = convert(Path(args.input), Path(args.out), machine, args.loco, _search_roots(args, machine))
+    outcome = convert(Path(args.input), Path(args.out), machine, args.loco, _search_roots(args, machine),
+                      args.accept_licence, args.audio)
     run = outcome.run
     if run:
         for name, stage in run.record["stages"].items():
@@ -126,6 +132,11 @@ def build_parser() -> argparse.ArgumentParser:
     conv.add_argument("input", help="Railroader mod folder or .zip (never modified)")
     conv.add_argument("--out", required=True, help="folder to put the finished Derail Valley pack in")
     conv.add_argument("--loco", help="locomotive identifier, when the mod has more than one")
+    conv.add_argument("--audio", choices=["S060", "S282"],
+                      help="vanilla Derail Valley sound set to use instead of the boiler-size rule")
+    conv.add_argument("--accept-licence", action="append", default=[], metavar="SHA256",
+                      help="convert despite a licence clause against modification, after reading that licence file "
+                           "(first 16+ hex digits of its SHA-256, as printed by scan); repeatable")
     with_search(conv)
     conv.set_defaults(func=cmd_convert)
     return parser

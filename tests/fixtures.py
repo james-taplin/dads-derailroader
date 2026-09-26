@@ -28,7 +28,8 @@ def part(pack_identifier: str, asset: str, name: str) -> dict:
             "parent": None, "enabled": True}
 
 
-def loco(ident: str, tender: str = "", truck: str = "", parts=(), kind: str = "SteamLocomotive", whistle: str | None = "wh-test") -> dict:
+def loco(ident: str, tender: str = "", truck: str = "", parts=(), kind: str = "SteamLocomotive", whistle: str | None = "wh-test",
+         heating_surface: float | None = 1500.0, extra_components=()) -> dict:
     components = [
         {"kind": "RadialControl", "purpose": "Throttle", "name": "Throttle", "animation": {"clipName": "Throttle"}},
         {"kind": "RadialControl", "purpose": "Reverser", "name": "Reverser", "animation": {"clipName": "Reverser"}},
@@ -37,9 +38,12 @@ def loco(ident: str, tender: str = "", truck: str = "", parts=(), kind: str = "S
     ]
     if whistle:
         components.append({"kind": "Whistle", "defaultWhistleIdentifier": whistle, "name": "Whistle"})
-    return {"identifier": ident, "metadata": {"name": f"Test {ident}"},
-            "definition": {"kind": kind, "archetype": "LocomotiveSteam", "modelIdentifier": ident,
-                           "tenderIdentifier": tender, "truckIdentifier": truck, "components": components}}
+    components += list(extra_components)
+    d = {"kind": kind, "archetype": "LocomotiveSteam", "modelIdentifier": ident,
+         "tenderIdentifier": tender, "truckIdentifier": truck, "components": components}
+    if heating_surface is not None:
+        d["totalHeatingSurface"] = heating_surface
+    return {"identifier": ident, "metadata": {"name": f"Test {ident}"}, "definition": d}
 
 
 def tender(ident: str, truck: str = "") -> dict:

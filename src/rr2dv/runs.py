@@ -81,17 +81,27 @@ def stage_inputs(run: Run, inventory: dict, index) -> dict:
     """Copy every file of every required pack into run/inputs and check each copy against the hash taken
     during `link`. A mismatch means the source changed underneath us; the run stops."""
     by_key = {(p.root.label, p.rel): p for p in index.packs}
+    roots = {r.label: r.path for r in index.roots}
     staged = []
+
+    def copy_checked(src: Path, target: Path, expected: str, label: str) -> None:
+        shutil.copyfile(src, target)
+        actual = sha256_file(target)
+        if actual != expected:
+            raise RuntimeError(f"{src} changed while it was being copied (hash {actual[:12]} != {expected[:12]}); rerun when nothing else is writing to the mod")
+        staged.append({"pack": label, "file": target.relative_to(run.path).as_posix(), "sha256": actual})
+
     for rec in inventory["packs"]:
         pack = by_key[(rec["root"], rec["path"])]
         dest = run.path / "inputs" / rec["root"] / (rec["path"] or pack.name)
         dest.mkdir(parents=True, exist_ok=False)
         for f in rec["files"]:
             src = next(p for p in pack.files.values() if p.name == f["name"])
-            target = dest / f["name"]
-            shutil.copyfile(src, target)
-            actual = sha256_file(target)
-            if actual != f["sha256"]:
-                raise RuntimeError(f"{src} changed while it was being copied (hash {actual[:12]} != {f['sha256'][:12]}); rerun when nothing else is writing to the mod")
-            staged.append({"pack": rec["name"], "file": target.relative_to(run.path).as_posix(), "sha256": actual})
+            copy_checked(src, dest / f["name"], f["sha256"], rec["name"])
+    for rec in inventory.get("extra_files", []):  # optional component groups, images
+        target = run.path / "inputs" / rec["root"] / rec["path"]
+        if target.exists():
+            raise RuntimeError(f"two inputs map to {target}")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        copy_checked(roots[rec["root"]] / rec["path"], target, rec["sha256"], rec["role"])
     return {"files": staged}

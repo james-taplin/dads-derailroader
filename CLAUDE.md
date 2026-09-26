@@ -53,6 +53,21 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
 - Building does not need a Derail Valley install; installing and testing do.
 - Duplicate identifiers or pack names at the same search priority are errors, never a first match (D03). The input mod
   outranks search roots.
+- **No audio conversion (James, W5).** Every sound (whistle, bell, chuff, pumps, dynamo) aliases to vanilla Derail Valley
+  S060 or S282 audio by boiler size: `totalHeatingSurface` < 2,000 ft2 = S060, otherwise S282 (`rrmod.audio_basis`).
+  `--audio` overrides; a definition without heating surface needs that answer. Never extract Railroader audio.
+- `modelIdentifier` may name a catalogue key or a prefab file (GN M-2: model `gn-m2t`, key `gn-m2t-2680`).
+- Optional component-group files (`identifier` + `bulkAdds`, from the mod being converted) are choices for the user;
+  their images are named `<mod id>.<file>` and are looked up inside that mod.
+
+## Licences
+
+- Many Railroader mods forbid redistribution, and some forbid opening, decompiling or modifying their files (e.g. both
+  legotrainman mods). `rrmod` reads licence/readme files of every mod whose files a conversion uses; a clause against
+  reverse engineering or modification blocks until the user accepts that exact file (`--accept-licence <sha256 prefix>`).
+- Never open, decompile or inspect code mods (DLLs) or bundles of mods we only depend on. Learn formats from the data
+  files of the mod being converted and from our guides. Uploaded test mods stay in the session container, never in git.
+- Converted packs contain the original authors' work: personal use unless the author agrees otherwise.
 
 ## Safety rules for the app
 

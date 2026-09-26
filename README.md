@@ -33,4 +33,11 @@ Settings live in `%APPDATA%\rr2dv\machine.json` (or pass `--machine`). It uses t
 `workRoot` and `searchRoots`. With `railroader` set, its `Mods` folder and base-game asset packs are searched for
 dependencies such as trucks from other mods.
 
+Sounds are never converted: every converted loco uses vanilla Derail Valley S060 sounds (small boiler, under
+2,000 ft² heating surface) or S282 sounds (big boiler). `--audio S060|S282` overrides the rule.
+
+Mod licences are read before converting. If a mod you convert (or one whose files it needs) forbids opening or modifying
+its files, the conversion stops until you accept that licence with `--accept-licence`. Converted packs contain the
+original authors' work and are for your own use unless they agree otherwise.
+
 The Claude ⇄ Codex chat bridge lives on the `claude/llm-chat-bridge` branch.

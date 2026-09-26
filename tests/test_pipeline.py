@@ -39,7 +39,7 @@ class Pipeline(unittest.TestCase):
         self.assertEqual([stages[s] for s in ("locate", "link", "stage", "extract", "build")],
                          ["done", "done", "done", "not_available", "pending"])
         self.assertEqual(read_json(run.file)["status"], "incomplete")
-        self.assertEqual(run.record["answers"], {"locomotive": "ts-260-a"})
+        self.assertEqual((run.record["answers"]["locomotive"], run.record["answers"]["audio"]["basis"]), ("ts-260-a", "S060"))
         staged = read_json(run.path / "staged.json")["files"]
         self.assertEqual(len(staged), 8)  # 3 loco pack + 2 parts pack + 3 truck pack
         for f in staged:

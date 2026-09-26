@@ -55,7 +55,7 @@ def choose_locomotive(index: Index, requested: str | None) -> tuple[str | None, 
 
 
 def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None = None,
-            search: Sequence[Path] = ()) -> Outcome:
+            search: Sequence[Path] = (), accept_licences: Sequence[str] = (), audio: str | None = None) -> Outcome:
     input_path = input_path.resolve()
     out_dir = out_dir.resolve()
     kind = input_kind(input_path)
@@ -66,12 +66,12 @@ def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None 
     check_write_target(out_dir, guard + [("app work folder", work_root)])
 
     request = {"input": str(input_path), "input_kind": kind, "locomotive": loco, "output": str(out_dir),
-               "search_roots": [str(p) for p in search]}
+               "search_roots": [str(p) for p in search], "accepted_licences": list(accept_licences), "audio": audio}
     if kind == "zip":
         request["input_sha256"] = sha256_file(input_path)
     run = Run.create(work_root, loco or input_path.stem, request)
     try:
-        return _stages(run, input_path, kind, loco, search)
+        return _stages(run, input_path, kind, loco, search, accept_licences, audio)
     except Exception as e:  # record the failure on the run, then let the caller report it
         current = next((n for n, s in run.record["stages"].items() if s["status"] == "running"), None)
         message = f"{type(e).__name__}: {e}"
@@ -81,7 +81,8 @@ def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None 
         raise
 
 
-def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Sequence[Path]) -> Outcome:
+def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Sequence[Path],
+            accept_licences: Sequence[str], audio: str | None) -> Outcome:
     def fail(stage: str, message: str, code: int = EXIT_FAILED) -> Outcome:
         run.finish(stage, "failed", message)
         run.close("failed", message)
@@ -104,9 +105,13 @@ def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Seq
     run.finish("locate", "done", f"{chosen} ({len(index.packs)} packs indexed)")
 
     run.begin("link")
-    inv = inventory(index, chosen)
+    inv = inventory(index, chosen, audio=audio)
     write_json(run.path / "inventory.json", inv)
-    errors = blocking(inv)
+    errors = blocking(inv, accept_licences)
+    accepted = [i["data"] for i in inv["issues"] if i["code"] == "licence-restricts-conversion" and i not in errors]
+    if accepted:
+        run.record["answers"]["accepted_licences"] = accepted
+    run.record["answers"]["audio"] = inv["audio"]
     if errors:
         return fail("link", f"{len(errors)} blocking issue(s): " + "; ".join(e["message"] for e in errors))
     run.record["input_fingerprint"] = fingerprint(inv)
