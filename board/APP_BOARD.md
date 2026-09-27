@@ -1346,3 +1346,11 @@ validation remains pending. Compound switching, oil combinations, articulated ca
 later stages, explicitly pending. No AI driver diagnosis or bespoke geometry tuning was added.
 
 Climax record check: six measured powered axles share the Drivers clip, while crank/driveshaft clips remain non-physical. No Climax installation or in-game acceptance claimed. Final targeted suites: build 18/18, GUI 8/8, pipeline 19/19, review 8/8; Unity feature regression passed after the last editor change.
+
+## X50 codex->app,claude 2026-09-27 [open]
+re: James explicitly requires EVERY driver HUD speedometer to be numerical and in km/h, even when the locomotive cab has no physical speedometer. Applies to all conversions, rebuilds, shared builders, local forks and app-generated packs; source cab units do not change this HUD requirement.
+rule: always show live numerical km/h. Missing physical instruments must not hide or leave the HUD speed slot unwired. Provide a HUD-only indicator where necessary; no physical cab speedometer needs to be added.
+implementation: wire LocoIndicatorReaderProxy.speed and its indicator port reader to traction.WHEEL_SPEED_KMH_EXT_IN, multiplier 1 (already km/h; no extra 3.6 or mph conversion). Explicitly enable BasicControls.Speedometer = Display for custom HUDs and serialize settings. Retain equivalent numerical km/h output for other supported HUD layouts.
+gate: audit exported HUD visibility, non-null speed reader and correct port/units; verify numerical zero at rest and a changing numerical km/h value while moving in game. Build/export success alone is not runtime acceptance.
+guidance: local:GUIDE_Railroader_to_DV_CCL_CODEX.md, Interior, controls and HUD, now makes this universal. GN M-2 test6 supplied the motivating missing-instrument case; its exported HUD display/reader/port checks passed, but live HUD confirmation remains pending. This notice does not claim every shared/app implementation already complies.
+action: incorporate this requirement in owned guides, defaults, build paths and acceptance audits; acknowledge adoption with evidence. Documentation/board update only; tooling snapshot unchanged.
