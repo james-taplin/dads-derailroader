@@ -1,9 +1,11 @@
 """One folder per conversion run, holding every input copy, record and log. Runs are never reused."""
 from __future__ import annotations
 
+import platform
 import re
 import secrets
 import shutil
+import sys
 import time
 from pathlib import Path
 from typing import Callable
@@ -52,6 +54,17 @@ class Run:
         if self.listener:
             self.listener(stage, status, detail)
 
+    def log(self, text: str) -> None:
+        """Append to run.log, the run's readable diary: stages, findings, answers and any error's full traceback.
+        Never lets a logging problem stop the run."""
+        stamp = time.strftime("%H:%M:%S")
+        lines = str(text).rstrip("\n").split("\n")
+        try:
+            with open(self.path / "run.log", "a", encoding="utf-8") as f:
+                f.write(f"{stamp}  {lines[0]}\n" + "".join(f"          {line}\n" for line in lines[1:]))
+        except OSError:
+            pass
+
     @classmethod
     def create(cls, work_root: Path, label: str, request: dict) -> "Run":
         work_root.mkdir(parents=True, exist_ok=True)
@@ -69,6 +82,8 @@ class Run:
             "stages": {name: {"status": "pending"} for name in STAGE_NAMES},
         }
         run.save()
+        run.log(f"rr2dv {__version__} run {run_id}, started {_now()}\n"
+                f"Python {sys.version.split()[0]} on {platform.platform()}")
         return run
 
     def save(self) -> None:
@@ -77,17 +92,20 @@ class Run:
     def begin(self, stage: str) -> None:
         self.record["stages"][stage] = {"status": "running", "started": _now()}
         self.save()
+        self.log(f"[{stage}] started")
         self._notify(stage, "running")
 
     def finish(self, stage: str, status: str, detail: str = "", **extra) -> None:
         entry = self.record["stages"][stage]
         entry.update(status=status, finished=_now(), detail=detail, **extra)
         self.save()
+        self.log(f"[{stage}] {status}" + (f": {detail}" if detail else ""))
         self._notify(stage, status, detail)
 
     def close(self, status: str, detail: str = "") -> None:
         self.record.update(status=status, finished=_now(), detail=detail)
         self.save()
+        self.log(f"run {status}" + (f": {detail}" if detail else ""))
         self._notify(None, status, detail)
 
 

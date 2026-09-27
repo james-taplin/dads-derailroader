@@ -98,6 +98,10 @@ review item and how to resolve each one.** The tool cannot yet ask you questions
 give your answers when you start (the app's Options, or `--loco`, `--livery`, `--audio`, `--wheel-radius`) and
 convert again after fixing a block. Reruns are safe and reuse the cached AssetRipper exports.
 
+For diagnosis, every run writes a readable **`run.log`** in its run folder (settings and installs used, every stage,
+every issue, what AssetRipper and Unity reported, review items, and the full traceback of any unexpected error), and
+the app and command line keep **`%LOCALAPPDATA%\rr2dv\logs\rr2dv.log`** for everything outside a run.
+
 ## Rules the tool follows
 
 - **Sounds are never converted.** Every loco uses vanilla Derail Valley sounds: S060 for a small boiler (under

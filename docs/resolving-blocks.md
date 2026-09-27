@@ -10,6 +10,18 @@ cached, so a rerun skips the slowest step. Your answers are saved in the run, so
 
 ## First: where to look
 
+Start with the logs:
+
+- **`run.log`** in the run folder (the app's **Open run folder**, or the path printed at the end of `convert`): the whole
+  run in order, readable. It records the settings, tools and game installs used; your answers; every stage as it
+  starts and ends; every issue found; what AssetRipper and Unity reported; the review items; and, if something
+  unexpected went wrong, the full error traceback. **This is the file to send when asking for help.**
+- **The app log**, `%LOCALAPPDATA%\rr2dv\logs\rr2dv.log` (**Settings… → Open app log**): what happens outside a
+  run, from the app and the command line: commands, games found or not, mods listed, and every unexpected error with
+  its traceback. It keeps the last five files of 1 MB.
+
+Then:
+
 | Where | What it tells you |
 |---|---|
 | The app's **Checks** list (or `rr2dv scan "Mod"`) | problems found before converting: red ✗ blocks, amber ! is a warning, i is information |
@@ -21,7 +33,8 @@ Inside a run folder:
 
 | File | Look here for |
 |---|---|
-| `run.json` | every stage's status and message, and your answers |
+| `run.log` | the readable diary of the run (above) |
+| `run.json` | every stage's status and message, and your answers (machine-readable) |
 | `inventory.json` | the `issues` list: every error, warning and note, with a code |
 | `index_issues.json` | problems reading other mods while searching (usually harmless) |
 | `import/clips-*.json`, `import/clips-*-bindings.json` | animation paths that could not be matched, and why |
@@ -110,5 +123,6 @@ pack can be accepted. Each item says what is missing and where its evidence is.
 
 ## Still stuck?
 
-Post on the app board (`board/APP_BOARD.md`) with the run folder name, the stage and the exact message. The run
-folder has everything needed to look into it; nothing in it is shared unless you share it.
+Post on the app board (`board/APP_BOARD.md`) with the run folder name, the stage, the exact message and the relevant
+part of `run.log` (or `rr2dv.log` if no run was started). The run folder has everything needed to look into it;
+nothing in it is shared unless you share it.

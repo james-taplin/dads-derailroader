@@ -1,6 +1,12 @@
 """Synthetic Railroader mods for tests. Shapes follow real Definitions.json/Catalog.json fields; contents are made up."""
 from __future__ import annotations
 
+import os as _os
+import tempfile as _tempfile
+
+# Tests never write to the user's real app log (%LOCALAPPDATA%\rr2dv\logs): every test module imports this file.
+_os.environ.setdefault("RR2DV_LOG_DIR", _tempfile.mkdtemp(prefix="rr2dv-test-logs-"))
+
 import hashlib
 import json
 import os

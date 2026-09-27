@@ -19,7 +19,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from tkinter import font as tkfont
 
-from . import __version__, consent
+from . import __version__, applog, consent
 from .appmodel import SETTINGS, Controller
 from .runs import STAGES
 
@@ -84,7 +84,8 @@ class Worker:
             try:
                 result = job()
                 self.inbox.put(("done", name, result, done))
-            except Exception as e:  # shown to the user, never swallowed
+            except Exception as e:  # shown to the user, never swallowed, and kept with its traceback
+                applog.get().error("%s failed:\n%s", name, traceback.format_exc())
                 self.inbox.put(("error", name, (e, traceback.format_exc()), done))
         threading.Thread(target=body, daemon=True).start()
         return True
@@ -275,7 +276,9 @@ class App:
                     self._set_busy(False)
                     if name == "Conversion":
                         self.summary.configure(text=f"Stopped: {error}", foreground=COLOURS["fail"])
-                    messagebox.showerror(APP_NAME, f"{name} failed:\n\n{error}", parent=self.root)
+                    where = f"\n\nRun log: {self.last_run / 'run.log'}" if name == "Conversion" and self.last_run else ""
+                    messagebox.showerror(APP_NAME, f"{name} failed:\n\n{error}{where}\n\nApp log: {applog.log_file()}",
+                                         parent=self.root)
                 elif kind == "progress":
                     stage, status, detail = rest
                     self._stage(stage, status, detail)
@@ -307,6 +310,11 @@ class App:
 
     def _show_installs(self, found) -> None:
         self.installs = found
+        log = applog.get()
+        log.info("games: Railroader %s; Derail Valley %s; CCL %s", found.railroader and found.railroader.root,
+                 found.derail_valley and found.derail_valley.root, found.ccl)
+        for key, why in found.problems.items():
+            log.warning("%s: %s", key, why)
         missing = self.c.tools_missing()
         states = {"railroader": "ok" if found.railroader else "fail", "derail_valley": "ok" if found.derail_valley else "fail",
                   "ccl": "ok" if found.ccl else "fail", "tools": "warn" if missing else "ok"}
@@ -329,6 +337,7 @@ class App:
 
     def _show_mods(self, mods) -> None:
         self.mods = mods
+        applog.get().info("mods: %d with steam locomotives", len(mods))
         self._fill_mods()
         count = sum(len(m.locos) for m in mods)
         self.mods_status.configure(text=f"{len(mods)} mods, {count} steam locomotives")
@@ -428,6 +437,7 @@ class App:
             answer["event"].wait()
             return answer["value"]
 
+        applog.get().info("converting %s from %s (livery %s, audio %s, wheel radius %s)", ident, folder, livery, audio, wheel_radius)
         started = self.worker.run("Conversion", lambda: self.c.convert(folder, ident, livery, audio, wheel_radius, progress, ask),
                                   self._converted)
         if started:
@@ -443,7 +453,10 @@ class App:
 
     def _converted(self, outcome) -> None:
         self._set_busy(False)
+        applog.get().info("conversion finished (exit %s): %s; run %s", outcome.code, outcome.message,
+                          outcome.run and outcome.run.path)
         if outcome.run:
+            self._log(f"Full log: {outcome.run.path / 'run.log'}")
             self.last_run = outcome.run.path
             self.open_run.configure(state="normal")
             has_record = (outcome.run.path / "record" / "vehicle-record.json").is_file()
@@ -501,6 +514,8 @@ class SettingsDialog:
         self.checks.grid(row=len(SETTINGS) + 1, column=0, columnspan=3, sticky="we", pady=(12, 0))
         buttons = ttk.Frame(frame)
         buttons.grid(row=len(SETTINGS) + 2, column=0, columnspan=3, sticky="e", pady=(12, 0))
+        ttk.Button(buttons, text="Open app log", command=lambda: applog.log_file().is_file() and open_path(applog.log_file())
+                   ).pack(side="left", padx=4)
         ttk.Button(buttons, text="Check", command=self._check).pack(side="left", padx=4)
         ttk.Button(buttons, text="Save", command=self._save).pack(side="left", padx=4)
         ttk.Button(buttons, text="Close", command=top.destroy).pack(side="left", padx=4)

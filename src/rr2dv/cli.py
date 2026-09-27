@@ -7,7 +7,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from . import __version__, installs, machine as machine_mod
+from . import __version__, applog, installs, machine as machine_mod
 from .consent import ConsentError
 from .appmodel import scan_report
 from .jsonio import write_json
@@ -108,7 +108,7 @@ def cmd_convert(args) -> int:
         for name, stage in run.record["stages"].items():
             if stage["status"] != "pending":
                 print(f"  {name:8} {stage['status']:13} {stage.get('detail', '')}")
-        print(f"\nRun folder: {run.path}")
+        print(f"\nRun folder: {run.path}\nRun log:    {run.path / 'run.log'}")
     print(outcome.message)
     return outcome.code
 
@@ -150,11 +150,20 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
+    log = applog.get()
+    log.info("command: rr2dv %s", " ".join(argv if argv is not None else sys.argv[1:]))
     try:
-        return args.func(args)
+        code = args.func(args)
+        log.info("command finished with exit code %s", code)
+        return code
     except (UnsafePath, FileNotFoundError, FileExistsError, ValueError, OSError, RuntimeError,
             installs.InstallError, InstallRefused, ConsentError) as e:
+        log.warning("stopped: %s", e, exc_info=True)
         print(f"error: {e}", file=sys.stderr)
+        return EXIT_FAILED
+    except Exception as e:  # a bug: keep the traceback for diagnosis, tell the user where it is
+        log.exception("unexpected error")
+        print(f"unexpected error: {type(e).__name__}: {e}\nDetails (with traceback): {applog.log_file()}", file=sys.stderr)
         return EXIT_FAILED
 
 

@@ -8,6 +8,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import traceback
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
@@ -92,11 +93,19 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
                "search_roots": [str(p) for p in roots], "audio": audio, "livery": livery, "wheel_radius": wheel_radius}
     run = Run.create(work_root, loco or input_path.name, request)
     run.listener = on_progress
+    tools = {k: machine.values.get(k) for k in ("unity", "carCreator", "assetRipper", "python", "workRoot")}
+    run.log("settings: " + (str(machine.source) if machine.source else "none (defaults)") + "\n"
+            + "\n".join(f"{k}: {v or '(not set)'}" for k, v in tools.items()) + "\n"
+            + f"Railroader: {rr.root} ({rr.source})\nDerail Valley: {dv.root} ({dv.source}), Mods {dv.mods}\n"
+            + f"input: {input_path}\nlocomotive: {loco or '(one in the mod)'}; livery: {livery or '(default)'}; "
+            + f"audio: {audio or '(boiler-size rule)'}; wheel radius: {wheel_radius or '(pending)'}\n"
+            + "search: " + ", ".join(str(r) for r in roots))
     try:
         return _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius)
     except Exception as e:  # record the failure on the run, then let the caller report it
         current = next((n for n, s in run.record["stages"].items() if s["status"] == "running"), None)
         message = f"{type(e).__name__}: {e}"
+        run.log("unexpected error:\n" + traceback.format_exc())
         if current:
             run.finish(current, "failed", message)
         run.close("failed", message)
@@ -152,6 +161,8 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     run.record["answers"]["audio"] = inv["audio"]
     if errors:
         return fail("link", f"{len(errors)} blocking issue(s): " + "; ".join(e["message"] for e in errors))
+    for issue in inv["issues"]:
+        run.log(f"  {issue['severity']:7} {issue['code']}: {issue['message']}")
     run.record["input_fingerprint"] = fingerprint(inv)
     warnings = [i for i in inv["issues"] if i["severity"] == "warning"]
     run.finish("link", "done", f"{len(inv['packs'])} packs, {len(inv['parts'])} parts, {len(warnings)} warning(s)")
@@ -165,6 +176,8 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     exports = extract(run, inv, machine)
     write_json(run.path / "exports.json", exports)
     reused = sum(1 for e in exports.values() if e["cached"])
+    for key, e in exports.items():
+        run.log(f"  {key}: {'cached' if e['cached'] else 'exported'} -> {e['path']}")
     run.finish("extract", "done", f"{len(exports)} bundle(s) exported ({reused} reused from cache)")
 
     run.begin("import")
@@ -182,6 +195,11 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     if result.get("status") not in ("passed", "problems"):
         return fail("probe", f"Unity probe failed: {result.get('error') or result}")
     problems = result.get("problems", 0)
+    run.log("  Unity result: " + json.dumps(result, sort_keys=True))
+    probe_file = run.path / "probe" / "probe.json"
+    if probe_file.exists():
+        for line in (read_json(probe_file).get("problems") or [])[:50]:
+            run.log(f"  probe problem: {line}")
     run.finish("probe", "done", f"{len(probe_in['vehicles'])} vehicle(s) measured; {problems} problem(s) to review"
                                 + (" (see probe/probe.json)" if problems else ""))
 
@@ -195,6 +213,11 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     draft = record.draft(run.path, inv, probe_in, probe_out, run.record["answers"])
     write_json(run.path / "record" / "vehicle-record.json", draft)
     pending = draft["metadata"]["pending"]
+    for item in pending:
+        run.log(f"  review: {item}")
+    for w in draft["metadata"].get("wheelCandidates", []):
+        run.log(f"  wheel {w.get('clip')}: tread {w.get('tread')} ({w.get('confidence')}), flange {w.get('flangeRadius')}, "
+                f"source {w.get('sourceRadius')}; notes: {'; '.join(w.get('notes') or []) or 'none'}")
     run.finish("record", "done", f"draft vehicle record with {len(pending)} item(s) pending review (record/vehicle-record.json)")
 
     for name, description, available in STAGES[7:]:
