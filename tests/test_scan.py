@@ -91,7 +91,23 @@ class Scan(unittest.TestCase):
         (self.m["mod"] / "parts" / "Catalog.json").write_text('{"assets": {}}')
         (self.m["mod"] / "ts-260-a" / "bundle").unlink()
         inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
-        self.assertEqual(codes(inv), ["missing-bundle", "missing-part-asset", "truck-replaced"])
+        self.assertEqual(codes(inv), ["left-out", "missing-bundle", "truck-replaced"])
+        self.assertEqual([i["code"] for i in blocking(inv)], ["missing-bundle"])
+        self.assertEqual(inv["left_out"][0]["asset"], "bell")
+        self.assertIn("broken in the source mod", inv["left_out"][0]["reason"])
+        self.assertNotIn("parts", [p["name"] for p in inv["packs"]])
+
+    def test_empty_asset_reference_is_left_out_with_its_anchored_components(self):
+        bad = part("Test Loco Mod\\parts", "", "PrefabModelComponent 12")
+        lamp = {"kind": "Headlight", "name": "lamp", "parent": {"path": ["PrefabModelComponent 12", "glass"]}}
+        (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [
+            loco("ts-260-a", tender="tt-260-a", parts=[part("Test Loco Mod\\parts", "bell", "bell1"), bad], extra_components=[lamp]),
+            tender("tt-260-a", truck="test-truck-2s")]}))
+        inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
+        self.assertEqual(blocking(inv), [])
+        self.assertEqual([p["asset"] for p in inv["parts"]], ["bell"])
+        self.assertEqual((inv["left_out"][0]["asset"], inv["left_out"][0]["anchored"]), ("", ["lamp"]))
+        self.assertIn("loses its anchor: lamp", inv["left_out"][0]["effect"])
 
     def test_broken_unrelated_pack_is_only_a_warning(self):
         # X24: one bad Catalog.json elsewhere in the catalogue must not stop every loco.

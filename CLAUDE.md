@@ -59,7 +59,8 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
   S060 or S282 audio by boiler size: `totalHeatingSurface` < 1,500 ft2 = S060, otherwise S282 (`rrmod.audio_basis`).
   `--audio` overrides; a definition without heating surface needs that answer. Never extract Railroader audio.
 - `modelIdentifier` may name a catalogue key or a prefab file (GN M-2: model `gn-m2t`, key `gn-m2t-2680`).
-- **Trucks are never converted (James, W21).** Every converted car runs on vanilla DV bogies: CCL `BogieType.Default`
+- **Trucks are never converted (James, W21).** Every Railroader truck object (tender and car trucks) becomes a vanilla DV
+  bogie; a locomotive's own driving gear is not a truck and keeps our custom bogie path (A04, X31). CCL `BogieType.Default`
   (200, DV's freight bogie; the other vanilla types are loco bogies), wheel radius 0.459 m. No truck mod's bundle or
   Railroader base-game truck is staged, exported or copied, so a truck's licence never stops a conversion. Its
   definition is read for information only (what the swap leaves out). Until the builder has a vanilla-bogie field the
@@ -87,6 +88,10 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
   blocking: the converted mod's own licence, and a tender that is game content or from a restricting mod (no vanilla
   DV tender to substitute). DV has no loose vanilla steam fittings to swap in (CCL's MeshGrabber list has none), so
   nothing is substituted except trucks (vanilla bogies) and sounds (vanilla S060/S282).
+  A part whose asset is missing from its pack's catalogue (broken in the source mod; X32 found 13 installed locos) is
+  left out the same way; a part pack that cannot be found still stops the conversion (install or add the mod).
+  Components anchored inside a left-out part go too (a missing parent is a build error) and are named in its `anchored`
+  and `effect`, so a functional loss is never silent (X31).
 - Never open, decompile or inspect code mods (DLLs) or bundles of mods we only depend on. Learn formats from the data
   files of the mod being converted and from our guides. Uploaded test mods stay in the session container, never in git.
 - Converted packs contain the original authors' work: personal use unless the author agrees otherwise.

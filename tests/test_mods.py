@@ -130,6 +130,13 @@ class Licences(Base):
         self.assertEqual([l["asset"] for l in rec["metadata"]["leftOut"]], ["horn"])
         self.assertIn("left out: 1", " ".join(rec["metadata"]["pending"]))
 
+    def test_components_anchored_in_a_left_out_part_are_not_placed(self):
+        from rr2dv import record
+        c = {"kind": "Headlight", "name": "lamp", "parent": {"path": ["horn1", "glass"]}}
+        left = [{"what": "part", "owner": "ts-260-a", "pack_identifier": "PartsMod\\extras", "asset": "horn", "anchored": ["lamp"]}]
+        self.assertTrue(record.left_out_component(c, "ts-260-a", left))
+        self.assertFalse(record.left_out_component(c, "tt-260-a", left))
+
     def test_a_restricted_tender_still_stops_the_conversion(self):
         write_pack(self.m["search"] / "TenderMod" / "Tenders", objects=[tender("tt-ext")], assets={"tt-ext": {"filename": "tt-ext.prefab"}})
         (self.m["search"] / "TenderMod" / "info.json").write_text('{"Id": "TenderMod"}')

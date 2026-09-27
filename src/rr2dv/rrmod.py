@@ -432,6 +432,18 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
     converted = loco_pack.mod
     left_out: list[dict] = []
 
+    def leave_out_part(vid: str, comp: dict, comps: list[dict], pack_ident: str, asset_ident, ppack: Pack, reason: str) -> None:
+        # A part is a model; anything the definition anchors inside it loses its anchor too (a functional loss to review).
+        name = comp.get("name")
+        anchored = sorted(str(c.get("name")) for c in comps if c is not comp and isinstance(c.get("parent"), dict)
+                          and (c["parent"].get("path") or [None])[0] == name)
+        left_out.append({"what": "part", "owner": vid, "component": name, "pack_identifier": pack_ident,
+                         "asset": asset_ident, "pack": ppack.describe(), "reason": reason,
+                         "effect": "model not shown" + (f"; loses its anchor: {', '.join(anchored)}" if anchored else ""),
+                         "anchored": anchored})
+        issues.append(Issue("warning", "left-out", f"{vid}/{name}: part {asset_ident!r} from {ppack.name} left out: {reason}"
+                            + (f"; components anchored in it: {', '.join(anchored)}" if anchored else "")))
+
     def problem(path: Path, mod: Mod | None) -> str | None:
         if is_game_content(path):
             return "Railroader game content"
@@ -565,9 +577,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
             ppack = pres.hit
             reason = problem(ppack.path, ppack.mod)
             if reason:
-                left_out.append({"what": "part", "owner": vid, "component": comp.get("name"), "pack_identifier": pack_ident,
-                                 "asset": asset_ident, "pack": ppack.describe(), "reason": reason})
-                issues.append(Issue("warning", "left-out", f"{label}: part {asset_ident!r} from {ppack.name} left out: {reason}"))
+                leave_out_part(vid, comp, comps, pack_ident, asset_ident, ppack, reason)
                 continue
             if CATALOG in ppack.errors:
                 packs[ppack.path] = ppack  # reported as pack-unreadable below
@@ -578,7 +588,10 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                                     f"{label}: {pack_ident!r} matched pack {ppack.root.label}:{ppack.rel} by name only (its mod folder is {ppack.folder_above!r})"))
             asset = ppack.assets.get(asset_ident)
             if not isinstance(asset, dict):
-                issues.append(Issue("error", "missing-part-asset", f"{label}: asset {asset_ident!r} not in {ppack.name}/Catalog.json"))
+                # Broken in the source mod itself (X32: 13 installed locos): Railroader cannot load it either, so it is
+                # left out and listed rather than stopping the conversion. A pack that cannot be found still stops it.
+                leave_out_part(vid, comp, comps, pack_ident, asset_ident, ppack,
+                               f"asset {asset_ident!r} is not in {ppack.name}/Catalog.json (broken in the source mod)")
                 continue
             packs[ppack.path] = ppack
             parts.append({"owner": vid, "component": comp.get("name"), "pack": ppack.name, "pack_ref": ppack.describe(),

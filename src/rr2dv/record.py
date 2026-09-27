@@ -128,6 +128,9 @@ def left_out_component(c: dict, owner: str, left_out: list[dict]) -> bool:
             continue
         if item["what"] == "part" and (model.get("assetPackIdentifier"), model.get("assetIdentifier")) == (item["pack_identifier"], item["asset"]):
             return True
+        # anchored inside a left-out part: its parent will not exist, and a missing parent is a build error (B03)
+        if item["what"] == "part" and c.get("name") in item.get("anchored", []):
+            return True
         if item["what"] == "image" and c.get("textureName") == item["id"]:
             return True
     return False
@@ -217,8 +220,8 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
     pending.append("simulation: draft engine, boiler, firebox and exhaust choices need per-engine calibration "
                    "(throttleMaxFlow, steamChestVolume, blowdown, vent rate, firing, exhaust, cutoff range)")
     if inv.get("left_out"):
-        pending.append(f"left out: {len(inv['left_out'])} part(s)/image(s) that are Railroader game content or restricted "
-                       "(metadata.leftOut); check the loco still looks right without them")
+        pending.append(f"left out: {len(inv['left_out'])} part(s)/image(s) (game content, restricted or broken in the source; "
+                       "metadata.leftOut with reason and effect); check the loco still looks and works right without them")
     code_mods = sorted({c["provider"] for c in inv.get("code_mods", [])})
     if code_mods:
         pending.append(f"simulation: nonstandard running gear ({', '.join(sorted({c['kind'] for c in inv['code_mods']}))} from "
