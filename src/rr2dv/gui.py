@@ -19,7 +19,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from tkinter import font as tkfont
 
-from . import __version__, applog, consent
+from . import __version__, applog, consent, toolfinder
 from .appmodel import SETTINGS, Controller
 from .runs import STAGES
 
@@ -582,10 +582,13 @@ class SettingsDialog:
         ttk.Label(frame, text=f"Saved in {controller.settings_path}", style="Muted.TLabel").grid(row=0, column=0, columnspan=3, sticky="w", pady=(0, 8))
         values = controller.settings()
         self.vars = {}
+        self.entries = []
         for row, (key, label, kind, _required) in enumerate(SETTINGS, start=1):
             ttk.Label(frame, text=label).grid(row=row, column=0, sticky="w", pady=2)
             var = tk.StringVar(value=str(values.get(key, "")))
-            ttk.Entry(frame, textvariable=var, width=60).grid(row=row, column=1, sticky="we", padx=8, pady=2)
+            entry = ttk.Entry(frame, textvariable=var, width=60)
+            entry.grid(row=row, column=1, sticky="we", padx=8, pady=2)
+            self.entries.append(entry)
             ttk.Button(frame, text="Browse…", command=lambda v=var, k=kind: self._browse(v, k)).grid(row=row, column=2, pady=2)
             self.vars[key] = var
         frame.columnconfigure(1, weight=1)
@@ -595,9 +598,13 @@ class SettingsDialog:
         buttons.grid(row=len(SETTINGS) + 2, column=0, columnspan=3, sticky="e", pady=(12, 0))
         ttk.Button(buttons, text="Open app log", command=lambda: applog.log_file().is_file() and open_path(applog.log_file())
                    ).pack(side="left", padx=4)
-        ttk.Button(buttons, text="Check", command=self._check).pack(side="left", padx=4)
-        ttk.Button(buttons, text="Save", command=self._save).pack(side="left", padx=4)
+        self.check_button = ttk.Button(buttons, text="Check", command=self._check)
+        self.check_button.pack(side="left", padx=4)
+        self.save_button = ttk.Button(buttons, text="Save", command=self._save)
+        self.save_button.pack(side="left", padx=4)
         ttk.Button(buttons, text="Close", command=top.destroy).pack(side="left", padx=4)
+        self._check_results: queue.Queue = queue.Queue()
+        self._checking = False
         top.update_idletasks()  # centre over the app, and keep focus here until closed
         x = parent.winfo_rootx() + (parent.winfo_width() - top.winfo_width()) // 2
         y = parent.winfo_rooty() + (parent.winfo_height() - top.winfo_height()) // 3
@@ -615,9 +622,52 @@ class SettingsDialog:
         self.on_saved()
 
     def _check(self) -> None:
+        if self._checking:
+            return
+        self._checking = True
+        self.check_button.state(["disabled"])
+        self.save_button.state(["disabled"])
+        for entry in self.entries:
+            entry.state(["disabled"])
         self.checks.delete("1.0", "end")
+        self.checks.insert("end", "Searching for tools and checking the paths shown above…\n")
+        entered = {key: var.get() for key, var in self.vars.items()}
+
+        def job():
+            try:
+                found = toolfinder.discover(self.c.machine, entered)
+                checked = self.c.checks({**entered, **found})
+                self._check_results.put((found, checked, None))
+            except Exception as error:
+                applog.get().exception("Settings check failed")
+                self._check_results.put(({}, [], error))
+
+        threading.Thread(target=job, daemon=True).start()
+        self.top.after(100, self._poll_check)
+
+    def _poll_check(self) -> None:
+        if not self.top.winfo_exists():
+            return
+        try:
+            found, checked, error = self._check_results.get_nowait()
+        except queue.Empty:
+            self.top.after(100, self._poll_check)
+            return
+        self._checking = False
+        self.check_button.state(["!disabled"])
+        self.save_button.state(["!disabled"])
+        for entry in self.entries:
+            entry.state(["!disabled"])
+        self.checks.delete("1.0", "end")
+        if error:
+            self.checks.insert("end", f"Check failed: {error}\n")
+            return
+        for key, path in found.items():
+            self.vars[key].set(path)
+        if found:
+            self.checks.insert("end", f"Found {len(found)} tool path(s). Click Save to keep them.\n\n")
         marks = {"ok": "✓", "warn": "!", "fail": "✗", "skip": "–"}
-        for check in self.c.checks():
+        for check in checked:
             self.checks.insert("end", f"{marks.get(check.status, '?')} {check.name}: {check.detail}\n")
 
 

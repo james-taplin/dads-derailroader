@@ -84,6 +84,21 @@ class Window(unittest.TestCase):
         self.root.update()
         self.assertEqual(self.app.tree.get_children(), ("mod::Another Loco Mod",))
 
+    def test_settings_check_fills_found_path(self):
+        candidate = self.tmp / "Unity 2019.4.40f1" / "Unity.exe"
+        candidate.parent.mkdir()
+        candidate.touch()
+        dialog = self.gui.SettingsDialog(self.root, self.app.c, lambda: None)
+        self.addCleanup(lambda: dialog.top.winfo_exists() and dialog.top.destroy())
+        dialog.vars["unity"].set("")
+        original = self.gui.toolfinder.discover
+        self.gui.toolfinder.discover = lambda machine, entered: {"unity": str(candidate)}
+        self.addCleanup(setattr, self.gui.toolfinder, "discover", original)
+        dialog._check()
+        self.until(lambda: not dialog._checking)
+        self.assertEqual(dialog.vars["unity"].get(), str(candidate))
+        self.assertIn("Unity Editor", dialog.checks.get("1.0", "end"))
+
     def test_convert_shows_each_stage(self):
         self.select("Test Loco Mod", "ts-260-a")
         self.app.convert()

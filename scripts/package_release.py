@@ -4,11 +4,12 @@ from __future__ import annotations
 import argparse
 import subprocess
 import sys
+import tomllib
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile
 
 ROOT = Path(__file__).resolve().parents[1]
-VERSION = "0.1.0"
+VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
 SOURCE_ROOT = f"Derailroader-{VERSION}-Source"
 
 
@@ -34,7 +35,7 @@ def package(dist: Path, output: Path) -> None:
         if python_license.is_file():
             archive.write(python_license, "Derailroader/PYTHON-LICENSE.txt")
         archive.writestr("Derailroader/START-HERE.txt", (
-            "Derailroader 0.1.0 for Windows\n\n"
+            f"Derailroader {VERSION} for Windows\n\n"
             "Extract this entire folder, then double-click Derailroader.exe.\n"
             "Keep the _internal folder beside the executable. Python is included.\n"
             "Set your game and tool paths in the app's Settings window.\n"

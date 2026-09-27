@@ -3,6 +3,7 @@ import json
 import shutil
 import tempfile
 import unittest
+from unittest.mock import patch
 from pathlib import Path
 
 from fixtures import loco, part, standard_mod, tool_machine, write_pack
@@ -59,6 +60,24 @@ class ControllerTests(unittest.TestCase):
         self.assertIn("unity", values)
         self.assertEqual(self.c.machine.values["workRoot"], str(self.tmp / "w2"))
         self.assertEqual([k for k, *_ in SETTINGS][:3], ["unity", "carCreator", "assetRipper"])
+
+    def test_check_previews_unsaved_tool_path(self):
+        candidate = self.tmp / "Unity 2019.4.40f1" / "Unity.exe"
+        candidate.parent.mkdir()
+        candidate.touch()
+        checks = self.c.checks({"unity": str(candidate)})
+        unity = next(check for check in checks if check.name == "Unity Editor")
+        self.assertEqual(unity.status, "ok")
+        self.assertEqual(unity.detail, str(candidate))
+        self.assertNotEqual(json.loads(self.settings.read_text())["unity"], str(candidate))
+
+    def test_frozen_app_uses_bundled_python(self):
+        self.c.machine.values.pop("python")
+        with patch.object(__import__("sys"), "frozen", True, create=True):
+            self.assertFalse(any("Python" in label for label in self.c.tools_missing()))
+            python = next(check for check in self.c.checks() if check.name == "tooling Python")
+        self.assertEqual(python.status, "ok")
+        self.assertIn("included", python.detail)
 
 
 if __name__ == "__main__":

@@ -39,9 +39,9 @@ acknowledged, which mods and authors the content came from) and an `rr2dv.json` 
 
 ## The app
 
-For the [0.1.0 release](https://github.com/james-taplin/derailroader/releases/tag/v0.1.0), download
-`Derailroader-0.1.0-Windows.zip`, extract the **whole** folder, and double-click `Derailroader.exe`. Keep its
-`_internal` folder beside the `.exe`. To run from scripts instead, download `Derailroader-0.1.0-Source.zip`, extract
+For the [0.1.1 release](https://github.com/james-taplin/derailroader/releases/tag/v0.1.1), download
+`Derailroader-0.1.1-Windows.zip`, extract the **whole** folder, and double-click `Derailroader.exe`. Keep its
+`_internal` folder beside the `.exe`. To run from scripts instead, download `Derailroader-0.1.1-Source.zip`, extract
 it, and double-click `Launch Derailroader.bat` (or `Derailroader.pyw` if Python is associated with `.pyw` files).
 The source download needs Python 3.11+ with Tk; neither download includes Unity, AssetRipper or CarCreator.
 
@@ -55,7 +55,8 @@ derailroader                      # opens the app (or: rr2dv gui)
 ![The derailroader app](docs/app-window.png)
 
 - The coloured chips at the top show whether Railroader, Derail Valley, Custom Car Loader and the tools were found
-  (hover for where). **Settings…** sets the tool paths and runs the same checks as `rr2dv doctor`.
+  (hover for where). In **Settings…**, **Check** searches common tool locations, fills missing paths and checks the
+  values shown. Click **Save** to use newly found paths. The Windows `.exe` includes the Python needed by the builder.
 - The left side lists the steam locomotive mods in your Railroader `Mods` folder; type to filter.
 - Pick a locomotive to see its tender, trucks, parts, controls, sounds, whose work it uses and any problems. Choose
   the livery and sounds, then **Convert**. The stages tick off below as they run; afterwards you can open the run

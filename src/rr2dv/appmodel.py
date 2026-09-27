@@ -2,6 +2,7 @@
 a mod's scan report and a conversion. No widgets here, so all of it is testable without a screen."""
 from __future__ import annotations
 
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Sequence
@@ -17,7 +18,7 @@ SETTINGS = [
     ("unity", "Unity 2019.4.40f1 (Unity.exe)", "file", True),
     ("carCreator", "CarCreator 3.1.9 package (.unitypackage)", "file", True),
     ("assetRipper", "AssetRipper", "file", True),
-    ("python", "Python for the builder scripts", "file", True),
+    ("python", "Python (included in the Windows app; source runs need it)", "file", not getattr(sys, "frozen", False)),
     ("workRoot", "Work folder (short path, e.g. C:\\rr2dv)", "dir", False),
     ("railroader", "Railroader install (empty: find through Steam)", "dir", False),
     ("game", "Derail Valley install (empty: find through Steam)", "dir", False),
@@ -83,8 +84,17 @@ class Controller:
         write_json(self.settings_path, values)
         self.reload()
 
-    def checks(self) -> list[machine_mod.Check]:
-        return machine_mod.doctor(self.machine)
+    def checks(self, changes: dict[str, str] | None = None) -> list[machine_mod.Check]:
+        """Check saved settings, or preview values currently shown in the Settings dialog."""
+        if changes is None:
+            return machine_mod.doctor(self.machine)
+        values = dict(self.machine.values)
+        for key, value in changes.items():
+            if value.strip():
+                values[key] = value.strip()
+            else:
+                values.pop(key, None)
+        return machine_mod.doctor(machine_mod.Machine(self.machine.source, values))
 
     # ---- installs and mods ----------------------------------------------------------------------------------------
     def installs(self) -> Installs:
@@ -104,7 +114,8 @@ class Controller:
 
     def tools_missing(self) -> list[str]:
         return [label for key, label, kind, required in SETTINGS
-                if required and not ((p := self.machine.path(key)) and (p.is_file() if kind == "file" else p.is_dir()))]
+                if required and not (key == "python" and getattr(sys, "frozen", False))
+                and not ((p := self.machine.path(key)) and (p.is_file() if kind == "file" else p.is_dir()))]
 
     def list_mods(self, progress: Callable[[int, int], None] | None = None) -> list[ModEntry]:
         """Folders in the Railroader Mods folder that contain steam locomotives."""

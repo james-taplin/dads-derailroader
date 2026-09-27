@@ -105,15 +105,18 @@ def doctor(machine: Machine) -> list[Check]:
     checks = [Check("ok" if machine.source else "warn", "settings file",
                     str(machine.source) if machine.source else f"none found; expected at {default_path()}")]
 
-    check, py = _exists(machine, "python", "file", True, "tooling Python")
-    if py:
-        try:
-            out = subprocess.run([str(py), "-c", "import sys;print('%d.%d.%d' % sys.version_info[:3])"],
-                                 capture_output=True, text=True, timeout=60, check=True).stdout.strip()
-            version = tuple(int(x) for x in out.split("."))
-            check = Check("ok" if version[:2] >= MIN_TOOL_PYTHON else "fail", "tooling Python", f"{py} ({out})")
-        except (OSError, subprocess.SubprocessError, ValueError) as e:
-            check = Check("fail", "tooling Python", f"{py} did not run: {e}")
+    if getattr(sys, "frozen", False):
+        check = Check("ok", "tooling Python", f"included in the Windows app ({sys.version.split()[0]})")
+    else:
+        check, py = _exists(machine, "python", "file", True, "tooling Python")
+        if py:
+            try:
+                out = subprocess.run([str(py), "-c", "import sys;print('%d.%d.%d' % sys.version_info[:3])"],
+                                     capture_output=True, text=True, timeout=60, check=True).stdout.strip()
+                version = tuple(int(x) for x in out.split("."))
+                check = Check("ok" if version[:2] >= MIN_TOOL_PYTHON else "fail", "tooling Python", f"{py} ({out})")
+            except (OSError, subprocess.SubprocessError, ValueError) as e:
+                check = Check("fail", "tooling Python", f"{py} did not run: {e}")
     checks.append(check)
 
     check, unity = _exists(machine, "unity", "file", True, "Unity Editor")
