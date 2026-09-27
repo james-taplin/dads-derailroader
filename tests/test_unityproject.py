@@ -209,16 +209,51 @@ class TiedClips(unittest.TestCase):
         out = resolve_clips(self.src, dest, self.tmp / "reports" / "clips-main.json")
         self.assertEqual((out["clips"], out["bound"]), (1, 1))
         self.assertIn("path: Body/Hatch", (dest / "AnimationClip" / "Hatch.anim").read_text())
-        evidence = read_json(self.tmp / "reports" / "clips-main-bindings.json")["bindings"]
-        self.assertEqual(evidence, {"AnimationClip/Hatch.anim": [{"prefab": "PrefabInstance/tender.prefab", "key": "Hatch"}]})
+        evidence = read_json(self.tmp / "reports" / "clips-main-bindings.json")["clips"]
+        self.assertEqual(evidence, {"AnimationClip/Hatch.anim": {"decision": "bound", "by": "clip map", "prefab": "PrefabInstance/tender.prefab",
+                                                                 "owners": [{"prefab": "PrefabInstance/tender.prefab", "key": "Hatch"}]}})
 
-    def test_tied_clip_without_an_owner_stays_an_error(self):
+    def add_unowned_twin(self):
         (self.src / "AnimationClip" / "Hatch_0.anim").write_text(self.clip)
         (self.src / "AnimationClip" / "Hatch_0.anim.meta").write_text("guid: c1\n")
+
+    def test_unowned_clip_nothing_references_is_left_out(self):
+        # X33 (C21): four *_0/box clips fit loco and tender and no clip map names them.
+        self.add_unowned_twin()
         dest = self.tmp / "dest"
-        with self.assertRaisesRegex(ProjectError, "Hatch_0.anim: no prefab's clip map names it"):
+        shutil.copytree(self.src, dest)  # the project starts as a copy of the export
+        out = resolve_clips(self.src, dest, self.tmp / "reports" / "clips-main.json")
+        self.assertEqual((out["bound"], out["left_out"]), (1, ["AnimationClip/Hatch_0.anim"]))
+        self.assertIn("path: Body/Hatch", (dest / "AnimationClip" / "Hatch.anim").read_text())
+        self.assertFalse((dest / "AnimationClip" / "Hatch_0.anim").exists())
+        self.assertFalse((dest / "AnimationClip" / "Hatch_0.anim.meta").exists())
+        self.assertTrue((self.src / "AnimationClip" / "Hatch_0.anim").exists(), "the export is never changed")
+        decision = read_json(self.tmp / "reports" / "clips-main-bindings.json")["clips"]["AnimationClip/Hatch_0.anim"]
+        self.assertEqual((decision["decision"], decision["references"]), ("left out", []))
+        self.assertFalse((self.tmp / "reports" / "clips-main-resolver-input").exists())
+
+    def test_unowned_clip_one_prefab_references_is_bound_to_it(self):
+        self.add_unowned_twin()
+        loco = self.src / "PrefabInstance" / "loco.prefab"
+        loco.write_text(loco.read_text() + "--- !u!111 &950\nAnimation:\n  m_Animations:\n  - {fileID: 7400000, guid: c1, type: 2}\n")
+        dest = self.tmp / "dest"
+        out = resolve_clips(self.src, dest, self.tmp / "reports" / "clips-main.json")
+        self.assertEqual((out["bound"], out["left_out"]), (2, []))
+        self.assertIn("path: Cab/Hatch", (dest / "AnimationClip" / "Hatch_0.anim").read_text())
+        decision = read_json(self.tmp / "reports" / "clips-main-bindings.json")["clips"]["AnimationClip/Hatch_0.anim"]
+        self.assertEqual((decision["by"], decision["references"]), ("serialized reference", ["PrefabInstance/loco.prefab"]))
+
+    def test_unowned_clip_referenced_elsewhere_stays_an_error_with_evidence(self):
+        self.add_unowned_twin()
+        (self.src / "AnimatorController").mkdir()
+        (self.src / "AnimatorController" / "Tender.controller").write_text("%YAML 1.1\nAnimatorState:\n  m_Motion: {fileID: 7400000, guid: c1, type: 2}\n")
+        dest = self.tmp / "dest"
+        with self.assertRaisesRegex(ProjectError, "Hatch_0.anim: referenced by AnimatorController/Tender.controller"):
             resolve_clips(self.src, dest, self.tmp / "reports" / "clips-main.json")
         self.assertFalse(dest.exists(), "nothing is written unless every clip resolves")
+        decisions = read_json(self.tmp / "reports" / "clips-main-bindings.json")["clips"]
+        self.assertEqual((decisions["AnimationClip/Hatch.anim"]["decision"], decisions["AnimationClip/Hatch_0.anim"]["decision"]),
+                         ("bound", "error"))
 
     def test_clip_named_by_two_prefabs_stays_an_error(self):
         (self.src / "PrefabInstance" / "loco.prefab").write_text(_prefab("loco", "Cab", {"Hatch": "b1"}))

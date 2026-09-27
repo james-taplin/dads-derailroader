@@ -16,6 +16,7 @@ Duplicate GUIDs anywhere in the result are an error (B04). Cached exports are on
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -68,15 +69,21 @@ def find_prefab(assets: Path, filename: str) -> Path:
 
 
 TIED = "Tied prefabs"
+YAML_HEADER = b"%YAML"
+
+
+def _guid_of(meta: Path) -> str | None:
+    m = re.search(r"^guid: (\w+)", meta.read_text(encoding="utf-8-sig", errors="replace"), re.M)
+    return m[1] if m else None
 
 
 def clip_owners(source_assets: Path) -> dict[str, list[dict]]:
     """Each clip (path relative to source_assets) -> the prefabs whose clip maps name it, with the map key."""
     clip_by_guid = {}
     for meta in source_assets.rglob("*.anim.meta"):
-        m = re.search(r"^guid: (\w+)", meta.read_text(encoding="utf-8-sig", errors="replace"), re.M)
-        if m:
-            clip_by_guid[m[1]] = meta.relative_to(source_assets).as_posix()[:-5]
+        g = _guid_of(meta)
+        if g:
+            clip_by_guid[g] = meta.relative_to(source_assets).as_posix()[:-5]
     owners: dict[str, list[dict]] = {}
     for prefab in sorted(source_assets.rglob("*.prefab")):
         rel = prefab.relative_to(source_assets).as_posix()
@@ -86,6 +93,25 @@ def clip_owners(source_assets: Path) -> dict[str, list[dict]]:
                 if entry not in owners.setdefault(clip_by_guid[g], []):
                     owners[clip_by_guid[g]].append(entry)
     return owners
+
+
+def guid_references(source_assets: Path, guids: dict[str, str]) -> dict[str, list[str]]:
+    """Every serialized Unity file (text YAML, not .meta) in the export that mentions each GUID, by clip."""
+    found: dict[str, list[str]] = {clip: [] for clip in guids.values()}
+    if not guids:
+        return found
+    for f in sorted(source_assets.rglob("*")):
+        if not f.is_file() or f.suffix == ".meta":
+            continue
+        with f.open("rb") as fh:
+            if fh.read(len(YAML_HEADER)) != YAML_HEADER:
+                continue
+        text = f.read_text(encoding="utf-8-sig", errors="replace")
+        rel = f.relative_to(source_assets).as_posix()
+        for g, clip in guids.items():
+            if g in text and rel != clip:
+                found[clip].append(rel)
+    return found
 
 
 def _resolve(source_assets: Path, dest_assets: Path, report: Path, bindings: Path | None = None) -> dict:
@@ -98,31 +124,86 @@ def _resolve(source_assets: Path, dest_assets: Path, report: Path, bindings: Pat
     return json.loads(report.read_text(encoding="utf-8"))
 
 
+def _mirror(source_assets: Path, target: Path, skip: set[str]) -> None:
+    """The resolver's inputs (prefabs and clips) without the clips proven unreachable. Hard links where possible."""
+    for f in sorted(list(source_assets.rglob("*.prefab")) + list(source_assets.rglob("*.anim"))):
+        rel = f.relative_to(source_assets).as_posix()
+        if rel in skip:
+            continue
+        dst = target / rel
+        dst.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            os.link(f, dst)
+        except OSError:
+            shutil.copy2(f, dst)
+
+
 def resolve_clips(source_assets: Path, dest_assets: Path, report: Path) -> dict:
+    """Restore clip paths with our strict resolver. A clip that fits several prefabs with different paths ("tied") is
+    decided from the source, never by first match (X30, X33): bound to the one prefab whose clip map names it, else to
+    the one prefab that references it anywhere; a clip no serialized file references at all is unreachable and is left
+    out of the project, with a report. Anything else stays an error. The evidence is written either way."""
     result = _resolve(source_assets, dest_assets, report)
-    bound = {}
+    bound: dict[str, str] = {}
+    excluded: list[str] = []
     tied = [e["clip"] for e in result.get("errors", []) if TIED in e.get("error", "") and e.get("clip")]
     if tied and len(tied) == len(result["errors"]):
         owners = clip_owners(source_assets)
-        unbound = {c: owners.get(c, []) for c in tied if len({o["prefab"] for o in owners.get(c, [])}) != 1}
-        if not unbound:
-            bound = {c: owners[c][0]["prefab"] for c in tied}
-            evidence = report.with_name(report.stem + "-bindings.json")
-            write_json(evidence, {"rule": "a tied clip is bound to the one prefab whose clip map names it",
-                                  "bindings": {c: owners[c] for c in tied}})
-            plain = report.with_name(report.stem + "-bindings.plain.json")
-            write_json(plain, bound)
-            result = _resolve(source_assets, dest_assets, report, plain)
-        else:
-            detail = "; ".join(f"{c}: " + (", ".join(o["prefab"] for o in o_) + " name it" if o_ else "no prefab's clip map names it")
-                               for c, o_ in sorted(unbound.items()))
-            raise ProjectError(f"animation clips fit several prefabs and the source maps do not say which: {detail} (see {report})")
+        unowned = [c for c in tied if not owners.get(c)]
+        guids = {g: c for c in unowned for g in [_guid_of(source_assets / (c + ".meta"))] if g}
+        refs = guid_references(source_assets, guids)
+        decisions, unresolved = {}, {}
+        for c in tied:
+            named = sorted({o["prefab"] for o in owners.get(c, [])})
+            referenced = refs.get(c, [])
+            prefabs = sorted({r for r in referenced if r.endswith(".prefab")})
+            if len(named) == 1:
+                bound[c] = named[0]
+                decisions[c] = {"decision": "bound", "by": "clip map", "prefab": named[0], "owners": owners[c]}
+            elif named:
+                unresolved[c] = f"{', '.join(named)} name it"
+                decisions[c] = {"decision": "error", "owners": owners[c]}
+            elif len(prefabs) == 1 and len(referenced) == 1:
+                bound[c] = prefabs[0]
+                decisions[c] = {"decision": "bound", "by": "serialized reference", "prefab": prefabs[0], "references": referenced}
+            elif not referenced and c in refs:
+                excluded.append(c)
+                decisions[c] = {"decision": "left out", "why": "no prefab's clip map names it and no serialized file in "
+                                                              "the export references its GUID: unreachable", "references": []}
+            else:
+                unresolved[c] = ("referenced by " + ", ".join(referenced)) if referenced else "no GUID in its .meta"
+                decisions[c] = {"decision": "error", "references": referenced}
+        evidence = report.with_name(report.stem + "-bindings.json")
+        write_json(evidence, {"rule": "tied clip -> the one prefab whose clip map names it, else the one prefab that "
+                                      "references it; unreferenced -> left out; otherwise an error",
+                              "clips": decisions})
+        if unresolved:
+            detail = "; ".join(f"{c}: {why}" for c, why in sorted(unresolved.items()))
+            raise ProjectError(f"animation clips fit several prefabs and the source does not say which: {detail} (see {evidence})")
+        plain = report.with_name(report.stem + "-bindings.plain.json")
+        write_json(plain, bound)
+        source = source_assets
+        if excluded:
+            source = report.with_name(report.stem + "-resolver-input")
+            if source.exists():
+                shutil.rmtree(source)
+            _mirror(source_assets, source, set(excluded))
+        try:
+            result = _resolve(source, dest_assets, report, plain)
+        finally:
+            if source != source_assets:
+                shutil.rmtree(source, ignore_errors=True)
+        if not result.get("errors") and result.get("applied"):
+            for c in excluded:  # unreachable: nothing in the project may carry its placeholder paths
+                for f in (dest_assets / c, dest_assets / (c + ".meta")):
+                    if f.is_file():
+                        f.unlink()
     if result.get("errors") or not result.get("applied"):
         errors = result.get("errors") or [{"error": "not applied"}]
         first = errors[0]
         raise ProjectError(f"resolve_clip_paths: {len(errors)} clip(s) did not resolve, first "
                            f"{first.get('clip', '')}: {first.get('error')}; see {report}")
-    return {"clips": len(result.get("clips", [])), "report": report.name, "bound": len(bound)}
+    return {"clips": len(result.get("clips", [])), "report": report.name, "bound": len(bound), "left_out": excluded}
 
 
 def set_project_settings(project: Path) -> None:
