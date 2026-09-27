@@ -43,7 +43,7 @@ Run the tests: `PYTHONPATH=src:tests python3 -m unittest discover -s tests`. Run
 ## Pipeline
 
 Stages follow the guide's acceptance states (Q01): locate -> link -> stage -> extract -> import -> probe -> record -> build ->
-audit -> publish, all implemented (first written in W35; X45 real Unity testing reached three exports/audits and
+audit -> publish, all implemented (first written in W35; X46 real Unity testing reached three exports/audits and
 A18 installation after its interactive notice). Exit 3 = stopped
 cleanly waiting for the user: a `needs-*` block (the wheel radius: the first run of every loco stops at build with the
 probe's candidate) or built+audited but the notice was declined. Other build blocks exit 1 (`build/blocks.json`).

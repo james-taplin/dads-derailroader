@@ -9,7 +9,7 @@ Valley `Mods` folder. It never changes the Railroader mod it reads.
 
 > **Work in progress: first end-to-end version.** Every stage is written, from finding the mod to installing the pack.
 > Windows/Unity 2019.4 testing now reaches export and bundle audit for S16, C21 and A18; A18 also completed
-> installation through the normal notice. Remaining visual/control warnings are recorded in X45. An installed pack is a **candidate**: it
+> installation through the normal notice. Remaining visual/control warnings are recorded in X46. An installed pack is a **candidate**: it
 > still has to be checked in Derail Valley (see *What a finished pack must pass*).
 
 The X43 development fixes check prefab save/reload success, report removed missing-script components, select the
