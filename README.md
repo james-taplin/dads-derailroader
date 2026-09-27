@@ -68,6 +68,9 @@ derailroader                      # opens the app (or: rr2dv gui)
   uses the whole locomotive/tender length, coupling allowance and clearance; reserved stock tracks are excluded.
 - Simple and fixed-geared steam profiles are experimental. Compound switching, oil-regime combinations, articulated
   calibration and diesel adapters remain pending. See [implementation status and tests](docs/review-and-geometry.md).
+- End beams below the usual coupler-height band are measured automatically when that band is inconclusive.
+  The search allows a central drawgear opening and distinguishes the outer beam from truck crossmembers behind it.
+  A reviewed geometry override is needed only when automatic measurement remains inconclusive.
 - The personal-use notice opens inside the app before anything is installed.
 
 ## Command line

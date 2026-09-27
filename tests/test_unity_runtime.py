@@ -11,6 +11,21 @@ from rr2dv.unityrun import _launch
 @unittest.skipUnless(os.environ.get('RR2DV_TEST_UNITY') and os.environ.get('RR2DV_TEST_BUILDER_PROJECT'),
                      'requires Unity and a disposable assembled builder project')
 class RealPlacement(unittest.TestCase):
+    def test_end_beam_height_search(self):
+        repo = Path(__file__).resolve().parents[1]
+        project = Path(os.environ['RR2DV_TEST_BUILDER_PROJECT']).resolve()
+        editor = project / 'Assets/Editor'
+        self.assertTrue((editor / 'CclLocoBuild.cs').is_file(), 'assembled builder project required')
+        shutil.copyfile(repo / 'tooling/builder/tools/unity/CclLocoBuild.cs', editor / 'CclLocoBuild.cs')
+        shutil.copyfile(repo / 'tests/unity_runtime/EndBeamRegression.cs', editor / 'EndBeamRegression.cs')
+        receipt = project / 'end-beam-regression.txt'
+        receipt.unlink(missing_ok=True)
+        log = project / 'end-beam-regression.log'
+        code = _launch(Path(os.environ['RR2DV_TEST_UNITY']), project, 'CclLocoBuild.EndBeamRegression', log,
+                       dict(os.environ, RR2DV_BEAM_TEST_REPORT=str(receipt)), 180)
+        self.assertEqual(code, 0, log.read_text(errors='replace')[-10000:])
+        self.assertEqual(len(receipt.read_text().splitlines()), 12)
+
     def test_visible_surfaces_survive_prefab_save(self):
         repo = Path(__file__).resolve().parents[1]
         project = Path(os.environ['RR2DV_TEST_BUILDER_PROJECT']).resolve()

@@ -167,8 +167,10 @@ be worked out; `build/blocks.json` lists them all at once.
 
 ### Reviewed end-beam geometry
 
-An *ambiguous end beam* or *insufficient end-beam rays* error can mean the default sampling heights miss the
-actual frame. Measure the current model first, including the broad beam face and nearby coupler/lift hardware.
+If the default sampling heights miss the actual frame, the builder now automatically searches lower heights
+for a broad, upright end face supported on both sides of the drawgear. The build report records its measured
+height band and depth. If that also fails, an *ambiguous end beam* or *insufficient end-beam rays* error still
+requires review. Measure the current model first, including the broad beam face and nearby coupler/lift hardware.
 Do not choose a band merely because it passes. The height band changes where the existing rays sample; it does
 not change coupler height, the minimum ray count, clearance checks or any acceptance requirement.
 
@@ -196,7 +198,9 @@ Only the selected locomotive and its tender may be named. Each band must lie in 
 `measured` or `derived` provenance with nonempty evidence. No other config fields are accepted. A changed source
 fingerprint stops before extraction: remeasure it. The file's contents are copied into the run's
 `geometry-review.json`, answers and build record so later edits to the input file cannot change that run.
-This remains a manual geometry review; the app does not identify and approve beams automatically.
+An explicit override remains a manual geometry review and will not be silently replaced by an automatic band.
+Automatic beam placement is a build-time measurement, not in-game acceptance: check that the stopcock, hook
+and hanging hose end are reachable. Cosmetic overlap with decorative pipework is acceptable.
 
 ## Stage `audit`
 

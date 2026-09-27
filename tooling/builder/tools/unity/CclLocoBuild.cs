@@ -1319,8 +1319,8 @@ public static partial class CclLocoBuild
         ("air hose", new Vector3(-0.385f, -0.25f, -0.17f), new Vector3(0.14f, 0.45f, 0.20f)),        // CouplingHoseRig (-0.383,-0.087,-0.173), hangs down (approx.)
     };
 
-    // End beam at the coupler: rays along z at x -0.6..0.6, y CouplerHeight -0.2..0 (exclude the tank end above hook height) (the hook-plate band); the face is the
-    // z most rays stop at (1 cm bins), so a narrow modelled coupler head or lift bar does not count as the beam.
+    // Preserve a successful hook-height measurement (and explicit reviewed bands). If that band
+    // crosses fittings instead of a beam, search other heights for a broad transverse face.
     static float EndBeam(GameObject body, int dir, out string detail)
     {
         var probe = Cfg.EndBeamProbeHeight ?? new Vector2(Cfg.CouplerHeight - 0.2f, Cfg.CouplerHeight);
@@ -1332,10 +1332,15 @@ public static partial class CclLocoBuild
             for (float x = -0.6f; x <= 0.601f; x += 0.1f)
                 for (float y = probe.x; y <= probe.y + 0.001f; y += 0.05f)
                     if (vh.Ray(new Vector3(x, y, dir * 30f), new Vector3(0, 0, -dir), 30f, out var h)) hits.Add((h.point.z, h.collider.transform.parent.name));
-        if (hits.Count < 20) throw new InvalidOperationException(CarId + " insufficient end-beam rays: " + hits.Count);
-        float outer = hits.Max(h => dir * h.z);
-        var bin = hits.Where(h => outer - dir * h.z <= 0.5f).GroupBy(h => Mathf.RoundToInt(dir * h.z * 100f)).OrderByDescending(g => g.Count()).First();
-        if (bin.Count() < 20) throw new InvalidOperationException(CarId + " ambiguous end beam: " + bin.Count() + "/" + hits.Count);
+        float outer = hits.Count > 0 ? hits.Max(h => dir * h.z) : 0;
+        var bin = hits.Where(h => outer - dir * h.z <= 0.5f).GroupBy(h => Mathf.RoundToInt(dir * h.z * 100f)).OrderByDescending(g => g.Count()).FirstOrDefault();
+        if (hits.Count < 20 || bin == null || bin.Count() < 20)
+        {
+            string failure = $"{(hits.Count < 20 ? "insufficient" : "ambiguous")} end beam: {bin?.Count() ?? 0}/{hits.Count}";
+            if (Cfg.EndBeamProbeHeight.HasValue)
+                throw new InvalidOperationException(CarId + " " + failure + "; explicit reviewed band was not changed");
+            return FindEndBeamAtOtherHeights(body, dir, failure, out detail);
+        }
         float beam = bin.Average(h => h.z);
         if (dir * beam < .5f || float.IsNaN(beam) || float.IsInfinity(beam))
             throw new InvalidOperationException(CarId + " implausible end beam: " + beam);
@@ -1343,6 +1348,52 @@ public static partial class CclLocoBuild
         detail = $"{bin.Count()}/{hits.Count} rays on it ({bin.First().part})" + (proud.Count > 0
             ? $"; {proud.Count} rays hit parts proud of it, up to {dir * proud.Max(h => dir * h.z):F3} ({string.Join(", ", proud.Select(h => h.part).Distinct())})" : "");
         return beam;
+    }
+
+    static float FindEndBeamAtOtherHeights(GameObject body, int dir, string failure, out string detail)
+    {
+        // Keep source car ends as a search constraint, never as a substitute for measured geometry.
+        float? end = dir > 0 ? Cfg.RrEndFront : Cfg.RrEndRear;
+        var samples = new List<(Vector3 p, string part)>();
+        int rows = Mathf.FloorToInt((Mathf.Min(2f, Cfg.CouplerHeight) - .2f) / .05f);
+        using (var vh = new VisualHits(body.transform))
+            for (int ix = -6; ix <= 6; ix++)
+                for (int iy = 0; iy <= rows; iy++)
+                {
+                    if (!vh.Ray(new Vector3(ix * .1f, .2f + iy * .05f, dir * 30f), new Vector3(0, 0, -dir), 30f, out var h)) continue;
+                    if (dir * h.normal.z < .95f || dir * h.point.z < .5f) continue;
+                    if (end.HasValue && Mathf.Abs(h.point.z - end.Value) > .35f) continue;
+                    samples.Add((h.point, h.collider.transform.parent.name));
+                }
+        var candidates = new List<(float z, float low, int count, string parts)>();
+        // Sliding depth windows avoid splitting the same face at an arbitrary 1 cm bin boundary.
+        // Require >=20 hits and at least two rows with >=3 samples on EACH outer side.
+        // The centre may be open/occluded by drawgear. Do not demand a solid central face.
+        // A narrow coupler or horizontal deck cannot qualify. The outermost qualifying face
+        // wins over broad truck/frame crossmembers behind it. Stay below tank/cab end walls.
+        for (int iy = 0; iy <= rows - 4; iy++)
+        {
+            float low = .2f + iy * .05f;
+            var band = samples.Where(h => h.p.y >= low - .001f && h.p.y <= low + .201f).OrderBy(h => h.p.z).ToList();
+            for (int i = 0; i < band.Count; i++)
+            {
+                var face = band.Skip(i).TakeWhile(h => h.p.z - band[i].p.z <= .015f).ToList();
+                if (face.Count < 20) continue;
+                int broadRows = face.GroupBy(h => Mathf.RoundToInt(h.p.y * 20f)).Count(g =>
+                    g.Count(h => h.p.x <= -.299f) >= 3 && g.Count(h => h.p.x >= .299f) >= 3);
+                if (broadRows < 2) continue;
+                candidates.Add((face.Average(h => h.p.z), low, face.Count,
+                    string.Join(", ", face.Select(h => h.part).Distinct().OrderBy(n => n))));
+            }
+        }
+        if (candidates.Count == 0)
+            throw new InvalidOperationException(CarId + " " + failure + "; automatic height search found no broad transverse face near the source car end; geometry review required");
+        float outer = candidates.Max(c => dir * c.z);
+        var best = candidates.Where(c => outer - dir * c.z <= .015f)
+            .OrderByDescending(c => c.count).ThenBy(c => c.low).ThenByDescending(c => dir * c.z).First();
+        detail = $"automatic height search after {failure}; band {best.low:F2}..{best.low + .2f:F2} m, {best.count} transverse-face rays ({best.parts})" +
+            (end.HasValue ? $"; source end {end.Value:F3}, measured difference {best.z - end.Value:F3} m" : "; source end unavailable");
+        return best.z;
     }
 
     static void RigOnEndBeam(GameObject body, Transform cols, Transform rig, int dir)

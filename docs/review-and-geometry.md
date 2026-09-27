@@ -89,6 +89,32 @@ The earlier A18 board measurement placed four cups near y = 2.04742 m.
 
 ## Evidence and remaining checks
 
+### Automatic end-beam measurement
+
+The builder first tries its existing coupler-height band. If that band has insufficient or split hits,
+it searches from 0.20 m up to coupler height for an upright transverse face. The search requires at
+least 20 near-coplanar hits and multiple rows with support on both outer sides; a central opening or
+drawgear obstruction is allowed. It selects the outermost qualifying face, so a broad truck crossmember
+behind the beam does not win by having more hits. Where source car-end coordinates exist, measurements
+must lie within 0.35 m of them. Those coordinates constrain the search; they never replace a measurement.
+Tank walls above coupler height, narrow fittings and horizontal decks cannot qualify. Sliding depth
+windows avoid splitting one face at a rounding-bin boundary. An explicit reviewed band remains binding.
+No suitable face still produces a geometry-review block, and the build report records the selected band,
+support count, mesh names and source-end difference. No vehicle-specific offsets or names are used.
+
+Validation on 2026-09-27: a complete C-70 conversion using the failed run's saved pre-build choices and
+no geometry override exported and passed the bundle audit. It measured +5.038 m front and −8.370 m rear,
+24 supporting rays each, matching the earlier independent manual survey. Twelve real Unity assertions
+cover both ends, central obstruction, a broad truck behind the beam, high tank walls, repeated measurement,
+explicit override failure, missing/narrow geometry, source-end mismatch and depth-bin splitting. The
+affected Python project/build/API suites ran 42 tests successfully, with one optional Mono-compiler test
+skipped. Validation did not install a pack, and its temporary conversion workspace was permanently deleted.
+
+Coupler overlap with decorative pipework and other small details is acceptable. Whole-assembly visual
+clearance warnings are advisory, not build failures. The gameplay requirement is reachability of the
+stopcock, hook and hanging hose end; that still needs checking in the game. Do not move the assembly
+outward merely to eliminate harmless decorative overlap.
+
 - Real Unity 2019.4.40f1: geared RPM/torque graph and saturated temperature reference survived prefab save/reload.
 - Real Unity: support capsules and all four A18 running-board seats checked on disposable generated geometry.
 - Real Unity C-70 diagnostic: both main-rod big-end nub tops were measured and a disposable prefab retained two

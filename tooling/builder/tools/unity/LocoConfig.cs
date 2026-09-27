@@ -36,7 +36,7 @@ public class LocoConfig
 
     // ---- physics / DV assets
     public float WheelRadius, CouplerHeight = 1.05f, CouplerInset = 0.30f;
-    public Vector2? EndBeamProbeHeight;          // measured beam sampling min/max y (m); null retains CouplerHeight-0.2..CouplerHeight
+    public Vector2? EndBeamProbeHeight;          // explicit measured band; null tries hook height, then searches for a broad beam face
     public string License = "SH282";            // DV GeneralLicenseType id (null for a tender)
     public int HudType = 20;                    // CCL BaseHUD: S060 25, S282 20, Custom 1000
     public Dictionary<string, int> HudCustom;   // non-null: custom HUD (1000) = CCL's steam preset + these "Section.Field" -> enum value overrides

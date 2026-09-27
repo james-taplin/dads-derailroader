@@ -1,5 +1,11 @@
 # Reviewed tooling snapshot for W
 
+App-maintained change, 2026-09-27: `builder/tools/unity/CclLocoBuild.cs` now searches other beam heights
+when its original band is inconclusive; `LocoConfig.cs` documents the updated null-band behavior.
+This general converter fix is authorized by the user's subsequent development instructions. It is an
+app-side patch, not a refresh from the private LLW workspace. `SNAPSHOT_SOURCES.json` preserves the original
+capture provenance; `MANIFEST.sha256` describes the current tree including this patch.
+
 Captured current local tooling for W11/W13 at SNAPSHOT_SOURCES.json's capture time. All copied files retain their exact source bytes and workspace-relative paths. This replaces the older broad historical snapshot with an explicit current-tooling allowlist; older frozen sources/reports remain in Git history and the private workspace.
 
 Start with builder/VEHICLE_RECORD.md, builder/tools/unity/LlwVehicleRecord.cs, builder/tools/prepare.py, workspace.json and locos/s16/profile/vehicle-record.json. The current shared core includes ReviewedMeshIslandRemoval.cs, CclLocoBuild.AnimatedToggles.cs and NewLocoBuildGate.cs. Loader contract sources and test scripts are in builder/tests/vehicle-record. S16's reviewed warning dispositions, measurement notes and BUILD_STATUS.md are included. G29/C21 C# profiles remain regression references; their JSON migration is not claimed.

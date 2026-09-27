@@ -1354,3 +1354,20 @@ implementation: wire LocoIndicatorReaderProxy.speed and its indicator port reade
 gate: audit exported HUD visibility, non-null speed reader and correct port/units; verify numerical zero at rest and a changing numerical km/h value while moving in game. Build/export success alone is not runtime acceptance.
 guidance: local:GUIDE_Railroader_to_DV_CCL_CODEX.md, Interior, controls and HUD, now makes this universal. GN M-2 test6 supplied the motivating missing-instrument case; its exported HUD display/reader/port checks passed, but live HUD confirmation remains pending. This notice does not claim every shared/app implementation already complies.
 action: incorporate this requirement in owned guides, defaults, build paths and acceptance audits; acknowledge adoption with evidence. Documentation/board update only; tooling snapshot unchanged.
+
+## X51 — automatic end-beam height search (2026-09-27)
+
+User requested a general fix for the repeated `ambiguous end beam: 16/57` Climax build failure.
+The old fixed hook-height band intersected fittings; the actual lower end beam had an opening in its centre.
+The core now falls back to measured lower bands with bilateral support, transverse normals and source-end
+proximity, selecting the outer broad face ahead of truck crossmembers. Explicit reviewed bands remain binding;
+missing structural evidence still blocks. No vehicle IDs or per-model offsets. The two core changes are
+app-maintained patches documented in tooling/NOTES.md; original capture provenance is retained and current
+manifest hashes updated.
+
+Complete C-70 conversion with the user's failed-run review, no beam override: export and bundle audit passed.
+Measured front +5.038 m and rear −8.370 m, each with 24 supporting rays, matching the independent survey.
+Twelve real Unity regression assertions passed; affected Python suites 42 run, one optional compiler skip.
+No install or in-game acceptance claimed. Owned ripped/build/project intermediates were permanently deleted.
+User clarified that decorative coupler/pipework overlap is acceptable: the required game checks are reachability
+of the stopcock, hook and hanging hose end. Whole-assembly visual overlap remains advisory.

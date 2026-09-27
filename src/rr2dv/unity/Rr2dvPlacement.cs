@@ -9,7 +9,7 @@ using Object = UnityEngine.Object;
 
 // App-owned orchestration around the pinned builder snapshot. Keep its build, validation and export order;
 // seat generated fittings before rendering/export, and before making the interior LOD copy.
-// The snapshot remains unchanged. No vehicle IDs or model-specific offsets belong here.
+// The core's app-maintained changes are documented in tooling/NOTES.md. No vehicle IDs or model-specific offsets belong here.
 public static partial class CclLocoBuild
 {
     public static void RunRr2dvRecord()
