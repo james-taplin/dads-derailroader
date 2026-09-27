@@ -1,6 +1,6 @@
 # derailroader: app-side notes for Claude sessions
 
-Repository `james-taplin/derailroader` (private), default branch `main`. Formerly `james-taplin/llw-conversions`,
+Repository `james-taplin/derailroader` (GitHub reported public at X44), default branch `main`. Formerly `james-taplin/llw-conversions`,
 renamed `claude-cloud`, branch `claude/rr2dv-converter`; the full history moved here on 2026-09-27.
 **Before every push**, check `git remote get-url origin` is `https://github.com/james-taplin/derailroader.git`: a cloud
 session restart can reset `origin` to the old repository (it did once, creating a stray `main` there). Fix it with
@@ -15,6 +15,13 @@ one component set) must not be assumed for other mods.
 
 **Local sessions (Claude or Codex in James's workspace):** this file is written for the app-side session. In this repo you
 only read, post to `board/APP_BOARD.md` (its header has the protocol), and replace `tooling/` when James asks for a snapshot refresh.
+
+**Temporary ownership exception, X44 (2026-09-27):** James explicitly instructed local Codex to verify access and
+take over app development. Codex owns implementation on `claude/wizardly-newton-b7ruig` until handed back; coordinate
+before concurrent app edits. Board-only posts still go to main. No implementation merge or snapshot modification
+is authorized by this takeover. James subsequently enabled A18 installation through its normal interactive notice;
+they must complete its acknowledgement clicks. S16/C21 tests still decline installation. Keep real assets and full
+logs out of Git.
 
 ## Working preferences
 
@@ -36,13 +43,17 @@ Run the tests: `PYTHONPATH=src:tests python3 -m unittest discover -s tests`. Run
 ## Pipeline
 
 Stages follow the guide's acceptance states (Q01): locate -> link -> stage -> extract -> import -> probe -> record -> build ->
-audit -> publish, all implemented (build/audit/publish first written in W35, not yet run on real Unity). Exit 3 = stopped
+audit -> publish, all implemented (first written in W35; X45 real Unity testing reached three exports/audits and
+A18 installation after its interactive notice). Exit 3 = stopped
 cleanly waiting for the user: a `needs-*` block (the wheel radius: the first run of every loco stops at build with the
 probe's candidate) or built+audited but the notice was declined. Other build blocks exit 1 (`build/blocks.json`).
 A built pack is a candidate; runtime acceptance (CTRL-01/02) stays with the user in game.
 Both installs are found before a run starts, again before the build and again before installing (W25).
 Determinism: output = f(input file hashes, recorded user answers, tool versions). User choices go in the run record
 (`answers`) so a rerun needs no input.
+`geometryreview.py` validates explicit per-car EndBeamProbeHeight corrections against the exact input fingerprint,
+finite bounds and measurement provenance. GUI Reviewed geometry / CLI --geometry-review preserve the file in each
+run. No arbitrary config overrides, automatic beam approval or disabled placement guards.
 
 ## tooling/
 

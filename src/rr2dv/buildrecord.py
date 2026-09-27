@@ -84,9 +84,10 @@ SPAWN_TRACKS = [300, 400, 1100, 1400, 1700]  # G-29/S-16: CoalMineSouth, CoalPow
 class Blocked(Exception):
     """The record cannot be completed; each item says what is missing and what to do."""
 
-    def __init__(self, items: list[dict]):
+    def __init__(self, items: list[dict], choices: list[str] | None = None):
         super().__init__("; ".join(i["message"] for i in items))
         self.items = items
+        self.choices = list(choices or [])
 
 
 def _plain(n):
@@ -121,6 +122,22 @@ def rr_axles(ws: dict) -> list[float]:
     if n <= 1:
         return [off] * n
     return [off + length / 2 - i * length / (n - 1) for i in range(n)]
+
+
+def driving_candidate(candidates: list[dict], wheelsets: list[dict], definition: dict) -> dict | None:
+    """Offer only a powered wheelset, preferring the explicitly selected main driver."""
+    from .record import drivers
+    powered = drivers(definition)
+    main = definition.get("mainDriverIndex", 0)
+    indices = ([main] if main in powered else []) + [i for i in powered if i != main]
+    for i in indices:
+        if not isinstance(i, int) or not 0 <= i < len(wheelsets):
+            continue
+        clip = wheelsets[i].get("clip")
+        hits = [c for c in candidates if clip and c.get("clip") == clip and c.get("tread")]
+        if len(hits) == 1:
+            return hits[0]
+    return None
 
 
 def _owner(path: str, rotating: list[str]) -> str | None:
@@ -306,11 +323,13 @@ class _Builder:
         if not cfg.get("MaterialMap"):
             self.block("no-materials", f"{lid}: the model's material map is empty (probe/probe.json materialMap); the builder "
                                        "tints materials from it, so this model cannot be built")
+        self._material_review(cfg, lid)
+        self._geometry_review(cfg, lid)
 
         radius = (cfg.get("WheelRadius") or {}).get("value")
         if not radius:
             cands = [w for w in rec["metadata"].get("wheelCandidates") or [] if w.get("tread")]
-            main = next((w for w in cands if w.get("clip") == (pv.get("wheelsets") or [{}])[0].get("clip")), cands[0] if cands else None)
+            main = driving_candidate(cands, pv.get("wheelsets") or [], self.definition_of(lid))
             self.block("needs-wheel-radius",
                        "the driving wheel tread radius needs your review: " +
                        (f"the probe's candidate is {main['tread']:.4f} m ({main['confidence']} confidence, source "
@@ -510,7 +529,7 @@ class _Builder:
                 loads.append([clip, "", f"{e['loadIdentifier']}.NORMALIZED", False])
             elif c["kind"] == "ToggleAnimation" and clip in anims and "firebox" in str(e.get("title", "")).casefold():
                 loads.append([clip, "", "fireboxDoor.EXT_IN", False])
-        cfg["LoadAnimations"] = self._unique_loads(loads)
+        cfg["LoadAnimations"] = self._ordered_loads(loads, ov)
         toggles = [c["name"] for c in comps if c["kind"] == "ToggleAnimation"
                    and "firebox" not in str(_extra(c).get("title", "")).casefold()]
         if toggles:
@@ -612,6 +631,8 @@ class _Builder:
             self.block("tender-empty", f"{tid}: the tender definition has no components; the loader needs at least one")
         if not cfg.get("MaterialMap"):
             self.block("no-materials", f"{tid}: the tender model's material map is empty")
+        self._material_review(cfg, tid)
+        self._geometry_review(cfg, tid)
         for key in ("WeightEmptyKg", "WaterCapacityL", "CoalCapacityKg"):
             if not cfg.get(key):
                 self.block("tender-data", f"{tid}: the definition lacks {key} (weightEmpty / loadSlots water and coal)")
@@ -666,7 +687,7 @@ class _Builder:
             clip = (e.get("animation") or {}).get("clipName")
             if c["kind"] == "LoadAnimation" and clip in anims and e.get("loadIdentifier") in ("water", "coal"):
                 loads.append([clip, "", f"{e['loadIdentifier']}.NORMALIZED", False])
-        cfg["LoadAnimations"] = self._unique_loads(loads)
+        cfg["LoadAnimations"] = self._ordered_loads(loads, ov)
         coal_slot, water_slot = self._slots(td)
         self._resources(cfg, rec, comps, coal_slot, water_slot, tank=False, tender_bounds=(bmin, bmax, front_end))
         half = (bmax[0] - bmin[0]) / 2
@@ -687,6 +708,26 @@ class _Builder:
     def _driver_indices(self, cfg: dict) -> list[int]:
         from .record import drivers
         return drivers(self.definition_of(self.draft["vehicleId"]))
+
+    def _material_review(self, cfg: dict, vid: str) -> None:
+        if self.pin[vid].get("materialMode") != "renderer-untinted":
+            return
+        if any(l[1] for l in cfg.get("Liveries") or []):
+            self.block("untinted-livery", f"{vid}: renderer materials exist but the named tint map is absent; "
+                       "livery colours cannot be mapped safely")
+            return
+        self.choose(f"{vid}: no named material map; renderer GUIDs identify untinted source materials. "
+                    "No livery colours invented. Core 'no colour' warnings for renderer: entries are expected; "
+                    "source colourizer options and final appearance remain unvalidated")
+
+    def _geometry_review(self, cfg: dict, vid: str) -> None:
+        # pipeline validates allowed fields, bounds, provenance and source fingerprint before extraction.
+        fields = self.answers.get('geometryReview', {}).get('vehicles', {}).get(vid, {})
+        if fields:
+            import copy
+            cfg['EndBeamProbeHeight'] = copy.deepcopy(fields['EndBeamProbeHeight'])
+            self.choose(f"{vid}: reviewed end-beam sampling band {fields['EndBeamProbeHeight']['value']} m; "
+                        "see geometry-review.json for measurements. Core ray-count and placement guards remain active")
 
     def _liveries(self, cfg: dict, vid: str, prefer: str | None = None) -> None:
         if not cfg.get("Liveries"):
@@ -759,6 +800,20 @@ class _Builder:
             bound = self.bound_paths(ov, clip)
             parent = c.get("parentPath") or ""
             path = next((b for b in sorted(bound, key=len) if parent == b or parent.startswith(b + "/")), None)
+            if not parent:
+                # Some mods put interaction anchors in car space, separate from the animated handle.
+                # Accept only one animated hierarchy, within that control's source interaction radius.
+                roots = [p for p in bound if p and not any(p.startswith(q + "/") for q in bound if q and q != p)]
+                anchor = _anchor(self.anchors(ov), c["name"])
+                nodes = self.nodes(ov)
+                reach = e.get("radius")
+                if len(roots) == 1 and anchor and roots[0] in nodes and isinstance(reach, (int, float)) and reach > 0:
+                    distance = math.dist(anchor, nodes[roots[0]])
+                    if distance <= reach:
+                        path = roots[0]
+                        self.choose(f"RR control {c['name']!r}: car-space anchor matched to its sole animated hierarchy "
+                                    f"{path!r} ({distance:.3f} m from pivot, source radius {reach:g} m); "
+                                    "grip ownership, pivot/travel and response remain pending")
             if not path:
                 self.choose(f"RR control {c['name']!r}: its clip {clip!r} does not move its part {parent!r}; a generated lever replaces it")
                 continue
@@ -791,6 +846,30 @@ class _Builder:
                 seen.add(l[0])
                 out.append(l)
         return out
+
+    def _ordered_loads(self, loads: list, ov: dict) -> list:
+        """Create child animation groups before a parent group moves their source hierarchy."""
+        remaining = self._unique_loads(loads)
+        original = list(remaining)
+        paths = {row[0]: self.bound_paths(ov, row[0]) for row in remaining}
+        ordered = []
+        while remaining:
+            ready = [row for row in remaining if not any(
+                child.startswith(parent + "/")
+                for other in remaining if other is not row
+                for parent in paths[row[0]] if parent
+                for child in paths[other[0]])]
+            if not ready:
+                self.block("animation-order", "load animations have conflicting parent/child ownership; "
+                           "their bindings need review before building")
+                return original
+            for row in ready:
+                ordered.append(row)
+                remaining.remove(row)
+        if ordered != original:
+            self.choose("load animation groups created child-first to preserve nested source paths: "
+                        + ", ".join(row[0] for row in ordered))
+        return ordered
 
     def _lamps(self, cfg, rec, comps, anchors) -> None:
         lenses, front, rear = [], [], []
@@ -862,7 +941,7 @@ def complete(draft: dict, inv: dict, probe_in: dict, probe_out: dict | None, pro
     if rec.get("tender"):
         b.tender(rec["config"])
     if b.blocks:
-        raise Blocked(b.blocks)
+        raise Blocked(b.blocks, b.choices)
     for vid, prefab in (composites or {}).items():  # the model with its parts placed (Rr2dvBuild makes it)
         cfg = rec["config"] if vid == rec["vehicleId"] else rec["tender"]["config"]
         cfg["SrcPrefab"] = prefab

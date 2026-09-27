@@ -26,6 +26,7 @@ namespace UnityEngine
     public class ScriptableObject : Object { }
     public class GameObject : Object
     {
+        public T[] GetComponents<T>() => null;
         public GameObject() { } public GameObject(string name) { }
         public Transform transform; public bool activeInHierarchy;
         public SceneManagement.Scene scene;
@@ -124,16 +125,19 @@ namespace UnityEditor
         public static GameObject LoadPrefabContents(string p) => null;
         public static void UnloadPrefabContents(GameObject go) { }
         public static GameObject SaveAsPrefabAsset(GameObject go, string p) => null;
+        public static GameObject SaveAsPrefabAsset(GameObject go, string p, out bool success) { success = false; return null; }
     }
+    public static class GameObjectUtility { public static int RemoveMonoBehavioursWithMissingScript(GameObject go) => 0; }
     public static class EditorApplication { public static void Exit(int code) { } }
     public static class EditorUtility { public static void SetDirty(Object o) { } }
     public enum SerializedPropertyType { Generic, Integer, Boolean, Float, String, Color, ObjectReference }
     public class SerializedProperty
     {
+        public bool Next(bool enterChildren) => false;
         public SerializedPropertyType propertyType; public string stringValue; public float floatValue; public int arraySize;
         public Object objectReferenceValue; public SerializedProperty GetArrayElementAtIndex(int i) => null;
     }
-    public class SerializedObject { public SerializedObject(Object o) { } public SerializedProperty FindProperty(string n) => null; }
+    public class SerializedObject { public SerializedObject(Object o) { } public SerializedProperty FindProperty(string n) => null; public SerializedProperty GetIterator() => null; }
     namespace SceneManagement
     {
         public enum NewSceneSetup { EmptyScene, DefaultGameObjects }

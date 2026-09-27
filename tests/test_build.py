@@ -80,6 +80,27 @@ class BuildStages(unittest.TestCase):
         self.assertEqual(out.run.record["stages"]["publish"]["status"], "not_installed")
         self.assertEqual(sorted(p.name for p in self.m["dv_mods"].iterdir()), ["DVCustomCarLoader"])
 
+    def test_reviewed_geometry_is_preserved_and_stale_review_stops_before_tools(self):
+        first = self.convert()
+        review = {'schema': 1, 'inputFingerprint': first.run.record['input_fingerprint'],
+                  'vehicles': {'ts-260-a': {'EndBeamProbeHeight': {
+                      'value': [.7, .85], 'unit': 'm', 'basis': 'derived', 'evidence': ['synthetic measured beam']}}}}
+        path = self.tmp / 'review.json'
+        path.write_text(json.dumps(review))
+        out = self.convert(agree=False, wheel_radius=.598, geometry_review=path)
+        self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)
+        self.assertEqual(read_json(out.run.path / 'geometry-review.json'), review)
+        self.assertEqual(out.run.record['answers']['geometryReview'], review)
+        rec = read_json(out.run.path / 'build/vehicle-record.json')
+        self.assertEqual(rec['config']['EndBeamProbeHeight'], review['vehicles']['ts-260-a']['EndBeamProbeHeight'])
+        self.assertNotIn('EndBeamProbeHeight', rec['tender']['config'])
+        review['inputFingerprint'] = 'changed'
+        path.write_text(json.dumps(review))
+        out = self.convert(wheel_radius=.598, geometry_review=path)
+        self.assertEqual(out.code, EXIT_FAILED)
+        self.assertIn('different source', out.message)
+        self.assertEqual(out.run.record['stages']['stage']['status'], 'pending')
+
     def test_without_the_radius_it_asks_and_offers_the_candidate(self):
         out = self.convert()
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)

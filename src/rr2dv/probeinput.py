@@ -38,6 +38,19 @@ def prefab_maps(prefab: Path, guids: dict[str, str]) -> dict[str, list[dict]]:
     return maps
 
 
+def renderer_materials(prefab: Path, guids: dict[str, str]) -> list[dict]:
+    """Explicit renderer references for models without a named tint map; keys are identities, not colour IDs."""
+    text = prefab.read_text(encoding="utf-8-sig", errors="replace")
+    found = set()
+    for block in re.split(r"(?m)^--- !u!", text):
+        if not block.startswith(("23 ", "137 ")):  # MeshRenderer / SkinnedMeshRenderer
+            continue
+        slots = re.search(r"(?m)^  m_Materials:\s*\n((?:  -[^\n]*\n)*)", block)
+        if slots:
+            found.update(re.findall(r"guid: ([0-9a-fA-F]{32})", slots[1]))
+    return [{"key": f"renderer:{g}", "asset": guids.get(g, ""), "guid": g} for g in sorted(found)]
+
+
 CAB_RAY_STEP = 0.1       # m between rays
 CAB_RAY_HALF_WIDTH = 1.0  # rays across x -1..1 m
 CAB_RAY_BELOW, CAB_RAY_ABOVE = 0.4, 1.6  # around the firebed height, up the backhead
@@ -88,6 +101,10 @@ def build(run_path: Path, inv: dict, project_info: dict) -> dict:
     for v in project_info["vehicles"]:
         d = definition_of(v)
         maps = prefab_maps(project / v["unity_prefab"], guids)
+        material_mode = "named"
+        if not maps["material"]:
+            maps["material"] = renderer_materials(project / v["unity_prefab"], guids)
+            material_mode = "renderer-untinted"
         clips = {e["key"]: e["asset"] for e in maps["clip"]}
         for kind in ("clip", "material"):
             missing += [f"{v['id']}: {kind} {e['key']!r} (guid {e['guid']}) not in project" for e in maps[kind] if not e["asset"]]
@@ -112,6 +129,7 @@ def build(run_path: Path, inv: dict, project_info: dict) -> dict:
         cab = cab_spec(comps) if v["role"] == "locomotive" else None
         vehicles.append({"id": v["id"], "role": v["role"], "prefab": v["unity_prefab"], "wheelsets": wheelsets,
                          "components": comps, "animationMap": maps["clip"], "materialMap": maps["material"],
+                         "materialMode": material_mode,
                          **({"cab": cab} if cab else {})})
     data = {"schema": 1, "vehicles": vehicles, "missing": missing}
     write_json(project / INPUT_ASSET, data)

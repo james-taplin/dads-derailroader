@@ -229,6 +229,21 @@ class App:
         Tooltip(wheel_label, wheel_help)
         Tooltip(wheel_entry, wheel_help)
 
+        geometry = ttk.Frame(right)
+        geometry.pack(side="top", fill="x", pady=(6, 0))
+        ttk.Label(geometry, text="Reviewed geometry (optional)").pack(side="left")
+        self.geometry = tk.StringVar()
+        entry = ttk.Entry(geometry, textvariable=self.geometry)
+        entry.pack(side="left", fill="x", expand=True, padx=6)
+        def browse_geometry():
+            path = filedialog.askopenfilename(parent=self.root, title="Choose reviewed geometry",
+                                              filetypes=[("Geometry review", "*.json")])
+            if path:
+                self.geometry.set(path)
+        ttk.Button(geometry, text="Browse…", command=browse_geometry).pack(side="left")
+        Tooltip(entry, "A measured end-beam correction file for this locomotive. Leave empty unless its geometry "
+                       "has been reviewed. A review for different source files is refused.")
+
         ttk.Label(right, text="Checks", style="H2.TLabel").pack(side="top", anchor="w", pady=(10, 2))
         self.issues = ttk.Treeview(right, columns=("message",), show="tree", height=3, selectmode="none")
         self.issues.column("#0", width=28, stretch=False)
@@ -439,6 +454,7 @@ class App:
             messagebox.showerror(APP_NAME, "The wheel radius must be a number of metres between 0.1 and 1.5.", parent=self.root)
             return
         audio = {1: "S060", 2: "S282"}.get(self.audio.current())
+        geometry_review = Path(self.geometry.get().strip()) if self.geometry.get().strip() else None
         livery = self.livery.get() if self.livery.get() != "(default)" else None
         for mark in self.stage_rows.values():
             mark.configure(text="\u25cb", fg=COLOURS["muted"])
@@ -460,7 +476,8 @@ class App:
             return answer["value"]
 
         applog.get().info("converting %s from %s (livery %s, audio %s, wheel radius %s)", ident, folder, livery, audio, wheel_radius)
-        started = self.worker.run("Conversion", lambda: self.c.convert(folder, ident, livery, audio, wheel_radius, progress, ask),
+        started = self.worker.run("Conversion", lambda: self.c.convert(folder, ident, livery, audio, wheel_radius, progress, ask,
+                                                                      geometry_review=geometry_review),
                                   self._converted)
         if started:
             self._set_busy(True)

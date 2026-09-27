@@ -103,7 +103,8 @@ def cmd_convert(args) -> int:
     machine = machine_mod.load(args.machine)
     extra = [Path(p) for p in args.search] + machine.search_roots()
     try:
-        outcome = convert(args.input, machine, args.loco, extra, args.audio, args.livery, args.wheel_radius)
+        outcome = convert(args.input, machine, args.loco, extra, args.audio, args.livery, args.wheel_radius,
+                          geometry_review=args.geometry_review)
     except Exception as e:  # stopped inside a run: show how far it got and where its log is, then report the error
         _print_run(getattr(e, "rr2dv_run", None))
         raise
@@ -112,9 +113,12 @@ def cmd_convert(args) -> int:
     radius = next((b for b in (outcome.run.record.get("blocks") or [] if outcome.run else [])
                    if b.get("code") == "needs-wheel-radius" and b.get("candidate")), None)
     if radius:  # the rerun command, with every answer already given, for the user to check and run
-        parts = ["rr2dv", "convert", f'"{args.input}"'] + (["--loco", args.loco] if args.loco else []) + \
+        parts = ["rr2dv"] + (["--machine", f'"{args.machine}"'] if args.machine else []) + \
+                ["convert", f'"{args.input}"'] + (["--loco", args.loco] if args.loco else []) + \
                 (["--livery", f'"{args.livery}"'] if args.livery else []) + (["--audio", args.audio] if args.audio else []) + \
-                [f"--search \"{s}\"" for s in args.search] + ["--wheel-radius", f"{radius['candidate']:.4f}"]
+                [f"--search \"{s}\"" for s in args.search] + \
+                (["--geometry-review", f'"{args.geometry_review}"'] if args.geometry_review else []) + \
+                ["--wheel-radius", f"{radius['candidate']:.4f}"]
         print("\nAfter checking the candidate against the tyre in the model, convert again with:\n  " + " ".join(parts))
     return outcome.code
 
@@ -157,6 +161,8 @@ def build_parser() -> argparse.ArgumentParser:
                       help="vanilla Derail Valley sound set to use instead of the boiler-size rule")
     conv.add_argument("--wheel-radius", type=float, metavar="METRES",
                       help="driving wheel tread radius you have reviewed (see metadata.wheelCandidates in the draft record)")
+    conv.add_argument("--geometry-review", type=Path, metavar="FILE",
+                      help="reviewed per-car end-beam band JSON, tied to the exact source fingerprint")
     with_search(conv, optional_default=False)
     conv.set_defaults(func=cmd_convert)
     return parser

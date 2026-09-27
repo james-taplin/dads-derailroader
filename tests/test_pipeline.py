@@ -204,7 +204,7 @@ class Cli(unittest.TestCase):
         self.assertIn("record   done", text)
         self.assertIn("build    needs_answer", text)
         self.assertIn("Run folder:", text)
-        self.assertIn('rr2dv convert "Test Loco Mod" --wheel-radius 0.5988', text)
+        self.assertIn(f'rr2dv --machine "{self.tmp / "machine.json"}" convert "Test Loco Mod" --wheel-radius 0.5988', text)
 
     def test_convert_stopped_inside_a_run_names_its_log(self):
         # X39: an error raised mid-run still shows the stages reached and where run.log is

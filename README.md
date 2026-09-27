@@ -8,9 +8,14 @@ folder, rebuilds it for the Derail Valley Custom Car Loader (CCL 3.1.9), and ins
 Valley `Mods` folder. It never changes the Railroader mod it reads.
 
 > **Work in progress: first end-to-end version.** Every stage is written, from finding the mod to installing the pack.
-> Everything up to the draft vehicle record has been run with real Unity and AssetRipper on Windows; the build, audit
-> and install stages are new and are being tried on real locomotives now. An installed pack is a **candidate**: it
+> Windows/Unity 2019.4 testing now reaches export and bundle audit for S16, C21 and A18; A18 also completed
+> installation through the normal notice. Remaining visual/control warnings are recorded in X45. An installed pack is a **candidate**: it
 > still has to be checked in Derail Valley (see *What a finished pack must pass*).
+
+The X43 development fixes check prefab save/reload success, report removed missing-script components, select the
+main driving-wheel candidate for review, and support untinted renderer materials when no named tint map exists.
+Blocked runs retain their automatic choices in `build/review.json`. See [resolving blocks](docs/resolving-blocks.md)
+for the remaining material and control-mapping limits. Real locomotive and runtime acceptance are separate gates.
 
 ## Personal use only
 
@@ -158,6 +163,11 @@ release that is not upright with its handle outward. The in-game checks are your
 
 ## Settings
 
+If a measured beam sits outside the builder's default sampling band, an explicit **Reviewed geometry** JSON file
+can supply that car's sampling heights (CLI: `--geometry-review FILE`). It must match the source fingerprint and
+include measurement evidence; see [reviewed end-beam geometry](docs/resolving-blocks.md#reviewed-end-beam-geometry).
+The builder's ray-count and clearance checks stay active.
+
 Settings live in `%APPDATA%\rr2dv\machine.json` (or pass `--machine FILE`). The app's **Settings…** dialog edits the same
 file. All keys are optional except the tools:
 
@@ -186,6 +196,11 @@ file. All keys are optional except the tools:
 
 Run the tests with `PYTHONPATH=src:tests python -m unittest discover -s tests` (on Windows use `src;tests`). The
 window tests run where Tk and a display are available (Windows, or Linux under Xvfb) and are skipped otherwise.
+For the real prefab-save regression, set `RR2DV_TEST_UNITY` to the Unity 2019.4.40f1 executable and run
+`python -m unittest discover -s tests -p test_unity_runtime.py -v` with the same `PYTHONPATH`. It creates a temporary
+synthetic project, verifies an actual missing-script save failure, recovery and preservation of valid components,
+and checks that preparation failure never reaches the builder. It uses the normal hidden-window launcher because
+the local Personal licence does not support batch mode. No game assets or install notice are involved.
 
 ## Licence
 

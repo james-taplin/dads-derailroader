@@ -23,7 +23,8 @@ public static class Rr2dvBuild
     [Serializable] public class Input { public int schema; public Absent[] absentBindings; public string[] audioStrip; public Composite[] composites; }
 
     [Serializable] public class Removed { public string clip, hash; public int bindings; }
-    [Serializable] public class Stripped { public string prefab; public int audioSources; }
+    [Serializable] public class MissingScript { public string path; public int count; }
+    [Serializable] public class Stripped { public string prefab; public int audioSources; public MissingScript[] missingScripts; }
     [Serializable] public class Placed { public string vehicle, target, part, parent; }
     [Serializable] public class Prep { public int schema = 1; public Removed[] removedBindings; public Stripped[] audioStripped; public Placed[] parts; public string error; }
 
@@ -41,8 +42,19 @@ public static class Rr2dvBuild
             var input = JsonUtility.FromJson<Input>(File.ReadAllText(Path.Combine(project, InputAsset)));
             if (input == null || input.schema != 1) throw new InvalidDataException("unsupported build input");
             prep.removedBindings = (input.absentBindings ?? new Absent[0]).SelectMany(RemoveAbsent).ToArray();
-            prep.audioStripped = (input.audioStrip ?? new string[0]).Select(StripAudio).Where(s => s.audioSources > 0).ToArray();
-            prep.parts = (input.composites ?? new Composite[0]).SelectMany(MakeComposite).ToArray();
+            var stripped = new List<Stripped>();
+            foreach (var path in input.audioStrip ?? new string[0])
+            {
+                var entry = StripAudio(path);
+                if (entry.audioSources > 0 || entry.missingScripts.Length > 0) stripped.Add(entry);
+                prep.audioStripped = stripped.ToArray();
+            }
+            var placed = new List<Placed>();
+            foreach (var composite in input.composites ?? new Composite[0])
+            {
+                placed.AddRange(MakeComposite(composite));
+                prep.parts = placed.ToArray();
+            }
             AssetDatabase.SaveAssets();
             AssetDatabase.Refresh();
             File.WriteAllText(Path.Combine(output, "prep.json"), JsonUtility.ToJson(prep, true));
@@ -114,8 +126,14 @@ public static class Rr2dvBuild
         {
             var sources = root.GetComponentsInChildren<AudioSource>(true);
             foreach (var s in sources) Object.DestroyImmediate(s);
-            if (sources.Length > 0) PrefabUtility.SaveAsPrefabAsset(root, prefabPath);
-            return new Stripped { prefab = prefabPath, audioSources = sources.Length };
+            var missing = new List<MissingScript>();
+            foreach (var t in root.GetComponentsInChildren<Transform>(true))
+            {
+                int count = GameObjectUtility.RemoveMonoBehavioursWithMissingScript(t.gameObject);
+                if (count > 0) missing.Add(new MissingScript { path = AnimationUtility.CalculateTransformPath(t, root.transform), count = count });
+            }
+            if (sources.Length > 0 || missing.Count > 0) SaveChecked(root, prefabPath);
+            return new Stripped { prefab = prefabPath, audioSources = sources.Length, missingScripts = missing.ToArray() };
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
@@ -148,10 +166,27 @@ public static class Rr2dvBuild
             }
             foreach (var s in go.GetComponentsInChildren<AudioSource>(true)) Object.DestroyImmediate(s);
             Folder(Path.GetDirectoryName(c.target).Replace('\\', '/'));
-            PrefabUtility.SaveAsPrefabAsset(go, c.target);
+            SaveChecked(go, c.target);
         }
         finally { Object.DestroyImmediate(go); }
         return placed;
+    }
+
+    // A failed save must stop preparation before the record loader can misreport a missing source prefab.
+    static void SaveChecked(GameObject root, string path)
+    {
+        bool success;
+        var saved = PrefabUtility.SaveAsPrefabAsset(root, path, out success);
+        if (!success || !saved) throw new InvalidOperationException("prefab save failed: " + path);
+        var reloaded = PrefabUtility.LoadPrefabContents(path);
+        if (!reloaded) throw new InvalidOperationException("saved prefab cannot be reloaded: " + path);
+        try
+        {
+            foreach (var t in reloaded.GetComponentsInChildren<Transform>(true))
+                if (t.gameObject.GetComponents<Component>().Any(c => c == null))
+                    throw new InvalidOperationException("saved prefab still has missing scripts: " + path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(reloaded); }
     }
 
     static void Folder(string path)

@@ -45,7 +45,8 @@ def audit_input(rec: dict, pack: Path) -> dict:
     ports = [l["Port"] for l in cfg.get("RrLevers") or [] if l.get("Port")] + [p["Port"] for p in cfg.get("Placed") or []]
     required = sorted(set(REQUIRED_PORTS) | set(ports))
     controls = sorted({READER_CONTROLS[p] for p in required if p in READER_CONTROLS})
-    bundles = [str(f.resolve()) for f in sorted(pack.iterdir()) if f.is_file() and f.name != "Info.json"]
+    bundles = [str(f.resolve()) for f in sorted(pack.iterdir())
+               if f.is_file() and f.name != "Info.json" and f.suffix.casefold() != ".manifest"]
     return {"schema": 1, "bundles": bundles, "carFolders": folders, "cars": cars, "controls": controls, "ports": required,
             "indicators": INDICATORS}
 

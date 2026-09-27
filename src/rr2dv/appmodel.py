@@ -126,9 +126,10 @@ class Controller:
         return scan_report(mod, search_roots(rr, self.machine.search_roots()))
 
     def convert(self, folder: str, loco: str, livery: str | None = None, audio: str | None = None,
-                wheel_radius: float | None = None, on_progress=None, ask: Callable = consent.ask) -> Outcome:
+                wheel_radius: float | None = None, on_progress=None, ask: Callable = consent.ask,
+                geometry_review: Path | None = None) -> Outcome:
         return convert(folder, self.machine, loco, self.machine.search_roots(), audio, livery, wheel_radius,
-                       ask=ask, on_progress=on_progress)
+                       ask=ask, on_progress=on_progress, geometry_review=geometry_review)
 
 
 def blocking_issues(report: dict, loco: str) -> list[dict]:

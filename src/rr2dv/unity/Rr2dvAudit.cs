@@ -72,18 +72,7 @@ public static class Rr2dvAudit
                 objects.AddRange(b.LoadAllAssets());
             }
             if ((input.bundles ?? new string[0]).Length == 0) errors.Add("no exported bundle to audit");
-            var all = new List<Object>();
-            foreach (var o in objects)
-            {
-                all.Add(o);
-                var go = o as GameObject;
-                if (!go) continue;
-                foreach (var c in go.GetComponentsInChildren<Component>(true))
-                {
-                    if (c == null) { errors.Add("missing behaviour script in " + go.name); continue; }
-                    all.Add(c);
-                }
-            }
+            var all = CollectObjects(objects, errors);
             foreach (var o in all)
             {
                 if (o is AudioClip) clips.Add(o.name);
@@ -118,7 +107,7 @@ public static class Rr2dvAudit
 
             // BR-01 (board X41): the stock brake-release fitting stands upright with its red handle pointing outward: in the
             // car's space its +z (handle) points to the side it is on and its +y (hanger) points up. Never rolled over.
-            foreach (var go in objects.OfType<GameObject>())
+            foreach (var go in all.OfType<GameObject>().Where(g => !g.transform.parent))
                 foreach (var t in go.GetComponentsInChildren<Transform>(true).Where(x => x.name == "[brake release]"))
                 {
                     var q = Quaternion.Inverse(go.transform.rotation) * t.rotation;
@@ -174,6 +163,36 @@ public static class Rr2dvAudit
                 File.WriteAllText(Path.Combine(output, "result.json"), JsonUtility.ToJson(result, true));
             EditorApplication.Exit(exit);
         }
+    }
+
+    static List<Object> CollectObjects(IEnumerable<Object> objects, List<string> errors)
+    {
+        // CCL exports the pack as its sole named asset; cars/prefabs are referenced dependencies,
+        // not separate LoadAllAssets entries. Follow the serialized graph, deduplicating cycles.
+        var all = new List<Object>();
+        var seen = new HashSet<Object>();
+        var pending = new Queue<Object>(objects);
+        while (pending.Count > 0)
+        {
+            var o = pending.Dequeue();
+            if (!o || !seen.Add(o)) continue;
+            all.Add(o);
+            var go = o as GameObject;
+            if (go) foreach (var c in go.GetComponentsInChildren<Component>(true))
+            {
+                if (c == null) { errors.Add("missing behaviour script in " + go.name); continue; }
+                pending.Enqueue(c);
+            }
+            // Mesh/texture buffers are leaves for these checks; avoid walking their large numeric arrays.
+            if (o is GameObject || o is Component || o is ScriptableObject || o is AnimationClip || o is Material)
+            {
+                var property = new SerializedObject(o).GetIterator();
+                while (property.Next(true))
+                    if (property.propertyType == SerializedPropertyType.ObjectReference && property.objectReferenceValue)
+                        pending.Enqueue(property.objectReferenceValue);
+            }
+        }
+        return all;
     }
 
     static string Str(Object o, string field)

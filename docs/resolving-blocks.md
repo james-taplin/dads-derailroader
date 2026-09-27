@@ -118,6 +118,28 @@ Not blocking, but worth reading (amber ! in the app):
 
 ## Stage `build`
 
+X43 preparation fixes: unsupported missing-script components are removed only from this run's copied prefabs,
+with each hierarchy path and count in `prep.json` (`audioStripped[].missingScripts`). Valid components remain.
+Every changed prefab and composite must save successfully and reload before the builder runs; a failure is reported
+as preparation failure. Railroader code DLLs are never imported to satisfy missing scripts.
+
+`build/review.json` is also written when record completion is blocked, with `status: blocked`, the choices reached
+so far and the blocks. It is diagnostic evidence, not a completed build record. The wheel-radius question offers
+only a powered wheelset's candidate, preferring `mainDriverIndex`; it does not substitute a pilot wheel when the
+driving candidate is unavailable. Suggested CLI reruns preserve a custom global `--machine` argument.
+
+Models without a named material map can use explicit renderer material references when no livery colours need
+mapping. Their `renderer:<guid>` keys are asset identities, not tint names. The builder leaves them untinted;
+its exact `no colour` warnings remain in the report for review. Source colourizer choices and appearance remain
+pending. A model with livery colours but no named tint map stops with `untinted-livery`; supply a reviewed mapping
+through a future supported adapter rather than guessing colour IDs. Missing renderer slots still remain pending.
+
+For car-space control anchors with no parent path, a handle is matched only when its clip has one animated hierarchy
+within the source control radius. The choice is recorded; it does not validate grip ownership, travel or response.
+Ambiguous hierarchies, distant pivots and absent bindings retain the disclosed generated-control fallback.
+Nested load animations are created child-first so moving a parent into an animator group does not lose the child's
+source path. `animation-order` means two clips have conflicting parent/child ownership and need binding review.
+
 The build first completes the draft record from the definitions and the measurements (every choice it makes is listed
 in `build/review.json`), then builds the pack with our builder in Unity. It stops with a block when something cannot
 be worked out; `build/blocks.json` lists them all at once.
@@ -136,7 +158,44 @@ be worked out; `build/blocks.json` lists them all at once.
 | *preparing the Unity project failed* | removing the listed animation bindings, removing AudioSources, or placing a part failed | send `build/out/prep.json` |
 | *scripts did not compile* | as for the probe | check the Unity version is exactly 2019.4.40f1 and that CarCreator 3.1.9 is the package set in the settings |
 
+### Reviewed end-beam geometry
+
+An *ambiguous end beam* or *insufficient end-beam rays* error can mean the default sampling heights miss the
+actual frame. Measure the current model first, including the broad beam face and nearby coupler/lift hardware.
+Do not choose a band merely because it passes. The height band changes where the existing rays sample; it does
+not change coupler height, the minimum ray count, clearance checks or any acceptance requirement.
+
+For a reviewed correction, choose **Reviewed geometry** in the app, or pass `--geometry-review FILE` to `convert`.
+The JSON has this shape (replace the fingerprint, car id, heights and evidence with the current measurements):
+
+```json
+{
+  "schema": 1,
+  "inputFingerprint": "copy input_fingerprint from the measured run.json",
+  "vehicles": {
+    "source-car-id": {
+      "EndBeamProbeHeight": {
+        "value": [1.0, 1.2],
+        "unit": "m",
+        "basis": "derived",
+        "evidence": ["measurement report, beam bounds, ray counts and review reasoning"]
+      }
+    }
+  }
+}
+```
+
+Only the selected locomotive and its tender may be named. Each band must lie in 0..2 m, span 0.1..0.4 m, and have
+`measured` or `derived` provenance with nonempty evidence. No other config fields are accepted. A changed source
+fingerprint stops before extraction: remeasure it. The file's contents are copied into the run's
+`geometry-review.json`, answers and build record so later edits to the input file cannot change that run.
+This remains a manual geometry review; the app does not identify and approve beams automatically.
+
 ## Stage `audit`
+
+The audit loads binary bundles, excluding text `.manifest` sidecars, then follows the pack's serialized references
+to cars, prefabs and their components. Dependencies need not appear as separately named bundle assets. Reference
+cycles are deduplicated; missing components, forbidden scripts and referenced audio still fail the audit.
 
 The audit reads the exported pack with Unity's own loader, in a second Unity run, before anything is installed.
 

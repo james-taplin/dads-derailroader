@@ -79,7 +79,12 @@ def prepare(run_path: Path, inv: dict, probe_in: dict, probe_out: dict | None, p
         target = f"Assets/RR2DV/{car_id}/source/{vid}.prefab"
         composites[vid] = target
         specs.append({"vehicle": vid, "source": source, "target": target, "parts": parts})
-    rec, choices = buildrecord.complete(draft, inv, probe_in, probe_out, project, answers, defs, composites)
+    try:
+        rec, choices = buildrecord.complete(draft, inv, probe_in, probe_out, project, answers, defs, composites)
+    except buildrecord.Blocked as e:
+        write_json(run_path / "build/review.json", {"status": "blocked", "choices": e.choices,
+                   "pending": draft["metadata"]["pending"], "blocks": e.items})
+        raise
     errors = recordcheck.check(rec)
     if errors:  # our own bug if it happens: the completed record must pass the loader's rules
         raise BuildError("the completed vehicle record breaks the loader's rules: " + "; ".join(errors[:5])

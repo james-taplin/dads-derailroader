@@ -14,9 +14,10 @@ APP_CS = sorted((REPO / "src/rr2dv/unity").glob("*.cs"))
 KNOWN_GOOD = sorted((REPO / "tooling").rglob("*.cs"))
 CLASSES = ("AnimationUtility", "AssetDatabase", "EditorApplication", "EditorSceneManager", "PrefabUtility",
            "JsonUtility", "Application", "Physics", "Mathf", "Shader", "Debug", "AssetBundle", "EditorUtility",
-           "SerializedPropertyType")
+           "SerializedPropertyType", "GameObjectUtility")
 # Members checked by hand against the Unity 2019.4 scripting reference, with a reason.
 REVIEWED = {
+    "GameObjectUtility.RemoveMonoBehavioursWithMissingScript": "https://docs.unity3d.com/2019.4/Documentation/ScriptReference/GameObjectUtility.RemoveMonoBehavioursWithMissingScript.html (returns removed count)",
     "JsonUtility.ToJson": "UnityEngine.JsonUtility.ToJson(object, bool), Unity 2019.4 scripting reference",
     "AssetDatabase.GetDependencies": "UnityEditor.AssetDatabase.GetDependencies(string[] pathNames, bool recursive), 2019.4",
     "AssetDatabase.GetMainAssetTypeAtPath": "UnityEditor.AssetDatabase.GetMainAssetTypeAtPath(string assetPath) -> Type, 2019.4",

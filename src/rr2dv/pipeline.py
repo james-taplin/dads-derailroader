@@ -15,7 +15,7 @@ from typing import Sequence
 
 from typing import Callable
 
-from . import (assetripper, audit, build, buildrecord, consent, installs, probeinput, projectcache, publish, record,
+from . import (assetripper, audit, build, buildrecord, consent, geometryreview, installs, probeinput, projectcache, publish, record,
                unityproject, unityrun)
 from .jsonio import read_json, write_json
 from .machine import Machine, check_work_root
@@ -79,7 +79,8 @@ def extract(run: Run, inv: dict, machine: Machine) -> dict:
 
 def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: Sequence[Path] = (),
             audio: str | None = None, livery: str | None = None, wheel_radius: float | None = None,
-            ask: Callable = consent.ask, on_progress: Callable[[str | None, str, str], None] | None = None) -> Outcome:
+            ask: Callable = consent.ask, on_progress: Callable[[str | None, str, str], None] | None = None,
+            geometry_review: Path | None = None) -> Outcome:
     # Both installs (and CCL) first (W25), then the input must be a mod in the Railroader Mods folder.
     rr, dv = _installs(machine)
     input_path = installs.mod_in_railroader(rr, mod)
@@ -91,7 +92,8 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
     roots = search_roots(rr, search)
 
     request = {"input": str(input_path), "locomotive": loco, "railroader": rr.describe(), "derail_valley": dv.describe(),
-               "search_roots": [str(p) for p in roots], "audio": audio, "livery": livery, "wheel_radius": wheel_radius}
+               "search_roots": [str(p) for p in roots], "audio": audio, "livery": livery, "wheel_radius": wheel_radius,
+               "geometry_review": str(geometry_review) if geometry_review else None}
     run = Run.create(work_root, loco or input_path.name, request)
     run.listener = on_progress
     tools = {k: machine.values.get(k) for k in ("unity", "carCreator", "assetRipper", "python", "workRoot")}
@@ -102,7 +104,7 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
             + f"audio: {audio or '(boiler-size rule)'}; wheel radius: {wheel_radius or '(pending)'}\n"
             + "search: " + ", ".join(str(r) for r in roots))
     try:
-        return _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius, ask)
+        return _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius, ask, geometry_review)
     except Exception as e:  # record the failure on the run, then let the caller report it
         current = next((n for n, s in run.record["stages"].items() if s["status"] == "running"), None)
         message = f"{type(e).__name__}: {e}"
@@ -142,7 +144,7 @@ def install_pack(run: Run, machine: Machine, pack_dir: Path, expected: dict[str,
 
 def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path],
             audio: str | None, machine: Machine, livery: str | None = None, wheel_radius: float | None = None,
-            ask: Callable = consent.ask) -> Outcome:
+            ask: Callable = consent.ask, geometry_review: Path | None = None) -> Outcome:
     def fail(stage: str, message: str, code: int = EXIT_FAILED) -> Outcome:
         run.finish(stage, "failed", message)
         run.close("failed", message)
@@ -170,6 +172,15 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     for issue in inv["issues"]:
         run.log(f"  {issue['severity']:7} {issue['code']}: {issue['message']}")
     run.record["input_fingerprint"] = fingerprint(inv)
+    if geometry_review:
+        cars = {chosen} | ({inv['tender']['id']} if inv.get('tender') else set())
+        try:
+            reviewed = geometryreview.validate(read_json(geometry_review), run.record['input_fingerprint'], cars)
+        except (ValueError, OSError) as e:
+            return fail('link', f'geometry review: {e}')
+        run.record['answers']['geometryReview'] = reviewed
+        write_json(run.path / 'geometry-review.json', reviewed)
+        run.log('reviewed geometry saved to geometry-review.json (source fingerprint matched)')
     warnings = [i for i in inv["issues"] if i["severity"] == "warning"]
     run.finish("link", "done", f"{len(inv['packs'])} packs, {len(inv['parts'])} parts, {len(warnings)} warning(s)")
 
