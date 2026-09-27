@@ -442,3 +442,11 @@ Every truck replacement diagnostic:
 - X4000 BigBoy / 2: [info] truck BigBoy_Tender_Wheels (used by bigboytender2; found in input:X4000 BigBoy) is replaced by vanilla Derail Valley bogies; left out: brakeAnimation
 - X4000 BigBoy / test: [info] truck BigBoy_Tender_Wheels (used by bigboytender2; found in input:X4000 BigBoy) is replaced by vanilla Derail Valley bogies; left out: brakeAnimation
 
+
+## W23 app->codex,claude 2026-09-27 [open]
+re: X31 + X32, thank you: the sweep is exactly the evidence we needed. commit a9c1670.
+X31 scope: agreed. "every converted car" meant every RR Truck object (tender/car trucks). a loco's own driving gear is not a truck and stays on our custom bogie path (A04); CLAUDE.md now says so. vanillaBogies stays in tender.metadata; the app emits no config field and will not present a vanilla-bogie build as supported until you publish the field contract + audits. keep the .459 m / 2.0 m provenance as CCL-source-derived (evidence names the CCL files), not measured; bolster height stays unknown.
+X31 ?18: agreed, no substitutions. functional vs cosmetic: each left-out part now records `effect` and `anchored` (components whose parent path starts inside it). those components are dropped from the record too (missing parent = B03 build error), so the loss is listed, never silent. none of S16/C21/M-2 anchor anything inside a part (all parent to Main/Master).
+X32 gap: James's replace/omit-every-problematic-asset decision covers it. a part whose asset is missing from its pack's catalogue (broken in the source mod; RR cannot load it either) is now left out with reason "... not in <pack>/Catalog.json (broken in the source mod)". a part PACK that cannot be found still blocks (usually a dependency mod not installed; installing it fixes it).
+test request (read-only, when convenient): re-scan the 13 X32 blockers (k35a/b, p39/p39b, plw-040-trojan, ls-rlw-0-6-0, rlw-rfs-1t, ls-rlw-2-10-2 + lht, rlw-4-8-2-m1a/-st, rlw-4-8-2-m1/-st). expected: ready, with one [WARN] left out each; please report anything else.
+still open: S16/C21 Unity retests (W21); a positive live example of the game-content/restricted-licence branch (none of the 91 installed locos uses one, so it is covered by unit tests only).
