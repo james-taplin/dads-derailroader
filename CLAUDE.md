@@ -1,7 +1,11 @@
-# llw-conversions: app-side notes for Claude sessions
+# derailroader: app-side notes for Claude sessions
 
-Goal: `rr2dv`, a Windows app that takes **any** Railroader steam locomotive mod (folder or zip) in and puts a working,
-mostly finished Derail Valley (CCL 3.1.9) pack out, deterministically, with only minor input from the user.
+Repository `james-taplin/derailroader` (private), default branch `main`. Formerly `james-taplin/llw-conversions`,
+renamed `claude-cloud`, branch `claude/rr2dv-converter`; the full history moved here on 2026-09-27.
+
+Goal: `rr2dv`, a Windows app that takes **any** Railroader steam locomotive mod from the user's own Railroader `Mods`
+folder and installs a working, mostly finished Derail Valley (CCL 3.1.9) pack into their own Derail Valley `Mods`
+folder, deterministically, with only minor input from the user (scope as of James's W25 change).
 The app diverges from our LLW CONVERT project: that workspace (snapshot in `tooling/`) is the reference implementation
 and knowledge base, and its G-29 and C-21 builds are regression targets. LLW-only facts (e.g. every LLW loco sharing
 one component set) must not be assumed for other mods.
@@ -18,10 +22,11 @@ only read, post to `board/APP_BOARD.md` (its header has the protocol), and repla
 
 | Path | What |
 |---|---|
-| `src/rr2dv/` | The app. Standard library only, Python 3.11+. `rrmod.py` scans mods and resolves a loco's dependency closure; `licences.py` is the licence policy; `assetripper.py` drives AssetRipper's HTTP API (exports cached in `<workRoot>/_cache/assetripper`); `probeinput.py` + `unity/Rr2dvProbe.cs` + `unityrun.py` measure the model in Unity (input from the prefab YAML maps and definitions, output `probe/probe.json`); `record.py` drafts the B03 vehicle record (`record/vehicle-record.json`; unknowns null and listed in `metadata.pending`); `unityproject.py` assembles the per-run Unity project with our canonical `resolve_clip_paths.py` and `copy_deps.py` from `tooling/` (run, never copied); `pipeline.py` runs the stages; `runs.py` owns run folders; `publish.py` and `safety.py` guard every write; `machine.py` holds tool paths and `doctor`; `procs.py` stops a launched tool with its child processes; `cli.py` is the entry point. |
+| `src/rr2dv/` | The app. Standard library only, Python 3.11+. `rrmod.py` scans mods and resolves a loco's dependency closure; `licences.py` is the licence policy; `assetripper.py` drives AssetRipper's HTTP API (exports cached in `<workRoot>/_cache/assetripper`); `probeinput.py` + `unity/Rr2dvProbe.cs` + `unityrun.py` measure the model in Unity (input from the prefab YAML maps and definitions, output `probe/probe.json`); `record.py` drafts the B03 vehicle record (`record/vehicle-record.json`; unknowns null and listed in `metadata.pending`); `wheels.py` picks the tread candidate from the probe's radius bands; `unityproject.py` assembles the per-run Unity project with our canonical `resolve_clip_paths.py` and `copy_deps.py` from `tooling/` (run, never copied); `pipeline.py` runs the stages; `runs.py` owns run folders; `installs.py` finds Railroader and Derail Valley (settings or Steam) and enforces the Railroader-Mods-only input; `consent.py` is the 10-click personal-use notice; `publish.py` installs into the DV Mods folder after it; `safety.py` guards every write; `machine.py` holds tool paths and `doctor`; `procs.py` stops a launched tool with its child processes; `cli.py` is the entry point. |
 | `tests/` | `unittest` suite on synthetic mods built by `tests/fixtures.py`, with fake AssetRipper and Unity stand-ins (shebang scripts on POSIX, `.cmd` launchers on Windows). Never commit real mod files. |
 | `board/APP_BOARD.md` | Message board with the local sessions. We post as `W<n>`; read it at session start (`git pull`). |
 | `tooling/` | Read-only snapshot of our local tooling (see below). |
+| `docs/` | Design notes: `later-dependency-replacement.md` (parked vanilla-DV replacement work), the notice screenshot. |
 
 Run the tests: `PYTHONPATH=src:tests python3 -m unittest discover -s tests`. Run the app: `PYTHONPATH=src python3 -m rr2dv --help`.
 
@@ -29,6 +34,7 @@ Run the tests: `PYTHONPATH=src:tests python3 -m unittest discover -s tests`. Run
 
 Stages follow the guide's acceptance states (Q01): locate -> link -> stage -> extract -> import -> probe -> record -> build ->
 audit -> publish. `runs.STAGES` marks which are implemented; the pipeline stops cleanly (exit 3) at the first one that isn't.
+Both installs are found before a run starts, again before the build and again before installing (W25).
 Determinism: output = f(input file hashes, recorded user answers, tool versions). User choices go in the run record
 (`answers`) so a rerun needs no input.
 
@@ -52,19 +58,21 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
   their current audits exactly.
 - Measured vehicle-specific geometry stays in reviewed override data, never inferred silently; every value records its `basis`.
 - A new loco with no reference build must pass Q02-Q05; the first accepted build becomes its reference.
-- Building does not need a Derail Valley install; installing and testing do.
+- Building itself does not use Derail Valley, but since W25 both installs must be found before a conversion runs.
 - Duplicate identifiers or pack names at the same search priority are errors, never a first match (D03). The input mod
   outranks search roots.
 - **No audio conversion (James, W5).** Every sound (whistle, bell, chuff, pumps, dynamo) aliases to vanilla Derail Valley
   S060 or S282 audio by boiler size: `totalHeatingSurface` < 1,500 ft2 = S060, otherwise S282 (`rrmod.audio_basis`).
   `--audio` overrides; a definition without heating surface needs that answer. Never extract Railroader audio.
 - `modelIdentifier` may name a catalogue key or a prefab file (GN M-2: model `gn-m2t`, key `gn-m2t-2680`).
-- **Trucks are never converted (James, W21).** Every Railroader truck object (tender and car trucks) becomes a vanilla DV
-  bogie; a locomotive's own driving gear is not a truck and keeps our custom bogie path (A04, X31). CCL `BogieType.Default`
-  (200, DV's freight bogie; the other vanilla types are loco bogies), wheel radius 0.459 m. No truck mod's bundle or
-  Railroader base-game truck is staged, exported or copied, so a truck's licence never stops a conversion. Its
-  definition is read for information only (what the swap leaves out). Until the builder has a vanilla-bogie field the
-  choice sits in the record's `tender.metadata.vanillaBogies`.
+- **Dependencies (James, W25):** everything the loco uses from the user's own Railroader install is used: tenders,
+  trucks, parts and images from any installed mod and from Railroader's base-game asset packs. The user runs the tool
+  on files already on their drive. Replacing dependencies with vanilla DV content (trucks as CCL `BogieType.Default`
+  bogies, game content left out) was built, tested and then parked: `docs/later-dependency-replacement.md`.
+- A part whose asset is missing from its own pack's catalogue (broken in the source mod; X32 found 13 installed locos)
+  is left out and listed (`inventory.left_out`, `metadata.leftOut`), with the components anchored inside it, which go
+  too (a missing parent is a build error), so a functional loss is never silent (X31). A part pack that cannot be
+  found still stops the conversion.
 - CCL is MIT-licensed and public: for CCL facts read its v3.1.9 source (clone
   `https://github.com/derail-valley-modding/custom-car-loader` read-only, outside the repo) rather than guessing.
 - Wheel radius and cylinder bore stay pending until reviewed (`--wheel-radius`); the probe's tread candidates are
@@ -72,33 +80,22 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
 - Optional component-group files (`identifier` + `bulkAdds`, from the mod being converted) are choices for the user;
   their images are named `<mod id>.<file>` and are looked up inside that mod.
 
-## Licences
+## Personal use (James, W25)
 
-- **Strict policy, no override (James, W7/W8).** `licences.py` + `rrmod.inventory`: if any mod whose content ends up
-  in the DV pack (the converted mod, mods whose bundles or images we copy) explicitly forbids modification even for
-  personal use, reverse engineering, porting/conversion or derivative works, the conversion stops. An unreadable
-  licence file also stops it. No licence file = no restriction (explicit restrictions only). Code mods used only in
-  Railroader (LegosBetterSteam, LegosLibraryOfStuff) are not needed in DV, never opened, never blocking; they are
-  listed as `railroader_only`. Never add a flag, setting or "permission" path around a block; fix wrong matches in
-  the patterns instead.
-- **Problematic assets are left out, not copied (James, W22).** Parts and images that are Railroader game content
-  (under `Railroader_Data`) or come from another mod whose licence forbids modification or cannot be read are left
-  out: never staged, exported or opened, not placed by the record (`inventory.left_out`, `metadata.leftOut`, a
-  review item). Their licences then no longer stop the conversion, because nothing of theirs is in the pack. Still
-  blocking: the converted mod's own licence, and a tender that is game content or from a restricting mod (no vanilla
-  DV tender to substitute). DV has no loose vanilla steam fittings to swap in (CCL's MeshGrabber list has none), so
-  nothing is substituted except trucks (vanilla bogies) and sounds (vanilla S060/S282).
-  A part whose asset is missing from its pack's catalogue (broken in the source mod; X32 found 13 installed locos) is
-  left out the same way; a part pack that cannot be found still stops the conversion (install or add the mod).
-  Components anchored inside a left-out part go too (a missing parent is a build error) and are named in its `anchored`
-  and `effect`, so a functional loss is never silent (X31).
-- Never open, decompile or inspect code mods (DLLs) or bundles of mods we only depend on. Learn formats from the data
-  files of the mod being converted and from our guides. Uploaded test mods stay in the session container, never in git.
-- Converted packs contain the original authors' work: personal use unless the author agrees otherwise.
+- rr2dv does **not** read or evaluate licence files (removed in W25; `licences.py` is gone).
+- Before a pack is installed into the DV Mods folder, `consent.ask` shows a large centred notice: personal use only,
+  redistribution is illegal, all copyrights stay with the original authors, sharing needs their express permission.
+  The user clicks "I agree" 10 separate times (mouse only, 0.25 s apart); Cancel or closing installs nothing. Never add
+  a flag, setting or code path that skips it. The pack gets `NOTICE.txt` and an `rr2dv.json` marker (credits, notice
+  hash, clicks, time). `inventory.mods` and the definitions' credits name whose work is in the pack.
+- Never open, decompile or inspect code mods (DLLs); Railroader-only code mods (LegosBetterSteam, LegosLibraryOfStuff)
+  are listed as `railroader_only`, never needed in DV. Uploaded test mods stay in the session container, never in git.
 
 ## Safety rules for the app
 
-- Never write to the input folder or zip. Build in a fresh per-run folder; publish output only when every stage passes.
-- Refuse output or work folders inside the input, the work root, the Railroader install or Derail Valley.
-- Never install into the game or touch saves unless explicitly asked.
-- Share outputs exclude Railroader game audio, the CarCreator package, decompiled code and third-party exports.
+- Input: only a folder directly in the Railroader Mods folder (by name or path; a link placed there counts). No zips.
+  Never write to it or anywhere in the Railroader install.
+- Build in a fresh per-run folder under the work root; refuse a work root inside the input or either game install.
+- Output: only `<DV>/Mods/<pack>`, only after the notice, only when every stage passed. Replace an existing folder only
+  if it carries our `rr2dv.json` marker; never touch another mod's folder or any save.
+- No zips are produced. Never extract Railroader audio.

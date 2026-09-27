@@ -1,53 +1,121 @@
-# rr2dv: Railroader → Derail Valley locomotive converter
+# derailroader
 
-Work in progress. `rr2dv` takes a Railroader steam locomotive mod (a folder or a zip) and produces a Derail Valley
-pack for the Custom Car Loader 3.1.9. It never modifies the mod you give it.
+A local interoperability tool which converts supported locomotive assets already installed in the user's Railroader
+Mods directory into a structure usable by Derail Valley.
 
-| Folder | What it is |
-|---|---|
-| [`src/rr2dv/`](src/rr2dv/) | The app (Python 3.11+, no extra packages). |
-| [`tests/`](tests/) | Automated tests on made-up mods. |
-| [`board/APP_BOARD.md`](board/APP_BOARD.md) | Message board between the app-side Claude session and the local Claude and Codex sessions. |
-| [`tooling/`](tooling/) | Snapshot of our LLW conversion scripts, Unity builder code and guides, used as the reference implementation. Read-only here; start with [`tooling/NOTES.md`](tooling/NOTES.md). |
+The tool is called `rr2dv` on the command line. It takes a steam locomotive mod from your own Railroader `Mods`
+folder, rebuilds it for the Derail Valley Custom Car Loader (CCL 3.1.9), and installs the result into your own Derail
+Valley `Mods` folder. It never changes the Railroader mod it reads.
 
-## Status
+> **Work in progress.** Everything up to a draft vehicle record works and has been run with real Unity and
+> AssetRipper on Windows. The Unity build and audit stages are next, so no pack is installed yet.
 
-| Stage | State |
-|---|---|
-| Find the locomotive, resolve its tender and parts across mods, check licences, copy and verify the inputs | working |
-| Export the bundles with AssetRipper (cached per bundle, AssetRipper build and Unity version) | working; passed a real-AssetRipper smoke test (S-16, C-21) |
-| Prepare the Unity 2019.4.40f1 project (restored animation paths, trucks and parts with their dependencies, CarCreator, our builder core) | working, not yet opened in Unity on a real machine |
-| Measure the model in Unity (hierarchy, meshes, anchors in car space, clip bindings and end poses, wheel tread bands) | runs in Unity 2019.4 (S-16); tread choice awaiting retest |
-| Draft the vehicle record: identity, liveries, maps, components, wheelsets, capacities, sim/HUD/sound basis, pull and cylinder calibration, boiler and firing estimates, vanilla tender bogies, each value with its unit, basis and evidence | working (source-derived part); wheel radius needs review (`--wheel-radius`); measured geometry and mass pending |
-| Build, audit | next (P3) |
-| Publish the finished pack to an output folder | working (used once the build stages exist) |
+## Personal use only
 
-## Try it
+A converted pack contains the original mod authors' work. Before anything is written to your Derail Valley `Mods`
+folder, `rr2dv` shows a large notice. It says the pack is for your personal use only, that redistributing it is
+illegal, that all copyrights stay with the original authors, and that sharing it needs their express permission. You
+click **I agree** ten times to continue, and there is no setting that skips it. The installed pack carries the same
+text in `NOTICE.txt`, together with the names of the authors and mods whose work it contains.
+
+![The personal-use notice](docs/personal-use-notice.png)
+
+## What you need
+
+- Windows, with Python 3.11 or later
+- Railroader and Derail Valley installed through Steam (or in folders you name in the settings file)
+- Unity Mod Manager and Custom Car Loader 3.1.9 installed in Derail Valley
+- Unity 2019.4.40f1, the CCL 3.1.9 CarCreator package (`CarCreator_3.1.9.unitypackage`) and AssetRipper
+
+## Using it
 
 ```
-python -m pip install -e .                     # run from the repository: rr2dv uses its tooling/ folder
-rr2dv doctor                                   # checks Unity, CarCreator, AssetRipper and folders
-rr2dv scan "path\to\Some Loco Mod"             # read-only: what's in the mod and what each loco needs
-rr2dv convert "path\to\Some Loco Mod" --out "path\to\output"
+python -m pip install -e .        # run from this repository: rr2dv uses its tooling/ folder
+rr2dv doctor                      # finds both games and checks Unity, CarCreator, AssetRipper and CCL
+rr2dv list                        # steam locomotive mods in your Railroader Mods folder
+rr2dv scan "Some Loco Mod"        # read-only: what the mod contains and what each loco needs
+rr2dv convert "Some Loco Mod"     # convert it (add --loco <id> when the mod has several)
 ```
 
-Settings live in `%APPDATA%\rr2dv\machine.json` (or pass `--machine`). It uses the same keys as our
-`machine.local.json` (`python`, `unity`, `carCreator`, `assetRipper`, `railroader`, `mods`, ...), plus optional
-`workRoot` and `searchRoots`. With `railroader` set, its `Mods` folder and base-game asset packs are searched for
-dependencies such as trucks from other mods.
+You name a mod by its folder in the Railroader `Mods` folder, or give that folder's path. Zip files and folders
+elsewhere are refused.
 
-Trucks are never converted: every converted tender runs on vanilla Derail Valley bogies, so no truck mod or
-Railroader game mesh ends up in the pack.
+`convert` options:
 
-Sounds are never converted: every converted loco uses vanilla Derail Valley S060 sounds (small boiler, under
-1,500 ft² heating surface) or S282 sounds (big boiler). `--audio S060|S282` overrides the rule.
+| Option | Meaning |
+|---|---|
+| `--loco ID` | which locomotive, when the mod has more than one |
+| `--livery NAME` | livery to use (default: the mod's first) |
+| `--audio S060\|S282` | vanilla sound set instead of the boiler-size rule |
+| `--wheel-radius M` | the driving wheel tread radius, once you have reviewed the measured candidates |
+| `--search DIR` | an extra folder to look in for dependencies |
 
-Mod licences are checked before converting. If the mod itself, or the mod its tender comes from, explicitly forbids
-modifying, decompiling, porting or deriving from its work, even for personal use, `rr2dv` stops and will not convert
-that locomotive. There is no override. A licence file it cannot read also stops it. Parts and images that come from
-Railroader's own game files, or from another mod with such a licence, are left out of the pack (and listed for you
-to review) rather than copied. Mods without a licence file are converted. Code mods a loco uses only in Railroader (such as
-LegosBetterSteam) are not needed in Derail Valley and are never opened. Converted packs contain the original authors'
-work and are for your own use.
+## What happens
 
-The Claude ⇄ Codex chat bridge lives on the `claude/llm-chat-bridge` branch.
+Each conversion gets a fresh run folder under the work folder. The pipeline runs these stages and stops at the first
+one that fails or is not built yet:
+
+| Stage | What it does | State |
+|---|---|---|
+| locate | find the locomotive in the mod | working |
+| link | resolve its tender, trucks and parts, including those from other installed mods and Railroader's own asset packs | working |
+| stage | copy the needed files into the run folder, hash-checked | working |
+| extract | export the bundles with AssetRipper (cached per bundle) | working |
+| import | assemble a Unity 2019.4 project: restored animation paths, dependencies, CarCreator, our builder | working |
+| probe | measure the model in Unity: hierarchy, anchors, animations, wheel tread candidates | working |
+| record | draft the vehicle record: every value with its unit, basis and evidence; unknowns listed for review | working |
+| build | build the CCL pack in Unity | next |
+| audit | check the built pack | next |
+| publish | show the notice, then install into Derail Valley's `Mods` folder | ready, waits for build |
+
+Both game installs are found before a conversion starts, again before the Unity build, and again just before
+installing.
+
+## Rules the tool follows
+
+- **Sounds are never converted.** Every loco uses vanilla Derail Valley sounds: S060 for a small boiler (under
+  1,500 ft² heating surface), S282 otherwise. `--audio` overrides this.
+- **Dependencies:** everything a loco uses from your own Railroader install is used, whichever mod it comes from.
+  A part the source mod references but does not contain is left out and listed, because Railroader cannot load it
+  either.
+- **Nothing is guessed.** Values that need measuring or a person's review stay empty and are listed in the draft
+  record's `metadata.pending`. Two equally good matches are an error, never a first pick.
+- **Deterministic:** the same input files, answers and tool versions give the same result. Your answers are saved
+  in the run record, so a rerun needs no input.
+- **Where it writes:** the run folder, and your Derail Valley `Mods` folder after you agree to the notice. It never
+  writes to the Railroader install or touches saves. It replaces a folder in Derail Valley's `Mods` folder only if
+  `rr2dv` made that folder earlier; any other mod's folder is left alone.
+
+## Settings
+
+Settings live in `%APPDATA%\rr2dv\machine.json` (or pass `--machine FILE`). All keys are optional except the tools:
+
+| Key | What |
+|---|---|
+| `unity` | `Unity.exe` of Unity 2019.4.40f1 |
+| `carCreator` | `CarCreator_3.1.9.unitypackage` |
+| `assetRipper` | the AssetRipper executable |
+| `python` | Python for the builder's own scripts |
+| `railroader` | Railroader install folder (default: found through Steam) |
+| `game`, `mods` | Derail Valley install and `Mods` folder (default: found through Steam) |
+| `steamRoots` | Steam folders to search instead of the registry and default locations |
+| `workRoot` | where run folders go; at most 74 characters, e.g. `C:\rr2dv` (Unity 2019.4 needs short paths) |
+| `searchRoots` | extra folders to look in for dependencies |
+
+## Repository
+
+| Path | What |
+|---|---|
+| [`src/rr2dv/`](src/rr2dv/) | the app: Python standard library only, plus a Unity editor probe in [`src/rr2dv/unity/`](src/rr2dv/unity/) |
+| [`tests/`](tests/) | automated tests on made-up mods, with stand-ins for AssetRipper and Unity |
+| [`tooling/`](tooling/) | read-only snapshot of our conversion tooling and guides, used as the reference implementation (start with [`tooling/NOTES.md`](tooling/NOTES.md)) |
+| [`board/APP_BOARD.md`](board/APP_BOARD.md) | message board between this app's Claude session and the local Claude and Codex sessions |
+| [`docs/`](docs/) | design notes, e.g. [replacing dependencies with vanilla DV content](docs/later-dependency-replacement.md) (parked) |
+| [`CLAUDE.md`](CLAUDE.md) | notes for Claude sessions working on the app |
+
+Run the tests with `PYTHONPATH=src:tests python -m unittest discover -s tests` (on Windows use `src;tests`).
+
+## Licence
+
+The code in this repository is released under the Unlicense (see [`LICENSE`](LICENSE)). It covers this tool only.
+Converted packs contain the original Railroader mod authors' work, which stays theirs.
