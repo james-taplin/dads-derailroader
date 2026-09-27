@@ -26,7 +26,8 @@ public static class Rr2dvProbe
     [Serializable] public class ClipOut { public string key, asset; public float duration; public int curves; public string[] missingPaths; public Pose[] poses; }
     // One 1 mm radius band of the wheel's outer surface: mean radius and the lateral extent it covers, measured from the
     // rotating node's pivot (axle-centric; both sides folded). A tyre tread is a wide band; the flange tip is narrow.
-    [Serializable] public class RadiusBand { public float radius, lateralMin, lateralMax; public int vertices; }
+    // modeRadius: the most common exact radius in the band (0.01 mm steps): a cylindrical tread's vertices share one.
+    [Serializable] public class RadiusBand { public float radius, modeRadius, radiusMin, radiusMax, lateralMin, lateralMax; public int vertices, modeVertices; }
     [Serializable] public class WheelMesh { public string path; public int vertices; public float centreOffset, maxRadius; public bool used; public string reason; }
     [Serializable] public class WheelOut
     {
@@ -164,6 +165,7 @@ public static class Rr2dvProbe
         var meshes = new List<WheelMesh>();
         var bands = new SortedDictionary<int, RadiusBand>();
         var sums = new Dictionary<int, double>();
+        var fine = new Dictionary<int, Dictionary<int, int>>();
         foreach (var path in rotating)
         {
             var t = Find(root, path);
@@ -197,15 +199,30 @@ public static class Rr2dvProbe
                     float lateral = Mathf.Abs(p.x);
                     int key = Mathf.RoundToInt(r * 1000f);
                     RadiusBand band;
-                    if (!bands.TryGetValue(key, out band)) { band = new RadiusBand { lateralMin = lateral, lateralMax = lateral }; bands[key] = band; sums[key] = 0; }
+                    if (!bands.TryGetValue(key, out band))
+                    {
+                        band = new RadiusBand { lateralMin = lateral, lateralMax = lateral, radiusMin = r, radiusMax = r };
+                        bands[key] = band; sums[key] = 0; fine[key] = new Dictionary<int, int>();
+                    }
                     band.vertices++;
                     sums[key] += r;
+                    if (r < band.radiusMin) band.radiusMin = r;
+                    if (r > band.radiusMax) band.radiusMax = r;
+                    int step = Mathf.RoundToInt(r * 100000f);
+                    int seenAt;
+                    fine[key][step] = fine[key].TryGetValue(step, out seenAt) ? seenAt + 1 : 1;
                     if (lateral < band.lateralMin) band.lateralMin = lateral;
                     if (lateral > band.lateralMax) band.lateralMax = lateral;
                 }
             }
         }
-        foreach (var kv in bands) kv.Value.radius = (float)(sums[kv.Key] / kv.Value.vertices);
+        foreach (var kv in bands)
+        {
+            kv.Value.radius = (float)(sums[kv.Key] / kv.Value.vertices);
+            var mode = fine[kv.Key].OrderByDescending(f => f.Value).ThenBy(f => f.Key).First();
+            kv.Value.modeRadius = mode.Key / 100000f;
+            kv.Value.modeVertices = mode.Value;
+        }
         o.meshes = meshes.ToArray();
         o.bands = bands.Values.ToArray();
         if (o.bands.Length == 0) Problems.Add(v.id + ": no wheel surface near the source radius for wheelset " + w.clip);
