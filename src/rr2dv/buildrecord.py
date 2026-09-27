@@ -638,7 +638,8 @@ class _Builder:
         self._lamps(cfg, rec, comps, anchors)
         cfg["PortRefOverrides"] = env({"boiler.FEEDWATER_TEMPERATURE": ""}, "port", "DV_choice", "S-16 and G-29: no feedwater heater")
         rec["hooks"]["OilPoints"] = self._oil(drivers, radius)
-        self.choose("oil cups: one per driving axle each side on the running-board line (G-29's first layout), not on the rods")
+        self.choose("oil-cup axle pairs are provisional: the builder first seats cups on modelled rod big-end nubs, "
+                    "then tries running boards; a pair with no valid seat is omitted")
         coal_slot, water_slot = self._slots(self.definition_of(lid))
         self._resources(cfg, rec, comps, coal_slot, water_slot, tank=not tender)
         rel_z = (drivers[-1]["z"] + drivers[-2]["z"]) / 2 if len(drivers) > 1 else cab_z + 0.5
@@ -956,7 +957,7 @@ class _Builder:
         for i, a in enumerate(drivers):
             for side, x in (("L", -0.95), ("R", 0.95)):
                 pts.append([f"oil_{i + 1}{side}", _r([x, 2 * radius + 0.05, a["z"]])])
-        return env(pts, "m", "DV_choice", "one cup per driving axle each side, on the running-board line (G-29 tests 1-6 layout)")
+        return env(pts, "m", "DV_choice", "provisional axle-pair hints; final cup count follows measured rod-nub or running-board seats")
 
     @staticmethod
     def _slots(d: dict) -> tuple[int | None, int | None]:

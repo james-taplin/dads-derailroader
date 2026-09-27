@@ -82,8 +82,8 @@ public static partial class CclLocoBuild
         PrepareClips();
         matMap = BuildMaterials(Livery);
         CreateCar();
-        SeatRr2dvFallbackOil();
         BuildExterior();
+        SeatRr2dvOilCups();
         AlignRr2dvBogieSupports();
         SeatRr2dvPlates();
         if (!c.IsTender) { BuildInterior(); SeatRr2dvControls(); BuildInteriorLOD(); }
@@ -101,41 +101,184 @@ public static partial class CclLocoBuild
         if (!success || !saved) throw new InvalidOperationException("Could not save measured placement: " + path);
     }
 
-    static void SeatRr2dvFallbackOil()
+    // The record's axle pairs are provisional. Modelled big-end nubs define the oiling
+    // layout when present; a board is only a fallback for a missing nub or a model
+    // without detectable nubs. A pair with no seat on either surface is omitted.
+    static void SeatRr2dvOilCups()
     {
         if (Cfg.IsTender || Cfg.OilPoints == null || Cfg.RodOilers != null || Cfg.OilAnchors != null) return;
-        var points = Cfg.OilPoints(RefBody).ToArray();
-        if (points.Length != Cfg.EngineUnits.Sum(u => u.DriverParts.Length) * 2)
-            throw new InvalidOperationException("Fallback oil cups must cover every driving axle on both sides");
-        using (var hits = new VisualHits(RefBody))
-        for (int i = 0; i < points.Length; i++)
+        var hints = Cfg.OilPoints(RefBody).ToArray();
+        if (hints.Length % 2 != 0 || hints.Length != Cfg.EngineUnits.Sum(u => u.DriverParts.Length) * 2)
+            throw new InvalidOperationException("Oil-cup hints must contain a left/right pair for every driving axle");
+        string path = $"{carFolder}/{CarId}_template.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
         {
-            var point = points[i];
-            float side = Mathf.Sign(point.Item2.x);
-            bool found = false;
-            // Search the outboard horizontal surface nearest the axle, requiring a full cup footprint.
-            // Never leave a point at the old estimated height inside the vehicle.
-            for (float x = 1.65f; x >= .8f && !found; x -= .025f)
-            for (int dz = 0; dz < 9 && !found; dz++)
+            var body = root.transform.Find("Model/" + Cfg.BodyName);
+            if (!body) throw new InvalidOperationException("Missing built body for oil-cup placement");
+            var placed = new System.Collections.Generic.List<(string tag, Vector3 pos, Transform rod, string seat)>();
+            var nubs = Rr2dvRodNubs(body);
+            using (var hits = new VisualHits(body))
             {
-                float z = point.Item2.z + (dz == 0 ? 0 : (dz % 2 == 0 ? -1 : 1) * ((dz + 1) / 2) * .05f);
-                var origin = new Vector3(side * x, 2 * WheelRadius + 1.2f, z);
-                if (!hits.Ray(origin, Vector3.down, 1.8f, out var hit, RefBody) || hit.normal.y < .97f) continue;
-                bool footprint = true;
-                foreach (var offset in new[] { new Vector3(.045f, 0, 0), new Vector3(-.045f, 0, 0), new Vector3(0, 0, .045f), new Vector3(0, 0, -.045f) })
-                    if (!hits.Ray(origin + offset, Vector3.down, 1.8f, out var edge, RefBody) || edge.normal.y < .97f || Mathf.Abs(edge.point.y - hit.point.y) > .01f) footprint = false;
-                if (!footprint) continue;
-                var pos = hit.point + Vector3.up * (CupPivotAboveBase - CupSeatSink);
-                // Space above the cup and a clear outward approach are necessary for access.
-                if (hits.Ray(pos + Vector3.up * .08f, Vector3.up, .12f, out var overhead, RefBody)) continue;
-                if (hits.Ray(pos + Vector3.up * .08f, Vector3.right * side, .6f, out var sideHit, RefBody)) continue;
-                points[i] = (point.Item1, pos);
-                Line($"rr2dv fallback oil {point.Item1}: {V(point.Item2)} -> {V(pos)} on {hit.collider.transform.parent.name}");
-                found = true;
+                var remaining = nubs.Where(n => n.pos.x > 0).ToList();
+                int pair = 0;
+                foreach (var left in nubs.Where(n => n.pos.x < 0))
+                {
+                    var right = remaining.OrderBy(n => Mathf.Abs(n.pos.z - left.pos.z)).FirstOrDefault();
+                    if (right.rod && Mathf.Abs(right.pos.z - left.pos.z) <= .45f) remaining.Remove(right);
+                    else right = (null, Vector3.zero);
+                    pair++;
+                    Rr2dvAddOilPair(placed, hits, body, pair,
+                        (left.rod, left.pos), (right.rod, right.pos), (left.pos.z + (right.rod ? right.pos.z : left.pos.z)) / 2);
+                }
+                foreach (var right in remaining)
+                {
+                    pair++;
+                    Rr2dvAddOilPair(placed, hits, body, pair, (null, Vector3.zero),
+                        (right.rod, right.pos), right.pos.z);
+                }
+                if (nubs.Count == 0)
+                {
+                    for (int i = 0; i < hints.Length; i += 2)
+                        Rr2dvAddOilPair(placed, hits, body, i / 2 + 1,
+                            (null, Vector3.zero), (null, Vector3.zero),
+                            (hints[i].Item2.z + hints[i + 1].Item2.z) / 2);
+                }
             }
-            if (!found) throw new InvalidOperationException("No accessible running-board seat for oil cup " + point.Item1);
+            var old = body.Find("[oiling points]");
+            if (old) Object.DestroyImmediate(old.gameObject);
+            var holder = new GameObject("[oiling points]").transform;
+            holder.SetParent(body, false);
+            var points = new (string tag, Vector3 pos)[placed.Count];
+            for (int i = 0; i < placed.Count; i++)
+            {
+                var p = placed[i];
+                var provider = new GameObject(p.tag).transform;
+                provider.SetParent(p.rod ? p.rod : holder, false);
+                provider.position = p.pos;
+                Set(Add(provider.gameObject, "CCL.Types.Proxies.Util.PositionSyncProviderProxy"), "syncTag", p.tag);
+                points[i] = (p.tag, root.transform.InverseTransformPoint(p.pos));
+                Line($"rr2dv oil {p.tag}: {p.seat} at {V(points[i].pos)}; provider parent {provider.parent.name}");
+            }
+            Cfg.OilPoints = _ => points;
+            var oilDefinition = root.transform.Find("[sim]/oilingPoints")?.GetComponents<Component>()
+                .FirstOrDefault(c => c.GetType().Name == "ManualOilingPointsDefinitionProxy");
+            if (!oilDefinition) throw new InvalidOperationException("Missing simulation oiling-point definition");
+            Set(oilDefinition, "OilingPointCount", points.Length);
+            oilDefinition.GetType().GetMethod("OnValidate", BF)?.Invoke(oilDefinition, null);
+            Line($"rr2dv oil layout: {placed.Count} cups ({nubs.Count} rod-nub candidates, {hints.Length} provisional axle hints)");
+            Line($"rr2dv oil simulation count: {points.Length}");
+            SaveRr2dvPrefab(root, path);
         }
-        Cfg.OilPoints = root => points;
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    static void Rr2dvAddOilPair(System.Collections.Generic.List<(string tag, Vector3 pos, Transform rod, string seat)> placed,
+        VisualHits hits, Transform body, int pair, (Transform rod, Vector3 pos) left, (Transform rod, Vector3 pos) right, float z)
+    {
+        var a = left.rod && Rr2dvRodSeatAccessible(hits, body, left.pos)
+            ? (true, left.pos, left.rod, "rod big end") : Rr2dvBoardSeat(hits, body, -1, z);
+        var b = right.rod && Rr2dvRodSeatAccessible(hits, body, right.pos)
+            ? (true, right.pos, right.rod, "rod big end") : Rr2dvBoardSeat(hits, body, 1, z);
+        if (!a.Item1 || !b.Item1)
+        {
+            Line($"rr2dv oil pair {pair} omitted: no accessible {(a.Item1 ? "right" : b.Item1 ? "left" : "left or right")} rod/board seat");
+            return;
+        }
+        placed.Add(($"oil_{pair}L", a.Item2, a.Item3, a.Item4));
+        placed.Add(($"oil_{pair}R", b.Item2, b.Item3, b.Item4));
+    }
+
+    static bool Rr2dvRodSeatAccessible(VisualHits hits, Transform body, Vector3 pos)
+    {
+        float side = Mathf.Sign(pos.x);
+        // A rod can have a moving eccentric outside the big end. The cup remains
+        // usable when it has a clear approach from above even if that side ray
+        // meets the linkage at one sampled wheel phase.
+        return !hits.Ray(pos + Vector3.up * .08f, Vector3.up, .12f, out var overhead, body) ||
+            !hits.Ray(pos + Vector3.up * .08f, Vector3.right * side, .6f, out var sideHit, body);
+    }
+
+    static (bool found, Vector3 pos, Transform rod, string seat) Rr2dvBoardSeat(VisualHits hits, Transform body, float side, float zHint)
+    {
+        // Search outboard horizontal surfaces near the axle. This is intentionally a
+        // secondary route; moving rods and wheels cannot masquerade as a board.
+        for (float x = 1.65f; x >= .8f; x -= .025f)
+        for (int dz = 0; dz < 9; dz++)
+        {
+            float z = zHint + (dz == 0 ? 0 : (dz % 2 == 0 ? -1 : 1) * ((dz + 1) / 2) * .05f);
+            var origin = new Vector3(side * x, 2 * WheelRadius + 1.2f, z);
+            if (!hits.Ray(origin, Vector3.down, 1.8f, out var hit, body) || hit.normal.y < .97f ||
+                hit.point.y < 2 * WheelRadius + .08f || Rr2dvIsRod(hit.collider.transform.parent.name)) continue;
+            bool footprint = true;
+            foreach (var offset in new[] { new Vector3(.045f, 0, 0), new Vector3(-.045f, 0, 0), new Vector3(0, 0, .045f), new Vector3(0, 0, -.045f) })
+                if (!hits.Ray(origin + offset, Vector3.down, 1.8f, out var edge, body) || edge.normal.y < .97f ||
+                    Mathf.Abs(edge.point.y - hit.point.y) > .01f) footprint = false;
+            if (!footprint) continue;
+            var pos = hit.point + Vector3.up * (CupPivotAboveBase - CupSeatSink);
+            if (hits.Ray(pos + Vector3.up * .08f, Vector3.up, .12f, out var overhead, body)) continue;
+            if (hits.Ray(pos + Vector3.up * .08f, Vector3.right * side, .6f, out var sideHit, body)) continue;
+            return (true, pos, null, "running board on " + hit.collider.transform.parent.name);
+        }
+        return (false, Vector3.zero, null, null);
+    }
+
+    static bool Rr2dvIsRod(string name)
+    {
+        string n = name.ToLowerInvariant();
+        return n.Contains("main rod") || n.Contains("side rod") || n.Contains("connecting rod") ||
+            n.Contains("coupling rod") || n.Contains("drive rod") || n.Contains("conrod");
+    }
+
+    static System.Collections.Generic.List<(Transform rod, Vector3 pos)> Rr2dvRodNubs(Transform body)
+    {
+        var result = new System.Collections.Generic.List<(Transform rod, Vector3 pos)>();
+        foreach (var mf in body.GetComponentsInChildren<MeshFilter>(true).Where(m => Rr2dvIsRod(m.name)))
+        {
+            var mesh = mf.sharedMesh;
+            var renderer = mf.GetComponent<MeshRenderer>();
+            if (!mesh || !renderer || !renderer.enabled || !mf.gameObject.activeInHierarchy) continue;
+            var world = mesh.vertices.Select(mf.transform.TransformPoint).ToArray();
+            if (world.Length == 0) continue;
+            var whole = new Bounds(world[0], Vector3.zero);
+            foreach (var v in world) whole.Encapsulate(v);
+            if (Mathf.Max(whole.size.y, whole.size.z) < .5f) continue;
+            var groups = Islands(mesh);
+            for (int sub = 0; sub < mesh.subMeshCount; sub++)
+            {
+                var triangles = mesh.GetTriangles(sub);
+                groups.Add(Enumerable.Range(0, triangles.Length / 3).Select(i =>
+                    (sub, triangles[3 * i], triangles[3 * i + 1], triangles[3 * i + 2])).ToList());
+            }
+            foreach (var group in groups)
+            {
+                if (group.Count < 35) continue;
+                var box = new Bounds(world[group[0].a], Vector3.zero);
+                foreach (var t in group) { box.Encapsulate(world[t.a]); box.Encapsulate(world[t.b]); box.Encapsulate(world[t.c]); }
+                var size = box.size;
+                if (size.x < .035f || size.z < .035f || size.y < .035f ||
+                    size.x > .3f || size.z > .3f || size.y > .3f) continue;
+                int axis = whole.size.z >= whole.size.y ? 2 : 1;
+                if (Mathf.Min(Mathf.Abs(box.center[axis] - whole.min[axis]),
+                    Mathf.Abs(box.center[axis] - whole.max[axis])) > .35f) continue;
+                Vector3 top = Vector3.zero; float area = 0;
+                foreach (var t in group)
+                {
+                    var a = world[t.a]; var b = world[t.b]; var c = world[t.c];
+                    var normal = Vector3.Cross(b - a, c - a);
+                    if (normal.magnitude < 1e-8f || normal.normalized.y < .75f ||
+                        Mathf.Min(a.y, b.y, c.y) < box.max.y - .03f) continue;
+                    float weight = normal.magnitude / 2;
+                    top += (a + b + c) / 3 * weight;
+                    area += weight;
+                }
+                if (area < .0003f) continue;
+                var pos = top / area + Vector3.up * (CupPivotAboveBase - CupSeatSink);
+                if (Mathf.Abs(pos.x) < .3f || result.Any(p => p.rod == mf.transform && Vector3.Distance(p.pos, pos) < .08f)) continue;
+                result.Add((mf.transform, pos));
+            }
+        }
+        return result.OrderByDescending(p => p.pos.z).ThenBy(p => p.pos.x).ToList();
     }
 
     static void AlignRr2dvBogieSupports()

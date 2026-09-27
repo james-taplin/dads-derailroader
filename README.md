@@ -32,12 +32,20 @@ acknowledged, which mods and authors the content came from) and an `rr2dv.json` 
 
 ## What you need
 
-- Windows, with Python 3.11 or later (its standard installer includes Tk, which the app's window uses)
+- Windows. The portable `.exe` download includes Python and Tk; the source download needs Python 3.11 or later with Tk.
 - Railroader and Derail Valley installed through Steam (or in folders you name in the settings file)
 - Unity Mod Manager and Custom Car Loader 3.1.9 installed in Derail Valley
 - Unity 2019.4.40f1, the CCL 3.1.9 CarCreator package (`CarCreator_3.1.9.unitypackage`) and AssetRipper
 
 ## The app
+
+For the [0.1.0 release](https://github.com/james-taplin/derailroader/releases/tag/v0.1.0), download
+`Derailroader-0.1.0-Windows.zip`, extract the **whole** folder, and double-click `Derailroader.exe`. Keep its
+`_internal` folder beside the `.exe`. To run from scripts instead, download `Derailroader-0.1.0-Source.zip`, extract
+it, and double-click `Launch Derailroader.bat` (or `Derailroader.pyw` if Python is associated with `.pyw` files).
+The source download needs Python 3.11+ with Tk; neither download includes Unity, AssetRipper or CarCreator.
+
+Developers can also run from a checkout:
 
 ```
 python -m pip install -e .        # run from this repository: rr2dv uses its tooling/ folder

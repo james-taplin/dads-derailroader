@@ -77,17 +77,30 @@ now centred at (0, 0.35, 5.4699), and the rear at (0, 0.79438, −0.9859). Both 
 rule also corrects tender capsules. This is a confirmed generated-prefab defect; removal of the in-game pitch still
 needs a fresh build/spawn test.
 
-The old fallback already generated four A18 oil points, confirmed by its build and runtime logs. Their estimated
-y = 1.63876 m position could hide them inside geometry. The fallback now requires two cups per driving axle and
-measures accessible horizontal seats with room for the whole cup footprint. It keeps matching simulation/provider/
-consumer tags. All four A18 points found actual running-board surfaces, with cup pivots near y = 2.04742 m.
-Existing explicit moving-rod anchors remain supported. Failure to find a safe fallback seat stops the build instead
-of exporting hidden cups. The search is a geometric approximation, with placement evidence in the build report.
+The old fallback generated four A18 oil points at an estimated y = 1.63876 m, where they could hide inside geometry.
+The generic builder now looks for compact, upward-facing big-end nub geometry on modelled main, side and connecting
+rods first. Left and right nubs define a pair; each provider is parented to its moving rod. A missing or inaccessible
+nub uses an accessible running-board seat with room for the whole cup footprint. If either side still has no seat,
+the builder omits both cups in that pair and reduces the simulation, provider and interactable counts together.
+When no rod nubs are detected, the provisional one-pair-per-driving-axle hints are tried on the running boards.
+Existing explicit moving-rod anchors remain supported. The placement and access checks sample one model pose;
+moving-clearance and in-game reach still need validation. The build report records the chosen seats and omitted pairs.
+The earlier A18 board measurement placed four cups near y = 2.04742 m.
 
 ## Evidence and remaining checks
 
 - Real Unity 2019.4.40f1: geared RPM/torque graph and saturated temperature reference survived prefab save/reload.
 - Real Unity: support capsules and all four A18 running-board seats checked on disposable generated geometry.
+- Real Unity C-70 diagnostic: both main-rod big-end nub tops were measured and a disposable prefab retained two
+  rod-parented providers with matching cup count. The left nub had clear top access while an eccentric rod crossed its
+  outward approach at the sampled pose. A separate regression exercised rod priority, board fallback and pair omission.
+- Real Unity C-70 end-beam survey: the reviewed 0.35–0.55 m band found broad faces at z +5.038 and −8.370 m,
+  24/65 rays at each end, aligned with the source car-end planes. The default coupler-height band had split hits
+  (16/57 front). The fingerprint-bound geometry review cleared the beam gate. A later geared-graph gate exposed
+  duplicate references to the same RPM and gear components; the app now moves those entries into execution order.
+- A non-installing C-70 conversion exported and passed bundle audit with two rod-parented oil cups, two providers,
+  and simulation count two. Four coupler hook/chain clearance warnings remain in the build report; reach, coupling,
+  moving-gear clearance and physics still need in-game checks. No C-70 pack was installed.
 - Real A18 export: self-lapping + radio-only build passed the exported-bundle audit, zero source audio, CCL.Types only.
 - Installed Climax: scan/probe/review completed; diagnostic record identifies six physical driving axles under the shared Drivers clip, with Crankshaft and Driveshaft retained separately. Diagnostic gearing values were assumptions, not source claims. No Climax pack was installed.
 - Python tests cover source-bound review replay, cancellation, track pools/lengths/restrictions, geared wheel roles,

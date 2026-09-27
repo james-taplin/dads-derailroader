@@ -37,9 +37,9 @@ public static partial class CclLocoBuild
                     throw new Exception("Support capsule offset or ground plane incorrect after reload");
                 Debug.Log("RR_SUPPORT_FIXED " + c.name + " " + c.transform.position.ToString("F5") + " radius=" + c.radius);
             }
-            SeatRr2dvFallbackOil();
+            SeatRr2dvOilCups();
             var oil = Cfg.OilPoints(RefBody).ToArray();
-            if (oil.Length != 4 || oil.Any(p => p.Item2.y <= 2 * WheelRadius + .05f)) throw new Exception("A18 oil fallback did not find four higher board seats");
+            if (oil.Length % 2 != 0 || oil.Length > 4) throw new Exception("A18 oil placement did not retain complete pairs");
             foreach (var p in oil) Debug.Log("RR_OIL_FIXED " + p.Item1 + " " + p.Item2.ToString("F5"));
             var root = UnityEngine.Object.Instantiate(prefab);
             foreach (var c in root.GetComponentsInChildren<CapsuleCollider>(true))
@@ -63,6 +63,7 @@ public static partial class CclLocoBuild
             if (conn.portReferenceConnections.Single(p => p.portReferenceId == "steamEngine.INTAKE_TEMPERATURE").portId != "boiler.TEMPERATURE") throw new Exception("Heat reference failed");
             if (!conn.connections.Any(p => p.fullPortIdOut == "rr2dvGear.TORQUE_OUT" && p.fullPortIdIn == "traction.TORQUE_IN")) throw new Exception("Torque output failed");
             if (conn.executionOrder.IndexOf(rpm) >= conn.executionOrder.FindIndex(p => p.ID == "steamEngine")) throw new Exception("RPM order failed");
+            if (conn.executionOrder.Select(p => p.ID).Distinct().Count() != conn.executionOrder.Count) throw new Exception("Geared simulation component was inserted twice");
             PrefabUtility.UnloadPrefabContents(root);
             File.WriteAllText("feature-regression-passed.json", "{\"serializedGearGraph\":true,\"runtimeValidated\":false}");
         }

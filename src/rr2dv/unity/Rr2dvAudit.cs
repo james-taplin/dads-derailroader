@@ -23,6 +23,7 @@ public static class Rr2dvAudit
     {
         public int schema = 1; public string status; public string[] errors, warnings, bundleAssets, scriptAssemblies, dependencies;
         public int audioClips; public string[] audioClipNames; public string[] portFeeders;
+        public int oilCupCount;
     }
     [Serializable] public class Result { public string status; public int errors, warnings; public bool runtimeValidated; public string error; }
 
@@ -105,6 +106,23 @@ public static class Rr2dvAudit
             if (indicators) foreach (var f in input.indicators ?? new string[0]) if (!Ref(indicators, f)) warnings.Add("the HUD has no reading for " + f + " (no instrument for it in the model)");
             foreach (var p in input.ports ?? new string[0]) if (!feeders.Contains(p)) errors.Add("no control feeds " + p);
             One("CabTeleportDestinationProxy", "cab teleport");
+
+            var oilCups = all.Where(o => o.GetType().Name == "ManualOilingPoint").ToArray();
+            var oilProviders = all.Where(o => o.GetType().Name == "PositionSyncProviderProxy").ToArray();
+            var cupTags = oilCups.Select(o => Str(o, "SyncTag")).ToArray();
+            var providerTags = oilProviders.Select(o => Str(o, "syncTag")).ToArray();
+            outp.oilCupCount = oilCups.Length;
+            if (cupTags.Any(string.IsNullOrEmpty) || cupTags.Distinct().Count() != cupTags.Length ||
+                !cupTags.OrderBy(t => t, StringComparer.Ordinal).SequenceEqual(providerTags.OrderBy(t => t, StringComparer.Ordinal)))
+                errors.Add("oil-cup and moving-provider tags do not match the placed layout");
+            var oilDefinition = One("ManualOilingPointsDefinitionProxy", "placed oil-cup count");
+            if (oilDefinition != null)
+            {
+                var count = new SerializedObject(oilDefinition).FindProperty("OilingPointCount");
+                if (count == null || count.intValue != oilCups.Length)
+                    errors.Add("oil simulation count differs from the placed cups");
+            }
+            if (oilCups.Length == 0) warnings.Add("no accessible manual oil-cup pair was placed");
 
             // BR-01 (board X41): the stock brake-release fitting stands upright with its red handle pointing outward: in the
             // car's space its +z (handle) points to the side it is on and its +y (hanger) points up. Never rolled over.

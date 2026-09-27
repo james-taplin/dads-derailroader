@@ -95,6 +95,9 @@ public static partial class CclLocoBuild
             gear.OnValidate();
             direct.fullPortIdIn = gear.ID + ".TORQUE_IN";
             conn.connections.Add(new PortConnectionProxy { fullPortIdOut = gear.ID + ".TORQUE_OUT", fullPortIdIn = "traction.TORQUE_IN" });
+            // The component's OnValidate registers it in executionOrder when it is added.
+            // Move that entry into its required evaluation position rather than adding it twice.
+            conn.executionOrder.RemoveAll(p => p == rpm || p == gear);
             var engine = conn.executionOrder.Single(p => p.ID == "steamEngine");
             var traction = conn.executionOrder.Single(p => p.ID == "traction");
             conn.executionOrder.Insert(conn.executionOrder.IndexOf(engine), rpm);

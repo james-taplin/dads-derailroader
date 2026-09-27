@@ -47,7 +47,9 @@ class ProjectError(RuntimeError):
 
 
 def tooling_root() -> Path:
-    root = Path(__file__).resolve().parents[2] / "tooling"
+    # A frozen Windows release keeps the snapshot beside its bundled Python modules.
+    root = (Path(sys._MEIPASS) / "tooling" if getattr(sys, "frozen", False)
+            else Path(__file__).resolve().parents[2] / "tooling")
     if not (root / "builder" / "tools" / "unity").is_dir():
         raise ProjectError(f"builder tooling not found at {root}; rr2dv needs the repository's tooling/ folder")
     return root
@@ -55,7 +57,10 @@ def tooling_root() -> Path:
 
 def _tool(script: str, *args) -> str:
     path = tooling_root() / "builder" / "tools" / script
-    proc = subprocess.run([sys.executable, str(path), *map(str, args)], capture_output=True, text=True)
+    command = [sys.executable]
+    if getattr(sys, "frozen", False):
+        command.append("--rr2dv-tool")
+    proc = subprocess.run([*command, str(path), *map(str, args)], capture_output=True, text=True)
     if proc.returncode:
         raise ProjectError(f"{Path(script).name} failed: {(proc.stderr or proc.stdout).strip().splitlines()[-1:]}")
     return proc.stdout

@@ -66,7 +66,39 @@ public static partial class CclLocoBuild
             if (!proxy.GetComponent<BoxCollider>().enabled) throw new Exception("source collider was not restored");
             Object.DestroyImmediate(source);
             refBody = null;
-            File.WriteAllText("placement-regression-passed.json", "{\"hiddenMeshIgnored\":true,\"collisionIgnored\":true,\"reloadVerified\":true}");
+
+            Cfg.WheelRadius = .4f;
+            var oilBody = new GameObject("oil regression body").transform;
+            var leftRod = PlacementRod(oilBody, "Main Rod Left", -1f);
+            var rightRod = PlacementRod(oilBody, "Main Rod Right", 1f);
+            var nubs = Rr2dvRodNubs(oilBody);
+            if (nubs.Count != 2 || nubs[0].pos.x * nubs[1].pos.x >= 0)
+                throw new Exception("two modelled big-end nub seats were not found");
+            using (var oilHits = new VisualHits(oilBody))
+            {
+                var cups = new List<(string tag, Vector3 pos, Transform rod, string seat)>();
+                Rr2dvAddOilPair(cups, oilHits, oilBody, 1,
+                    (leftRod, nubs.Find(n => n.pos.x < 0).pos),
+                    (rightRod, nubs.Find(n => n.pos.x > 0).pos), -.5f);
+                if (cups.Count != 2 || cups[0].rod != leftRod || cups[1].rod != rightRod)
+                    throw new Exception("rod-nub pair did not take priority");
+                cups.Clear();
+                Rr2dvAddOilPair(cups, oilHits, oilBody, 2,
+                    (leftRod, nubs.Find(n => n.pos.x < 0).pos), (null, Vector3.zero), -.5f);
+                if (cups.Count != 0) throw new Exception("unplaceable pair was not omitted together");
+            }
+            PlacementCube(oilBody, "left running board", new Vector3(-1.25f, 1.2f, 1), new Vector3(.3f, .05f, .3f));
+            PlacementCube(oilBody, "right running board", new Vector3(1.25f, 1.2f, 1), new Vector3(.3f, .05f, .3f));
+            using (var oilHits = new VisualHits(oilBody))
+            {
+                var cups = new List<(string tag, Vector3 pos, Transform rod, string seat)>();
+                Rr2dvAddOilPair(cups, oilHits, oilBody, 3,
+                    (null, Vector3.zero), (null, Vector3.zero), 1f);
+                if (cups.Count != 2 || cups.Exists(c => c.rod))
+                    throw new Exception("running boards did not seat a fallback pair");
+            }
+            Object.DestroyImmediate(oilBody.gameObject);
+            File.WriteAllText("placement-regression-passed.json", "{\"hiddenMeshIgnored\":true,\"collisionIgnored\":true,\"reloadVerified\":true,\"rodNubsFirst\":true,\"boardFallback\":true,\"pairOmission\":true}");
         }
         catch (Exception e) { Debug.LogException(e); code = 1; }
         finally { if (created) AssetDatabase.DeleteAsset(folder); }
@@ -85,5 +117,26 @@ public static partial class CclLocoBuild
     static void PlacementNear(float actual, float expected, string description)
     {
         if (Mathf.Abs(actual - expected) > .001f) throw new Exception(description + ": " + actual + " != " + expected);
+    }
+
+    static Transform PlacementRod(Transform parent, string name, float x)
+    {
+        var cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+        var bar = GameObject.CreatePrimitive(PrimitiveType.Cube);
+        var mesh = new Mesh { name = name + " test mesh" };
+        mesh.CombineMeshes(new[] {
+            new CombineInstance { mesh = cylinder.GetComponent<MeshFilter>().sharedMesh,
+                transform = Matrix4x4.TRS(new Vector3(0, 0, -.5f), Quaternion.identity, new Vector3(.1f, .08f, .1f)) },
+            new CombineInstance { mesh = bar.GetComponent<MeshFilter>().sharedMesh,
+                transform = Matrix4x4.TRS(Vector3.zero, Quaternion.identity, new Vector3(.07f, .08f, 1.2f)) }
+        }, false, true);
+        Object.DestroyImmediate(cylinder);
+        Object.DestroyImmediate(bar);
+        var rod = new GameObject(name).transform;
+        rod.SetParent(parent, false);
+        rod.localPosition = new Vector3(x, .8f, 0);
+        rod.gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
+        rod.gameObject.AddComponent<MeshRenderer>();
+        return rod;
     }
 }
