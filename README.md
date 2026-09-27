@@ -125,20 +125,36 @@ the app and command line keep **`%LOCALAPPDATA%\rr2dv\logs\rr2dv.log`** for ever
 
 ## What a finished pack must pass
 
-The build uses our builder's own gates (`tooling/`, guide rules Q02–Q05) and the audit checks the exported pack. Two
-control gates we have learned the hard way (board X36) can only be checked in game:
+The build uses our builder's own gates (`tooling/`, guide rules Q02–Q05), and the audit checks the exported pack before
+anything is installed. A pack that builds and passes the audit is still only a **candidate**: the control gates below
+(board X42, which keeps CTRL-01, CTRL-02 and BR-01) are checked in game, and anything not yet checked stays pending.
+Earlier accepted conversions (G-29, C-21) are evidence of what works, not templates every locomotive must copy.
 
-- **Responsive controls (CTRL-01).** Driving controls and valves must behave like our last accepted G-29/C-21
-  builds: they respond to fine inputs, cover their full range, keep their settings and release momentary controls
-  reliably, with no sticking, lag, overshoot or drift. Intended detents stay.
-- **Closed means zero (CTRL-02).** A closed throttle, whistle or other steam valve must command exactly zero in the
-  simulation, not just look closed or round to 0% on the HUD, with no steam flow attributable to it.
+1. **Proven fixes are kept.** Behaviour fixed on earlier conversions is not reintroduced; geometry, travel and tuning
+   are worked out for this locomotive, never copied as a universal preset.
+2. **Every control is there and does its job.** Throttle, reverser, brakes, whistle, injector, blower, damper, fire
+   door and the rest each drive their own function; anything missing or replaced is listed, never silently lost.
+3. **Right pivot, axis, direction and travel**, with the handle, joint and reported value agreeing at both ends.
+4. **Grips you can reach**, each collider belonging to its own control and covering the grip, not the whole arm.
+5. **No interference through full travel** between controls or with the cab; contacts investigated, not whitelisted.
+6. **Fine, prompt response (CTRL-01)**: small inputs move and report; the full range is reachable without sticking,
+   lag or overshoot.
+7. **Holding, return and detents**: set controls stay set, momentary ones (the whistle) return, intended steps remain.
+8. **Closed means exactly zero (CTRL-02)**: a closed throttle, whistle or other steam valve gives no steam flow at all
+   under pressure, not just 0% on the HUD.
+9. **Every input route agrees**: grabbing, the HUD, keyboard/scroll (and VR where used) move the same control the same
+   way, and the gauges and labels tell the truth.
+10. **Repeated use and save/reload**: tiny openings, full travel, repeated use, and the state after saving and loading.
+11. **External fittings placed right**: the brake release stands upright with its red handle pointing outward and its
+    hanger up into the mounting (BR-01), the handbrake wheel faces out, grips are clear.
+12. **Evidence before acceptance**: what was checked is recorded per control and input route; untested means pending.
 
-A successful build is not enough on its own: these need checking in game, and a pack that has not been checked yet is
-marked as pending, not accepted. The cab handles Railroader models become Derail Valley levers with the joint settings
-of our last user-accepted G-29 build, per kind of control; functions Railroader has no handle for (injector, blower,
-damper and so on) get generated controls on the backhead. `build/review.json` in the run folder lists every such
-automatic choice.
+What the app does about them today: it lists every automatic choice in `build/review.json` (for example: Railroader's
+cab handles become Derail Valley levers with starting joint settings taken from the accepted G-29 build per kind of
+control; functions Railroader has no handle for get generated controls on the backhead); the builder reports control
+sweeps and fitting checks in `build/out/build_report.txt` with renders beside it; and the audit refuses a pack with
+audio in it, scripts other than Custom Car Loader's, a HUD control or driving control without its feeder, or a brake
+release that is not upright with its handle outward. The in-game checks are yours.
 
 ## Settings
 

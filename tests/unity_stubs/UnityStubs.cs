@@ -39,6 +39,7 @@ namespace UnityEngine
         public Quaternion rotation, localRotation; public Transform parent;
         public Transform Find(string n) => null;
         public Vector3 TransformPoint(Vector3 p) => p;
+        public Vector3 InverseTransformPoint(Vector3 p) => p;
         public void SetParent(Transform p, bool worldPositionStays) { }
         public IEnumerator GetEnumerator() => null;
     }
@@ -46,7 +47,7 @@ namespace UnityEngine
     public struct Vector3
     {
         public float x, y, z; public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
-        public static Vector3 zero, one, forward;
+        public static Vector3 zero, one, forward, up;
         public static Vector3 operator -(Vector3 a, Vector3 b) => a;
         public static Vector3 Scale(Vector3 a, Vector3 b) => a;
     }
@@ -55,6 +56,8 @@ namespace UnityEngine
         public float x, y, z, w; public Quaternion(float x, float y, float z, float w) { this.x = x; this.y = y; this.z = z; this.w = w; }
         public static Quaternion identity;
         public static Quaternion operator *(Quaternion a, Quaternion b) => a;
+        public static Vector3 operator *(Quaternion a, Vector3 v) => v;
+        public static Quaternion Inverse(Quaternion q) => q;
     }
     public struct Bounds { public Bounds(Vector3 c, Vector3 s) { center = c; min = c; max = c; } public Vector3 center, min, max; public void Encapsulate(Vector3 p) { } public void Encapsulate(Bounds b) { } }
     public class Renderer : Component { public bool enabled; public Bounds bounds; public Material[] sharedMaterials; }

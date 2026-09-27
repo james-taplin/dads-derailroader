@@ -93,11 +93,21 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
   universal numeric preset). CTRL-02: a closed throttle/whistle/steam valve commands exactly 0 in the simulation
   (trace control -> report -> port -> valve demand -> flow); fix closure, never mute residual audio or effects. Build
   success is not acceptance: runtime evidence per input route, else the candidate is marked pending.
-- **Controls in app-built records (W35):** Railroader `RadialControl`s become DV levers with G-29's joint physics per
-  control role (`buildrecord.LEVER_PHYSICS`, copied from `tooling/locos/g29/profile/G29Config.cs` RrLevers, the last
-  user-accepted build in the snapshot); grips use the core's handle-end heuristic; functions with no RR handle get
-  generated backhead controls with the core's own physics. This replaces W31's "the app generates no control physics":
-  the core needs them per lever. All of it is runtime-pending under CTRL-01/02 and listed in `build/review.json`.
+- **Control acceptance (board X42, all 12 gates; keeps CTRL-01/02 and BR-01):** preserve validated behaviour; every
+  required control present and wired control -> report -> port -> demand -> effect; correct pivot/axis/direction/travel;
+  reachable grips with correct collider ownership; no interference through full travel; fine prompt response (CTRL-01);
+  holding/return/detents; closed = exact zero (CTRL-02); consistent input routes and truthful indications; repeated
+  operation and save/reload; external fittings (BR-01, X41: stock brake release upright, red handle OUTWARD, hanger UP
+  into the mounting, never rolled); evidence before acceptance. G-29/C-21 are regression evidence, not templates.
+  Documented in README ("What a finished pack must pass"); automated so far: audit checks feeders for every driving/HUD
+  control, BR-01 orientation, no audio, CCL.Types only; the core's SweepCheck and fitting checks report in the build
+  report. Everything else is runtime-pending.
+- **Controls in app-built records (W35):** Railroader `RadialControl`s become DV levers with starting joint physics per
+  control role taken from G-29's accepted profile (`buildrecord.LEVER_PHYSICS`, from `tooling/locos/g29/profile/G29Config.cs`
+  RrLevers; notches divide each lever's own measured sweep); grips use the core's handle-end heuristic; functions with
+  no RR handle get generated backhead controls with the core's own physics. The core needs physics per lever, so this
+  replaces W31's "the app generates no control physics". Per X42 these are starting values (analogue_estimate), not a
+  validated derivation for each loco's travel: an open gap, runtime-pending, listed in `build/review.json`.
 - Wheel radius and cylinder bore stay pending until reviewed (`--wheel-radius`); the probe's tread candidates are
   evidence for review, never a measurement (X30).
 - Optional component-group files (`identifier` + `bulkAdds`, from the mod being converted) are choices for the user;

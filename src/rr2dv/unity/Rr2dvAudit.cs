@@ -116,6 +116,19 @@ public static class Rr2dvAudit
             foreach (var p in input.ports ?? new string[0]) if (!feeders.Contains(p)) errors.Add("no control feeds " + p);
             One("CabTeleportDestinationProxy", "cab teleport");
 
+            // BR-01 (board X41): the stock brake-release fitting stands upright with its red handle pointing outward: in the
+            // car's space its +z (handle) points to the side it is on and its +y (hanger) points up. Never rolled over.
+            foreach (var go in objects.OfType<GameObject>())
+                foreach (var t in go.GetComponentsInChildren<Transform>(true).Where(x => x.name == "[brake release]"))
+                {
+                    var q = Quaternion.Inverse(go.transform.rotation) * t.rotation;
+                    var local = go.transform.InverseTransformPoint(t.position);
+                    Vector3 handle = q * Vector3.forward, hanger = q * Vector3.up;
+                    float side = local.x < 0 ? -1f : 1f;
+                    if (handle.x * side < 0.999f || hanger.y < 0.999f)
+                        errors.Add("BR-01: brake release in " + go.name + " is not upright with its handle outward (handle " + handle + ", hanger " + hanger + ")");
+                }
+
             foreach (var sim in all.Where(o => o.GetType().Name == "SimConnectionsDefinitionProxy"))
             {
                 var order = new SerializedObject(sim).FindProperty("executionOrder");

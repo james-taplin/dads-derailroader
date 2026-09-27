@@ -21,8 +21,9 @@ import re
 from . import wheels
 from .record import LB_KG, env
 
-# Lever joint physics per control role, carried from the last user-accepted G-29 profile (CTRL-01: responsiveness is
-# inherited, never re-tuned per loco): tooling/locos/g29/profile/G29Config.cs RrLevers. Order: notches, spring, damper,
+# Starting lever joint physics per control role, from the last user-accepted G-29 profile (tooling/locos/g29/profile/
+# G29Config.cs RrLevers). Board X42: accepted builds are evidence, not templates, so these are analogue estimates to be
+# checked in game per loco (CTRL-01); notch counts divide each lever's own measured sweep. Order: notches, spring, damper,
 # mass, drag, angularDrag, scroll, scrollSpring; the whistle's scroll is a quarter of its sweep (scrollAngleFraction).
 G29 = "tooling/locos/g29/profile/G29Config.cs"
 LEVER_PHYSICS = {
@@ -497,8 +498,9 @@ class _Builder:
             self.choose("no Railroader handle for " + ", ".join(m[0] for m in missing) + ": generated backhead lever(s) instead")
         self.choose(f"{len(placed)} generated backhead controls (G-29's set) at measured points on the backhead plate: "
                     "check reach, labels and the control sweep in the build report (CTRL-01)")
-        self.choose("RR cab handles become DV levers with G-29's joint physics per role and the core's handle-end grip boxes: "
-                    "runtime check of every control and input route pending (CTRL-01/CTRL-02)")
+        self.choose("RR cab handles become DV levers with starting joint physics per role from G-29's accepted profile "
+                    "(evidence, not validated for this loco's travel) and the core's handle-end grip boxes: every control "
+                    "and input route still needs the in-game checks (board X42 gates, CTRL-01/CTRL-02)")
 
         # ---------------- clips that follow ports, loops, loads
         for c in comps:
@@ -509,6 +511,11 @@ class _Builder:
             elif c["kind"] == "ToggleAnimation" and clip in anims and "firebox" in str(e.get("title", "")).casefold():
                 loads.append([clip, "", "fireboxDoor.EXT_IN", False])
         cfg["LoadAnimations"] = self._unique_loads(loads)
+        toggles = [c["name"] for c in comps if c["kind"] == "ToggleAnimation"
+                   and "firebox" not in str(_extra(c).get("title", "")).casefold()]
+        if toggles:
+            self.choose(f"{len(toggles)} Railroader toggle animation(s) (doors, windows, hatches, vents) are not interactive yet and "
+                        f"stay as modelled: {', '.join(toggles)}")
         loops = []
         for c in comps:
             e = _extra(c)

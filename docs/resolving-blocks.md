@@ -146,6 +146,7 @@ The audit reads the exported pack with Unity's own loader, in a second Unity run
 | *behaviour outside CCL.Types* / *missing behaviour script* | only Custom Car Loader's own components may be in a pack | report it with `audit/audit.json` |
 | *no control for the HUD's …* / *no control feeds …* | a control the HUD and keyboard need was not built (usually a generated backhead control that found no plate) | check `build/out/build_report.txt` for the control's `WARN`, report it |
 | *car type … mass / wheel radius* | the pack does not carry the recorded values | report it |
+| *BR-01: brake release … is not upright with its handle outward* | the stock brake-release fitting was placed rolled or turned (board X41) | report it with `build/out/build_report.txt` and the `markers_*` renders |
 | *the HUD has no reading for …* (a note, not an error) | the model has no instrument for that reading (for example no brake-pipe gauge) | nothing to do; the HUD shows no value there |
 
 A passed audit is **not** acceptance: the pack is a candidate until it has been checked in game (below).
@@ -160,11 +161,13 @@ A passed audit is **not** acceptance: the pack is a candidate until it has been 
 
 ## After installing: checking the candidate in Derail Valley
 
-Every installed pack is a candidate. Before calling it done, check in game, by grabbing, with the HUD and with the
-keyboard: every control moves in fine steps across its full range, holds where it is left, and momentary controls
-(the whistle) return; nothing sticks, lags or overshoots (CTRL-01). A closed throttle and a closed whistle give no
-steam flow at all, also after saving and loading (CTRL-02). Then the brakes, lamps, the cab teleport, coupling (and the
-tender), oiling and firing. `build/review.json` lists what was chosen automatically and is worth reading first.
+Every installed pack is a candidate. Before calling it done, go through the twelve gates in the README's *What a
+finished pack must pass* (board X42) for each control and each input route (grabbing, HUD, keyboard; VR if you use it):
+every control moves in fine steps across its full range, holds where it is left, and momentary controls (the whistle)
+return; nothing sticks, lags or overshoots (CTRL-01). A closed throttle and a closed whistle give no steam flow at all
+under pressure, also after saving and loading (CTRL-02). The brake release stands upright with its handle outward
+(BR-01). Then the brakes, lamps, the cab teleport, coupling (and the tender), oiling and firing. `build/review.json`
+lists what was chosen automatically and is worth reading first; post what you find on the app board.
 
 ## Review items: `metadata.pending` in the draft record
 
