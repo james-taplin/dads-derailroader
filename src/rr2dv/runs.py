@@ -6,6 +6,7 @@ import secrets
 import shutil
 import time
 from pathlib import Path
+from typing import Callable
 
 from . import __version__
 from .jsonio import read_json, sha256_file, write_json
@@ -44,6 +45,12 @@ class Run:
         self.path = path
         self.file = path / "run.json"
         self.record = read_json(self.file) if self.file.exists() else {}
+        # Called with (stage or None for the whole run, status, detail) on every change; the GUI shows progress with it.
+        self.listener: Callable[[str | None, str, str], None] | None = None
+
+    def _notify(self, stage: str | None, status: str, detail: str = "") -> None:
+        if self.listener:
+            self.listener(stage, status, detail)
 
     @classmethod
     def create(cls, work_root: Path, label: str, request: dict) -> "Run":
@@ -70,15 +77,18 @@ class Run:
     def begin(self, stage: str) -> None:
         self.record["stages"][stage] = {"status": "running", "started": _now()}
         self.save()
+        self._notify(stage, "running")
 
     def finish(self, stage: str, status: str, detail: str = "", **extra) -> None:
         entry = self.record["stages"][stage]
         entry.update(status=status, finished=_now(), detail=detail, **extra)
         self.save()
+        self._notify(stage, status, detail)
 
     def close(self, status: str, detail: str = "") -> None:
         self.record.update(status=status, finished=_now(), detail=detail)
         self.save()
+        self._notify(None, status, detail)
 
 
 def stage_inputs(run: Run, inventory: dict, index) -> dict:

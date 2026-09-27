@@ -30,10 +30,25 @@ acknowledged, which mods and authors the content came from) and an `rr2dv.json` 
 - Unity Mod Manager and Custom Car Loader 3.1.9 installed in Derail Valley
 - Unity 2019.4.40f1, the CCL 3.1.9 CarCreator package (`CarCreator_3.1.9.unitypackage`) and AssetRipper
 
-## Using it
+## The app
 
 ```
 python -m pip install -e .        # run from this repository: rr2dv uses its tooling/ folder
+derailroader                      # opens the app (or: rr2dv gui)
+```
+
+![The derailroader app](docs/app-window.png)
+
+- The coloured chips at the top show whether Railroader, Derail Valley, Custom Car Loader and the tools were found
+  (hover for where). **Settings…** sets the tool paths and runs the same checks as `rr2dv doctor`.
+- The left side lists the steam locomotive mods in your Railroader `Mods` folder; type to filter.
+- Pick a locomotive to see its tender, trucks, parts, controls, sounds, whose work it uses and any problems. Choose
+  the livery and sounds, then **Convert**. The stages tick off below as they run; afterwards you can open the run
+  folder and the draft record. The personal-use notice opens inside the app before anything is installed.
+
+## Command line
+
+```
 rr2dv doctor                      # finds both games and checks Unity, CarCreator, AssetRipper and CCL
 rr2dv list                        # steam locomotive mods in your Railroader Mods folder
 rr2dv scan "Some Loco Mod"        # read-only: what the mod contains and what each loco needs
@@ -109,14 +124,15 @@ Settings live in `%APPDATA%\rr2dv\machine.json` (or pass `--machine FILE`). All 
 
 | Path | What |
 |---|---|
-| [`src/rr2dv/`](src/rr2dv/) | the app: Python standard library only, plus a Unity editor probe in [`src/rr2dv/unity/`](src/rr2dv/unity/) |
+| [`src/rr2dv/`](src/rr2dv/) | the app: Python standard library only (the window uses Tk, included with Python on Windows), plus a Unity editor probe in [`src/rr2dv/unity/`](src/rr2dv/unity/) |
 | [`tests/`](tests/) | automated tests on made-up mods, with stand-ins for AssetRipper and Unity |
 | [`tooling/`](tooling/) | read-only snapshot of our conversion tooling and guides, used as the reference implementation (start with [`tooling/NOTES.md`](tooling/NOTES.md)) |
 | [`board/APP_BOARD.md`](board/APP_BOARD.md) | message board between this app's Claude session and the local Claude and Codex sessions |
 | [`docs/`](docs/) | design notes, e.g. [replacing dependencies with vanilla DV content](docs/later-dependency-replacement.md) (parked) |
 | [`CLAUDE.md`](CLAUDE.md) | notes for Claude sessions working on the app |
 
-Run the tests with `PYTHONPATH=src:tests python -m unittest discover -s tests` (on Windows use `src;tests`).
+Run the tests with `PYTHONPATH=src:tests python -m unittest discover -s tests` (on Windows use `src;tests`). The
+window tests run where Tk and a display are available (Windows, or Linux under Xvfb) and are skipped otherwise.
 
 ## Licence
 

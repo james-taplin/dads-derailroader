@@ -9,6 +9,7 @@ from pathlib import Path
 
 from . import __version__, installs, machine as machine_mod
 from .consent import ConsentError
+from .appmodel import scan_report
 from .jsonio import write_json
 from .pipeline import EXIT_FAILED, convert, search_roots
 from .publish import InstallRefused
@@ -34,18 +35,12 @@ def cmd_doctor(args) -> int:
 
 
 def _scan(root: Path, search: list[Path], hash_files: bool) -> dict:
-    index = Index(root, search)
-    locos = index.steam_locomotives()
-    report = {
-        "schema": 1,
-        "roots": [{"label": r.label, "path": str(r.path)} for r in index.roots],
-        "packs_indexed": len(index.packs),
-        "index_issues": [i.as_dict() for i in index.issues],
-        "steam_locomotives": [{"id": o["identifier"], "name": (o.get("metadata") or {}).get("name"), "pack": p.describe()} for p, o in locos],
-        "other_locomotives": [{"id": o["identifier"], "kind": o["definition"].get("kind")} for _, o in index.other_locomotives()],
-        "inventories": {o["identifier"]: inventory(index, o["identifier"], hash_files) for _, o in locos},
-    }
-    return report
+    return scan_report(root, search, hash_files)
+
+
+def cmd_gui(args) -> int:
+    from . import gui  # Tk is only needed for the desktop app
+    return gui.main(["--machine", str(args.machine)] if args.machine else [])
 
 
 def cmd_list(args) -> int:
@@ -126,6 +121,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     sub.add_parser("doctor", help="check that the tools and both game installs are in place").set_defaults(func=cmd_doctor)
     sub.add_parser("list", help="list the steam locomotive mods in the Railroader Mods folder").set_defaults(func=cmd_list)
+    sub.add_parser("gui", help="open the desktop app").set_defaults(func=cmd_gui)
 
     def with_search(p, optional_default=True):
         p.add_argument("--search", action="append", default=[], metavar="DIR", help="extra folder to look in for dependencies (repeatable)")

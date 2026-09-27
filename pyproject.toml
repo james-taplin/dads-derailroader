@@ -13,6 +13,9 @@ dependencies = []
 [project.scripts]
 rr2dv = "rr2dv.cli:main"
 
+[project.gui-scripts]
+derailroader = "rr2dv.gui:main"  # the desktop app, without a console window on Windows
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

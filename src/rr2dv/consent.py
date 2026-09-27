@@ -87,37 +87,41 @@ class Counter:
         return f'Click "I agree" {self.required} times to continue: {self.count} of {self.required}'
 
 
-def ask(pack: str, sources: Sequence[str]) -> bool:
-    """Show the notice listing the source content; True only after REQUIRED_CLICKS counted clicks on "I agree"."""
-    try:
-        import tkinter as tk
-        from tkinter import font as tkfont
-    except ImportError as e:
-        raise ConsentError(f"cannot show the personal-use notice ({e}); nothing was installed") from e
-    try:
-        root = tk.Tk()
-    except tk.TclError as e:
-        raise ConsentError(f"cannot show the personal-use notice ({e}); nothing was installed") from e
+def build_notice(window, pack: str, sources: Sequence[str], done: Callable[[bool], None]) -> None:
+    """Fill `window` (a Tk root or a Toplevel) with the notice. Calls done(True) once "I agree" has been clicked
+    REQUIRED_CLICKS times, done(False) on Cancel or when the window is closed; exactly once either way."""
+    import tkinter as tk
+    from tkinter import font as tkfont
 
     counter = Counter()
-    agreed = {"value": False}
-    root.title(TITLE)
-    root.attributes("-topmost", True)
-    width, height = int(root.winfo_screenwidth() * 0.6), int(root.winfo_screenheight() * 0.8)
-    root.geometry(f"{width}x{height}+{(root.winfo_screenwidth() - width) // 2}+{(root.winfo_screenheight() - height) // 2}")
-    root.minsize(640, 480)
-    heading = tkfont.Font(size=26, weight="bold")
-    body = tkfont.Font(size=14)
+    finished = {"value": False}
 
-    tk.Label(root, text=HEADING, font=heading, fg="white", bg="#a31515", pady=16).pack(fill="x")
-    frame = tk.Frame(root)
-    frame.pack(fill="both", expand=True)
+    def finish(result: bool) -> None:
+        if not finished["value"]:
+            finished["value"] = True
+            done(result)
+
+    window.title(TITLE)
+    window.attributes("-topmost", True)
+    width, height = int(window.winfo_screenwidth() * 0.6), int(window.winfo_screenheight() * 0.8)
+    window.geometry(f"{width}x{height}+{(window.winfo_screenwidth() - width) // 2}+{(window.winfo_screenheight() - height) // 2}")
+    window.minsize(640, 480)
+    heading = tkfont.Font(window, size=26, weight="bold")
+    body = tkfont.Font(window, size=14)
+
+    tk.Label(window, text=HEADING, font=heading, fg="white", bg="#a31515", pady=16).pack(side="top", fill="x")
+    buttons = tk.Frame(window, pady=16)
+    buttons.pack(side="bottom")  # packed before the text so a small window squeezes the text, never the buttons
+    status = tk.Label(window, text=counter.label(), font=body, pady=8)
+    status.pack(side="bottom")
+    frame = tk.Frame(window)
+    frame.pack(side="top", fill="both", expand=True)
     scroll = tk.Scrollbar(frame)
     scroll.pack(side="right", fill="y")
     text = tk.Text(frame, wrap="word", font=body, padx=24, pady=16, relief="flat", height=10, yscrollcommand=scroll.set)
     scroll.configure(command=text.yview)
     text.tag_configure("bullet", lmargin1=0, lmargin2=body.measure("* "), spacing1=2)
-    text.tag_configure("source", lmargin1=body.measure("    "), font=tkfont.Font(family="Courier", size=13))
+    text.tag_configure("source", lmargin1=body.measure("    "), font=tkfont.Font(window, family="Courier", size=13))
     parts = notice_parts(pack, sources)
     text.insert("end", parts["intro"] + "\n\n")
     for point in parts["points"]:
@@ -128,24 +132,38 @@ def ask(pack: str, sources: Sequence[str]) -> bool:
     text.insert("end", "\n" + parts["closing"])
     text.configure(state="disabled")
     text.pack(side="left", fill="both", expand=True)
-    status = tk.Label(root, text=counter.label(), font=body, pady=8)
-    status.pack()
-    buttons = tk.Frame(root, pady=16)
-    buttons.pack()
 
     def on_agree(event):
         if not (0 <= event.x < event.widget.winfo_width() and 0 <= event.y < event.widget.winfo_height()):
             return  # released away from the button: not a click
         if counter.click():
-            agreed["value"] = True
-            root.destroy()
+            finish(True)
         else:
             status.configure(text=counter.label())
 
     agree = tk.Button(buttons, text="I agree", font=heading, width=12, takefocus=0)
     agree.bind("<ButtonRelease-1>", on_agree)  # mouse only: no keyboard activation
     agree.pack(side="left", padx=24)
-    tk.Button(buttons, text="Cancel", font=body, width=10, command=root.destroy).pack(side="left", padx=24)
-    root.protocol("WM_DELETE_WINDOW", root.destroy)
+    tk.Button(buttons, text="Cancel", font=body, width=10, command=lambda: finish(False)).pack(side="left", padx=24)
+    window.protocol("WM_DELETE_WINDOW", lambda: finish(False))
+
+
+def ask(pack: str, sources: Sequence[str]) -> bool:
+    """Show the notice in its own window (command line); True only after REQUIRED_CLICKS counted clicks."""
+    try:
+        import tkinter as tk
+    except ImportError as e:
+        raise ConsentError(f"cannot show the personal-use notice ({e}); nothing was installed") from e
+    try:
+        root = tk.Tk()
+    except tk.TclError as e:
+        raise ConsentError(f"cannot show the personal-use notice ({e}); nothing was installed") from e
+    result = {"value": False}
+
+    def done(agreed: bool) -> None:
+        result["value"] = agreed
+        root.destroy()
+
+    build_notice(root, pack, sources, done)
     root.mainloop()
-    return agreed["value"]
+    return result["value"]

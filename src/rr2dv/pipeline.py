@@ -77,7 +77,7 @@ def extract(run: Run, inv: dict, machine: Machine) -> dict:
 
 def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: Sequence[Path] = (),
             audio: str | None = None, livery: str | None = None, wheel_radius: float | None = None,
-            ask: Callable = consent.ask) -> Outcome:
+            ask: Callable = consent.ask, on_progress: Callable[[str | None, str, str], None] | None = None) -> Outcome:
     # Both installs (and CCL) first (W25), then the input must be a mod in the Railroader Mods folder.
     rr, dv = _installs(machine)
     input_path = installs.mod_in_railroader(rr, mod)
@@ -91,6 +91,7 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
     request = {"input": str(input_path), "locomotive": loco, "railroader": rr.describe(), "derail_valley": dv.describe(),
                "search_roots": [str(p) for p in roots], "audio": audio, "livery": livery, "wheel_radius": wheel_radius}
     run = Run.create(work_root, loco or input_path.name, request)
+    run.listener = on_progress
     try:
         return _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius)
     except Exception as e:  # record the failure on the run, then let the caller report it
