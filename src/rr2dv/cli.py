@@ -72,14 +72,11 @@ def cmd_scan(args) -> int:
         state = "BLOCKED" if errors else "ready for the next stage"
         tender = inv.get("tender") or {}
         print(f"\n{loco['id']} - {loco['name']}: {state}")
-        print(f"  tender: {tender.get('id', 'none')}; trucks: {', '.join(t['id'] for t in inv['trucks']) + ' (replaced by vanilla DV bogies)' if inv['trucks'] else 'none'}; "
+        print(f"  tender: {tender.get('id', 'none')}; trucks: {', '.join(t['id'] for t in inv['trucks']) or 'none'}; "
               f"parts: {len(inv['parts'])}; packs: {', '.join(p['name'] for p in inv['packs'])}")
         purposes = sorted({c['purpose'] for c in inv['controls']['radial'] if c.get('purpose')})
         print(f"  controls: {', '.join(purposes) or 'none'}; toggles: {len(inv['controls']['toggles'])}")
-        for mod in inv["mods"]:
-            lic = "; ".join(f"{l['file']} ({'unreadable' if l.get('unreadable') else ', '.join(l['terms']) or 'no restrictive terms found'})"
-                            for l in mod["licences"])
-            print(f"  mod {mod['id']}: {lic or 'no licence file found'}")
+        print(f"  uses work from: {', '.join(m['id'] for m in inv['mods']) or 'none'}")
         for dep in inv.get("railroader_only", []):
             print(f"  uses {dep['id']} in Railroader only ({'installed' if dep['installed'] else 'not found'}); not needed in Derail Valley")
         for g in inv["optional_groups"]:

@@ -38,13 +38,6 @@ BASIS = {
     "tender": {"SimBasis": 1, "HudType": 20, "License": "SH282", "BaseCarType": 6},
 }
 TENDER_CAR = {"BaseCarType": 8, "License": None}
-# Every converted car runs on vanilla DV bogies (James, W21). For a tender that is CCL's BogieType.Default, DV's
-# freight bogie: the other vanilla types are locomotive bogies. CCL copies it from the vanilla car at the position of
-# our BogieF/BogieR. Figures from the CCL v3.1.9 source (github.com/derail-valley-modding/custom-car-loader, MIT).
-CCL = "custom-car-loader v3.1.9 "
-VANILLA_BOGIE = {"BogieType": "Default", "value": 200, "evidence": CCL + "CCL.Types/BogieBufferTypes.cs BogieType.Default = 200",
-                 "halfWheelbase": 1.00, "halfWheelbaseEvidence": CCL + "CCL.Creator/Wizards/CarPrefabManipulators.cs GetBogieOffset(Default)",
-                 "wheelRadius": 0.459, "wheelRadiusEvidence": CCL + "CCL.Creator/Wizards/CarWizard.cs default car wheelRadius"}
 AUDIO = {"S060": {"ChuffType": 0, "WhistleSystem": 3050}, "S282": {"ChuffType": 1, "WhistleSystem": 3100}}
 # Draft DV-side simulation starting points (X30): the values of our S16 draft record, with its units, bases and evidence.
 # They are not validated for any loco; every one is listed for per-engine review in metadata.pending.
@@ -121,7 +114,7 @@ def load_capacities(d: dict) -> dict:
 
 
 def left_out_component(c: dict, owner: str, left_out: list[dict]) -> bool:
-    """A part or image the inventory left out (game content or a forbidding licence): the builder must not place it."""
+    """A part the inventory left out (broken in its own mod): the builder must not place it or anything anchored in it."""
     model = c.get("model") or {}
     for item in left_out:
         if item["owner"] != owner:
@@ -220,8 +213,8 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
     pending.append("simulation: draft engine, boiler, firebox and exhaust choices need per-engine calibration "
                    "(throttleMaxFlow, steamChestVolume, blowdown, vent rate, firing, exhaust, cutoff range)")
     if inv.get("left_out"):
-        pending.append(f"left out: {len(inv['left_out'])} part(s)/image(s) (game content, restricted or broken in the source; "
-                       "metadata.leftOut with reason and effect); check the loco still looks and works right without them")
+        pending.append(f"left out: {len(inv['left_out'])} part(s) broken in the source mod (metadata.leftOut with reason "
+                       "and effect); check the loco still looks and works right without them")
     code_mods = sorted({c["provider"] for c in inv.get("code_mods", [])})
     if code_mods:
         pending.append(f"simulation: nonstandard running gear ({', '.join(sorted({c['kind'] for c in inv['code_mods']}))} from "
@@ -307,17 +300,6 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
             "CoalCapacityKg": env(tcaps.get("CoalCapacityKg"), "kg", "derived", tsrc("loadSlots")) if "CoalCapacityKg" in tcaps else None,
             "CouplerHeight": env(1.05, "m", "DV_choice", "guide C03 default"),
             "WeightEmptyKg": env((td.get("weightEmpty") or 0) * LB_KG, "kg", "source", tsrc("weightEmpty")) if td.get("weightEmpty") else None,
-            "WheelRadius": env(VANILLA_BOGIE["wheelRadius"], "m", "DV_choice", VANILLA_BOGIE["wheelRadiusEvidence"]),
         }, "hooks": {}}
-        sep = td.get("truckSeparation")
-        swapped = [t for t in inv.get("trucks", []) if t["owner"] == tender_id]
-        # Not a LocoConfig field yet: the builder's vanilla-bogie mode is requested on the board (W21).
-        record["tender"]["metadata"] = {"vanillaBogies": {
-            "BogieType": VANILLA_BOGIE["BogieType"], "value": VANILLA_BOGIE["value"], "evidence": [VANILLA_BOGIE["evidence"]],
-            "centres": env([sep / 2, -sep / 2], "m", "source", tsrc("truckSeparation"), "bogie centres at +/- separation/2 (guide A04)") if sep else None,
-            "halfWheelbase": env(VANILLA_BOGIE["halfWheelbase"], "m", "DV_choice", VANILLA_BOGIE["halfWheelbaseEvidence"]),
-            "replaces": swapped}}
-        if not sep:
-            pending.append(f"tender: {tender_id} has no truckSeparation; place the vanilla bogies from measured geometry")
-        pending += ["tender: collision boxes from measured geometry; check the body sits on the vanilla bogies"]
+        pending += ["tender: trucks layout and collision boxes from measured geometry"]
     return record

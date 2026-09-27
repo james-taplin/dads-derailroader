@@ -2,14 +2,13 @@
 
 A Railroader mod is a folder with an info.json. It holds one or more asset packs: folders with Definitions.json
 and/or Catalog.json plus a `bundle`. Objects in Definitions.json reference each other by identifier (tender,
-truck) and reference assets in other packs through PrefabModelComponent models. Trucks are not followed: every
-converted car runs on vanilla Derail Valley bogies. Mods can also carry optional
+truck) and reference assets in other packs through PrefabModelComponent models. Mods can also carry optional
 component-group files (an object `identifier` plus `bulkAdds`, e.g. alternative heralds) and images referenced
 as "<mod id>.<file name>".
 
 This module finds every pack, group file and image a steam locomotive needs, from the input first and then from
-extra search roots (the Railroader Mods folder, base-game asset packs), and applies the licence policy in
-licences.py to the mod and everything it depends on. Nothing here writes to disk.
+extra search roots (the Railroader Mods folder, base-game asset packs). Every dependency found in the user's own
+Railroader install is used (James, W25); only a part broken in its own mod is left out. Nothing here writes to disk.
 
 Resolution is deterministic: the input root outranks search roots, and search roots rank in the order given.
 Two candidates at the same rank are an error, never a first match (guide rule D03).
@@ -23,7 +22,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Iterable, Sequence
 
-from . import licences
 from .jsonio import SourceError, read_json_lenient, sha256_file
 from .safety import is_link
 
@@ -103,14 +101,6 @@ class Issue:
         return out
 
 
-GAME_DATA = "railroader_data"
-
-
-def is_game_content(path: Path) -> bool:
-    """Railroader's own asset packs live under Railroader_Data (StreamingAssets/AssetPacks)."""
-    return any(part.casefold() == GAME_DATA for part in path.parts)
-
-
 def _rel(root: Root, path: Path) -> str:
     rel = path.relative_to(root.path).as_posix()
     return "" if rel == "." else rel
@@ -121,14 +111,13 @@ class Mod:
     root: Root
     path: Path
     ident: str  # info.json Id, else the folder name
-    licences: list[dict] = field(default_factory=list)
 
     @property
     def rel(self) -> str:
         return _rel(self.root, self.path)
 
     def describe(self) -> dict:
-        return {"id": self.ident, "root": self.root.label, "path": self.rel, "licences": self.licences}
+        return {"id": self.ident, "root": self.root.label, "path": self.rel}
 
 
 @dataclass
@@ -274,7 +263,7 @@ class Index:
                     ident = data.get("Id") or data.get("id")
             except SourceError as e:
                 self.issues.append(Issue("warning", "info-unreadable", str(e)))
-        mod = Mod(root, folder, ident, licences.scan_folder(folder))
+        mod = Mod(root, folder, ident)
         self.mods.append(mod)
         self._mods_by_ident[ident.casefold()].append(mod)
         if ident.casefold() != folder.name.casefold():
@@ -425,11 +414,9 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
     packs: dict[Path, Pack] = {loco_pack.path: loco_pack}
     vehicles = [(loco_pack, loco)]  # objects whose models and parts we follow
 
-    # Problematic assets are left out, never copied (James, W22): Railroader game content, and anything from another
-    # mod whose licence forbids modification or cannot be read. Their files are never staged, exported or opened, so
-    # those mods' licences do not stop the conversion. DV has no vanilla equivalent for loose steam fittings (CCL's
-    # mesh list has no stacks, pilots, lamps or rails), so a left-out part or image is reported for review, not swapped.
-    converted = loco_pack.mod
+    # Every dependency in the user's own install is used (W25). Only a part broken in its own mod is left out, and
+    # listed with what it takes with it. (Replacing dependencies with vanilla DV content is parked:
+    # docs/later-dependency-replacement.md.)
     left_out: list[dict] = []
 
     def leave_out_part(vid: str, comp: dict, comps: list[dict], pack_ident: str, asset_ident, ppack: Pack, reason: str) -> None:
@@ -444,27 +431,12 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         issues.append(Issue("warning", "left-out", f"{vid}/{name}: part {asset_ident!r} from {ppack.name} left out: {reason}"
                             + (f"; components anchored in it: {', '.join(anchored)}" if anchored else "")))
 
-    def problem(path: Path, mod: Mod | None) -> str | None:
-        if is_game_content(path):
-            return "Railroader game content"
-        if mod is None or (converted is not None and mod.path == converted.path):
-            return None
-        for lic in mod.licences:
-            if lic.get("unreadable"):
-                return f"mod {mod.ident}: licence {lic['file']} cannot be read"
-            if licences.forbidding(lic["terms"]):
-                return f"mod {mod.ident} ({lic['file']}) forbids {licences.describe(licences.forbidding(lic['terms']))}"
-        return None
-
     tender_info = None
     tender_id = ldef.get("tenderIdentifier")
     if isinstance(tender_id, str) and tender_id:
         tres = index.find_object(tender_id)
         if tres.hit:
             tpack, tender = tres.hit
-            if is_game_content(tpack.path):
-                issues.append(Issue("error", "game-content", f"tender {tender_id} is Railroader game content; rr2dv does not copy it "
-                                    "and Derail Valley has no vanilla tender to put in its place"))
             packs[tpack.path] = tpack
             vehicles.append((tpack, tender))
             tender_info = {"id": tender_id, "pack": tpack.describe()}
@@ -475,30 +447,23 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         else:
             issues.append(Issue("error", "missing-tender", f"tender {tender_id} not found in the input or search folders" + _unreadable_hint(index)))
 
-    # Trucks are never converted (James, W21): every car runs on vanilla Derail Valley bogies, so nothing of a truck
-    # (its mod's bundle, or Railroader base-game meshes) ends up in the pack, and its licence cannot stop a conversion.
-    # The truck's own definition is read for information only: what the swap leaves out.
     trucks = []
     for vpack, vehicle in list(vehicles):
         truck_id = definition(vehicle).get("truckIdentifier")
         if not (isinstance(truck_id, str) and truck_id):
             continue
         tres = index.find_object(truck_id)
-        entry = {"id": truck_id, "owner": vehicle["identifier"], "replaced_by": "vanilla Derail Valley bogies",
-                 "found": None, "source": None, "left_out": []}
         if tres.hit:
             tpack, truck = tres.hit
-            tdef = definition(truck)
-            entry["found"] = tpack.describe()
-            entry["source"] = {k: tdef.get(k) for k in ("diameter", "numberOfAxles", "length") if tdef.get(k) is not None}
-            entry["left_out"] = sorted({str(c.get("kind", "?")) for c in components(tdef)}
-                                       | ({"brakeAnimation"} if tdef.get("brakeAnimation") else set()))
-        note = "found in " + (f"{entry['found']['root']}:{entry['found']['path'] or entry['found']['name']}" if tres.hit
-                              else "several places" if tres.candidates else "no indexed folder")
-        issues.append(Issue("info", "truck-replaced",
-                            f"truck {truck_id} (used by {vehicle['identifier']}; {note}) is replaced by vanilla Derail Valley bogies"
-                            + (f"; left out: {', '.join(entry['left_out'])}" if entry["left_out"] else "")))
-        trucks.append(entry)
+            packs[tpack.path] = tpack
+            vehicles.append((tpack, truck))
+            trucks.append({"id": truck_id, "owner": vehicle["identifier"], "pack": tpack.describe()})
+        elif tres.candidates:
+            issues.append(Issue("error", "ambiguous", _ambiguous(f"truck {truck_id}", tres)))
+        else:
+            issues.append(Issue("error", "missing-truck",
+                                f"truck {truck_id} (used by {vehicle['identifier']}) not found; add the folder of the mod that provides it"
+                                + _unreadable_hint(index)))
 
     car_ids = {loco_id} | ({tender_info["id"]} if tender_info else set())
     groups = sorted((g for g in index.groups if g.target in car_ids), key=lambda g: _rel(g.root, g.path))
@@ -516,12 +481,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                 continue
             tres, mod = index.find_texture(name)
             entry = {"id": name, "owner": owner, "via": via, "file": None}
-            reason = problem(tres.hit, mod) if tres.hit else None
-            if reason:
-                entry["left_out"] = reason
-                left_out.append({"what": "image", "owner": owner, "id": name, "via": via, "reason": reason})
-                issues.append(Issue("warning", "left-out", f"{owner}: image {name!r} left out: {reason}"))
-            elif tres.hit:
+            if tres.hit:
                 path = tres.hit
                 entry["file"] = {"root": mod.root.label, "path": _rel(mod.root, path)}
                 extra.setdefault(path, _file_record(mod.root, path, "texture", hash_files))
@@ -539,7 +499,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         model = vdef.get("modelIdentifier")
         if isinstance(model, str) and model and vpack.assets and not vpack.has_model(model):
             issues.append(Issue("warning", "model-not-in-catalog", f"{vid}: model {model!r} matches no key or prefab in {vpack.name}/Catalog.json"))
-        role = "locomotive" if vehicle is loco else "tender"
+        role = "locomotive" if vehicle is loco else "tender" if tender_info and vid == tender_info["id"] else "truck"
         if isinstance(model, str) and model:
             vehicle_records.append({"id": vid, "role": role, "model": model, "prefab": vpack.model_prefab(model), "pack": vpack.describe()})
         else:
@@ -575,10 +535,6 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                     issues.append(Issue("error", "missing-part-pack", f"{label}: pack {pack_ident!r} not found"))
                 continue
             ppack = pres.hit
-            reason = problem(ppack.path, ppack.mod)
-            if reason:
-                leave_out_part(vid, comp, comps, pack_ident, asset_ident, ppack, reason)
-                continue
             if CATALOG in ppack.errors:
                 packs[ppack.path] = ppack  # reported as pack-unreadable below
                 continue
@@ -630,9 +586,9 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
                 files.append(entry)
         pack_records.append({**p.describe(), "files": files})
 
-    # Licence policy (licences.py). Only mods whose content ends up in the Derail Valley pack can stop a conversion:
-    # the converted mod and every mod whose bundles or images we copy. Code mods the loco uses in Railroader are not
-    # needed in Derail Valley and are never opened, so they are listed for information only.
+    # Whose work ends up in the pack: the converted mod and every mod whose bundles or images we copy. Listed for
+    # attribution (the pack's credits and the personal-use notice). Code mods the loco uses in Railroader are not
+    # needed in Derail Valley and are never opened; they are listed for information only.
     involved: dict[Path, Mod] = {}
     for p in ordered:
         if p.mod:
@@ -645,16 +601,6 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
     mod_records = []
     for mod in sorted(involved.values(), key=lambda m: (m.root.rank, m.rel)):
         mod_records.append(mod.describe())
-        for lic in mod.licences:
-            where = f"mod {mod.ident} ({lic['file']})"
-            if lic.get("unreadable"):
-                issues.append(Issue("error", "licence-unreadable", f"{where} cannot be read as text; rr2dv will not guess what it allows"))
-            elif licences.forbidding(lic["terms"]):
-                issues.append(Issue("error", "licence-forbids-conversion",
-                                    f"{where} forbids {licences.describe(licences.forbidding(lic['terms']))}; rr2dv will not convert this locomotive",
-                                    {"mod": mod.ident, "file": lic["file"], "sha256": lic["sha256"], "terms": lic["terms"]}))
-            elif lic["terms"]:
-                issues.append(Issue("info", "licence-terms", f"{where}: {', '.join(lic['terms'])}; the converted pack is for personal use"))
 
     providers = {c["provider"]: c["evidence"] for c in code_mods}
     if group_records:
@@ -662,9 +608,8 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         providers.setdefault(name, evidence)
     railroader_only = []
     for provider in sorted(providers):
-        known = licences.KNOWN_LICENCES.get(provider.casefold())
         railroader_only.append({"id": provider, "installed": bool(index.find_mod(provider).candidates),
-                                "evidence": providers[provider], "licence_terms": known["terms"] if known else None})
+                                "evidence": providers[provider]})
         issues.append(Issue("info", "railroader-only-dependency",
                             f"uses {provider} in Railroader; not needed in Derail Valley and none of its files are opened or copied"))
 

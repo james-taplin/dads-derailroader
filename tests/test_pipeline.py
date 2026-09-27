@@ -51,10 +51,10 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(read_json(run.file)["status"], "incomplete")
         self.assertEqual((run.record["answers"]["locomotive"], run.record["answers"]["audio"]["basis"]), ("ts-260-a", "S060"))
         staged = read_json(run.path / "staged.json")["files"]
-        self.assertEqual(len(staged), 5)  # 3 loco pack + 2 parts pack; the truck mod is replaced by vanilla bogies
+        self.assertEqual(len(staged), 8)  # 3 loco pack + 2 parts pack + 3 truck pack
         for f in staged:
             self.assertEqual(sha256_file(run.path / f["file"]), f["sha256"])
-        self.assertFalse((run.path / "inputs" / "search1").exists())
+        self.assertTrue((run.path / "inputs" / "search1" / "TruckMod" / "Trucks" / "Bundle").is_file())
 
     def test_unrelated_broken_pack_does_not_stop_convert(self):
         bad = self.m["mod"] / "k50parts"
@@ -81,11 +81,10 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(outcome.run.record["request"]["input_sha256"], sha256_file(archive))
 
     def test_blocking_issue_stops_at_link(self):
-        shutil.rmtree(self.m["mod"] / "parts")
-        outcome = convert(self.m["mod"], self.out, self.machine, search=[self.m["search"]])
+        outcome = convert(self.m["mod"], self.out, self.machine)  # no search root: truck missing
         self.assertEqual(outcome.code, EXIT_FAILED)
         self.assertEqual(outcome.run.record["stages"]["link"]["status"], "failed")
-        self.assertIn("parts", outcome.message)
+        self.assertIn("test-truck-2s", outcome.message)
         self.assertFalse((outcome.run.path / "inputs").exists())
 
     def test_several_locomotives_need_a_choice(self):
@@ -166,14 +165,8 @@ class Cli(unittest.TestCase):
         self.assertIn("Reverser, Throttle", text)
         self.assertEqual(list(read_json(report)["inventories"]), ["ts-260-a"])
 
-    def test_scan_without_search_roots_needs_no_truck_mod(self):
+    def test_scan_blocked_without_search_roots(self):
         code, text = self.run_cli("scan", str(self.m["mod"]), "--no-default-search")
-        self.assertEqual(code, 0, text)
-        self.assertIn("trucks: test-truck-2s (replaced by vanilla DV bogies)", text)
-
-    def test_scan_blocked(self):
-        shutil.rmtree(self.m["mod"] / "parts")
-        code, text = self.run_cli("scan", str(self.m["mod"]))
         self.assertEqual(code, EXIT_FAILED)
         self.assertIn("BLOCKED", text)
 

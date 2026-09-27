@@ -32,7 +32,7 @@ class Probe(unittest.TestCase):
         data = read_json(project / "Assets/Rr2dv/ProbeInput.json")
         self.assertEqual(data["missing"], [])
         vehicles = {v["id"]: v for v in data["vehicles"]}
-        self.assertEqual(sorted(vehicles), ["ts-260-a", "tt-260-a"])
+        self.assertEqual(sorted(vehicles), ["test-truck-2s", "ts-260-a", "tt-260-a"])
         loco = vehicles["ts-260-a"]
         self.assertEqual(loco["animationMap"][0]["key"], "Drivers")
         self.assertEqual(loco["animationMap"][0]["asset"], "Assets/AnimationClip/Drivers.anim")
@@ -41,12 +41,14 @@ class Probe(unittest.TestCase):
                                               "diameter": 1.2, "offset": 0.0, "length": 2.4, "axles": 3}])
         throttle = next(c for c in loco["components"] if c["purpose"] == "Throttle")
         self.assertEqual((throttle["kind"], throttle["scale"], throttle["rotation"]), ("RadialControl", [1.0, 1.0, 1.0], [0.0, 0.0, 0.0, 1.0]))
+        truck = vehicles["test-truck-2s"]
+        self.assertTrue(truck["animationMap"][0]["asset"].startswith("Assets/RR/search1/TruckMod/Trucks/"))
         # the probe script itself is in the project, with its hash recorded
         self.assertTrue((project / "Assets/Editor/Rr2dvProbe.cs").is_file())
         self.assertIn("rr2dv/unity/Rr2dvProbe.cs", read_json(out.run.path / "unity/project.json")["app_scripts"])
         stage = out.run.record["stages"]["probe"]
         self.assertEqual(stage["status"], "done")
-        self.assertIn("2 vehicle(s) measured; 0 problem(s)", stage["detail"])
+        self.assertIn("3 vehicle(s) measured; 0 problem(s)", stage["detail"])
         self.assertEqual(read_json(out.run.path / "probe/launch.json")["method"], "Rr2dvProbe.Run")
 
     def test_licence_flake_is_retried_once(self):

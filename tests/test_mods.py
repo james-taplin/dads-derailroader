@@ -12,7 +12,6 @@ from fixtures import fake_assetripper, fake_carcreator, fake_unity, loco, part, 
 from rr2dv.jsonio import read_json, sha256_file
 from rr2dv.machine import Machine
 from rr2dv.pipeline import EXIT_FAILED, EXIT_INCOMPLETE, convert
-from rr2dv.licences import terms_in
 from rr2dv.rrmod import Index, audio_basis, blocking, inventory
 
 STRICT = "You may not open, decompile, reverse engineer, or modify any part of the Mod. No redistribution. Personal use only."
@@ -36,93 +35,54 @@ class Base(unittest.TestCase):
         return inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a", **kw)
 
 
-class Licences(Base):
-    def test_terms(self):
-        self.assertEqual(terms_in(STRICT), ["no-modification", "no-reverse-engineering", "no-redistribution", "personal-use-only"])
-        self.assertEqual(terms_in("MIT License. Permission is hereby granted, free of charge, to any person obtaining a copy "
-                                  "of this software, to deal in the Software without restriction, including without limitation "
-                                  "the rights to use, copy, modify, merge, publish."), [])
-        self.assertEqual(terms_in("Licensed under CC BY-NC-ND 4.0."), ["no-derivatives", "no-commercial-use"])
-        self.assertEqual(terms_in("Please do not port this locomotive to other games."), ["no-porting"])
-        self.assertEqual(terms_in("You may not redistribute any portion of this mod."), ["no-redistribution"])
-        readme = "Install: do not edit the folder name.\n\nLicence: free to use, please credit me."
-        self.assertEqual(terms_in(readme, readme=True), [])
-        self.assertIn("no-modification", terms_in("Licence: no modifications allowed.", readme=True))
+class Dependencies(Base):
+    """W25: every dependency in the user's own install is used; licences are not read; only a part broken in its own
+    mod is left out, with what it takes with it."""
 
-    def assertStopped(self, outcome, code):
-        self.assertEqual(outcome.code, EXIT_FAILED, outcome.message)
-        self.assertEqual(outcome.run.record["stages"]["link"]["status"], "failed")
-        issues = read_json(outcome.run.path / "inventory.json")["issues"]
-        self.assertIn(code, [i["code"] for i in issues if i["severity"] == "error"])
-        self.assertFalse((outcome.run.path / "inputs").exists())
-
-    def test_forbidding_licence_stops_the_conversion_with_no_way_round_it(self):
-        (self.m["mod"] / "LICENSE.txt").write_text(STRICT)
-        before = tree_state(self.tmp / "input")
-        out = convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]])
-        self.assertStopped(out, "licence-forbids-conversion")
-        self.assertIn("will not convert", out.message)
-        self.assertEqual(tree_state(self.tmp / "input"), before)
-        import inspect
-        from rr2dv import cli, pipeline
-        self.assertNotIn("accept", inspect.signature(pipeline.convert).parameters)
-        self.assertNotIn("--accept-licence", cli.build_parser().format_help() + cli.build_parser()._subparsers._group_actions[0].choices["convert"].format_help())
-
-    def test_licence_files_are_found_by_name_anywhere_near_the_top_of_the_mod(self):
-        (self.m["mod"] / "docs").mkdir()
-        (self.m["mod"] / "docs" / "Copyright notice.md").write_text("No modifications of any kind are permitted.")
-        self.assertIn("licence-forbids-conversion", codes(self.inv()))
-
-    def test_unreadable_licence_stops(self):
-        (self.m["mod"] / "LICENSE.pdf").write_bytes(b"%PDF-1.4")
-        self.assertIn("licence-unreadable", codes(self.inv()))
-
-    def parts_mod(self, licence: str | None = STRICT, where=None):
+    def parts_mod(self, where=None, catalogue=True):
         base = where or (self.m["search"] / "PartsMod")
-        write_pack(base / "extras", assets={"horn": {"filename": "horn.prefab"}})
+        write_pack(base / "extras", assets={"horn": {"filename": "horn.prefab"}} if catalogue else {"other": {"filename": "o.prefab"}})
         (base / "info.json").write_text('{"Id": "PartsMod"}')
-        if licence:
-            (base / "LICENSE").write_text(licence)
         (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [
             loco("ts-260-a", tender="tt-260-a", parts=[part("Test Loco Mod\\parts", "bell", "bell1"), part("PartsMod\\extras", "horn", "horn1")]),
             tender("tt-260-a", truck="test-truck-2s")]}))
 
-    def test_a_restricted_dependency_mods_parts_are_left_out_not_copied(self):
-        self.parts_mod()
+    def test_licence_files_are_not_read(self):
+        (self.m["mod"] / "LICENSE.txt").write_text(STRICT)
+        (self.m["mod"] / "LICENSE.pdf").write_bytes(b"%PDF-1.4")
         inv = self.inv()
         self.assertEqual(blocking(inv), [])
-        self.assertEqual([p["asset"] for p in inv["parts"]], ["bell"])
-        self.assertEqual([(l["what"], l["asset"]) for l in inv["left_out"]], [("part", "horn")])
-        self.assertIn("forbids", inv["left_out"][0]["reason"])
-        self.assertNotIn("extras", [p["name"] for p in inv["packs"]])
-        self.assertNotIn("PartsMod", [m["id"] for m in inv["mods"]])
-        self.assertIn("left-out", codes(inv))
+        self.assertFalse([i for i in inv["issues"] if "licen" in i["code"] or "licen" in i["message"].casefold()])
+        self.assertTrue(all("licences" not in m for m in inv["mods"]))
 
-    def test_unrestricted_dependency_mods_parts_are_used(self):
-        self.parts_mod(licence=None)
+    def test_parts_from_other_installed_mods_are_used(self):
+        self.parts_mod()
+        (self.m["search"] / "PartsMod" / "LICENSE").write_text(STRICT)
         inv = self.inv()
         self.assertEqual(([p["asset"] for p in inv["parts"]], inv["left_out"]), (["bell", "horn"], []))
         self.assertIn("PartsMod", [m["id"] for m in inv["mods"]])
 
-    def test_unreadable_dependency_licence_leaves_its_parts_out(self):
-        self.parts_mod(licence=None)
-        (self.m["search"] / "PartsMod" / "LICENSE.pdf").write_bytes(b"%PDF-1.4")
-        inv = self.inv()
-        self.assertEqual(blocking(inv), [])
-        self.assertIn("cannot be read", inv["left_out"][0]["reason"])
-
-    def test_railroader_game_parts_are_left_out(self):
+    def test_railroader_game_parts_are_used(self):
         game = self.tmp / "Railroader" / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
-        self.parts_mod(licence=None, where=game / "PartsMod")
+        self.parts_mod(where=game / "PartsMod")
         inv = inventory(Index(self.m["mod"], [self.m["search"], game]), "ts-260-a")
         self.assertEqual(blocking(inv), [])
-        self.assertEqual([(l["asset"], l["reason"]) for l in inv["left_out"]], [("horn", "Railroader game content")])
+        self.assertEqual([p["asset"] for p in inv["parts"]], ["bell", "horn"])
 
-    def test_left_out_parts_are_never_staged_or_placed(self):
-        self.parts_mod()
+    def test_trucks_and_tenders_from_other_mods_are_used(self):
+        write_pack(self.m["search"] / "TenderMod" / "Tenders", objects=[tender("tt-ext", truck="test-truck-2s")],
+                   assets={"tt-ext": {"filename": "tt-ext.prefab"}}, bundle_name="Bundle")
+        (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [loco("ts-260-a", tender="tt-ext")]}))
+        inv = self.inv()
+        self.assertEqual(blocking(inv), [])
+        self.assertEqual({v["id"]: v["role"] for v in inv["vehicles"]}, {"ts-260-a": "locomotive", "tt-ext": "tender", "test-truck-2s": "truck"})
+        self.assertEqual([p["name"] for p in inv["packs"]], ["ts-260-a", "Tenders", "Trucks"])
+
+    def test_broken_part_is_left_out_never_staged_or_placed(self):
+        self.parts_mod(catalogue=False)
         out = convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]])
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)
-        self.assertFalse((out.run.path / "inputs" / "search1").exists())
+        self.assertFalse((out.run.path / "inputs" / "search1" / "PartsMod").exists())
         rec = read_json(out.run.path / "record" / "vehicle-record.json")
         placed = [c["name"] for c in rec["config"]["Components"]["value"]]
         self.assertIn("bell1", placed)
@@ -137,55 +97,10 @@ class Licences(Base):
         self.assertTrue(record.left_out_component(c, "ts-260-a", left))
         self.assertFalse(record.left_out_component(c, "tt-260-a", left))
 
-    def test_a_restricted_tender_still_stops_the_conversion(self):
-        write_pack(self.m["search"] / "TenderMod" / "Tenders", objects=[tender("tt-ext")], assets={"tt-ext": {"filename": "tt-ext.prefab"}})
-        (self.m["search"] / "TenderMod" / "info.json").write_text('{"Id": "TenderMod"}')
-        (self.m["search"] / "TenderMod" / "LICENSE").write_text(STRICT)
-        (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [loco("ts-260-a", tender="tt-ext")]}))
-        self.assertEqual([i["data"]["mod"] for i in blocking(self.inv())], ["TenderMod"])
-
-    def test_a_truck_mod_never_counts_because_trucks_are_replaced(self):
+    def test_mods_list_names_whose_work_is_used(self):
         (self.m["search"] / "TruckMod" / "info.json").write_text('{"Id": "TruckMod"}')
-        (self.m["search"] / "TruckMod" / "LICENSE").write_text(STRICT)
         inv = self.inv()
-        self.assertEqual(blocking(inv), [])
-        self.assertNotIn("TruckMod", [m["id"] for m in inv["mods"]])
-        self.assertEqual(inv["trucks"][0]["replaced_by"], "vanilla Derail Valley bogies")
-
-    def test_restricted_mods_images_are_left_out(self):
-        decals = self.m["search"] / "DecalPack"
-        decals.mkdir()
-        (decals / "info.json").write_text('{"Id": "decal-pack"}')
-        (decals / "safety.png").write_bytes(b"x")
-        (decals / "LICENSE.txt").write_text("No derivative works.")
-        group = {"identifier": "tt-260-a", "GroupName": "Safety", "bulkAdds": [{"kind": "CustomImage", "textureName": "decal-pack.safety.png"}]}
-        (self.m["mod"] / "safety.json").write_text(json.dumps(group))
-        inv = self.inv()
-        self.assertEqual(blocking(inv), [])
-        self.assertEqual([(l["what"], l["id"]) for l in inv["left_out"]], [("image", "decal-pack.safety.png")])
-        self.assertEqual(inv["extra_files"][0]["role"], "component-group")
-        self.assertEqual(len(inv["extra_files"]), 1)
-        (decals / "LICENSE.txt").unlink()
-        inv = self.inv()
-        self.assertEqual((inv["left_out"], len(inv["extra_files"])), ([], 2))
-
-    def test_no_licence_file_means_no_restriction(self):
-        inv = self.inv()
-        self.assertEqual(blocking(inv), [])
-        self.assertTrue(all(m["licences"] == [] for m in inv["mods"]))
-
-    def test_unrelated_installed_mods_do_not_count(self):
-        other = self.m["search"] / "SomeOtherMod"
-        other.mkdir()
-        (other / "info.json").write_text('{"Id": "SomeOtherMod"}')
-        (other / "LICENSE").write_text(STRICT)
-        self.assertEqual(blocking(self.inv()), [])
-
-    def test_permissive_terms_are_information_only(self):
-        (self.m["mod"] / "README.md").write_text("Licence: free to use. Please do not redistribute.")
-        inv = self.inv()
-        self.assertEqual(blocking(inv), [])
-        self.assertIn("licence-terms", codes(inv))
+        self.assertEqual(sorted(m["id"] for m in inv["mods"]), ["TruckMod", "test-loco-mod"])
 
 
 class GroupsAndImages(Base):
@@ -259,19 +174,6 @@ class Definitions(Base):
         # LegosBetterSteam is only needed in Railroader: listed, never opened, never blocking.
         self.assertEqual(blocking(inv), [])
         self.assertEqual([(d["id"], d["installed"]) for d in inv["railroader_only"]], [("LegosBetterSteam", False)])
-        self.assertIn("no-modification", inv["railroader_only"][0]["licence_terms"])
-
-    def test_code_mod_with_unknown_licence_does_not_block(self):
-        from rr2dv import rrmod
-        rrmod.CODE_MOD_KINDS["MadeUpComponent"] = ("MadeUpMod", "test")
-        self.addCleanup(rrmod.CODE_MOD_KINDS.pop, "MadeUpComponent")
-        write_pack(self.m["mod"] / "ts-260-a",
-                   objects=[loco("ts-260-a", tender="tt-260-a", extra_components=[{"kind": "MadeUpComponent"}]),
-                            tender("tt-260-a", truck="test-truck-2s")],
-                   assets={"ts-260-a": {"filename": "a.prefab"}, "tt-260-a": {"filename": "t.prefab"}})
-        inv = self.inv()
-        self.assertEqual(blocking(inv), [])
-        self.assertEqual(inv["railroader_only"][0]["licence_terms"], None)
 
 
 class Audio(Base):
