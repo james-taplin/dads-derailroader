@@ -16,7 +16,6 @@ from rr2dv.safety import UnsafePath
 from rr2dv.unityproject import ProjectError, check_guids, import_unitypackage, resolve_clips, set_project_settings, tooling_root
 
 
-@unittest.skipIf(sys.platform == "win32", "fake AssetRipper is a POSIX script")
 class Import(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())

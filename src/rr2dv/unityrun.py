@@ -13,6 +13,7 @@ import sys
 import time
 from pathlib import Path
 
+from . import procs
 from .jsonio import read_json, write_json
 
 LICENCE_FLAKE = "No valid Unity Editor license"
@@ -43,8 +44,7 @@ def _launch(unity: Path, project: Path, method: str, log: Path, env: dict, timeo
         text = log.read_text(encoding="utf-8", errors="replace") if log.exists() else ""
         errors = sorted({m.group(0).strip() for m in COMPILER_ERROR.finditer(text)})
         if errors or time.monotonic() > deadline:
-            proc.kill()
-            proc.wait(timeout=60)
+            procs.stop(proc, grace=60)
             if errors:
                 raise UnityError(f"scripts did not compile, so {method} could not run: " + "; ".join(errors[:5]) + f" (see {log})")
             raise UnityError(f"Unity did not finish {method} within {timeout:.0f} s; see {log}")

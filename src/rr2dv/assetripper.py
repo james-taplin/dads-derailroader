@@ -21,6 +21,7 @@ import urllib.request
 from html.parser import HTMLParser
 from pathlib import Path
 
+from . import procs
 from .jsonio import read_json, sha256_file, write_json
 
 TARGET_VERSION = "2019.4.40f1"
@@ -130,12 +131,7 @@ def export(exe: Path, bundle: Path, bundle_sha256: str, cache_root: Path, target
                 _request(base, "/LoadFile", {"Path": str(bundle)}, timeout=load_timeout)
                 _request(base, "/Export/UnityProject", {"Path": str(out)}, timeout=export_timeout)
             finally:
-                proc.terminate()
-                try:
-                    proc.wait(timeout=15)
-                except subprocess.TimeoutExpired:
-                    proc.kill()
-                    proc.wait(timeout=15)
+                procs.stop(proc)
         log = (logs / "assetripper.log").read_text(encoding="utf-8", errors="replace")
         if not (out / "ExportedProject" / "Assets").is_dir():
             raise ExportError(f"AssetRipper produced no ExportedProject/Assets for {bundle.name}; see {logs}")

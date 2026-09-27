@@ -13,7 +13,6 @@ from rr2dv.probeinput import prefab_maps
 from rr2dv.unityrun import UnityError
 
 
-@unittest.skipIf(sys.platform == "win32", "fake tools are POSIX scripts")
 class Probe(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())

@@ -179,12 +179,26 @@ http.server.HTTPServer(("127.0.0.1", port), H).serve_forever()
 '''
 
 
-def fake_assetripper(folder: Path) -> Path:
+def fake_tool(folder: Path, name: str, script: str, python: str | None = None) -> Path:
+    """A stand-in executable running `script` with Python: a shebang script on POSIX; on Windows the script plus a
+    .cmd launcher, which Windows starts like an .exe (X33: extensionless scripts fail there with WinError 193)."""
+    import sys
+    python = python or sys.executable
     folder.mkdir(parents=True, exist_ok=True)
-    exe = folder / "AssetRipper.GUI.Free"
-    exe.write_text(FAKE_ASSETRIPPER.replace("#!/usr/bin/env python3", "#!" + os.environ.get("FAKE_AR_PYTHON", __import__("sys").executable), 1))
+    if sys.platform == "win32":
+        body = folder / (name + ".py")
+        body.write_text(script)
+        exe = folder / (name + ".cmd")
+        exe.write_text(f'@echo off\n"{python}" "%~dp0{name}.py" %*\n')
+        return exe
+    exe = folder / name
+    exe.write_text(script.replace("#!/usr/bin/env python3", "#!" + python, 1))
     exe.chmod(0o755)
     return exe
+
+
+def fake_assetripper(folder: Path) -> Path:
+    return fake_tool(folder, "AssetRipper.GUI.Free", FAKE_ASSETRIPPER, os.environ.get("FAKE_AR_PYTHON"))
 
 
 def fake_carcreator(path: Path) -> Path:
@@ -235,11 +249,7 @@ sys.exit(2 if problems else 0)
 
 
 def fake_unity(folder: Path) -> Path:
-    folder.mkdir(parents=True, exist_ok=True)
-    exe = folder / "Unity"
-    exe.write_text(FAKE_UNITY.replace("#!/usr/bin/env python3", "#!" + __import__("sys").executable, 1))
-    exe.chmod(0o755)
-    return exe
+    return fake_tool(folder, "Unity", FAKE_UNITY)
 
 
 def tool_machine(tmp: Path) -> dict:

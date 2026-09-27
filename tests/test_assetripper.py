@@ -25,7 +25,6 @@ class Form(unittest.TestCase):
             settings_from_form("<input name='Other' value='1'>")
 
 
-@unittest.skipIf(sys.platform == "win32", "fake AssetRipper is a POSIX script")
 class Export(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())

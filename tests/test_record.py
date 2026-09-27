@@ -46,7 +46,6 @@ class Formulas(unittest.TestCase):
         self.assertAlmostEqual(caps["CoalCapacityKg"], 907.18474)
 
 
-@unittest.skipIf(sys.platform == "win32", "fake tools are POSIX scripts")
 class Draft(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())

@@ -26,7 +26,6 @@ def with_fake_assetripper(test, tmp: Path) -> str:
     return str(fake_assetripper(tmp / "tools"))
 
 
-@unittest.skipIf(sys.platform == "win32", "fake AssetRipper is a POSIX script")
 class Pipeline(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
@@ -142,7 +141,6 @@ class Pipeline(unittest.TestCase):
         self.assertFalse((self.tmp / "escape.txt").exists())
 
 
-@unittest.skipIf(sys.platform == "win32", "fake AssetRipper is a POSIX script")
 class Cli(unittest.TestCase):
     def setUp(self):
         self.tmp = Path(tempfile.mkdtemp())
