@@ -7,8 +7,9 @@ The tool is called `rr2dv` on the command line. It takes a steam locomotive mod 
 folder, rebuilds it for the Derail Valley Custom Car Loader (CCL 3.1.9), and installs the result into your own Derail
 Valley `Mods` folder. It never changes the Railroader mod it reads.
 
-> **Work in progress.** Everything up to a draft vehicle record works and has been run with real Unity and
-> AssetRipper on Windows. The Unity build and audit stages are next, so no pack is installed yet.
+> **Work in progress.** Everything up to a draft vehicle record works, from the desktop app or the command line,
+> and has been run with real Unity and AssetRipper on Windows. The Unity build and audit stages are next, so no pack
+> is installed yet.
 
 ## Personal use only
 
@@ -25,7 +26,7 @@ acknowledged, which mods and authors the content came from) and an `rr2dv.json` 
 
 ## What you need
 
-- Windows, with Python 3.11 or later
+- Windows, with Python 3.11 or later (its standard installer includes Tk, which the app's window uses)
 - Railroader and Derail Valley installed through Steam (or in folders you name in the settings file)
 - Unity Mod Manager and Custom Car Loader 3.1.9 installed in Derail Valley
 - Unity 2019.4.40f1, the CCL 3.1.9 CarCreator package (`CarCreator_3.1.9.unitypackage`) and AssetRipper
@@ -104,9 +105,24 @@ installing.
   writes to the Railroader install or touches saves. It replaces a folder in Derail Valley's `Mods` folder only if
   `rr2dv` made that folder earlier; any other mod's folder is left alone.
 
+## What a finished pack must pass
+
+The build and audit stages still to come will only accept a pack that passes our builder's gates (`tooling/`, guide
+rules Q02–Q05), plus two control gates we have learned the hard way (board X36):
+
+- **Responsive controls (CTRL-01).** Driving controls and valves must behave like our last accepted G-29/C-21
+  builds: they respond to fine inputs, cover their full range, keep their settings and release momentary controls
+  reliably, with no sticking, lag, overshoot or drift. Intended detents stay.
+- **Closed means zero (CTRL-02).** A closed throttle, whistle or other steam valve must command exactly zero in the
+  simulation, not just look closed or round to 0% on the HUD, with no steam flow attributable to it.
+
+A successful build is not enough on its own: these need checking in game, and a pack that has not been checked yet is
+marked as pending, not accepted.
+
 ## Settings
 
-Settings live in `%APPDATA%\rr2dv\machine.json` (or pass `--machine FILE`). All keys are optional except the tools:
+Settings live in `%APPDATA%\rr2dv\machine.json` (or pass `--machine FILE`). The app's **Settings…** dialog edits the same
+file. All keys are optional except the tools:
 
 | Key | What |
 |---|---|
@@ -128,7 +144,7 @@ Settings live in `%APPDATA%\rr2dv\machine.json` (or pass `--machine FILE`). All 
 | [`tests/`](tests/) | automated tests on made-up mods, with stand-ins for AssetRipper and Unity |
 | [`tooling/`](tooling/) | read-only snapshot of our conversion tooling and guides, used as the reference implementation (start with [`tooling/NOTES.md`](tooling/NOTES.md)) |
 | [`board/APP_BOARD.md`](board/APP_BOARD.md) | message board between this app's Claude session and the local Claude and Codex sessions |
-| [`docs/`](docs/) | design notes, e.g. [replacing dependencies with vanilla DV content](docs/later-dependency-replacement.md) (parked) |
+| [`docs/`](docs/) | design notes ([replacing dependencies with vanilla DV content](docs/later-dependency-replacement.md), parked) and the screenshots on this page |
 | [`CLAUDE.md`](CLAUDE.md) | notes for Claude sessions working on the app |
 
 Run the tests with `PYTHONPATH=src:tests python -m unittest discover -s tests` (on Windows use `src;tests`). The
@@ -136,5 +152,6 @@ window tests run where Tk and a display are available (Windows, or Linux under X
 
 ## Licence
 
-The code in this repository is released under the Unlicense (see [`LICENSE`](LICENSE)). It covers this tool only.
-Converted packs contain the original Railroader mod authors' work, which stays theirs.
+The code in this repository is released under the Unlicense (see [`LICENSE`](LICENSE)). It covers this tool only,
+not the content it converts: copyright and other rights in the source assets remain with their respective rights
+holders.

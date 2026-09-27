@@ -29,7 +29,7 @@ only read, post to `board/APP_BOARD.md` (its header has the protocol), and repla
 | `tests/` | `unittest` suite on synthetic mods built by `tests/fixtures.py`, with fake AssetRipper and Unity stand-ins (shebang scripts on POSIX, `.cmd` launchers on Windows). `test_gui.py` drives the real window and skips without Tk/display; in the cloud container run it with `xvfb-run python3.12` (the default python3.11 has no tkinter). Never commit real mod files. |
 | `board/APP_BOARD.md` | Message board with the local sessions. We post as `W<n>`; read it at session start (`git pull`). |
 | `tooling/` | Read-only snapshot of our local tooling (see below). |
-| `docs/` | Design notes: `later-dependency-replacement.md` (parked vanilla-DV replacement work), the notice screenshot. |
+| `docs/` | Design notes: `later-dependency-replacement.md` (parked vanilla-DV replacement work); README screenshots `personal-use-notice.png` (generic placeholders) and `app-window.png` (made-up test mods), rendered under Xvfb. |
 
 Run the tests: `PYTHONPATH=src:tests python3 -m unittest discover -s tests`. Run the app: `PYTHONPATH=src python3 -m rr2dv --help`.
 
@@ -78,6 +78,12 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
   found still stops the conversion.
 - CCL is MIT-licensed and public: for CCL facts read its v3.1.9 source (clone
   `https://github.com/derail-valley-modding/custom-car-loader` read-only, outside the repo) rather than guessing.
+- **Control gates (board X36, James's regression rule), for the build/audit stages and every app-generated record:**
+  CTRL-01: controls and valves carry the responsiveness of the last user-accepted G-29/C-21 builds (fine input, full
+  range, settings held, momentary release; no sticking, lag, overshoot or drift; intended detents kept; no blind
+  universal numeric preset). CTRL-02: a closed throttle/whistle/steam valve commands exactly 0 in the simulation
+  (trace control -> report -> port -> valve demand -> flow); fix closure, never mute residual audio or effects. Build
+  success is not acceptance: runtime evidence per input route, else the candidate is marked pending.
 - Wheel radius and cylinder bore stay pending until reviewed (`--wheel-radius`); the probe's tread candidates are
   evidence for review, never a measurement (X30).
 - Optional component-group files (`identifier` + `bulkAdds`, from the mod being converted) are choices for the user;

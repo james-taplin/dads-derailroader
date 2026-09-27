@@ -1,2 +1,5 @@
 # tooling/ is a byte-exact snapshot checked by tooling/MANIFEST.sha256: never convert line endings.
 tooling/** -text
+# GitHub's language bar and search: the snapshot is vendored reference material, the app is src/.
+tooling/** linguist-vendored
+board/** linguist-documentation
