@@ -113,6 +113,10 @@ class App:
         if self._pump_id:
             self.root.after_cancel(self._pump_id)
             self._pump_id = None
+        try:  # run ttk's pending idle handlers (<<ThemeChanged>> after style changes) while the app still exists (X39)
+            self.root.update_idletasks()
+        except tk.TclError:
+            pass
         self.root.destroy()
 
     # ---- layout -----------------------------------------------------------------------------------------------------
@@ -275,9 +279,13 @@ class App:
                     self.worker.busy = False
                     self._log(f"{name} failed: {error}")
                     self._set_busy(False)
+                    where = ""
                     if name == "Conversion":
                         self.summary.configure(text=f"Stopped: {error}", foreground=COLOURS["fail"])
-                    where = f"\n\nRun log: {self.last_run / 'run.log'}" if name == "Conversion" and self.last_run else ""
+                        run = getattr(error, "rr2dv_run", None)  # the run that stopped, if it got that far (X39)
+                        if run:
+                            self._show_run(run.path)
+                            where = f"\n\nRun log: {run.path / 'run.log'}"
                     messagebox.showerror(APP_NAME, f"{name} failed:\n\n{error}{where}\n\nApp log: {applog.log_file()}",
                                          parent=self.root)
                 elif kind == "progress":
@@ -427,6 +435,9 @@ class App:
         for mark in self.stage_rows.values():
             mark.configure(text="\u25cb", fg=COLOURS["muted"])
         self.summary.configure(text="Converting\u2026", foreground="")
+        self.last_run = None
+        self.open_run.configure(state="disabled")
+        self.open_record.configure(state="disabled")
         self._log(f"Converting {ident} from {folder}…")
 
         def progress(stage, status, detail):
@@ -452,16 +463,20 @@ class App:
         if detail and status != "not_available":  # the run's own closing message says it once
             self._log(f"{stage}: {detail}")
 
+    def _show_run(self, path: Path) -> None:
+        """The last run's folder, log and (if it got that far) draft record, whether it finished or stopped."""
+        self._log(f"Full log: {path / 'run.log'}")
+        self.last_run = path
+        self.open_run.configure(state="normal")
+        has_record = (path / "record" / "vehicle-record.json").is_file()
+        self.open_record.configure(state="normal" if has_record else "disabled")
+
     def _converted(self, outcome) -> None:
         self._set_busy(False)
         applog.get().info("conversion finished (exit %s): %s; run %s", outcome.code, outcome.message,
                           outcome.run and outcome.run.path)
         if outcome.run:
-            self._log(f"Full log: {outcome.run.path / 'run.log'}")
-            self.last_run = outcome.run.path
-            self.open_run.configure(state="normal")
-            has_record = (outcome.run.path / "record" / "vehicle-record.json").is_file()
-            self.open_record.configure(state="normal" if has_record else "disabled")
+            self._show_run(outcome.run.path)
         self._log(outcome.message)
         from .pipeline import EXIT_INCOMPLETE, EXIT_OK
         if outcome.code == EXIT_OK:

@@ -76,6 +76,12 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
   is left out and listed (`inventory.left_out`, `metadata.leftOut`), with the components anchored inside it, which go
   too (a missing parent is a build error), so a functional loss is never silent (X31). A part pack that cannot be
   found still stops the conversion.
+- Animation clips (X39, GN A-18): a clip no single prefab fully resolves is kept only when exactly one prefab's clip
+  map names it and every target that prefab lacks is in no prefab of the pack's whole export; its other bindings are
+  restored as the resolver would (restricted to that prefab), the absent ones keep their placeholder, and each is
+  listed (`clips-*-bindings.json`, `project.json` `absent_bindings`, `metadata.absentBindings`, a pending item). The
+  build stage must remove them through Unity's `AnimationUtility` before our builder (`CclLocoBuild.Clip` rejects
+  placeholders); never edit clip YAML curves by hand. Absence is verified in the export only, not Railroader runtime.
 - CCL is MIT-licensed and public: for CCL facts read its v3.1.9 source (clone
   `https://github.com/derail-valley-modding/custom-car-loader` read-only, outside the repo) rather than guessing.
 - **Control gates (board X36, James's regression rule), for the build/audit stages and every app-generated record:**

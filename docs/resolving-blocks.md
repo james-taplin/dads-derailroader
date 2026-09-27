@@ -27,7 +27,7 @@ Then:
 | The app's **Checks** list (or `rr2dv scan "Mod"`) | problems found before converting: red ✗ blocks, amber ! is a warning, i is information |
 | The app's **Conversion** panel (or the `convert` output) | which stage stopped, and the reason in one line |
 | `rr2dv doctor` (or **Settings… → Check**) | anything wrong with the tools or the game installs |
-| The run folder (**Open run folder**) | the full record, see below |
+| The run folder (**Open run folder**, which also works after a conversion stops) | the full record, see below |
 
 Inside a run folder:
 
@@ -37,7 +37,8 @@ Inside a run folder:
 | `run.json` | every stage's status and message, and your answers (machine-readable) |
 | `inventory.json` | the `issues` list: every error, warning and note, with a code |
 | `index_issues.json` | problems reading other mods while searching (usually harmless) |
-| `import/clips-*.json`, `import/clips-*-bindings.json` | animation paths that could not be matched, and why |
+| `import/clips-*.json`, `import/clips-*-bindings.json` | how each animation's paths were restored, and every decision (bound to a model, left out, kept with absent targets) |
+| `import/clips-*-diagnosis.json` | written when an animation stops the import: which model names it, how many of its targets each model has, and where each missing target is found |
 | `probe/unity-1.log`, `probe/result.json`, `probe/probe.json` | what Unity reported while measuring the model |
 | `record/vehicle-record.json` | the draft record: `metadata.pending` (review items), `metadata.wheelCandidates`, `metadata.leftOut` |
 
@@ -97,7 +98,7 @@ Not blocking, but worth reading (amber ! in the app):
 | `extract` | *AssetRipper exited during startup / did not start / produced no ExportedProject* | check `assetRipper` in the settings and the log folder named in the message (a `.failed-…` folder in the cache keeps it); a newer AssetRipper may need testing first |
 | `extract` | *cache entry … is inconsistent* | delete the named folder under `<workRoot>\_cache\assetripper` and convert again |
 | `import` | *animation clips fit several prefabs and the source does not say which* | the mod's animations could belong to more than one model and nothing in the mod says which. `import/clips-*-bindings.json` lists each clip and every model that names or references it. Report it on the app board; this needs a decision in `rr2dv`, not a guess |
-| `import` | *resolve_clip_paths: N clip(s) did not resolve … No prefab resolves every clip binding* | an animation targets objects that no single model in the pack has all of. Open the `import/clips-*-diagnosis.json` the message names: for each animation it lists which model's clip map names it, how many of its targets each model has, and each missing target's `found_in`. Empty `found_in` means the mod's own animation points at objects its model does not have (Railroader ignores those); a model listed there means the targets live in another model file. Report it on the app board with that file; the fix is decided in `rr2dv`, never guessed |
+| `import` | *resolve_clip_paths: N clip(s) did not resolve … No prefab resolves every clip binding; …* | an animation targets objects that no single model in the pack has all of, and the rest of the message says why `rr2dv` will not keep it: *… name it* (several models' clip maps name the animation), *no prefab's clip map names it*, or *lacks targets that other prefabs have* (the missing targets live in another model file). Open the `import/clips-*-diagnosis.json` the message names: for each animation it lists which model's clip map names it, how many of its targets each model has, and each missing target's `found_in`. Report it on the app board with that file; the fix is decided in `rr2dv`, never guessed. (When exactly one model names the animation and its missing targets are in no model of the export, the conversion does not stop: see *animation …* under review items.) |
 | `import` | *duplicate GUID* | two assets in the combined project claim the same identity; report it with the run folder |
 | `probe` | *scripts did not compile* | Unity could not compile our probe; the log path is in the message. Check the Unity version is exactly 2019.4.40f1 |
 | `probe` | *is open in another Unity editor* | close that Unity window, convert again |
@@ -120,6 +121,7 @@ pack can be accepted. Each item says what is missing and where its evidence is.
 | `simulation: draft engine, boiler, firebox and exhaust choices` | starting values from our reviewed S-16 record; they need tuning per engine during the build and in-game tests |
 | `simulation: nonstandard running gear (…)` | an articulated or otherwise unusual engine: its pull and cylinders need setting deliberately |
 | `simulation: carries …, not coal` | an oil burner or similar: Derail Valley simulates a coal-fired boiler, review firing |
+| `animation …: N of its M bindings target objects that are in no model of the export` (or *animates nothing in the exported model*) | the mod's animation points at objects that are not in its exported model (GN A-18: 3 of the 40 `Drivers` targets, and the only `Whistle` target). The targets it does have are restored; the others are listed in `metadata.absentBindings` and are removed during the build, before our builder, which rejects them. We only know they are absent from AssetRipper's export, not how Railroader treats them, so check in Railroader and in the converted pack that nothing that should move is missing. For an animation with no target at all (*animates nothing*), also check the control it belongs to (for example the whistle) still works without it |
 | `left out: N part(s)` | see `metadata.leftOut` for each part, why, and what it takes with it; check the loco still looks and works right |
 | `Bogies`, `CollisionBoxes`, `boiler …`, `tender: trucks layout …` | come from measured geometry in the build stage (not written yet) |
 

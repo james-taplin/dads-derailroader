@@ -79,6 +79,26 @@ class Window(unittest.TestCase):
         self.assertIn("Draft record ready", self.app.summary.cget("text"))
         self.assertEqual(str(self.app.open_record.cget("state")), "normal")
 
+    def test_stopped_conversion_keeps_its_run_folder(self):
+        # X39: after a failure inside a run, Open run folder works and the error names run.log
+        self.select("Test Loco Mod", "ts-260-a")
+        self.app.convert()
+        self.until(lambda: not self.app.worker.busy and self.app.last_run, timeout=120)
+        for anim in (self.tmp / "work" / "_cache" / "assetripper").rglob("Drivers.anim"):
+            anim.write_text("AnimationClip:\n  - path: path_0xdeadbeef_x\n")
+        shown = []
+        original = self.gui.messagebox.showerror
+        self.gui.messagebox.showerror = lambda title, message, **kw: shown.append(message)
+        self.addCleanup(setattr, self.gui.messagebox, "showerror", original)
+        first = self.app.last_run
+        self.app.convert()
+        self.until(lambda: shown, timeout=120)
+        self.assertNotEqual(self.app.last_run, first)
+        self.assertEqual(str(self.app.open_run.cget("state")), "normal")
+        self.assertEqual(str(self.app.open_record.cget("state")), "disabled")
+        self.assertIn(f"Run log: {self.app.last_run / 'run.log'}", shown[0])
+        self.assertEqual(self.app.stage_rows["import"].cget("text"), "\u2717")
+
     def test_notice_opens_inside_the_app_and_needs_ten_clicks(self):
         import threading
         answer = {"event": threading.Event(), "value": None}

@@ -69,6 +69,9 @@ def find_prefab(assets: Path, filename: str) -> Path:
 
 
 TIED = "Tied prefabs"
+NO_FIT = "No prefab resolves every clip binding"
+UNREACHABLE = ("no prefab's clip map names it and no serialized file in the export references its GUID: "
+               "unreachable")
 YAML_HEADER = b"%YAML"
 
 
@@ -178,7 +181,7 @@ def diagnose_clips(source_assets: Path, clips: list[str], out: Path) -> Path:
             "unresolved_in_best": [{"hash": f"0x{h:x}", "found_in": [n for n, t in tables if h in t][:5]} for h in unresolved],
         }
     write_json(out, {"note": "bindings are hashed paths; found_in [] means no prefab in this export has that path "
-                             "(the source clip animates objects that are not in its model)", "clips": findings})
+                             "(verified against the export only, not Railroader at runtime)", "clips": findings})
     return out
 
 
@@ -193,24 +196,62 @@ def resolve_clips(source_assets: Path, dest_assets: Path, report: Path, only: se
         shutil.rmtree(selected)
     _mirror(source_assets, selected, only=only)
     try:
-        out = _resolve_clips(selected, dest_assets, report)
+        out = _resolve_clips(selected, dest_assets, report, full_assets=source_assets)
     finally:
         shutil.rmtree(selected, ignore_errors=True)
     return {**out, "selected": len(only)}
 
 
-def _resolve_clips(source_assets: Path, dest_assets: Path, report: Path) -> dict:
+def _absent_plan(source_assets: Path, full_assets: Path, clip: str, owners: list[dict]) -> tuple[dict | None, str]:
+    """A clip no prefab fully resolves (X39, GN A-18: Drivers 37 of 40 targets in its model, Whistle 0 of 1). Kept only
+    when the source says whose it is and the rest of its targets exist nowhere: exactly one prefab's clip map names it,
+    and every binding that prefab lacks is in no prefab of the pack's whole export. Those bindings keep their
+    placeholder path (they animate nothing in the exported model; the build stage removes them through Unity before
+    our builder, which rejects unresolved bindings); the others are restored exactly as the resolver would, restricted
+    to the named prefab. Anything else is (None, why)."""
+    named = sorted({o["prefab"] for o in owners})
+    if len(named) != 1:
+        return None, (f"{', '.join(named)} name it" if named else "no prefab's clip map names it")
+    resolver = _resolver_module()
+    tables = [(p.relative_to(source_assets).as_posix(), resolver.prefab_paths(p)) for p in sorted(source_assets.rglob("*.prefab"))]
+    owner = dict(tables).get(named[0])
+    if owner is None:
+        return None, f"{named[0]} is not among the prefabs resolved"
+    text = (source_assets / clip).read_text(encoding="utf-8-sig")
+    hashes = {int(h, 16) for h in resolver.PAT.findall(text)}
+    absent = sorted(h for h in hashes if h not in owner)
+    full = [(p.relative_to(full_assets).as_posix(), resolver.prefab_paths(p)) for p in sorted(full_assets.rglob("*.prefab"))]
+    elsewhere = {f"0x{h:x}": [n for n, t in full if h in t] for h in absent}
+    if any(elsewhere.values()):
+        where = "; ".join(f"{h} in {', '.join(ns)}" for h, ns in elsewhere.items() if ns)
+        return None, f"{named[0]} lacks targets that other prefabs have ({where})"
+    try:
+        mapping = resolver.select_mapping({h for h in hashes if h in owner}, tables, named[0])
+    except ValueError as e:
+        return None, str(e)
+    return {"prefab": named[0], "owners": owners, "bindings": len(hashes), "restored": len(mapping),
+            "absent": [f"0x{h:x}" for h in absent],
+            "text": resolver.PAT.sub(lambda m: mapping.get(int(m[1], 16), m[0]), text)}, ""
+
+
+def _resolve_clips(source_assets: Path, dest_assets: Path, report: Path, full_assets: Path | None = None) -> dict:
     """Restore clip paths with our strict resolver. A clip that fits several prefabs with different paths ("tied") is
     decided from the source, never by first match (X30, X33): bound to the one prefab whose clip map names it, else to
     the one prefab that references it anywhere; a clip no serialized file references at all is unreachable and is left
-    out of the project, with a report. Anything else stays an error. The evidence is written either way."""
+    out of the project, with a report. A clip no prefab fully resolves is kept only under `_absent_plan` (X39).
+    Anything else stays an error. The evidence is written either way. `full_assets` is the pack's whole export when
+    `source_assets` is a selection from it."""
+    full_assets = full_assets or source_assets
     result = _resolve(source_assets, dest_assets, report)
     bound: dict[str, str] = {}
     excluded: list[str] = []
-    tied = [e["clip"] for e in result.get("errors", []) if TIED in e.get("error", "") and e.get("clip")]
-    if tied and len(tied) == len(result["errors"]):
+    partial: dict[str, dict] = {}
+    errors = result.get("errors", [])
+    tied = [e["clip"] for e in errors if TIED in e.get("error", "") and e.get("clip")]
+    no_fit = [e["clip"] for e in errors if NO_FIT in e.get("error", "") and e.get("clip")]
+    if errors and len(tied) + len(no_fit) == len(errors):
         owners = clip_owners(source_assets)
-        unowned = [c for c in tied if not owners.get(c)]
+        unowned = [c for c in tied + no_fit if not owners.get(c)]
         guids = {g: c for c in unowned for g in [_guid_of(source_assets / (c + ".meta"))] if g}
         refs = guid_references(source_assets, guids)
         decisions, unresolved = {}, {}
@@ -229,28 +270,55 @@ def _resolve_clips(source_assets: Path, dest_assets: Path, report: Path) -> dict
                 decisions[c] = {"decision": "bound", "by": "serialized reference", "prefab": prefabs[0], "references": referenced}
             elif not referenced and c in refs:
                 excluded.append(c)
-                decisions[c] = {"decision": "left out", "why": "no prefab's clip map names it and no serialized file in "
-                                                              "the export references its GUID: unreachable", "references": []}
+                decisions[c] = {"decision": "left out", "why": UNREACHABLE, "references": []}
             else:
                 unresolved[c] = ("referenced by " + ", ".join(referenced)) if referenced else "no GUID in its .meta"
                 decisions[c] = {"decision": "error", "references": referenced}
+        for c in no_fit:
+            if not owners.get(c) and c in refs and not refs[c]:
+                excluded.append(c)
+                decisions[c] = {"decision": "left out", "why": UNREACHABLE, "references": []}
+                continue
+            plan, why = _absent_plan(source_assets, full_assets, c, owners.get(c, []))
+            if plan is None:
+                unresolved[c] = f"{NO_FIT}; {why}"
+                decisions[c] = {"decision": "error", "why": why, "owners": owners.get(c, [])}
+                continue
+            partial[c] = plan
+            decisions[c] = {"decision": "kept, absent bindings unresolved", "by": "clip map", "prefab": plan["prefab"],
+                            "owners": plan["owners"], "bindings": plan["bindings"], "restored": plan["restored"],
+                            "absent": plan["absent"]}
         evidence = report.with_name(report.stem + "-bindings.json")
         write_json(evidence, {"rule": "tied clip -> the one prefab whose clip map names it, else the one prefab that "
-                                      "references it; unreferenced -> left out; otherwise an error",
+                                      "references it; unreferenced -> left out; a clip no prefab fully resolves -> kept "
+                                      "when one prefab's clip map names it and every target it lacks is in no prefab of "
+                                      "the export (those bindings animate nothing and keep their placeholder path); "
+                                      "otherwise an error",
                               "clips": decisions})
         if unresolved:
             detail = "; ".join(f"{c}: {why}" for c, why in sorted(unresolved.items()))
+            if all(c in no_fit for c in unresolved):
+                where = evidence
+                try:
+                    where = diagnose_clips(full_assets, sorted(unresolved), report.with_name(report.stem + "-diagnosis.json"))
+                except Exception:
+                    pass
+                raise ProjectError(f"resolve_clip_paths: {len(unresolved)} clip(s) did not resolve: {detail} (see {where})")
             raise ProjectError(f"animation clips fit several prefabs and the source does not say which: {detail} (see {evidence})")
         plain = report.with_name(report.stem + "-bindings.plain.json")
         write_json(plain, bound)
         source = source_assets
-        if excluded:
+        if excluded or partial:
             source = report.with_name(report.stem + "-resolver-input")
             if source.exists():
                 shutil.rmtree(source)
-            _mirror(source_assets, source, set(excluded))
+            _mirror(source_assets, source, set(excluded) | set(partial))
         try:
-            result = _resolve(source, dest_assets, report, plain)
+            if any(source.rglob("*.anim")):
+                result = _resolve(source, dest_assets, report, plain if bound else None)
+            else:  # every clip was set aside above: nothing left for the resolver, which would call that an error
+                result = {"clips": [], "errors": [], "applied": True}
+                write_json(report, result)
         finally:
             if source != source_assets:
                 shutil.rmtree(source, ignore_errors=True)
@@ -259,18 +327,25 @@ def _resolve_clips(source_assets: Path, dest_assets: Path, report: Path) -> dict
                 for f in (dest_assets / c, dest_assets / (c + ".meta")):
                     if f.is_file():
                         f.unlink()
+            for c, plan in partial.items():
+                target = dest_assets / c
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text(plan["text"], encoding="utf-8")
     if result.get("errors") or not result.get("applied"):
         errors = result.get("errors") or [{"error": "not applied"}]
         first = errors[0]
         where = report
         try:  # the diagnosis is extra help; failing to write it must not hide the real error
-            where = diagnose_clips(source_assets, [e["clip"] for e in errors if e.get("clip")],
+            where = diagnose_clips(full_assets, [e["clip"] for e in errors if e.get("clip")],
                                    report.with_name(report.stem + "-diagnosis.json"))
         except Exception:
             pass
         raise ProjectError(f"resolve_clip_paths: {len(errors)} clip(s) did not resolve, first "
                            f"{first.get('clip', '')}: {first.get('error')}; see {where}")
-    return {"clips": len(result.get("clips", [])), "report": report.name, "bound": len(bound), "left_out": excluded}
+    absent = [{"clip": c, "prefab": p["prefab"], "keys": sorted({o["key"] for o in p["owners"]}), "bindings": p["bindings"],
+               "restored": p["restored"], "absent": p["absent"]} for c, p in sorted(partial.items())]
+    return {"clips": len(result.get("clips", [])) + len(partial), "report": report.name, "bound": len(bound),
+            "left_out": excluded, "absent_bindings": absent}
 
 
 def set_project_settings(project: Path) -> None:

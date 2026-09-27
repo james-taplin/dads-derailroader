@@ -109,6 +109,10 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
         if current:
             run.finish(current, "failed", message)
         run.close("failed", message)
+        try:  # the app and the command line point the user at this run's folder and run.log
+            e.rr2dv_run = run
+        except AttributeError:
+            pass
         raise
 
 
@@ -185,6 +189,10 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     if car_creator is None or not car_creator.is_file():
         raise FileNotFoundError("CarCreator 3.1.9 is not set up: add `carCreator` to the settings file (see `rr2dv doctor`)")
     project = unityproject.assemble(run.path, inv, exports, car_creator)
+    absent = [{"export": name, **a} for name, c in sorted(project["clips"].items()) for a in c.get("absent_bindings", [])]
+    for a in absent:
+        run.log(f"  clip {a['clip']} ({', '.join(a['keys'])}): {len(a['absent'])} of {a['bindings']} binding(s) target "
+                f"objects not in any model of the export; kept with the other {a['restored']} restored (review item)")
     run.finish("import", "done", f"Unity {project['unity']} project with {len(project['vehicles'])} vehicle(s), "
                                  f"{len(project['parts'])} part(s), {project['unique_guids']} GUIDs")
 
@@ -210,7 +218,7 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
         run.record["answers"]["livery"] = livery
     if wheel_radius:
         run.record["answers"]["wheelRadius"] = {"value": wheel_radius, "evidence": ["user answer --wheel-radius (reviewed tread band)"]}
-    draft = record.draft(run.path, inv, probe_in, probe_out, run.record["answers"])
+    draft = record.draft(run.path, inv, probe_in, probe_out, run.record["answers"], absent_bindings=absent)
     write_json(run.path / "record" / "vehicle-record.json", draft)
     pending = draft["metadata"]["pending"]
     for item in pending:

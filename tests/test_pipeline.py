@@ -205,6 +205,19 @@ class Cli(unittest.TestCase):
         self.assertIn("build    not_available", text)
         self.assertIn("Run folder:", text)
 
+    def test_convert_stopped_inside_a_run_names_its_log(self):
+        # X39: an error raised mid-run still shows the stages reached and where run.log is
+        self.run_cli("convert", "Test Loco Mod")  # fills the export cache
+        for anim in (self.tmp / "work" / "_cache" / "assetripper").rglob("Drivers.anim"):
+            anim.write_text("AnimationClip:\n  - path: path_0xdeadbeef_x\n")
+        with redirect_stderr(io.StringIO()) as err:
+            code, text = self.run_cli("convert", "Test Loco Mod")
+        self.assertEqual(code, EXIT_FAILED)
+        self.assertIn("extract  done", text)
+        self.assertIn("import   failed", text)
+        self.assertIn("Run log:", text)
+        self.assertIn("did not resolve", err.getvalue())
+
 
 if __name__ == "__main__":
     unittest.main()

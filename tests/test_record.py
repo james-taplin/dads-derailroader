@@ -99,6 +99,21 @@ class Draft(unittest.TestCase):
         self.assertEqual((candidate["tread"], candidate["flangeRadius"]), (0.598, 0.62))
         self.assertIn("probe candidate 0.598000 m", " ".join(rec["metadata"]["pending"]))
 
+    def test_absent_animation_targets_are_review_items(self):
+        run = self.run_convert()
+        inv = read_json(run.path / "inventory.json")
+        probe_in = read_json(run.path / "unity/project/Assets/Rr2dv/ProbeInput.json")
+        absent = [{"export": "main", "clip": "AnimationClip/Whistle.anim", "prefab": "PrefabInstance/ts-260-a.prefab",
+                   "keys": ["Whistle"], "bindings": 1, "restored": 0, "absent": ["0xd579eece"]},
+                  {"export": "main", "clip": "AnimationClip/Drivers.anim", "prefab": "PrefabInstance/ts-260-a.prefab",
+                   "keys": ["Drivers"], "bindings": 40, "restored": 37, "absent": ["0x1", "0x2", "0x3"]}]
+        rec = record.draft(run.path, inv, probe_in, None, {}, absent_bindings=absent)
+        self.assertEqual(rec["metadata"]["absentBindings"], absent)
+        pending = " | ".join(rec["metadata"]["pending"])
+        self.assertIn("animation Whistle: animates nothing in the exported model", pending)
+        self.assertIn("control it belongs to still works", pending)
+        self.assertIn("animation Drivers: 3 of its 40 bindings target objects that are in no model of the export", pending)
+
     def test_reviewed_radius_fills_the_bore(self):
         run = self.run_convert(wheel_radius=0.598)
         rec = read_json(run.path / "record" / "vehicle-record.json")

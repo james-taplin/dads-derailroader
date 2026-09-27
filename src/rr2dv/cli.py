@@ -102,15 +102,22 @@ def cmd_scan(args) -> int:
 def cmd_convert(args) -> int:
     machine = machine_mod.load(args.machine)
     extra = [Path(p) for p in args.search] + machine.search_roots()
-    outcome = convert(args.input, machine, args.loco, extra, args.audio, args.livery, args.wheel_radius)
-    run = outcome.run
+    try:
+        outcome = convert(args.input, machine, args.loco, extra, args.audio, args.livery, args.wheel_radius)
+    except Exception as e:  # stopped inside a run: show how far it got and where its log is, then report the error
+        _print_run(getattr(e, "rr2dv_run", None))
+        raise
+    _print_run(outcome.run)
+    print(outcome.message)
+    return outcome.code
+
+
+def _print_run(run) -> None:
     if run:
         for name, stage in run.record["stages"].items():
             if stage["status"] != "pending":
                 print(f"  {name:8} {stage['status']:13} {stage.get('detail', '')}")
         print(f"\nRun folder: {run.path}\nRun log:    {run.path / 'run.log'}")
-    print(outcome.message)
-    return outcome.code
 
 
 def build_parser() -> argparse.ArgumentParser:

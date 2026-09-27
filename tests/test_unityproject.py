@@ -89,7 +89,8 @@ class Import(unittest.TestCase):
         cache = self.tmp / "work" / "_cache" / "assetripper"
         for anim in cache.rglob("Drivers.anim"):
             anim.write_text("AnimationClip:\n  - path: path_0xdeadbeef_x\n")
-        with self.assertRaisesRegex(ProjectError, "resolve_clip_paths.*clips-main-diagnosis.json"):
+        # both the loco's and the tender's clip maps name Drivers, so the absent-binding rule does not apply (X39)
+        with self.assertRaisesRegex(ProjectError, "resolve_clip_paths.*ts-260-a.prefab, PrefabInstance/tt-260-a.prefab name it.*clips-main-diagnosis.json"):
             convert(self.m["mod"], self.machine, search=[self.m["search"]])
         run = sorted((self.tmp / "work").glob("2*"))[-1]
         diagnosis = read_json(run / "import" / "clips-main-diagnosis.json")["clips"]["AnimationClip/Drivers.anim"]
@@ -274,6 +275,69 @@ class TiedClips(unittest.TestCase):
         (self.src / "PrefabInstance" / "loco.prefab").write_text(_prefab("loco", "Cab", {"Hatch": "b1"}))
         with self.assertRaisesRegex(ProjectError, "loco.prefab, PrefabInstance/tender.prefab name it"):
             resolve_clips(self.src, self.tmp / "dest", self.tmp / "reports" / "clips-main.json")
+
+
+
+class AbsentBindings(unittest.TestCase):
+    """X39 (GN A-18): a clip whose clip map owner has most of its targets and whose other targets are in no prefab of
+    the export is kept; the absent bindings keep their placeholder and are listed. Anything else stays an error."""
+
+    def setUp(self):
+        import zlib
+        self.crc = lambda path: "0x%x" % zlib.crc32(path.encode())
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp)
+        self.src = self.tmp / "src"
+        (self.src / "PrefabInstance").mkdir(parents=True)
+        (self.src / "AnimationClip").mkdir()
+        (self.src / "PrefabInstance" / "loco.prefab").write_text(_prefab("loco", "Cab", {"Whistle": "w1"}))
+        (self.src / "PrefabInstance" / "tender.prefab").write_text(_prefab("tender", "Body", {}))
+        (self.src / "AnimationClip" / "Whistle.anim.meta").write_text("guid: w1\n")
+
+    def clip(self, *paths):
+        text = "AnimationClip:\n  m_FloatCurves:\n" + "".join(f"  - path: path_{self.crc(p)}_x\n" for p in paths)
+        (self.src / "AnimationClip" / "Whistle.anim").write_text(text)
+        return text
+
+    def resolve(self, **kw):
+        return resolve_clips(self.src, self.tmp / "dest", self.tmp / "reports" / "clips-main.json", **kw)
+
+    def test_absent_targets_are_kept_and_listed(self):
+        self.clip("Cab/Hatch", "Cab/Gone")
+        out = self.resolve()
+        self.assertEqual(out["absent_bindings"], [{"clip": "AnimationClip/Whistle.anim", "prefab": "PrefabInstance/loco.prefab",
+                                                   "keys": ["Whistle"], "bindings": 2, "restored": 1, "absent": [self.crc("Cab/Gone")]}])
+        text = (self.tmp / "dest" / "AnimationClip" / "Whistle.anim").read_text()
+        self.assertIn("path: Cab/Hatch\n", text)
+        self.assertIn(f"path: path_{self.crc('Cab/Gone')}_x", text)
+        decision = read_json(self.tmp / "reports" / "clips-main-bindings.json")["clips"]["AnimationClip/Whistle.anim"]
+        self.assertEqual((decision["decision"], decision["restored"]), ("kept, absent bindings unresolved", 1))
+
+    def test_clip_with_no_target_in_the_model_is_kept_unchanged(self):
+        text = self.clip("Cab/Gone")
+        out = self.resolve()
+        self.assertEqual((out["absent_bindings"][0]["restored"], out["clips"]), (0, 1))
+        self.assertEqual((self.tmp / "dest" / "AnimationClip" / "Whistle.anim").read_text(), text)
+
+    def test_targets_in_another_prefab_stay_an_error(self):
+        self.clip("Cab/Hatch", "Body")
+        with self.assertRaisesRegex(ProjectError, "lacks targets that other prefabs have .*tender.prefab.*clips-main-diagnosis.json"):
+            self.resolve()
+        self.assertFalse((self.tmp / "dest").exists(), "nothing is written unless every clip is decided")
+
+    def test_targets_in_a_prefab_we_do_not_use_still_count(self):
+        # a dependency pack is resolved against the prefabs we use, but "absent" means absent from its whole export
+        self.clip("Cab/Hatch", "Body")
+        with self.assertRaisesRegex(ProjectError, "lacks targets that other prefabs have"):
+            self.resolve(only={"PrefabInstance/loco.prefab", "AnimationClip/Whistle.anim"})
+
+    def test_clip_no_map_names_stays_an_error(self):
+        (self.src / "PrefabInstance" / "loco.prefab").write_text(_prefab("loco", "Cab", {}))
+        (self.src / "PrefabInstance" / "loco.prefab").write_text(
+            (self.src / "PrefabInstance" / "loco.prefab").read_text() + "  - {fileID: 7400000, guid: w1, type: 2}\n")
+        self.clip("Cab/Hatch", "Cab/Gone")
+        with self.assertRaisesRegex(ProjectError, "no prefab's clip map names it"):
+            self.resolve()
 
 
 if __name__ == "__main__":
