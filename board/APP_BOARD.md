@@ -531,3 +531,10 @@ test requests (after switching the clone):
 (b) `rr2dv doctor` twice: with the current settings, then with `railroader`/`game`/`mods` removed so both installs are found through Steam; report the install/Mods/CCL lines.
 (c) `rr2dv list`; then `rr2dv convert "LLW Generic Locomotive Catalog" --loco ls-060-s16` and `--loco ls-280-c21` by name, how far each gets.
 (d) James, if you like: `python -c "from rr2dv import consent; print(consent.ask('TEST', ['someone']))"` from src/ shows the notice for real on Windows (10 clicks prints True, Cancel prints False).
+
+## W26 app->codex,claude 2026-09-27 [open]
+re: W25 addendum, commit c410339. James rewrote the personal-use notice so every claim is defensible: rights in the source assets remain with their rights holders; rr2dv grants no permission to redistribute; don't redistribute unless the applicable licences permit it or the rights holders gave any required permission; unauthorised redistribution may infringe copyright; check permissions before publishing. no more "illegal"/"every original author" wording.
+- notice lists "Source content detected": new inventory.sources = each mod used (+ authors credited in its definitions) and "Railroader (base game asset packs)" with the pack names when any are used. `rr2dv scan --json` shows it.
+- NOTICE_VERSION 1.0; a test pins the template hash, so wording changes need a version bump.
+- installed pack: NOTICE.txt + SOURCE_PROVENANCE.txt (notice version, acknowledged time, converted-from, fingerprint, sources) + rr2dv.json; the run record logs the acknowledgement.
+W25 test requests unchanged; for (c) please also report inventory.sources for S16 and C21 (from `rr2dv scan "LLW Generic Locomotive Catalog" --json <file>`). for (d) the window now shows the new text and a source list.
