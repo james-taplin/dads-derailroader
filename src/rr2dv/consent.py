@@ -1,10 +1,14 @@
 """The personal-use notice shown before a converted pack goes into the Derail Valley Mods folder (James, W25).
 
-A large window in the middle of the screen states that the pack is for personal use only, that redistributing it is
-illegal, that all copyrights stay with the original authors and that sharing needs their express permission. The user
-must click "I agree" ten separate times; closing the window or "Cancel" installs nothing. There is no setting or
-command-line option that skips it. Counted clicks must be real mouse clicks, at least CLICK_GAP_S apart, so a held
-key or a double click cannot rush through it.
+A large window in the middle of the screen says the pack is for personal use, that copyright stays with the rights
+holders of the source assets, that rr2dv grants no permission to redistribute, and that redistribution needs the
+applicable licences or the rights holders' permission. It lists the source content detected. The user must click
+"I agree" ten separate times; closing the window or "Cancel" installs nothing. There is no setting or command-line
+option that skips it. Counted clicks must be real mouse clicks, at least CLICK_GAP_S apart, so a held key or a double
+click cannot rush through it.
+
+Wording (James, 2026-09-27): every claim is one the tool can stand behind; it does not decide copyright questions on
+the user's behalf. Changing any text below means a new NOTICE_VERSION (the test pins TEMPLATE_SHA256).
 """
 from __future__ import annotations
 
@@ -12,41 +16,47 @@ import hashlib
 import time
 from typing import Callable, Sequence
 
+NOTICE_VERSION = "1.0"
 REQUIRED_CLICKS = 10
 CLICK_GAP_S = 0.25
 TITLE = "Personal use only"
 
-NOTICE = [
-    "PERSONAL USE ONLY",
-    'This Derail Valley mod ("{pack}") was converted on your computer from Railroader mods installed on it. It contains '
-    "the original authors' work: their models, textures, animations and other content.",
-    "- All copyrights and other rights remain with the original authors: {credits}.",
-    "- You may use this converted mod only yourself, on your own computer.",
-    "- Do not share, upload, sell or otherwise redistribute it, or any part of it, in any form. Redistributing it "
-    "without the authors' permission is illegal: it infringes their copyright.",
-    "- If you want to share it, you must first get express permission from every original author.",
-    "- rr2dv gives you no rights to the original work.",
-    'Click "I agree" {clicks} times to confirm that you have read, understood and agree to this.',
+HEADING = "PERSONAL USE ONLY"
+INTRO = ('This Derail Valley mod ("{pack}") was converted locally on your computer from Railroader mods already '
+         "installed on it. It contains third-party work including models, textures, animations and other content.")
+POINTS = [
+    "Copyright and other rights in the source assets remain with their respective rights holders.",
+    "rr2dv does not grant you permission to redistribute third-party content.",
+    "Do not share, upload, sell or otherwise redistribute this conversion unless the applicable licences already permit "
+    "it, or you have obtained any required permission from the relevant rights holders.",
+    "Unauthorised redistribution may infringe copyright.",
+    "Check the permissions for every source asset before publishing a converted locomotive.",
 ]
+SOURCES_HEADING = "Source content detected:"
+CLOSING = 'Click "I agree" {clicks} times to confirm that you have read and understood this notice.'
+TEMPLATE = "\n".join([NOTICE_VERSION, HEADING, INTRO, *POINTS, SOURCES_HEADING, CLOSING])
+TEMPLATE_SHA256 = hashlib.sha256(TEMPLATE.encode("utf-8")).hexdigest()
 
 
 class ConsentError(RuntimeError):
     """The notice could not be shown, so nothing may be installed."""
 
 
-def notice_paragraphs(pack: str, credits: Sequence[str]) -> list[str]:
-    who = ", ".join(credits) or "the authors of the Railroader mods it was made from"
-    return [p.format(pack=pack, credits=who, clicks=REQUIRED_CLICKS) for p in NOTICE]
+def notice_parts(pack: str, sources: Sequence[str]) -> dict:
+    return {"heading": HEADING, "intro": INTRO.format(pack=pack), "points": list(POINTS),
+            "sources": list(sources) or ["(none recorded)"], "closing": CLOSING.format(clicks=REQUIRED_CLICKS)}
 
 
-def notice_text(pack: str, credits: Sequence[str], width: int = 100) -> str:
-    """The notice as plain text (NOTICE.txt): paragraphs wrapped, bullets indented."""
+def notice_text(pack: str, sources: Sequence[str], width: int = 100) -> str:
+    """The notice as plain text (NOTICE.txt): paragraphs wrapped, bullets and sources indented."""
     import textwrap
-    out = []
-    for p in notice_paragraphs(pack, credits):
-        bullet = p.startswith("- ")
-        out.append(textwrap.fill(p, width, subsequent_indent="  " if bullet else ""))
-    return "\n".join(out[:1] + [""] + out[1:2] + [""] + out[2:-1] + [""] + out[-1:])
+    parts = notice_parts(pack, sources)
+    lines = [parts["heading"], "", textwrap.fill(parts["intro"], width), ""]
+    lines += [textwrap.fill(p, width, initial_indent="* ", subsequent_indent="  ") for p in parts["points"]]
+    lines += ["", SOURCES_HEADING]
+    lines += [f"  {s}" for s in parts["sources"]]
+    lines += ["", textwrap.fill(parts["closing"], width), "", f"(notice version {NOTICE_VERSION})"]
+    return "\n".join(lines)
 
 
 def notice_sha256(text: str) -> str:
@@ -77,8 +87,8 @@ class Counter:
         return f'Click "I agree" {self.required} times to continue: {self.count} of {self.required}'
 
 
-def ask(pack: str, credits: Sequence[str]) -> bool:
-    """Show the notice; True only after REQUIRED_CLICKS counted clicks on "I agree"."""
+def ask(pack: str, sources: Sequence[str]) -> bool:
+    """Show the notice listing the source content; True only after REQUIRED_CLICKS counted clicks on "I agree"."""
     try:
         import tkinter as tk
         from tkinter import font as tkfont
@@ -99,16 +109,25 @@ def ask(pack: str, credits: Sequence[str]) -> bool:
     heading = tkfont.Font(size=26, weight="bold")
     body = tkfont.Font(size=14)
 
-    tk.Label(root, text="PERSONAL USE ONLY", font=heading, fg="white", bg="#a31515", pady=16).pack(fill="x")
-    text = tk.Text(root, wrap="word", font=body, padx=24, pady=16, relief="flat", height=10)
-    text.tag_configure("bullet", lmargin1=0, lmargin2=body.measure("- "), spacing1=2)
-    paragraphs = notice_paragraphs(pack, credits)[1:]
-    text.insert("end", paragraphs[0] + "\n\n")
-    for bullet in paragraphs[1:-1]:
-        text.insert("end", bullet + "\n", "bullet")
-    text.insert("end", "\n" + paragraphs[-1])
+    tk.Label(root, text=HEADING, font=heading, fg="white", bg="#a31515", pady=16).pack(fill="x")
+    frame = tk.Frame(root)
+    frame.pack(fill="both", expand=True)
+    scroll = tk.Scrollbar(frame)
+    scroll.pack(side="right", fill="y")
+    text = tk.Text(frame, wrap="word", font=body, padx=24, pady=16, relief="flat", height=10, yscrollcommand=scroll.set)
+    scroll.configure(command=text.yview)
+    text.tag_configure("bullet", lmargin1=0, lmargin2=body.measure("* "), spacing1=2)
+    text.tag_configure("source", lmargin1=body.measure("    "), font=tkfont.Font(family="Courier", size=13))
+    parts = notice_parts(pack, sources)
+    text.insert("end", parts["intro"] + "\n\n")
+    for point in parts["points"]:
+        text.insert("end", "* " + point + "\n", "bullet")
+    text.insert("end", "\n" + SOURCES_HEADING + "\n")
+    for source in parts["sources"]:
+        text.insert("end", source + "\n", "source")
+    text.insert("end", "\n" + parts["closing"])
     text.configure(state="disabled")
-    text.pack(fill="both", expand=True)
+    text.pack(side="left", fill="both", expand=True)
     status = tk.Label(root, text=counter.label(), font=body, pady=8)
     status.pack()
     buttons = tk.Frame(root, pady=16)

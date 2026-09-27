@@ -12,7 +12,7 @@ from fixtures import game_installs
 from rr2dv import consent, installs
 from rr2dv.jsonio import read_json, sha256_file
 from rr2dv.machine import Machine
-from rr2dv.publish import MARKER, NOTICE_FILE, InstallRefused, install
+from rr2dv.publish import MARKER, NOTICE_FILE, PROVENANCE_FILE, InstallRefused, install
 from rr2dv.safety import UnsafePath
 
 
@@ -109,9 +109,19 @@ class Notice(unittest.TestCase):
         self.assertFalse(counter.done)
 
     def test_notice_says_what_it_must(self):
-        text = consent.notice_text("RR2DV_TS_260_A", ["Eilelwen", "mod test-loco-mod"]).casefold()
-        for phrase in ("personal use only", "illegal", "copyrights", "express permission", "eilelwen", "10 times"):
-            self.assertIn(phrase, text)
+        text = consent.notice_text("RR2DV_TS_260_A", ["test-loco-mod (credited: Eilelwen)", "FoxTrucks"])
+        for phrase in ("PERSONAL USE ONLY", "remain with their respective rights holders",
+                       "does not grant you permission to redistribute", "unless the applicable licences already permit it",
+                       "may infringe copyright", "Check the permissions for every source asset",
+                       "Source content detected:\n  test-loco-mod (credited: Eilelwen)\n  FoxTrucks", "10 times",
+                       "notice version 1.0"):
+            self.assertIn(phrase, text if "\n" in phrase else " ".join(text.split()))
+        self.assertNotIn("illegal", text)  # James, 2026-09-27: only claims the tool can stand behind
+
+    def test_changed_wording_needs_a_new_notice_version(self):
+        self.assertEqual((consent.NOTICE_VERSION, consent.TEMPLATE_SHA256),
+                         ("1.0", "387b127795393d40d536bc6101b070a04210b5cd2ffa72db1fe7ef7803d9c838"),
+                         "the notice text changed: bump NOTICE_VERSION and update the pinned hash here")
 
 
 class Install(unittest.TestCase):
@@ -131,8 +141,15 @@ class Install(unittest.TestCase):
         self.asked.append((pack, list(credits)))
         return True
 
+    SOURCES = [{"id": "test-loco-mod", "kind": "mod", "root": "input", "path": "", "credits": ["Test Author"]},
+               {"id": "Railroader (base game asset packs)", "kind": "game", "root": "", "path": "", "credits": [],
+                "packs": ["truck.archbar.diamond"]}]
+
     def run_install(self, ask=None):
-        return install(self.pack, self.dv, self.expected, ["Test Author"], {"run": "r1"}, ask or self.agree)
+        dest, record = install(self.pack, self.dv, self.expected, self.SOURCES,
+                               {"run": "r1", "input": "Mods/Test Loco Mod", "locomotive": "ts-260-a"}, ask or self.agree)
+        self.record = record
+        return dest
 
     def leftovers(self):
         return [p.name for p in self.dv.mods.iterdir() if p.name.startswith(".rr2dv-")]
@@ -140,11 +157,18 @@ class Install(unittest.TestCase):
     def test_installs_the_files_with_notice_and_marker_after_consent(self):
         dest = self.run_install()
         self.assertEqual(dest, self.dv.mods / "RR2DV_TEST")
-        self.assertEqual(sorted(p.name for p in dest.iterdir()), ["Info.json", NOTICE_FILE, "ccl_bundle", MARKER])
+        self.assertEqual(sorted(p.name for p in dest.iterdir()), ["Info.json", NOTICE_FILE, PROVENANCE_FILE, "ccl_bundle", MARKER])
         marker = read_json(dest / MARKER)
-        self.assertEqual((marker["generator"], marker["agreed_clicks"], marker["credits"]), ("rr2dv", 10, ["Test Author"]))
+        self.assertEqual((marker["generator"], marker["clicks"], marker["notice_version"]), ("rr2dv", 10, "1.0"))
+        self.assertEqual(marker["sources"], self.SOURCES)
+        self.assertEqual(self.record["acknowledged"], marker["acknowledged"])
+        provenance = (dest / PROVENANCE_FILE).read_text()
+        for line in ("Notice version: 1.0", "Acknowledged: " + marker["acknowledged"], "Source content detected:",
+                     "  - test-loco-mod (credited: Test Author) [input]", "  - Railroader (base game asset packs)\n",
+                     "      truck.archbar.diamond", "Converted from: Mods/Test Loco Mod (locomotive ts-260-a)"):
+            self.assertIn(line, provenance)
         self.assertIn("PERSONAL USE ONLY", (dest / NOTICE_FILE).read_text())
-        self.assertEqual(self.asked, [("RR2DV_TEST", ["Test Author"])])
+        self.assertEqual(self.asked, [("RR2DV_TEST", ["test-loco-mod (credited: Test Author)", "Railroader (base game asset packs)"])])
         self.assertEqual(self.leftovers(), [])
 
     def test_declined_notice_installs_nothing(self):
@@ -175,7 +199,7 @@ class Install(unittest.TestCase):
         self.run_install()
         bad = dict(self.expected, ccl_bundle="0" * 64)
         with self.assertRaises(ValueError):
-            install(self.pack, self.dv, bad, ["Test Author"], {}, self.agree)
+            install(self.pack, self.dv, bad, self.SOURCES, {}, self.agree)
         self.assertEqual((self.dv.mods / "RR2DV_TEST" / "ccl_bundle").read_bytes(), b"bundle")
         self.assertEqual(self.leftovers(), [])
 
@@ -184,6 +208,8 @@ class Install(unittest.TestCase):
             install(self.pack, self.dv, {"../Info.json": "x"}, [], {}, self.agree)
         with self.assertRaises(UnsafePath):
             install(self.pack, self.dv, {MARKER: "x"}, [], {}, self.agree)
+        with self.assertRaises(UnsafePath):
+            install(self.pack, self.dv, {PROVENANCE_FILE: "x"}, [], {}, self.agree)
 
 
 if __name__ == "__main__":

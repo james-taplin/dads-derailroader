@@ -12,11 +12,14 @@ Valley `Mods` folder. It never changes the Railroader mod it reads.
 
 ## Personal use only
 
-A converted pack contains the original mod authors' work. Before anything is written to your Derail Valley `Mods`
-folder, `rr2dv` shows a large notice. It says the pack is for your personal use only, that redistributing it is
-illegal, that all copyrights stay with the original authors, and that sharing it needs their express permission. You
-click **I agree** ten times to continue, and there is no setting that skips it. The installed pack carries the same
-text in `NOTICE.txt`, together with the names of the authors and mods whose work it contains.
+A converted pack contains third-party work. Before anything is written to your Derail Valley `Mods` folder, `rr2dv`
+shows a large notice. It says that copyright in the source assets stays with their rights holders, that rr2dv grants
+no permission to redistribute, and that you should not share the conversion unless the applicable licences already
+permit it or you have any required permission from the relevant rights holders. It also lists the source content it
+detected. You click **I agree** ten times to continue, and there is no setting that skips it.
+
+The installed pack carries `NOTICE.txt` (the same text), `SOURCE_PROVENANCE.txt` (notice version, when it was
+acknowledged, which mods and authors the content came from) and an `rr2dv.json` record of the same.
 
 ![The personal-use notice](docs/personal-use-notice.png)
 

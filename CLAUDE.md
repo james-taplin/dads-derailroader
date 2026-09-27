@@ -22,7 +22,7 @@ only read, post to `board/APP_BOARD.md` (its header has the protocol), and repla
 
 | Path | What |
 |---|---|
-| `src/rr2dv/` | The app. Standard library only, Python 3.11+. `rrmod.py` scans mods and resolves a loco's dependency closure; `licences.py` is the licence policy; `assetripper.py` drives AssetRipper's HTTP API (exports cached in `<workRoot>/_cache/assetripper`); `probeinput.py` + `unity/Rr2dvProbe.cs` + `unityrun.py` measure the model in Unity (input from the prefab YAML maps and definitions, output `probe/probe.json`); `record.py` drafts the B03 vehicle record (`record/vehicle-record.json`; unknowns null and listed in `metadata.pending`); `wheels.py` picks the tread candidate from the probe's radius bands; `unityproject.py` assembles the per-run Unity project with our canonical `resolve_clip_paths.py` and `copy_deps.py` from `tooling/` (run, never copied); `pipeline.py` runs the stages; `runs.py` owns run folders; `installs.py` finds Railroader and Derail Valley (settings or Steam) and enforces the Railroader-Mods-only input; `consent.py` is the 10-click personal-use notice; `publish.py` installs into the DV Mods folder after it; `safety.py` guards every write; `machine.py` holds tool paths and `doctor`; `procs.py` stops a launched tool with its child processes; `cli.py` is the entry point. |
+| `src/rr2dv/` | The app. Standard library only, Python 3.11+. `rrmod.py` scans mods and resolves a loco's dependency closure (and the `sources` provenance list); `assetripper.py` drives AssetRipper's HTTP API (exports cached in `<workRoot>/_cache/assetripper`); `probeinput.py` + `unity/Rr2dvProbe.cs` + `unityrun.py` measure the model in Unity (input from the prefab YAML maps and definitions, output `probe/probe.json`); `record.py` drafts the B03 vehicle record (`record/vehicle-record.json`; unknowns null and listed in `metadata.pending`); `wheels.py` picks the tread candidate from the probe's radius bands; `unityproject.py` assembles the per-run Unity project with our canonical `resolve_clip_paths.py` and `copy_deps.py` from `tooling/` (run, never copied); `pipeline.py` runs the stages; `runs.py` owns run folders; `installs.py` finds Railroader and Derail Valley (settings or Steam) and enforces the Railroader-Mods-only input; `consent.py` is the 10-click personal-use notice; `publish.py` installs into the DV Mods folder after it; `safety.py` guards every write; `machine.py` holds tool paths and `doctor`; `procs.py` stops a launched tool with its child processes; `cli.py` is the entry point. |
 | `tests/` | `unittest` suite on synthetic mods built by `tests/fixtures.py`, with fake AssetRipper and Unity stand-ins (shebang scripts on POSIX, `.cmd` launchers on Windows). Never commit real mod files. |
 | `board/APP_BOARD.md` | Message board with the local sessions. We post as `W<n>`; read it at session start (`git pull`). |
 | `tooling/` | Read-only snapshot of our local tooling (see below). |
@@ -83,11 +83,16 @@ Determinism: output = f(input file hashes, recorded user answers, tool versions)
 ## Personal use (James, W25)
 
 - rr2dv does **not** read or evaluate licence files (removed in W25; `licences.py` is gone).
-- Before a pack is installed into the DV Mods folder, `consent.ask` shows a large centred notice: personal use only,
-  redistribution is illegal, all copyrights stay with the original authors, sharing needs their express permission.
-  The user clicks "I agree" 10 separate times (mouse only, 0.25 s apart); Cancel or closing installs nothing. Never add
-  a flag, setting or code path that skips it. The pack gets `NOTICE.txt` and an `rr2dv.json` marker (credits, notice
-  hash, clicks, time). `inventory.mods` and the definitions' credits name whose work is in the pack.
+- Before a pack is installed into the DV Mods folder, `consent.ask` shows a large centred notice (wording by James,
+  2026-09-27, version `NOTICE_VERSION` 1.0): rights in the source assets remain with their rights holders; rr2dv grants
+  no permission to redistribute; do not redistribute unless the applicable licences permit it or the rights holders
+  have given any required permission; unauthorised redistribution may infringe copyright; check permissions before
+  publishing. Only claims the tool can stand behind; it does not decide copyright questions for the user. Any wording
+  change needs a new `NOTICE_VERSION` (a test pins `TEMPLATE_SHA256`).
+- The notice lists "Source content detected" (`inventory.sources`: each mod used, its credited authors, and base-game
+  packs). The user clicks "I agree" 10 separate times (mouse only, 0.25 s apart); Cancel or closing installs nothing.
+  Never add a flag, setting or code path that skips it. The pack gets `NOTICE.txt`, `SOURCE_PROVENANCE.txt` and an
+  `rr2dv.json` marker (notice version and hash, acknowledgement time, clicks, sources); the run record logs the same.
 - Never open, decompile or inspect code mods (DLLs); Railroader-only code mods (LegosBetterSteam, LegosLibraryOfStuff)
   are listed as `railroader_only`, never needed in DV. Uploaded test mods stay in the session container, never in git.
 

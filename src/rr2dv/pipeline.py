@@ -37,13 +37,6 @@ def search_roots(rr: installs.Install, extra: Sequence[Path] = ()) -> list[Path]
     return [r for i, r in enumerate(roots) if r not in roots[:i]]
 
 
-def credits(inv: dict, loco_credits: str | None = None) -> list[str]:
-    """Whose work is in the pack, for the notice and the installed NOTICE.txt: authors named in the definitions, then
-    every mod the pack takes content from."""
-    names = [c.strip() for c in (loco_credits or "").replace(";", ",").split(",") if c.strip()]
-    return names + [f"mod {m['id']}" for m in inv.get("mods", []) if f"mod {m['id']}" not in names]
-
-
 def fingerprint(inv: dict) -> str:
     """Identity of the exact input bytes a conversion used."""
     canonical = json.dumps(inv["packs"], sort_keys=True, separators=(",", ":"))
@@ -110,7 +103,7 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
         raise
 
 
-def install_pack(run: Run, machine: Machine, pack_dir: Path, expected: dict[str, str], who: list[str],
+def install_pack(run: Run, machine: Machine, pack_dir: Path, expected: dict[str, str], sources: list[dict],
                  ask: Callable = consent.ask) -> Path:
     """The publish stage: Derail Valley is found again, CCL must be there, then the notice, then the install."""
     dv = installs.derail_valley(machine)
@@ -120,7 +113,10 @@ def install_pack(run: Run, machine: Machine, pack_dir: Path, expected: dict[str,
     details = {"run": run.path.name, "input": run.record["request"]["input"],
                "locomotive": run.record.get("answers", {}).get("locomotive"),
                "input_fingerprint": run.record.get("input_fingerprint")}
-    return publish.install(pack_dir, dv, expected, who, details, ask)
+    dest, acknowledgement = publish.install(pack_dir, dv, expected, sources, details, ask)
+    run.record["notice"] = acknowledgement  # notice version, when it was acknowledged, the sources it listed
+    run.save()
+    return dest
 
 
 def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path],

@@ -101,6 +101,9 @@ class Issue:
         return out
 
 
+GAME_DATA = "railroader_data"  # Railroader's own asset packs live under Railroader_Data/StreamingAssets/AssetPacks
+
+
 def _rel(root: Root, path: Path) -> str:
     rel = path.relative_to(root.path).as_posix()
     return "" if rel == "." else rel
@@ -501,7 +504,8 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
             issues.append(Issue("warning", "model-not-in-catalog", f"{vid}: model {model!r} matches no key or prefab in {vpack.name}/Catalog.json"))
         role = "locomotive" if vehicle is loco else "tender" if tender_info and vid == tender_info["id"] else "truck"
         if isinstance(model, str) and model:
-            vehicle_records.append({"id": vid, "role": role, "model": model, "prefab": vpack.model_prefab(model), "pack": vpack.describe()})
+            vehicle_records.append({"id": vid, "role": role, "model": model, "prefab": vpack.model_prefab(model), "pack": vpack.describe(),
+                                    "credits": str((vehicle.get("metadata") or {}).get("credits") or "").strip()})
         else:
             issues.append(Issue("error", "no-model", f"{vid} ({role}) has no modelIdentifier"))
         is_car = vid in car_ids
@@ -602,6 +606,20 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
     for mod in sorted(involved.values(), key=lambda m: (m.root.rank, m.rel)):
         mod_records.append(mod.describe())
 
+    # Source provenance for the notice and SOURCE_PROVENANCE.txt: every mod whose content is used, with the authors its
+    # definitions credit, and Railroader's own asset packs (no mod) when any are used.
+    credited: dict[Path, set] = defaultdict(set)
+    for (vpack, vehicle) in vehicles:
+        name = str((vehicle.get("metadata") or {}).get("credits") or "").strip()
+        if name and vpack.mod:
+            credited[vpack.mod.path].add(name)
+    sources = [{"id": mod.ident, "kind": "mod", "root": mod.root.label, "path": mod.rel, "credits": sorted(credited[mod.path])}
+               for mod in sorted(involved.values(), key=lambda m: (m.root.rank, m.rel))]
+    game_packs = sorted(p.rel for p in ordered if p.mod is None and GAME_DATA in (x.casefold() for x in p.path.parts))
+    if game_packs:
+        sources.append({"id": "Railroader (base game asset packs)", "kind": "game", "root": "", "path": "", "credits": [],
+                        "packs": game_packs})
+
     providers = {c["provider"]: c["evidence"] for c in code_mods}
     if group_records:
         name, evidence = FEATURE_PROVIDERS["component-groups"]
@@ -628,6 +646,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         "packs": pack_records,
         "extra_files": sorted(extra.values(), key=lambda r: (r["root"], r["path"])),
         "mods": mod_records,
+        "sources": sources,
         "railroader_only": railroader_only,
         "optional_groups": group_records,
         "textures": textures,

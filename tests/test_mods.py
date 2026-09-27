@@ -102,6 +102,21 @@ class Dependencies(Base):
         inv = self.inv()
         self.assertEqual(sorted(m["id"] for m in inv["mods"]), ["TruckMod", "test-loco-mod"])
 
+    def test_sources_name_each_mod_its_credited_authors_and_game_packs(self):
+        (self.m["search"] / "TruckMod" / "info.json").write_text('{"Id": "TruckMod"}')
+        objects = [loco("ts-260-a", tender="tt-260-a", parts=[part("Test Loco Mod\\parts", "bell", "bell1")]),
+                   tender("tt-260-a", truck="game-truck")]
+        objects[0]["metadata"]["credits"] = "Some Author"
+        (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": objects}))
+        game = self.tmp / "Railroader" / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
+        write_pack(game / "game-truck", objects=[{"identifier": "game-truck", "definition": {"kind": "Truck", "modelIdentifier": "game-truck"}}],
+                   assets={"game-truck": {"filename": "game-truck.prefab"}})
+        inv = inventory(Index(self.m["mod"], [self.m["search"], game]), "ts-260-a")
+        self.assertEqual(blocking(inv), [])
+        self.assertEqual([(s["id"], s["kind"], s["credits"]) for s in inv["sources"]],
+                         [("test-loco-mod", "mod", ["Some Author"]), ("Railroader (base game asset packs)", "game", [])])
+        self.assertEqual(inv["sources"][1]["packs"], ["game-truck"])
+
 
 class GroupsAndImages(Base):
     def add_group(self, name="Herald 1912", texture="Test Loco Mod.herald-1912.png"):
