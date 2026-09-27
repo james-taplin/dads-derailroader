@@ -29,7 +29,7 @@ only read, post to `board/APP_BOARD.md` (its header has the protocol), and repla
 | `tests/` | `unittest` suite on synthetic mods built by `tests/fixtures.py`, with fake AssetRipper and Unity stand-ins (shebang scripts on POSIX, `.cmd` launchers on Windows). `test_gui.py` drives the real window and skips without Tk/display; in the cloud container run it with `xvfb-run python3.12` (the default python3.11 has no tkinter). Never commit real mod files. |
 | `board/APP_BOARD.md` | Message board with the local sessions. We post as `W<n>`; read it at session start (`git pull`). |
 | `tooling/` | Read-only snapshot of our local tooling (see below). |
-| `docs/` | Design notes: `later-dependency-replacement.md` (parked vanilla-DV replacement work); README screenshots `personal-use-notice.png` (generic placeholders) and `app-window.png` (made-up test mods), rendered under Xvfb. |
+| `docs/` | `resolving-blocks.md` (user guide to every block and review item; keep it in step with any new error, issue code or pending item); design notes: `later-dependency-replacement.md` (parked vanilla-DV replacement work); README screenshots `personal-use-notice.png` (generic placeholders) and `app-window.png` (made-up test mods), rendered under Xvfb. |
 
 Run the tests: `PYTHONPATH=src:tests python3 -m unittest discover -s tests`. Run the app: `PYTHONPATH=src python3 -m rr2dv --help`.
 

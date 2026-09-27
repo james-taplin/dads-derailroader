@@ -90,6 +90,14 @@ one that fails or is not built yet:
 Both game installs are found before a conversion starts, again before the Unity build, and again just before
 installing.
 
+## If a conversion stops
+
+It stops rather than guess, and always says why: in the app's Checks list and Conversion panel, in the command
+line's output, and in the run folder. **[docs/resolving-blocks.md](docs/resolving-blocks.md) lists every block and
+review item and how to resolve each one.** The tool cannot yet ask you questions mid-run or resume a stopped run:
+give your answers when you start (the app's Options, or `--loco`, `--livery`, `--audio`, `--wheel-radius`) and
+convert again after fixing a block. Reruns are safe and reuse the cached AssetRipper exports.
+
 ## Rules the tool follows
 
 - **Sounds are never converted.** Every loco uses vanilla Derail Valley sounds: S060 for a small boiler (under
@@ -144,7 +152,7 @@ file. All keys are optional except the tools:
 | [`tests/`](tests/) | automated tests on made-up mods, with stand-ins for AssetRipper and Unity |
 | [`tooling/`](tooling/) | read-only snapshot of our conversion tooling and guides, used as the reference implementation (start with [`tooling/NOTES.md`](tooling/NOTES.md)) |
 | [`board/APP_BOARD.md`](board/APP_BOARD.md) | message board between this app's Claude session and the local Claude and Codex sessions |
-| [`docs/`](docs/) | design notes ([replacing dependencies with vanilla DV content](docs/later-dependency-replacement.md), parked) and the screenshots on this page |
+| [`docs/`](docs/) | [resolving blocks](docs/resolving-blocks.md), design notes ([replacing dependencies with vanilla DV content](docs/later-dependency-replacement.md), parked) and the screenshots on this page |
 | [`CLAUDE.md`](CLAUDE.md) | notes for Claude sessions working on the app |
 
 Run the tests with `PYTHONPATH=src:tests python -m unittest discover -s tests` (on Windows use `src;tests`). The
