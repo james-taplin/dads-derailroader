@@ -48,7 +48,7 @@ def audit_input(rec: dict, pack: Path) -> dict:
     bundles = [str(f.resolve()) for f in sorted(pack.iterdir())
                if f.is_file() and f.name != "Info.json" and f.suffix.casefold() != ".manifest"]
     return {"schema": 1, "bundles": bundles, "carFolders": folders, "cars": cars, "controls": controls, "ports": required,
-            "indicators": INDICATORS}
+            "indicators": INDICATORS, "review": rec.get("metadata", {}).get("review", {}).get("values")}
 
 
 def check_pack(rec: dict, pack: Path, files: dict[str, str]) -> list[str]:

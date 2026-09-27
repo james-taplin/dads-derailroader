@@ -1,0 +1,217 @@
+{
+  "schema": 1,
+  "version": "CCL-3.1.9",
+  "evidence": "https://github.com/derail-valley-modding/custom-car-loader/blob/11b3292a064e26b9dadf3dff4b5ea9868c79e548/CCL.Types/LocoSpawnGroup.cs",
+  "tracks": [
+    {
+      "id": 0,
+      "key": "CitySouth",
+      "name": "City South",
+      "length_m": 110.0,
+      "restriction": ""
+    },
+    {
+      "id": 100,
+      "key": "CityWest",
+      "name": "City West",
+      "length_m": 155.0,
+      "restriction": ""
+    },
+    {
+      "id": 200,
+      "key": "CoalMineEast",
+      "name": "Coal Mine East",
+      "length_m": 50.0,
+      "restriction": ""
+    },
+    {
+      "id": 300,
+      "key": "CoalMineSouth",
+      "name": "Coal Mine South",
+      "length_m": 170.0,
+      "restriction": ""
+    },
+    {
+      "id": 400,
+      "key": "CoalPowerPlant",
+      "name": "Coal Power Plant",
+      "length_m": 270.0,
+      "restriction": ""
+    },
+    {
+      "id": 500,
+      "key": "Farm",
+      "name": "Farm",
+      "length_m": 300.0,
+      "restriction": ""
+    },
+    {
+      "id": 600,
+      "key": "FoodFactory1",
+      "name": "Food Factory 1",
+      "length_m": 50.0,
+      "restriction": "Length: 50m; DE2 exclusive"
+    },
+    {
+      "id": 601,
+      "key": "FoodFactory2",
+      "name": "Food Factory 2",
+      "length_m": 55.0,
+      "restriction": ""
+    },
+    {
+      "id": 700,
+      "key": "ForestCentral",
+      "name": "Forest Central",
+      "length_m": 60.0,
+      "restriction": ""
+    },
+    {
+      "id": 800,
+      "key": "ForestSouth",
+      "name": "Forest South",
+      "length_m": 62.0,
+      "restriction": ""
+    },
+    {
+      "id": 900,
+      "key": "GoodsFactory1",
+      "name": "Goods Factory 1",
+      "length_m": 60.0,
+      "restriction": "Length: 60m; DE2 exclusive"
+    },
+    {
+      "id": 901,
+      "key": "GoodsFactory2",
+      "name": "Goods Factory 2",
+      "length_m": 60.0,
+      "restriction": ""
+    },
+    {
+      "id": 1000,
+      "key": "HarbourA1",
+      "name": "Harbour A1",
+      "length_m": 65.0,
+      "restriction": "Length: 65m; DE2 exclusive"
+    },
+    {
+      "id": 1001,
+      "key": "HarbourRoundhouse1",
+      "name": "Harbour Roundhouse 1",
+      "length_m": 45.0,
+      "restriction": ""
+    },
+    {
+      "id": 1002,
+      "key": "HarbourRoundhouse2",
+      "name": "Harbour Roundhouse 2",
+      "length_m": 45.0,
+      "restriction": "Length: 45m (has turntable); S282 exclusive"
+    },
+    {
+      "id": 1005,
+      "key": "HarbourRoundhouse5",
+      "name": "Harbour Roundhouse 5",
+      "length_m": 45.0,
+      "restriction": ""
+    },
+    {
+      "id": 1007,
+      "key": "HarbourRoundhouse7",
+      "name": "Harbour Roundhouse 7",
+      "length_m": 45.0,
+      "restriction": ""
+    },
+    {
+      "id": 1100,
+      "key": "IronMineEast",
+      "name": "Iron Mine East",
+      "length_m": 45.0,
+      "restriction": ""
+    },
+    {
+      "id": 1200,
+      "key": "IronMineWest",
+      "name": "Iron Mine West",
+      "length_m": 25.0,
+      "restriction": "Length: 25m (has turntable); S282 exclusive"
+    },
+    {
+      "id": 1300,
+      "key": "MachineFactoryA1",
+      "name": "Machine Factory A1",
+      "length_m": 140.0,
+      "restriction": ""
+    },
+    {
+      "id": 1302,
+      "key": "MachineFactoryRoundhouse2",
+      "name": "Machine Factory Roundhouse 2",
+      "length_m": 45.0,
+      "restriction": ""
+    },
+    {
+      "id": 1303,
+      "key": "MachineFactoryRoundhouse3",
+      "name": "Machine Factory Roundhouse 3",
+      "length_m": 45.0,
+      "restriction": "Length: 45m (has turntable); DE2 exclusive"
+    },
+    {
+      "id": 1304,
+      "key": "MachineFactoryRoundhouse4",
+      "name": "Machine Factory Roundhouse 4",
+      "length_m": 45.0,
+      "restriction": ""
+    },
+    {
+      "id": 1307,
+      "key": "MachineFactoryRoundhouse7",
+      "name": "Machine Factory Roundhouse 7",
+      "length_m": 45.0,
+      "restriction": "Length: 45m (has turntable); DE6 exclusive"
+    },
+    {
+      "id": 1400,
+      "key": "OilRefinery",
+      "name": "Oil Refinery",
+      "length_m": 130.0,
+      "restriction": ""
+    },
+    {
+      "id": 1500,
+      "key": "OilWellCentral",
+      "name": "Oil Well Central",
+      "length_m": 32.0,
+      "restriction": ""
+    },
+    {
+      "id": 1600,
+      "key": "OilWellNorth",
+      "name": "Oil Well North",
+      "length_m": 40.0,
+      "restriction": ""
+    },
+    {
+      "id": 1700,
+      "key": "Sawmill",
+      "name": "Sawmill",
+      "length_m": 95.0,
+      "restriction": ""
+    },
+    {
+      "id": 1800,
+      "key": "SteelMillTurntable1",
+      "name": "Steel Mill Turntable 1",
+      "length_m": 32.0,
+      "restriction": "Length: 32m (has turntable); DE2 exclusive; Reserved Track"
+    },
+    {
+      "id": 1801,
+      "key": "SteelMillTurntable2",
+      "name": "Steel Mill Turntable 2",
+      "length_m": 32.0,
+      "restriction": ""
+    }
+  ]
+}

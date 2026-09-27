@@ -35,6 +35,19 @@ class Window(unittest.TestCase):
         self.root = tk.Tk()
         self.app = gui.App(self.root, Controller(settings))
         self.addCleanup(self.app.close)
+        from rr2dv import reviewgui
+        original_review = reviewgui.show
+        def reviewed(parent, req, answer):
+            value = None
+            if self.app.wheel.get():
+                value = {**{k:req[k] for k in ('schema','adapterVersion','vehicleId','fingerprint','catalogueHash')},
+                    'values': {'trainBrake':'manual-lap','spawnMode':'radio-only','physics':'legacy-equivalent',
+                               'steamHeat':'basis-approximation','wheelRadius':float(self.app.wheel.get()),
+                               'cylinders':2,'spawnTracks':[],'acknowledgeExperimental':True}}
+            answer['value'] = value
+            answer['event'].set()
+        reviewgui.show = reviewed
+        self.addCleanup(setattr, reviewgui, 'show', original_review)
 
     def until(self, condition, timeout=60.0):
         end = time.monotonic() + timeout
@@ -77,13 +90,10 @@ class Window(unittest.TestCase):
         self.until(lambda: not self.app.worker.busy and self.app.last_run, timeout=120)
         self.root.update()
         self.assertEqual(self.app.stage_rows["record"].cget("text"), "✓")
-        self.assertEqual(self.app.stage_rows["build"].cget("text"), "?")
-        self.assertIn("Needs your answer: the wheel radius", self.app.summary.cget("text"))
-        self.assertEqual(str(self.app.open_record.cget("state")), "normal")
-        # one click fills in the measured candidate; the user still converts
-        self.assertEqual(str(self.app.use_radius.cget("state")), "normal")
-        self.app.use_radius.invoke()
-        self.assertEqual(self.app.wheel.get(), "0.5988")
+        self.assertEqual(self.app.stage_rows['review'].cget('text'), '?')
+        self.assertIn('Review cancelled', self.app.summary.cget('text'))
+        self.assertEqual(str(self.app.open_record.cget('state')), 'normal')
+        self.assertFalse((self.app.last_run / 'build/vehicle-record.json').exists())
 
     def test_convert_with_the_radius_installs_after_the_notice(self):
         self.select("Test Loco Mod", "ts-260-a")

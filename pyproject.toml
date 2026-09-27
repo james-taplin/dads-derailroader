@@ -20,4 +20,4 @@ derailroader = "rr2dv.gui:main"  # the desktop app, without a console window on 
 where = ["src"]
 
 [tool.setuptools.package-data]
-rr2dv = ["unity/*.cs"]
+rr2dv = ["unity/*.cs", "spawn_tracks.json"]

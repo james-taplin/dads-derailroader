@@ -52,9 +52,13 @@ derailroader                      # opens the app (or: rr2dv gui)
 - Pick a locomotive to see its tender, trucks, parts, controls, sounds, whose work it uses and any problems. Choose
   the livery and sounds, then **Convert**. The stages tick off below as they run; afterwards you can open the run
   report folder, the vehicle record and the finished pack folder.
-- The first conversion of a locomotive stops before building and asks for the **wheel radius**: it shows the measured
-  candidate. Check it, click **Use measured radius** (or type your own) and **Convert** again. The second run reuses
-  the imported model, so it goes straight to building.
+- After measurement, **Pre-build review** asks for the train-brake valve type, spawning mode, physical driving-wheel
+  **radius**, cylinder count and steam profile. The source evidence tab shows measured wheel candidates. Choices
+  are saved in `prebuild-review.json`; load that file on a rerun. A changed source or adapter rejects stale answers.
+- Normal spawning can be radio only, a manually selected suitable track pool, or all suitable tracks. Track filtering
+  uses the whole locomotive/tender length, coupling allowance and clearance; reserved stock tracks are excluded.
+- Simple and fixed-geared steam profiles are experimental. Compound switching, oil-regime combinations, articulated
+  calibration and diesel adapters remain pending. See [implementation status and tests](docs/review-and-geometry.md).
 - The personal-use notice opens inside the app before anything is installed.
 
 ## Command line
@@ -63,7 +67,8 @@ derailroader                      # opens the app (or: rr2dv gui)
 rr2dv doctor                      # finds both games and checks Unity, CarCreator, AssetRipper and CCL
 rr2dv list                        # steam locomotive mods in your Railroader Mods folder
 rr2dv scan "Some Loco Mod"        # read-only: what the mod contains and what each loco needs
-rr2dv convert "Some Loco Mod"     # convert it (add --loco <id> when the mod has several)
+rr2dv convert "Some Loco Mod"     # interactive pre-build review
+rr2dv convert "Some Loco Mod" --review-file prebuild-review.json  # replay reviewed choices
 ```
 
 You name a mod by its folder in the Railroader `Mods` folder, or give that folder's path. Zip files and folders

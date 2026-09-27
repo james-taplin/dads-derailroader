@@ -124,10 +124,10 @@ def rr_axles(ws: dict) -> list[float]:
     return [off + length / 2 - i * length / (n - 1) for i in range(n)]
 
 
-def driving_candidate(candidates: list[dict], wheelsets: list[dict], definition: dict) -> dict | None:
+def driving_candidate(candidates: list[dict], wheelsets: list[dict], definition: dict, powered_indices=None) -> dict | None:
     """Offer only a powered wheelset, preferring the explicitly selected main driver."""
     from .record import drivers
-    powered = drivers(definition)
+    powered = drivers(definition) if powered_indices is None else powered_indices
     main = definition.get("mainDriverIndex", 0)
     indices = ([main] if main in powered else []) + [i for i in powered if i != main]
     for i in indices:
@@ -153,6 +153,9 @@ def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[fl
     for mesh in (wheel_out or {}).get("meshes") or []:
         if not mesh.get("used"):
             continue
+        declared = ws_in.get('transformPath')
+        if declared and not (mesh['path'] == declared or mesh['path'].startswith(declared + '/')):
+            continue
         owner = _owner(mesh["path"], rotating)
         if owner is None or owner not in nodes:
             continue
@@ -162,6 +165,11 @@ def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[fl
             groups.append({"z": z, "paths": [owner]})
         elif owner not in g["paths"]:
             g["paths"].append(owner)
+    if ws_in.get('transformPath') and len(groups) == len(expected) and groups:
+        # An explicit source transform identifies the physical truck even when its mesh positions
+        # differ from the source simulation offsets. Keep the measured geometry and report both.
+        return [{'z': g['z'], 'part': sorted(g['paths'])[0], 'basis': 'measured', 'rr': z}
+                for g, z in zip(sorted(groups, key=lambda g: -g['z']), expected)]
     out = []
     for z in expected:
         near = sorted((g for g in groups if abs(g["z"] - z) <= AXLE_MATCH_M), key=lambda g: (abs(g["z"] - z), g["z"]))
@@ -340,13 +348,55 @@ class _Builder:
             radius = main["tread"] if main and main.get("tread") else 0.5  # only to finish the checks below; never built
         self._mass(cfg, lid, rec)
 
+        # A typed value is not evidence that it belongs to the powered wheel.
+        # Reject a pilot/tender radius (and a diameter entered as a radius).
+        candidate = driving_candidate(rec['metadata'].get('wheelCandidates', []),
+                                      pv.get('wheelsets', []), self.definition_of(lid), self._driver_indices(cfg))
+        if candidate and candidate.get('confidence') == 'high' and radius:
+            if abs(radius - candidate['tread']) > max(.01, candidate['tread'] * .03):
+                self.block('needs-driver-radius',
+                           f"Reviewed radius {radius:g} m disagrees with the powered-wheel tread "
+                           f"{candidate['tread']:.5f} m ({candidate['clip']}); use the driving tyre radius, not a bogie wheel or diameter",
+                           candidate=candidate['tread'])
+        rec['metadata']['wheelRadiusCheck'] = {
+            'enteredRadiusM': radius, 'poweredCandidate': candidate,
+            'status': 'compared' if candidate else 'no measured powered candidate',
+            'tolerance': 'max(10 mm, 3% of measured tread radius)',
+        }
+
         # ---------------- running gear
         wheelsets = pv.get("wheelsets") or []
         wouts = ov.get("wheels") or []
         driver_idx = set(self._driver_indices(cfg))
+        reviewed = self.answers.get('prebuildReview', {}).get('values', {})
+        geared = reviewed.get('physics') == 'geared'
+        physical_idx = driver_idx | set(reviewed.get('unpoweredWheelsets', []))
         axles, units, ponies, wheel_clips = [], [], [], []
         for i, ws in enumerate(wheelsets):
             wout = wouts[i] if i < len(wouts) else None
+            if geared and i in physical_idx:
+                original = self.definition_of(lid)['wheelsets'][i]
+                path = (original.get('transform') or {}).get('path')
+                if path:
+                    ws = {**ws, 'transformPath': '/'.join(path)}
+            if geared and i not in physical_idx:
+                if ws.get('clip') in anims and ws['clip'] not in [wheelsets[j].get('clip') for j in physical_idx]:
+                    wheel_clips.append([ws['clip'], f"shaft clip {ws['clip']}", round(ws['diameter'] / 2, 4)])
+                self.choose(f"wheelset {i}: reviewed as non-physical; no axle generated; source clip retained where present")
+                continue
+            # One source animation can rotate wheels on several physical trucks. Match by measured
+            # axle positions and source wheel size, never by vehicle ID or an animation's name.
+            if geared and not ws.get('clip'):
+                shared = []
+                for source_ws, source_out in zip(wheelsets, wouts):
+                    if source_ws.get('clip') not in anims or abs(source_ws['diameter'] - ws['diameter']) > .01:
+                        continue
+                    matched = measured_axles(ws, source_out, nodes)
+                    if matched and all(a['part'] for a in matched): shared.append((source_ws, source_out))
+                if len(shared) == 1:
+                    source_ws, wout = shared[0]
+                    ws = {**ws, 'clip': source_ws['clip']}
+                    self.choose(f"physical wheelset {i}: measured axles share source animation {ws['clip']!r}")
             found = [m for m in (wout or {}).get("meshes") or [] if m.get("used")]
             if i not in driver_idx and not found:
                 if ws.get("clip") and ws["clip"] in anims:  # G-29 'Wrench': a clip on a wheelset without a wheel
@@ -366,8 +416,12 @@ class _Builder:
                                                     "(probe/probe.json wheels); the builder needs every driving axle's wheel")
                 if ws.get("clip") not in anims:
                     self.block("drivers-no-clip", f"{lid}: driving wheelset {i} has no animation clip in the model's clip map")
-                units.append({"DriverParts": [p for p in parts if p], "AnimKey": ws.get("clip"), "GroupName": f"drivers {len(units) + 1}" if units else "drivers",
-                              "StartOffset": 0})
+                shared_unit = next((u for u in units if u['AnimKey'] == ws.get('clip')), None)
+                if shared_unit:
+                    shared_unit['DriverParts'] += [p for p in parts if p and p not in shared_unit['DriverParts']]
+                else:
+                    units.append({"DriverParts": [p for p in parts if p], "AnimKey": ws.get("clip"), "GroupName": f"drivers {len(units) + 1}" if units else "drivers",
+                                  "StartOffset": 0})
             elif ws.get("clip") in anims:
                 ponies.append((ws["clip"], ax, ws))
         drivers = sorted((a for a in axles if a["driver"]), key=lambda a: -a["z"])
@@ -375,6 +429,10 @@ class _Builder:
             self.block("no-drivers", f"{lid}: no driving wheelset found in the definition")
             return rec
         allax = sorted(axles, key=lambda a: -a["z"])
+        rec['metadata']['physicalAxles'] = [dict(a) for a in allax]
+        if geared and any(a['part'] and abs(a['z'] - a['rr']) > .05 for a in allax):
+            self.choose('Explicit source truck transforms identify measured axles whose model positions differ from source simulation offsets; '
+                        'using measured model geometry, see metadata.physicalAxles (z and rr); in-game wheelbase validation pending')
         n_front = max(1, len(drivers) // 2)
         front_drivers = drivers[:n_front]
         split = allax.index(front_drivers[-1]) + 1
@@ -707,6 +765,9 @@ class _Builder:
 
     def _driver_indices(self, cfg: dict) -> list[int]:
         from .record import drivers
+        reviewed = self.answers.get('prebuildReview', {}).get('values', {})
+        if reviewed.get('physics') == 'geared':
+            return reviewed['poweredWheelsets']
         return drivers(self.definition_of(self.draft["vehicleId"]))
 
     def _material_review(self, cfg: dict, vid: str) -> None:

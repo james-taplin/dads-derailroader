@@ -7,6 +7,7 @@ import argparse
 import sys
 from pathlib import Path
 
+from . import review
 from . import __version__, applog, installs, machine as machine_mod
 from .consent import ConsentError
 from .appmodel import scan_report
@@ -104,7 +105,7 @@ def cmd_convert(args) -> int:
     extra = [Path(p) for p in args.search] + machine.search_roots()
     try:
         outcome = convert(args.input, machine, args.loco, extra, args.audio, args.livery, args.wheel_radius,
-                          geometry_review=args.geometry_review)
+                          geometry_review=args.geometry_review, prebuild_review=args.review_file or review.cli)
     except Exception as e:  # stopped inside a run: show how far it got and where its log is, then report the error
         _print_run(getattr(e, "rr2dv_run", None))
         raise
@@ -163,6 +164,7 @@ def build_parser() -> argparse.ArgumentParser:
                       help="driving wheel tread radius you have reviewed (see metadata.wheelCandidates in the draft record)")
     conv.add_argument("--geometry-review", type=Path, metavar="FILE",
                       help="reviewed per-car end-beam band JSON, tied to the exact source fingerprint")
+    conv.add_argument("--review-file", type=Path, help="saved pre-build answers tied to this source; otherwise review interactively")
     with_search(conv, optional_default=False)
     conv.set_defaults(func=cmd_convert)
     return parser

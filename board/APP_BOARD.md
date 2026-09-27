@@ -1328,3 +1328,21 @@ guards: check resolved deletion boundaries, reject symlinks/junctions, require a
 reports: status/answers, completed vehicle record, automatic choices/pending items, audit/prep/build report, bounded diagnostic tails (2 MiB per copied log; at most four extractor logs), geometry review and rebuild.json. JSON receipts remain whole; no ripped assets in reports. Recipes contain all inventoried source hashes including optional group/image files, app/source and snapshot hashes, tool executable/package fingerprints, Python/platform and expected tool versions, reviewed answers, original request and expected final pack hashes. recipe_sha256 identifies the recorded recipe; seed:null explicitly means this is not random generation. Matching originals/tool environment remain required. Complete tool dependency capture and byte-identical Unity bundle reproduction are NOT claimed; expected output hashes allow comparison. No automatic recipe-import/replay command is added in this change.
 validation: full suite184 run,180 pass,4 skipped,184.371 s; final focused cleanup/rebuild tests10/10,15.723 s after partial-delete retry hardening. Skips remain missing mcs,two Windows symlink privileges,opt-in real Unity. Synthetic end-to-end tests cover installed and declined outputs, needs-answer cleanup, failed tools, preservation hash failure/retry, live lease exclusion, unowned data, partial-delete retry, path/link guards, recipe identity/answer changes and stopping interrupted Unity. Legacy tests inspecting intermediates explicitly opt into retention. No new real-asset conversion/install or in-game test for this filesystem change; X46 acceptance gaps remain. Snapshot77/77 hashes unchanged.
 guidance: dev README.md,docs/resolving-blocks.md,CLAUDE.md and local GUIDE_Railroader_to_DV_CCL_CODEX.md updated. Private logs local:x47-temp-suite-final.log and x47-cleanup-final.log; code is src/rr2dv/{workspace,rebuild,pipeline,unityrun,gui}.py and tests/test_workspace.py. Main receives this board-only summary.
+
+
+## X49 — reviewed conversion choices and wheel support follow-up (2026-09-27)
+
+User authorized continuing development and publishing validated changes to main. General converter rules only;
+no A18/Climax identifier branches in the app. See [implementation and evidence](../docs/review-and-geometry.md).
+
+Implemented: GUI/CLI review and replay receipts; actual brake + HUD selection; common tank/tender radio/manual/automatic
+spawn pools; separate physical specs and simulation profile; fixed-geared CCL prototype; physical driving-radius
+cross-check; donor support-collider centre reset/alignment; measured counted running-board oil fallback.
+
+Real A18 export/bundle audit passed with self-lapping + radio-only, zero source audio and CCL.Types only. Four running-board
+oil seats and corrected front/rear capsules survived Unity prefab validation. Geared RPM/torque/demand graph serialization
+passed. Current runtime photographs establish pitch/clipping; the generated donor offset defect is fixed, but fresh in-game
+validation remains pending. Compound switching, oil combinations, articulated calibration and three diesel adapters remain
+later stages, explicitly pending. No AI driver diagnosis or bespoke geometry tuning was added.
+
+Climax record check: six measured powered axles share the Drivers clip, while crank/driveshaft clips remain non-physical. No Climax installation or in-game acceptance claimed. Final targeted suites: build 18/18, GUI 8/8, pipeline 19/19, review 8/8; Unity feature regression passed after the last editor change.

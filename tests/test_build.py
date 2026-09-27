@@ -35,7 +35,7 @@ class BuildStages(unittest.TestCase):
         out = self.convert(wheel_radius=0.598)
         self.assertEqual(out.code, EXIT_OK, out.message)
         run = out.run
-        self.assertEqual([s["status"] for s in run.record["stages"].values()], ["done"] * 10)
+        self.assertEqual([s["status"] for s in run.record["stages"].values()], ["done"] * len(run.record["stages"]))
         rec = read_json(run.path / "build/vehicle-record.json")
         self.assertEqual(recordcheck.check(rec), [])
         cfg = buildrecord._plain(rec["config"])

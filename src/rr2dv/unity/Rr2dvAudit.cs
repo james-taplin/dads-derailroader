@@ -17,7 +17,8 @@ using Object = UnityEngine.Object;
 public static class Rr2dvAudit
 {
     [Serializable] public class Car { public string id; public float mass, wheelRadius; public bool locomotive; }
-    [Serializable] public class Input { public int schema; public string[] bundles; public string[] carFolders; public Car[] cars; public string[] controls, ports, indicators; }
+    [Serializable] public class Review { public string trainBrake, physics; public int[] spawnTracks; }
+    [Serializable] public class Input { public int schema; public string[] bundles; public string[] carFolders; public Car[] cars; public string[] controls, ports, indicators; public Review review; }
     [Serializable] public class Output
     {
         public int schema = 1; public string status; public string[] errors, warnings, bundleAssets, scriptAssemblies, dependencies;
@@ -140,6 +141,21 @@ public static class Rr2dvAudit
                 float mass = so.FindProperty("mass").floatValue, radius = so.FindProperty("wheelRadius").floatValue;
                 if (Mathf.Abs(mass - car.mass) > 0.5f) errors.Add(car.id + " mass " + mass + " kg, record " + car.mass);
                 if (Mathf.Abs(radius - car.wheelRadius) > 0.0005f) errors.Add(car.id + " wheel radius " + radius + " m, record " + car.wheelRadius);
+                if (car.locomotive && input.review != null)
+                {
+                    int brake = input.review.trainBrake == "self-lapping" ? 1 : 2;
+                    if (so.FindProperty("brakes.brakeValveType").intValue != brake) errors.Add("Actual brake valve differs from reviewed choice");
+                    var variant = all.FirstOrDefault(o => o.GetType().Name == "CustomCarVariant" && new SerializedObject(o).FindProperty("parentType").objectReferenceValue == t);
+                    if (!variant) errors.Add("No locomotive variant for reviewed spawning");
+                    else
+                    {
+                        var groups = new SerializedObject(variant).FindProperty("LocoSpawnGroups");
+                        var actual = Enumerable.Range(0, groups.arraySize).Select(i => groups.GetArrayElementAtIndex(i).FindPropertyRelative("Track").intValue).OrderBy(i => i).ToArray();
+                        if (!actual.SequenceEqual((input.review.spawnTracks ?? new int[0]).OrderBy(i => i))) errors.Add("Exported spawn pool differs from review");
+                    }
+                    var hud = all.FirstOrDefault(o => o.GetType().Name == "VanillaHUDLayout");
+                    if (!hud || new SerializedObject(hud).FindProperty("CustomHUDSettings.Braking.BrakeType").intValue != brake) errors.Add("HUD brake behaviour differs from reviewed valve");
+                }
             }
             if (types.Count != (input.cars ?? new Car[0]).Length) errors.Add("expected " + (input.cars ?? new Car[0]).Length + " car type(s), found " + types.Count);
 

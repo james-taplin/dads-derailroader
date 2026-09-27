@@ -17,7 +17,8 @@ class RealPlacement(unittest.TestCase):
         editor = project / 'Assets/Editor'
         self.assertTrue((editor / 'CclLocoBuild.cs').is_file(), 'assembled builder project required')
         # Explicitly supplied disposable project; never a source game project.
-        shutil.copyfile(repo / 'src/rr2dv/unity/Rr2dvPlacement.cs', editor / 'Rr2dvPlacement.cs')
+        for name in ('Rr2dvPlacement.cs', 'Rr2dvFeatures.cs'):
+            shutil.copyfile(repo / 'src/rr2dv/unity' / name, editor / name)
         shutil.copyfile(repo / 'tests/unity_runtime/PlacementRegression.cs', editor / 'PlacementRegression.cs')
         receipt = project / 'placement-regression-passed.json'
         receipt.unlink(missing_ok=True)

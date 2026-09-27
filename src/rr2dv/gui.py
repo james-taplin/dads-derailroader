@@ -32,7 +32,7 @@ STAGE_MARKS = {"pending": ("○", "muted"), "running": ("●", "warn"), "done": 
 SEVERITY = {"error": ("✗", "fail"), "warning": ("!", "warn"), "info": ("i", "muted")}
 STAGE_NAMES_SHORT = {"locate": "Find the locomotive", "link": "Resolve tender, trucks, parts", "stage": "Copy the inputs",
                      "extract": "Export bundles (AssetRipper)", "import": "Prepare the Unity project",
-                     "probe": "Measure the model", "record": "Draft the vehicle record", "build": "Build the CCL pack",
+                     "probe": "Measure the model", "record": "Draft the vehicle record", "review": "Review vehicle choices", "build": "Build the CCL pack",
                      "audit": "Check the pack", "publish": "Install into Derail Valley"}
 AUDIO_CHOICES = ["Automatic (by boiler size)", "S060 (small boiler)", "S282 (big boiler)"]
 
@@ -223,9 +223,8 @@ class App:
         self.wheel = tk.StringVar()
         wheel_entry = ttk.Entry(options, textvariable=self.wheel, width=8)
         wheel_entry.pack(side="left", padx=(6, 0))
-        wheel_help = ("The driving wheel's tread radius. Leave it empty the first time: the conversion measures the wheels "
-                      "and stops before building with the measured candidate. Check it against the tyre in the model "
-                      "(the draft record's metadata.wheelCandidates), then use it and convert again.")
+        wheel_help = ("Physical driving-wheel tyre radius in metres. Leave empty to review the measured candidates "
+                      "in the pre-build dialog. This value is checked against powered wheels, not pilot or tender wheels.")
         Tooltip(wheel_label, wheel_help)
         Tooltip(wheel_entry, wheel_help)
 
@@ -317,6 +316,10 @@ class App:
                 elif kind == "mods-progress":
                     i, total = rest
                     self.mods_status.configure(text=f"Reading mods… {i} of {total}")
+                elif kind == "review":
+                    questions, answer = rest
+                    from .reviewgui import show
+                    show(self.root, questions, answer)
                 elif kind == "ask":
                     pack, sources, answer = rest
                     self._ask(pack, sources, answer)
@@ -475,9 +478,15 @@ class App:
             answer["event"].wait()
             return answer["value"]
 
+        def prebuild_review(questions):
+            answer = {"event": threading.Event(), "value": None}
+            self.worker.post(("review", questions, answer))
+            answer['event'].wait()
+            return answer['value']
+
         applog.get().info("converting %s from %s (livery %s, audio %s, wheel radius %s)", ident, folder, livery, audio, wheel_radius)
         started = self.worker.run("Conversion", lambda: self.c.convert(folder, ident, livery, audio, wheel_radius, progress, ask,
-                                                                      geometry_review=geometry_review),
+                                                                      geometry_review=geometry_review, prebuild_review=prebuild_review),
                                   self._converted)
         if started:
             self._set_busy(True)
@@ -616,9 +625,11 @@ def main(argv=None) -> int:
     import argparse
     parser = argparse.ArgumentParser(prog="rr2dv gui", description="The derailroader desktop app.")
     parser.add_argument("--machine", type=Path, help="settings file")
+    parser.add_argument("--filter", default="", help="initial mod search text")
     args = parser.parse_args(argv)
     root = tk.Tk()
-    App(root, Controller(args.machine))
+    app = App(root, Controller(args.machine))
+    app.search.set(args.filter)
     root.mainloop()
     return 0
 

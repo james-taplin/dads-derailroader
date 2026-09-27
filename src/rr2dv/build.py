@@ -85,6 +85,9 @@ def prepare(run_path: Path, inv: dict, probe_in: dict, probe_out: dict | None, p
         write_json(run_path / "build/review.json", {"status": "blocked", "choices": e.choices,
                    "pending": draft["metadata"]["pending"], "blocks": e.items})
         raise
+    if answers.get('prebuildReview'):
+        from . import review
+        rec = review.apply(rec, answers['prebuildReview'])
     errors = recordcheck.check(rec)
     if errors:  # our own bug if it happens: the completed record must pass the loader's rules
         raise BuildError("the completed vehicle record breaks the loader's rules: " + "; ".join(errors[:5])
@@ -97,7 +100,7 @@ def prepare(run_path: Path, inv: dict, probe_in: dict, probe_out: dict | None, p
     for a in absent:
         asset = f"Assets/{a['clip']}" if a["export"] == "main" else f"Assets/{a['export']}/{a['clip']}"
         clips.append({"clip": asset, "hashes": a["absent"]})
-    data = {"schema": 1, "absentBindings": clips, "audioStrip": prefabs, "composites": specs}
+    data = {"schema": 1, "absentBindings": clips, "audioStrip": prefabs, "composites": specs, "review": answers.get("prebuildReview", {}).get("values")}
     write_json(run_path / project["project"] / BUILD_INPUT, data)
     return {"record": rec, "choices": choices, "input": data}
 

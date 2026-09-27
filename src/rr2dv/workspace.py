@@ -131,6 +131,7 @@ def finish(run, lease: Lease) -> None:
             ('build/blocks.json', 'blocks.json'), ('build/out/build_report.txt', 'build_report.txt'),
             ('build/out/prep.json', 'prep.json'), ('audit/summary.json', 'audit.json'),
             ('geometry-review.json', 'geometry-review.json'),
+            ('review-questions.json', 'review-questions.json'), ('prebuild-review.json', 'prebuild-review.json'),
             ('rebuild.json', 'rebuild.json'),
             ('probe/unity-1.log', 'probe.log'), ('build/out/unity-1.log', 'build.log'),
             ('audit/unity-1.log', 'audit.log'),

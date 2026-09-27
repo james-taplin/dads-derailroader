@@ -17,6 +17,7 @@ public static partial class CclLocoBuild
         try
         {
             var cfg = LlwVehicleRecord.Load(Environment.GetEnvironmentVariable("CCL_VEHICLE_RECORD"));
+            LoadRrReview();
             LlwVehicleRecord.PrepareSources(cfg);
             // rr2dv always exports stock DV audio; custom source audio is never shipped.
             foreach (var car in Cars(cfg)) { car.Sounds.Clear(); car.RemoveVanillaSounds = new string[0]; }
@@ -50,6 +51,7 @@ public static partial class CclLocoBuild
             BuildOwnAssets();
             foreach (var c in Cars(cfg)) BuildRr2dvCar(c);
             if (cfg.Tender != null) LinkTender(cfg, cfg.Tender);
+            ConfigureRrReview();
             Cfg = cfg; refBody = null; carFolder = builtFolders[cfg];
             EditorSceneManager.SaveOpenScenes();
             AssetDatabase.SaveAssets();
@@ -80,7 +82,9 @@ public static partial class CclLocoBuild
         PrepareClips();
         matMap = BuildMaterials(Livery);
         CreateCar();
+        SeatRr2dvFallbackOil();
         BuildExterior();
+        AlignRr2dvBogieSupports();
         SeatRr2dvPlates();
         if (!c.IsTender) { BuildInterior(); SeatRr2dvControls(); BuildInteriorLOD(); }
         BuildInteractables();
@@ -95,6 +99,77 @@ public static partial class CclLocoBuild
         bool success;
         var saved = PrefabUtility.SaveAsPrefabAsset(root, path, out success);
         if (!success || !saved) throw new InvalidOperationException("Could not save measured placement: " + path);
+    }
+
+    static void SeatRr2dvFallbackOil()
+    {
+        if (Cfg.IsTender || Cfg.OilPoints == null || Cfg.RodOilers != null || Cfg.OilAnchors != null) return;
+        var points = Cfg.OilPoints(RefBody).ToArray();
+        if (points.Length != Cfg.EngineUnits.Sum(u => u.DriverParts.Length) * 2)
+            throw new InvalidOperationException("Fallback oil cups must cover every driving axle on both sides");
+        using (var hits = new VisualHits(RefBody))
+        for (int i = 0; i < points.Length; i++)
+        {
+            var point = points[i];
+            float side = Mathf.Sign(point.Item2.x);
+            bool found = false;
+            // Search the outboard horizontal surface nearest the axle, requiring a full cup footprint.
+            // Never leave a point at the old estimated height inside the vehicle.
+            for (float x = 1.65f; x >= .8f && !found; x -= .025f)
+            for (int dz = 0; dz < 9 && !found; dz++)
+            {
+                float z = point.Item2.z + (dz == 0 ? 0 : (dz % 2 == 0 ? -1 : 1) * ((dz + 1) / 2) * .05f);
+                var origin = new Vector3(side * x, 2 * WheelRadius + 1.2f, z);
+                if (!hits.Ray(origin, Vector3.down, 1.8f, out var hit, RefBody) || hit.normal.y < .97f) continue;
+                bool footprint = true;
+                foreach (var offset in new[] { new Vector3(.045f, 0, 0), new Vector3(-.045f, 0, 0), new Vector3(0, 0, .045f), new Vector3(0, 0, -.045f) })
+                    if (!hits.Ray(origin + offset, Vector3.down, 1.8f, out var edge, RefBody) || edge.normal.y < .97f || Mathf.Abs(edge.point.y - hit.point.y) > .01f) footprint = false;
+                if (!footprint) continue;
+                var pos = hit.point + Vector3.up * (CupPivotAboveBase - CupSeatSink);
+                // Space above the cup and a clear outward approach are necessary for access.
+                if (hits.Ray(pos + Vector3.up * .08f, Vector3.up, .12f, out var overhead, RefBody)) continue;
+                if (hits.Ray(pos + Vector3.up * .08f, Vector3.right * side, .6f, out var sideHit, RefBody)) continue;
+                points[i] = (point.Item1, pos);
+                Line($"rr2dv fallback oil {point.Item1}: {V(point.Item2)} -> {V(pos)} on {hit.collider.transform.parent.name}");
+                found = true;
+            }
+            if (!found) throw new InvalidOperationException("No accessible running-board seat for oil cup " + point.Item1);
+        }
+        Cfg.OilPoints = root => points;
+    }
+
+    static void AlignRr2dvBogieSupports()
+    {
+        string path = $"{carFolder}/{CarId}_template.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            foreach (var front in new[] { true, false })
+            {
+                var bogie = root.transform.Find((front ? "BogieF" : "BogieR") + "/bogie_car");
+                var axles = bogie.Cast<Transform>().Where(t => t.name == "[axle]").Select(t => root.transform.InverseTransformPoint(t.position).z).ToArray();
+                if (axles.Length == 0) throw new InvalidOperationException("No support axles");
+                float z = front ? axles.Max() : axles.Min();
+                float radius = WheelRadius;
+                var ws = Cfg.Wheelsets.Where(w => w.axles > 0).OrderBy(w => Mathf.Abs(z - (w.offset + (front ? 1 : -1) * (w.axles > 1 ? w.length / 2 : 0)))).First();
+                bool reviewedPowered = RrChoices != null && RrChoices.physics == "geared" &&
+                    (RrChoices.poweredWheelsets ?? new int[0]).Contains(Array.IndexOf(Cfg.Wheelsets, ws));
+                if (!Cfg.IsTender && !reviewedPowered && !Cfg.EngineUnits.Any(u => u.AnimKey == ws.clip))
+                    radius = Cfg.PonyRadii.TryGetValue(ws.clip ?? "", out var measured) ? measured : ws.diameter / 2;
+                if (radius <= 0) throw new InvalidOperationException("Invalid end-wheel support radius");
+                var support = root.transform.Find("[colliders]/[bogies]/" + (front ? "front" : "rear"));
+                var collider = support.GetComponent<CapsuleCollider>();
+                if (!collider) throw new InvalidOperationException("Missing bogie support capsule");
+                var oldCentre = collider.center;
+                collider.center = Vector3.zero;
+                collider.radius = radius;
+                collider.height = Mathf.Max(collider.height, radius * 2);
+                support.position = root.transform.TransformPoint(new Vector3(0, radius, z));
+                Line($"rr2dv support {support.name}: donor centre {V(oldCentre)} cleared; car centre (0,{radius:F5},{z:F5}), radius {radius:F5}, rail contact y=0");
+            }
+            SaveRr2dvPrefab(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
     static void SeatRr2dvPlates()

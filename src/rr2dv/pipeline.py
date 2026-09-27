@@ -16,7 +16,7 @@ from typing import Sequence
 from typing import Callable
 
 from . import (assetripper, audit, build, buildrecord, consent, geometryreview, installs, probeinput, projectcache, publish, record,
-               unityproject, unityrun, workspace, rebuild)
+               unityproject, unityrun, workspace, rebuild, review)
 from .jsonio import read_json, write_json
 from .machine import Machine, check_work_root
 from .rrmod import Index, blocking, inventory
@@ -81,7 +81,7 @@ def extract(run: Run, inv: dict, machine: Machine) -> dict:
 def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: Sequence[Path] = (),
             audio: str | None = None, livery: str | None = None, wheel_radius: float | None = None,
             ask: Callable = consent.ask, on_progress: Callable[[str | None, str, str], None] | None = None,
-            geometry_review: Path | None = None) -> Outcome:
+            geometry_review: Path | None = None, prebuild_review=None) -> Outcome:
     # Both installs (and CCL) first (W25), then the input must be a mod in the Railroader Mods folder.
     rr, dv = _installs(machine)
     input_path = installs.mod_in_railroader(rr, mod)
@@ -110,7 +110,7 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
             + "search: " + ", ".join(str(r) for r in roots))
     try:
         rebuild.capture(run, machine)
-        outcome = _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius, ask, geometry_review)
+        outcome = _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius, ask, geometry_review, prebuild_review)
     except BaseException as e:  # include interruption; stop tools and retain a truthful receipt before cleanup
         current = next((n for n, s in run.record["stages"].items() if s["status"] == "running"), None)
         message = f"{type(e).__name__}: {e}"
@@ -159,7 +159,7 @@ def install_pack(run: Run, machine: Machine, pack_dir: Path, expected: dict[str,
 
 def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path],
             audio: str | None, machine: Machine, livery: str | None = None, wheel_radius: float | None = None,
-            ask: Callable = consent.ask, geometry_review: Path | None = None) -> Outcome:
+            ask: Callable = consent.ask, geometry_review: Path | None = None, prebuild_review=None) -> Outcome:
     def fail(stage: str, message: str, code: int = EXIT_FAILED) -> Outcome:
         run.finish(stage, "failed", message)
         run.close("failed", message)
@@ -273,6 +273,27 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
         run.log(f"  wheel {w.get('clip')}: tread {w.get('tread')} ({w.get('confidence')}), flange {w.get('flangeRadius')}, "
                 f"source {w.get('sourceRadius')}; notes: {'; '.join(w.get('notes') or []) or 'none'}")
     run.finish("record", "done", f"draft vehicle record with {len(pending)} item(s) pending review (record/vehicle-record.json)")
+
+    if prebuild_review is not None:
+        run.begin("review")
+        questions = review.request(draft, build.definitions(run.path, inv), probe_out, run.record['input_fingerprint'])
+        write_json(run.path / 'review-questions.json', questions)
+        try:
+            response = prebuild_review(questions) if callable(prebuild_review) else read_json(Path(prebuild_review))
+            reviewed = review.resolve(questions, response)
+        except (review.ReviewError, OSError, ValueError) as error:
+            run.finish('review', 'needs_answer', str(error))
+            run.close('incomplete', str(error))
+            return Outcome(EXIT_INCOMPLETE, str(error), run)
+        run.record['answers']['prebuildReview'] = reviewed
+        run.record['answers']['wheelRadius'] = {'value': reviewed['values']['wheelRadius'], 'evidence': ['Pre-build review: physical driving tyre radius']}
+        draft = record.draft(run.path, inv, probe_in, probe_out, run.record['answers'], absent_bindings=absent)
+        draft['metadata']['review'] = reviewed
+        write_json(run.path / 'prebuild-review.json', reviewed)
+        write_json(run.path / 'record/vehicle-record.json', draft)
+        run.finish('review', 'done', 'Saved brake, spawning, wheel and simulation choices with source identity')
+    else:
+        run.finish('review', 'done', 'Legacy API caller: existing conversion settings')
 
     # build: both installs are found again first (W25)
     _installs(machine)

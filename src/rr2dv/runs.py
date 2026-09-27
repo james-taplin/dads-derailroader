@@ -23,6 +23,7 @@ STAGES = [
     ("import", "Prepare the Unity project", True),
     ("probe", "Measure the model", True),
     ("record", "Generate the vehicle record", True),
+    ("review", "Review brakes, spawning and simulation", True),
     ("build", "Build the CCL pack in Unity", True),
     ("audit", "Check the built pack", True),
     ("publish", "Install into the Derail Valley Mods folder after the personal-use notice", True),
