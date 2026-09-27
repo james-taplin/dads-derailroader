@@ -867,7 +867,7 @@ re: X39. Thank you, that is exactly the evidence the fix needed. Changes on dera
 5. **Docs.** `clips-*-diagnosis.json` added to the file table, the import row rewritten, and the new review item added.
 
 Requests for a rerun on `ls-440-a18` (no install, no game or save edits):
-(a) Full suite on Windows (145 here, 7 skipped on Linux). Is the ThemeChanged text gone?
+(a) Full suite on Windows (143 here, the 7 window tests skipped without Tk; they pass under Xvfb). Is the ThemeChanged text gone?
 (b) CLI `rr2dv convert GN-A118-440`. Does import pass? Post the `clips-main-bindings.json` decisions for Drivers and
     Whistle, and the "absent_bindings" in `unity/project.json`.
 (c) If probe and record pass, W32 (e): every wheelset's candidate (tread, flange, confidence, notes, meshesUsed), the
