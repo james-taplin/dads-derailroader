@@ -6,7 +6,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from fixtures import fake_assetripper, fake_carcreator, fake_unity, standard_mod
+from fixtures import fake_assetripper, fake_carcreator, fake_tool, fake_unity, standard_mod
 from rr2dv.assetripper import ExportError, export, settings_from_form
 from rr2dv.jsonio import read_json, sha256_file
 from rr2dv.machine import Machine
@@ -66,11 +66,16 @@ class Export(unittest.TestCase):
         self.assertFalse(export(self.exe, self.bundle, self.sha, self.cache)["cached"])
 
     def test_assetripper_that_will_not_start(self):
-        broken = self.tmp / "tools" / "broken"
-        broken.write_text("#!/bin/sh\nexit 3\n")
-        broken.chmod(0o755)
+        broken = fake_tool(self.tmp / "tools", "broken", "#!/usr/bin/env python3\nimport sys\nsys.exit(3)\n")
         with self.assertRaisesRegex(ExportError, "exited during startup"):
             export(broken, self.bundle, self.sha, self.cache, startup_timeout=10)
+
+    def test_assetripper_that_cannot_be_launched(self):
+        bogus = self.tmp / "tools" / "not-a-program.txt"
+        bogus.parent.mkdir(parents=True, exist_ok=True)
+        bogus.write_text("hello")
+        with self.assertRaisesRegex(ExportError, "could not be started"):
+            export(bogus, self.bundle, self.sha, self.cache, startup_timeout=10)
 
     def test_second_conversion_reuses_every_export(self):
         m = standard_mod(self.tmp / "mods")

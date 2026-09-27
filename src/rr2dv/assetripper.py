@@ -110,8 +110,11 @@ def export(exe: Path, bundle: Path, bundle_sha256: str, cache_root: Path, target
     flags = getattr(subprocess, "CREATE_NO_WINDOW", 0) if sys.platform == "win32" else 0
     try:
         with open(logs / "assetripper.log", "wb") as stdout, open(logs / "assetripper.err.log", "wb") as stderr:
-            proc = subprocess.Popen([str(exe), "--headless", "--port", str(port)], stdout=stdout, stderr=stderr,
-                                    cwd=temp, creationflags=flags)
+            try:
+                proc = subprocess.Popen([str(exe), "--headless", "--port", str(port)], stdout=stdout, stderr=stderr,
+                                        cwd=temp, creationflags=flags)
+            except OSError as e:
+                raise ExportError(f"AssetRipper at {exe} could not be started ({e}); check `assetRipper` in the settings file") from e
             try:
                 deadline = time.monotonic() + startup_timeout
                 while True:

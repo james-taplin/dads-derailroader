@@ -34,7 +34,10 @@ def _launch(unity: Path, project: Path, method: str, log: Path, env: dict, timeo
         info.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         info.wShowWindow = 0  # hidden window, not batch mode
         kwargs["startupinfo"] = info
-    proc = subprocess.Popen(cmd, cwd=project, env=env, **kwargs)
+    try:
+        proc = subprocess.Popen(cmd, cwd=project, env=env, **kwargs)
+    except OSError as e:
+        raise UnityError(f"Unity at {unity} could not be started ({e}); check `unity` in the settings file") from e
     deadline = time.monotonic() + timeout
     while True:
         try:
