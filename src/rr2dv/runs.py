@@ -82,7 +82,8 @@ class Run:
             "stages": {name: {"status": "pending"} for name in STAGE_NAMES},
         }
         run.save()
-        run.log(f"rr2dv {__version__} run {run_id}, started {_now()}\n"
+        from .applog import app_revision
+        run.log(f"rr2dv {app_revision()} run {run_id}, started {_now()}\n"
                 f"Python {sys.version.split()[0]} on {platform.platform()}")
         return run
 

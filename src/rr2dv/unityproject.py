@@ -142,6 +142,46 @@ def _mirror(source_assets: Path, target: Path, skip: set[str] = frozenset(), onl
                 shutil.copy2(g, dst)
 
 
+def _resolver_module():
+    """Our canonical resolver, loaded (not copied) so a diagnosis reads prefabs and clips exactly as it does."""
+    import importlib.util
+    path = tooling_root() / "builder" / "tools" / "resolve_clip_paths.py"
+    spec = importlib.util.spec_from_file_location("rr2dv_resolve_clip_paths", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def diagnose_clips(source_assets: Path, clips: list[str], out: Path) -> Path:
+    """For clips the resolver could not restore, write what a person needs to decide the fix: which prefab's clip map
+    names each clip, how many of its bindings each prefab can resolve, and, for each binding the best prefab lacks,
+    whether any prefab in the export has that path at all (a stale binding in the source, versus a path that lives in
+    another prefab)."""
+    resolver = _resolver_module()
+    tables = [(p.relative_to(source_assets).as_posix(), resolver.prefab_paths(p)) for p in sorted(source_assets.rglob("*.prefab"))]
+    owners = clip_owners(source_assets)
+    findings = {}
+    for clip in clips:
+        path = source_assets / clip
+        if not path.is_file():
+            continue
+        hashes = sorted({int(h, 16) for h in resolver.PAT.findall(path.read_text(encoding="utf-8-sig", errors="replace"))})
+        fits = sorted(((name, sum(1 for h in hashes if h in table)) for name, table in tables), key=lambda t: (-t[1], t[0]))
+        best_name = fits[0][0] if fits else None
+        best = dict(tables).get(best_name, {})
+        unresolved = [h for h in hashes if h not in best]
+        findings[clip] = {
+            "bindings": len(hashes),
+            "named_by": owners.get(clip, []),
+            "best_prefabs": [{"prefab": n, "resolves": k} for n, k in fits[:3]],
+            "resolved_in_best": sorted({next(iter(best[h])) for h in hashes if h in best and len(best[h]) == 1})[:40],
+            "unresolved_in_best": [{"hash": f"0x{h:x}", "found_in": [n for n, t in tables if h in t][:5]} for h in unresolved],
+        }
+    write_json(out, {"note": "bindings are hashed paths; found_in [] means no prefab in this export has that path "
+                             "(the source clip animates objects that are not in its model)", "clips": findings})
+    return out
+
+
 def resolve_clips(source_assets: Path, dest_assets: Path, report: Path, only: set[str] | None = None) -> dict:
     """Restore clip paths of `source_assets` into `dest_assets`. With `only` (paths relative to source_assets), just
     those prefabs and clips take part: a dependency pack is resolved against the prefabs we use from it, not every
@@ -222,8 +262,14 @@ def _resolve_clips(source_assets: Path, dest_assets: Path, report: Path) -> dict
     if result.get("errors") or not result.get("applied"):
         errors = result.get("errors") or [{"error": "not applied"}]
         first = errors[0]
+        where = report
+        try:  # the diagnosis is extra help; failing to write it must not hide the real error
+            where = diagnose_clips(source_assets, [e["clip"] for e in errors if e.get("clip")],
+                                   report.with_name(report.stem + "-diagnosis.json"))
+        except Exception:
+            pass
         raise ProjectError(f"resolve_clip_paths: {len(errors)} clip(s) did not resolve, first "
-                           f"{first.get('clip', '')}: {first.get('error')}; see {report}")
+                           f"{first.get('clip', '')}: {first.get('error')}; see {where}")
     return {"clips": len(result.get("clips", [])), "report": report.name, "bound": len(bound), "left_out": excluded}
 
 

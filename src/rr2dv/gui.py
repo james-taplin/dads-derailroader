@@ -127,6 +127,7 @@ class App:
             style.theme_use("vista")
         elif "clam" in style.theme_names():
             style.theme_use("clam")
+        root.update_idletasks()  # let ttk's theme-change handler run now, not after a quick close (X37)
         base = tkfont.nametofont("TkDefaultFont")
         self.fonts = {"title": tkfont.Font(root, family=base.actual("family"), size=18, weight="bold"),
                       "h2": tkfont.Font(root, family=base.actual("family"), size=12, weight="bold"),

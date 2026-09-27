@@ -19,6 +19,26 @@ from . import __version__
 _logger: logging.Logger | None = None
 
 
+def app_revision() -> str:
+    """The app's version, plus the git commit when it runs from a clone of our repository (X37: tells results apart
+    across quick updates). Read from .git directly, so git itself is not needed."""
+    root = Path(__file__).resolve().parents[2] / ".git"
+    try:
+        head = (root / "HEAD").read_text(encoding="utf-8").strip()
+        if head.startswith("ref: "):
+            ref = head[5:]
+            ref_file = root / ref
+            if ref_file.is_file():
+                commit = ref_file.read_text(encoding="utf-8").strip()
+            else:
+                packed = (root / "packed-refs").read_text(encoding="utf-8")
+                commit = next(line.split()[0] for line in packed.splitlines() if line.endswith(" " + ref))
+            return f"{__version__} ({ref.rsplit('/', 1)[-1]} {commit[:10]})"
+        return f"{__version__} ({head[:10]})"
+    except (OSError, StopIteration):
+        return __version__
+
+
 def log_dir() -> Path:
     override = os.environ.get("RR2DV_LOG_DIR")
     if override:
@@ -42,7 +62,7 @@ def get() -> logging.Logger:
             handler = RotatingFileHandler(log_file(), maxBytes=1_000_000, backupCount=5, encoding="utf-8")
             handler.setFormatter(logging.Formatter("%(asctime)s %(levelname)-7s %(message)s"))
             _logger.addHandler(handler)
-            _logger.info("rr2dv %s, Python %s, %s", __version__, sys.version.split()[0], platform.platform())
+            _logger.info("rr2dv %s, Python %s, %s", app_revision(), sys.version.split()[0], platform.platform())
         except OSError:
             _logger.addHandler(logging.NullHandler())
     return _logger

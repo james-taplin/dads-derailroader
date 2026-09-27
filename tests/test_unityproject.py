@@ -89,8 +89,13 @@ class Import(unittest.TestCase):
         cache = self.tmp / "work" / "_cache" / "assetripper"
         for anim in cache.rglob("Drivers.anim"):
             anim.write_text("AnimationClip:\n  - path: path_0xdeadbeef_x\n")
-        with self.assertRaisesRegex(ProjectError, "resolve_clip_paths"):
+        with self.assertRaisesRegex(ProjectError, "resolve_clip_paths.*clips-main-diagnosis.json"):
             convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        run = sorted((self.tmp / "work").glob("2*"))[-1]
+        diagnosis = read_json(run / "import" / "clips-main-diagnosis.json")["clips"]["AnimationClip/Drivers.anim"]
+        self.assertEqual(diagnosis["bindings"], 1)
+        self.assertEqual(diagnosis["unresolved_in_best"], [{"hash": "0xdeadbeef", "found_in": []}])
+        self.assertEqual([o["prefab"] for o in diagnosis["named_by"]][:1], ["PrefabInstance/ts-260-a.prefab"])
         record = read_json(sorted((self.tmp / "work").glob("2*"))[-1] / "run.json")
         self.assertEqual((record["status"], record["stages"]["import"]["status"]), ("failed", "failed"))
 
