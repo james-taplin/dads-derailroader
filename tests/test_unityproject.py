@@ -24,7 +24,7 @@ class Import(unittest.TestCase):
         os.environ["FAKE_AR_STATE"] = str(self.tmp / "state")
         self.addCleanup(os.environ.pop, "FAKE_AR_STATE", None)
         self.cc = fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage")
-        self.machine = Machine(None, {**self.m["games"], "workRoot": str(self.tmp / "work"), "assetRipper": str(fake_assetripper(self.tmp / "tools")),
+        self.machine = Machine(None, {**self.m["games"], "keepWorkFiles": True, "workRoot": str(self.tmp / "work"), "assetRipper": str(fake_assetripper(self.tmp / "tools")),
                                       "carCreator": str(self.cc), "unity": str(fake_unity(self.tmp / "tools"))})
 
     def convert(self):

@@ -281,7 +281,7 @@ class App:
                                       command=lambda: self.last_run and open_path(self.last_run / "record" / "vehicle-record.json"))
         self.open_record.pack(side="left", padx=6)
         self.open_build = ttk.Button(buttons, text="Open build folder", state="disabled",
-                                     command=lambda: self.last_run and open_path(self.last_run / "build"))
+                                     command=lambda: self.last_run and open_path(self.last_output))
         self.open_build.pack(side="left")
         self.use_radius = ttk.Button(buttons, text="Use measured radius", state="disabled", command=self._use_candidate)
         self.use_radius.pack(side="left", padx=6)
@@ -485,6 +485,9 @@ class App:
     def _stage(self, stage, status, detail) -> None:
         if stage is None:
             return
+        if stage not in self.stage_rows:
+            self._log(f"{stage}: {detail}")
+            return
         mark, colour = STAGE_MARKS.get(status, ("?", "muted"))
         self.stage_rows[stage].configure(text=mark, fg=COLOURS[colour])
         if detail and status != "not_available":  # the run's own closing message says it once
@@ -497,7 +500,10 @@ class App:
         self.open_run.configure(state="normal")
         has_record = (path / "record" / "vehicle-record.json").is_file()
         self.open_record.configure(state="normal" if has_record else "disabled")
-        self.open_build.configure(state="normal" if (path / "build").is_dir() else "disabled")
+        from .jsonio import read_json
+        data = read_json(path / 'run.json') if (path / 'run.json').is_file() else {}
+        self.last_output = Path(data['output']) if data.get('output') else path / 'build'
+        self.open_build.configure(state="normal" if self.last_output.is_dir() else "disabled")
 
     def _use_candidate(self) -> None:
         """Fills in the measured tread candidate the last run stopped on; the user still starts the conversion."""
@@ -520,7 +526,7 @@ class App:
         self.use_radius.configure(state="normal" if self.candidate else "disabled",
                                   text=f"Use measured radius ({self.candidate:.4f} m)" if self.candidate else "Use measured radius")
         installed = "Installed into your Derail Valley Mods folder. Check it in the game before calling it done: every control, " \
-                    "closed throttle and whistle, brakes, lamps and the coupling (build/review.json lists what was chosen automatically)."
+                    "closed throttle and whistle, brakes, lamps and the coupling (the conversion report lists what was chosen automatically)."
         if outcome.code == EXIT_OK:
             text, colour = installed, "ok"
         elif outcome.code == EXIT_INCOMPLETE and radius:

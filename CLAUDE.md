@@ -51,6 +51,13 @@ A built pack is a candidate; runtime acceptance (CTRL-01/02) stays with the user
 Both installs are found before a run starts, again before the build and again before installing (W25).
 Determinism: output = f(input file hashes, recorded user answers, tool versions). User choices go in the run record
 (`answers`) so a rerun needs no input.
+Temporary storage (James, following X46): default conversions permanently delete their input copies, ripped assets,
+Unity project/Library and build intermediates on completion or failure. `workspace.py` retains compact reports and
+only the finished audited output, guards deletion boundaries/links, leases active runs and retries marked abandoned
+workspaces. Never delete shared editors/rippers or sweep unmarked historical evidence. Explicit diagnostic setting
+`keepWorkFiles: true` retains the old caches/workspaces; tests inspecting intermediate stages opt in deliberately.
+`rebuild.json` is a hash-addressed recipe (source, app/snapshot/tool fingerprints, versions, answers, output hashes),
+not a random seed or proof of byte-identical Unity builds. The latter remains unverified.
 `geometryreview.py` validates explicit per-car EndBeamProbeHeight corrections against the exact input fingerprint,
 finite bounds and measurement provenance. GUI Reviewed geometry / CLI --geometry-review preserve the file in each
 run. No arbitrary config overrides, automatic beam approval or disabled placement guards.

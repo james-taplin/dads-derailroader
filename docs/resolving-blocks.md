@@ -5,10 +5,11 @@ the item for review. This page covers each case and what to do about it.
 
 **The tool cannot ask you questions mid-conversion or resume a stopped run yet.** You give your answers when you
 start a conversion (command-line options, or the app's Options row), and after fixing a block you convert again from
-the start. That is safe: every run gets a fresh folder, the input mod is never changed, and AssetRipper exports are
-cached. The imported Unity project and its measurements are cached too (under `<workRoot>\_cache\projects`, the three
-most recent), so converting again with a new answer skips the import and the measuring and goes straight to building.
-Your answers are saved in the run, so the same answers give the same result.
+the start. Every run gets a fresh temporary folder and the input mod is never changed. By default the temporary
+inputs, ripped assets, Unity project and build intermediates are permanently deleted when the run stops or finishes.
+Answers and a rebuild recipe survive in `<workRoot>/reports/<run-id>`. Reruns re-extract and re-import.
+Only explicit developer setting `"keepWorkFiles": true` enables retained workspaces and shared caches.
+The recipe records source/code/tool hashes and choices; byte-identical Unity rebuilds have not been verified.
 
 ## First: where to look
 
@@ -31,7 +32,13 @@ Then:
 | `rr2dv doctor` (or **Settings… → Check**) | anything wrong with the tools or the game installs |
 | The run folder (**Open run folder**, which also works after a conversion stops) | the full record, see below |
 
-Inside a run folder:
+Normal report files include `run.json`, `run.log`, `rebuild.json`, `record/vehicle-record.json`, `review.json`,
+`blocks.json`, `build_report.txt`, `prep.json`, `audit.json` and diagnostic log tails where available.
+The finished pack is at `run.json`'s `output` path; **Open build folder** opens it. If cleanup is pending, the report
+names the retained temporary path and error; close anything holding it and start another conversion to retry.
+Original-source/game/tool folders and unmarked legacy workspaces are never part of this automatic deletion.
+
+The following detailed intermediate paths exist during conversion or with developer retention enabled:
 
 | File | Look here for |
 |---|---|
@@ -104,7 +111,7 @@ Not blocking, but worth reading (amber ! in the app):
 | Stage | Message | What to do |
 |---|---|---|
 | `stage` | *… changed while it was being copied* | something (a mod manager, a sync tool) wrote to the mod during the copy; wait until nothing is writing, convert again |
-| `extract` | *AssetRipper exited during startup / did not start / produced no ExportedProject* | check `assetRipper` in the settings and the log folder named in the message (a `.failed-…` folder in the cache keeps it); a newer AssetRipper may need testing first |
+| `extract` | *AssetRipper exited during startup / did not start / produced no ExportedProject* | check `assetRipper` in settings and the retained report; full export/cache diagnostics require an explicit developer-retention rerun; a newer AssetRipper may need testing first |
 | `extract` | *cache entry … is inconsistent* | delete the named folder under `<workRoot>\_cache\assetripper` and convert again |
 | `import` | *animation clips fit several prefabs and the source does not say which* | the mod's animations could belong to more than one model and nothing in the mod says which. `import/clips-*-bindings.json` lists each clip and every model that names or references it. Report it on the app board; this needs a decision in `rr2dv`, not a guess |
 | `import` | *resolve_clip_paths: N clip(s) did not resolve … No prefab resolves every clip binding; …* | an animation targets objects that no single model in the pack has all of, and the rest of the message says why `rr2dv` will not keep it: *… name it* (several models' clip maps name the animation), *no prefab's clip map names it*, or *lacks targets that other prefabs have* (the missing targets live in another model file). Open the `import/clips-*-diagnosis.json` the message names: for each animation it lists which model's clip map names it, how many of its targets each model has, and each missing target's `found_in`. Report it on the app board with that file; the fix is decided in `rr2dv`, never guessed. (When exactly one model names the animation and its missing targets are in no model of the export, the conversion does not stop: see *animation …* under review items.) |
@@ -249,5 +256,5 @@ pack can be accepted. Each item says what is missing and where its evidence is.
 ## Still stuck?
 
 Post on the app board (`board/APP_BOARD.md`) with the run folder name, the stage, the exact message and the relevant
-part of `run.log` (or `rr2dv.log` if no run was started). The run folder has everything needed to look into it;
+part of `run.log` (or `rr2dv.log` if no run was started). The report includes a rebuild recipe and bounded diagnostics;
 nothing in it is shared unless you share it.

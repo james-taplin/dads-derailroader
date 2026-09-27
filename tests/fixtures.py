@@ -356,6 +356,7 @@ def fake_unity(folder: Path) -> Path:
 def tool_machine(tmp: Path) -> dict:
     """Settings for a machine with fake AssetRipper, Unity and CarCreator (POSIX tests)."""
     os.environ["FAKE_AR_STATE"] = str(tmp / "ar-state")
-    return {"workRoot": str(tmp / "work"), "assetRipper": str(fake_assetripper(tmp / "tools")),
+    # Most stage tests inspect intermediate artifacts; production defaults to deleting them.
+    return {"keepWorkFiles": True, "workRoot": str(tmp / "work"), "assetRipper": str(fake_assetripper(tmp / "tools")),
             "unity": str(fake_unity(tmp / "tools")), "carCreator": str(fake_carcreator(tmp / "tools" / "CarCreator_3.1.9.unitypackage")),
             **game_installs(tmp)}

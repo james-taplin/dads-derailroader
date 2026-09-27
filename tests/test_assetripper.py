@@ -79,7 +79,7 @@ class Export(unittest.TestCase):
 
     def test_second_conversion_reuses_every_export(self):
         m = standard_mod(self.tmp / "mods")
-        machine = Machine(None, {**m["games"], "workRoot": str(self.tmp / "work"), "assetRipper": str(self.exe),
+        machine = Machine(None, {**m["games"], "keepWorkFiles": True, "workRoot": str(self.tmp / "work"), "assetRipper": str(self.exe),
                                  "unity": str(fake_unity(self.tmp / "tools")), "carCreator": str(fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage"))})
         a = convert(m["mod"], machine, search=[m["search"]])
         self.assertEqual(a.code, EXIT_INCOMPLETE, a.message)

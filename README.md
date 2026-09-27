@@ -51,7 +51,7 @@ derailroader                      # opens the app (or: rr2dv gui)
 - The left side lists the steam locomotive mods in your Railroader `Mods` folder; type to filter.
 - Pick a locomotive to see its tender, trucks, parts, controls, sounds, whose work it uses and any problems. Choose
   the livery and sounds, then **Convert**. The stages tick off below as they run; afterwards you can open the run
-  folder, the draft record and the build folder (the builder's report and renders).
+  report folder, the vehicle record and the finished pack folder.
 - The first conversion of a locomotive stops before building and asks for the **wheel radius**: it shows the measured
   candidate. Check it, click **Use measured radius** (or type your own) and **Convert** again. The second run reuses
   the imported model, so it goes straight to building.
@@ -89,7 +89,7 @@ one that fails or is not built yet:
 | locate | find the locomotive in the mod | working |
 | link | resolve its tender, trucks and parts, including those from other installed mods and Railroader's own asset packs | working |
 | stage | copy the needed files into the run folder, hash-checked | working |
-| extract | export the bundles with AssetRipper (cached per bundle) | working |
+| extract | export the bundles with AssetRipper into temporary storage | working |
 | import | assemble a Unity 2019.4 project: restored animation paths, dependencies, CarCreator, our builder | working |
 | probe | measure the model in Unity: hierarchy, anchors, animations, wheel tread candidates | working |
 | record | draft the vehicle record: every value with its unit, basis and evidence; unknowns listed for review | working |
@@ -106,12 +106,32 @@ It stops rather than guess, and always says why: in the app's Checks list and Co
 line's output, and in the run folder. **[docs/resolving-blocks.md](docs/resolving-blocks.md) lists every block and
 review item and how to resolve each one.** The tool cannot yet ask you questions mid-run or resume a stopped run:
 give your answers when you start (the app's Options, or `--loco`, `--livery`, `--audio`, `--wheel-radius`) and
-convert again after fixing a block. Reruns are safe: they reuse the cached AssetRipper exports and, when only your
-answers changed, the imported and measured Unity project.
+convert again after fixing a block. Reruns are safe and start from the source files again.
 
 For diagnosis, every run writes a readable **`run.log`** in its run folder (settings and installs used, every stage,
 every issue, what AssetRipper and Unity reported, review items, and the full traceback of any unexpected error), and
 the app and command line keep **`%LOCALAPPDATA%\rr2dv\logs\rr2dv.log`** for everything outside a run.
+
+### Temporary storage and rebuild reports
+
+By default, copied inputs, ripped assets, Unity projects (including Library), renders and build intermediates
+are permanently deleted when a conversion ends, including failures and stops for an answer. Deletion does not use
+the Recycle Bin. The app waits until its tools finish and preserves the final output before deleting intermediates.
+Installed packs stay in DV Mods without a duplicate. An audited pack that was not installed is hash-verified into
+`<workRoot>/output/<run-id>/<pack-name>` first. **Open build folder** opens this finished output or the installed pack.
+
+Small reports remain in `<workRoot>/reports/<run-id>`: status, recorded choices, vehicle record, audit and bounded
+diagnostic log tails (at most 2 MiB per copied log). **Open run folder** opens the report. `rebuild.json` records
+source-file hashes, app/source and snapshot hashes, tool executable/package fingerprints, runtime versions,
+reviewed answers and expected output hashes. Its recipe SHA-256 identifies the recorded recipe; it is not a random
+seed. Rebuilding requires the original sources and matching tools. Byte-identical Unity bundles are **not verified**;
+tool dependencies and Unity build metadata can affect output. No ripped assets are kept in the report.
+
+Locked/failed deletions are reported and retried before the next conversion. Live conversions, linked paths and
+Unity-locked projects are not deleted. Recovery applies only to marked temporary folders created by this version;
+older runs and shared caches are not swept automatically. Installed editors/rippers are shared tools and stay installed.
+For deliberate developer diagnosis only, JSON setting `"keepWorkFiles": true` retains the old workspaces and caches;
+the normal default is false. Retention makes reruns faster but increases disk usage.
 
 ## Rules the tool follows
 

@@ -16,7 +16,7 @@ from typing import Sequence
 from typing import Callable
 
 from . import (assetripper, audit, build, buildrecord, consent, geometryreview, installs, probeinput, projectcache, publish, record,
-               unityproject, unityrun)
+               unityproject, unityrun, workspace, rebuild)
 from .jsonio import read_json, write_json
 from .machine import Machine, check_work_root
 from .rrmod import Index, blocking, inventory
@@ -65,7 +65,8 @@ def extract(run: Run, inv: dict, machine: Machine) -> dict:
     exe = machine.path("assetRipper")
     if exe is None or not exe.is_file():
         raise FileNotFoundError("AssetRipper is not set up: add `assetRipper` to the settings file (see `rr2dv doctor`)")
-    cache = machine.work_root / "_cache" / "assetripper"
+    cache = (machine.work_root / "_cache" / "assetripper" if workspace.keep_files(machine)
+             else run.path / 'extracted')
     exports = {}
     for rec in inv["packs"]:
         bundle = next((f for f in rec["files"] if f["name"].casefold() == "bundle"), None)
@@ -94,8 +95,12 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
     request = {"input": str(input_path), "locomotive": loco, "railroader": rr.describe(), "derail_valley": dv.describe(),
                "search_roots": [str(p) for p in roots], "audio": audio, "livery": livery, "wheel_radius": wheel_radius,
                "geometry_review": str(geometry_review) if geometry_review else None}
+    cleanup_warnings = workspace.recover(work_root)
     run = Run.create(work_root, loco or input_path.name, request)
     run.listener = on_progress
+    lease = None if workspace.keep_files(machine) else workspace.begin(run)
+    for warning in cleanup_warnings:
+        run.log(warning)
     tools = {k: machine.values.get(k) for k in ("unity", "carCreator", "assetRipper", "python", "workRoot")}
     run.log("settings: " + (str(machine.source) if machine.source else "none (defaults)") + "\n"
             + "\n".join(f"{k}: {v or '(not set)'}" for k, v in tools.items()) + "\n"
@@ -104,8 +109,9 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
             + f"audio: {audio or '(boiler-size rule)'}; wheel radius: {wheel_radius or '(pending)'}\n"
             + "search: " + ", ".join(str(r) for r in roots))
     try:
-        return _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius, ask, geometry_review)
-    except Exception as e:  # record the failure on the run, then let the caller report it
+        rebuild.capture(run, machine)
+        outcome = _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius, ask, geometry_review)
+    except BaseException as e:  # include interruption; stop tools and retain a truthful receipt before cleanup
         current = next((n for n, s in run.record["stages"].items() if s["status"] == "running"), None)
         message = f"{type(e).__name__}: {e}"
         run.log("unexpected error:\n" + traceback.format_exc())
@@ -117,6 +123,15 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
         except AttributeError:
             pass
         raise
+    finally:
+        try:
+            rebuild.save(run)
+        finally:
+            if lease is not None:
+                workspace.finish(run, lease)
+    if run.record.get('cleanup', {}).get('status') == 'pending':
+        outcome.message += '; temporary cleanup pending: ' + run.record['cleanup'].get('error', '')
+    return outcome
 
 
 def _installs(machine: Machine) -> tuple[installs.Install, installs.Install]:
@@ -201,8 +216,8 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     car_creator = machine.path("carCreator")
     if car_creator is None or not car_creator.is_file():
         raise FileNotFoundError("CarCreator 3.1.9 is not set up: add `carCreator` to the settings file (see `rr2dv doctor`)")
-    cache_key = projectcache.key(inv, exports, car_creator)
-    project = projectcache.restore(machine.work_root.resolve(), cache_key, run.path)
+    cache_key = projectcache.key(inv, exports, car_creator) if workspace.keep_files(machine) else None
+    project = projectcache.restore(machine.work_root.resolve(), cache_key, run.path) if cache_key else None
     cached = project is not None
     if cached:
         run.log(f"  reused the imported project and its probe results from an earlier run (cache {cache_key}); "
@@ -233,7 +248,7 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     if probe_file.exists():
         for line in (read_json(probe_file).get("problems") or [])[:50]:
             run.log(f"  probe problem: {line}")
-    if not cached:
+    if not cached and cache_key:
         try:
             if projectcache.save(machine.work_root.resolve(), cache_key, run.path):
                 run.log(f"  saved the imported project and probe results for reruns (cache {cache_key})")

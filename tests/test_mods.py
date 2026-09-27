@@ -132,6 +132,7 @@ class GroupsAndImages(Base):
         self.assertEqual([d["id"] for d in inv["railroader_only"]], ["LegosLibraryOfStuff"])
 
     def test_group_files_and_their_images_are_found_and_staged(self):
+        self.machine.values['keepWorkFiles'] = True  # This test inspects staging, not final report cleanup.
         self.add_group()
         (self.m["mod"] / "images").mkdir()
         (self.m["mod"] / "images" / "Herald-1912.PNG").write_bytes(b"png")

@@ -39,18 +39,22 @@ def _launch(unity: Path, project: Path, method: str, log: Path, env: dict, timeo
     except OSError as e:
         raise UnityError(f"Unity at {unity} could not be started ({e}); check `unity` in the settings file") from e
     deadline = time.monotonic() + timeout
-    while True:
-        try:
-            return proc.wait(timeout=POLL_SECONDS)
-        except subprocess.TimeoutExpired:
-            pass
-        text = log.read_text(encoding="utf-8", errors="replace") if log.exists() else ""
-        errors = sorted({m.group(0).strip() for m in COMPILER_ERROR.finditer(text)})
-        if errors or time.monotonic() > deadline:
-            procs.stop(proc, grace=60)
-            if errors:
-                raise UnityError(f"scripts did not compile, so {method} could not run: " + "; ".join(errors[:5]) + f" (see {log})")
-            raise UnityError(f"Unity did not finish {method} within {timeout:.0f} s; see {log}")
+    try:
+        while True:
+            try:
+                return proc.wait(timeout=POLL_SECONDS)
+            except subprocess.TimeoutExpired:
+                pass
+            text = log.read_text(encoding="utf-8", errors="replace") if log.exists() else ""
+            errors = sorted({m.group(0).strip() for m in COMPILER_ERROR.finditer(text)})
+            if errors or time.monotonic() > deadline:
+                procs.stop(proc, grace=60)
+                if errors:
+                    raise UnityError(f"scripts did not compile, so {method} could not run: " + "; ".join(errors[:5]) + f" (see {log})")
+                raise UnityError(f"Unity did not finish {method} within {timeout:.0f} s; see {log}")
+    finally:
+        if proc.poll() is None:
+            procs.stop(proc)  # interruption must stop the editor before workspace cleanup
 
 
 def run_method(unity: Path, project: Path, method: str, out: Path, extra_env: dict | None = None,

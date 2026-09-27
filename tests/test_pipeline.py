@@ -32,7 +32,7 @@ class Pipeline(unittest.TestCase):
         self.tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.tmp)
         self.m = standard_mod(self.tmp)
-        self.machine = Machine(None, {**self.m["games"], "workRoot": str(self.tmp / "work"), "assetRipper": with_fake_assetripper(self, self.tmp),
+        self.machine = Machine(None, {**self.m["games"], "keepWorkFiles": True, "workRoot": str(self.tmp / "work"), "assetRipper": with_fake_assetripper(self, self.tmp),
                                       "unity": str(fake_unity(self.tmp / "tools")), "carCreator": str(fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage"))})
         self.out = self.tmp / "out"
 
@@ -208,6 +208,8 @@ class Cli(unittest.TestCase):
 
     def test_convert_stopped_inside_a_run_names_its_log(self):
         # X39: an error raised mid-run still shows the stages reached and where run.log is
+        settings = Path(self.base[1])
+        settings.write_text(json.dumps({**read_json(settings), 'keepWorkFiles': True}))
         self.run_cli("convert", "Test Loco Mod")  # fills the export cache
         for anim in (self.tmp / "work" / "_cache" / "assetripper").rglob("Drivers.anim"):
             anim.write_text("AnimationClip:\n  - path: path_0xdeadbeef_x\n")
