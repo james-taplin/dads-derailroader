@@ -18,7 +18,7 @@ public static class Rr2dvAudit
 {
     [Serializable] public class Car { public string id; public float mass, wheelRadius; public bool locomotive; }
     [Serializable] public class Review { public string trainBrake, physics; public int[] spawnTracks; }
-    [Serializable] public class Input { public int schema; public string[] bundles; public string[] carFolders; public Car[] cars; public string[] controls, ports, indicators; public Review review; }
+    [Serializable] public class Input { public int schema, openingCount; public string[] bundles; public string[] carFolders; public Car[] cars; public string[] controls, ports, indicators; public Review review; }
     [Serializable] public class Output
     {
         public int schema = 1; public string status; public string[] errors, warnings, bundleAssets, scriptAssemblies, dependencies;
@@ -103,9 +103,39 @@ public static class Rr2dvAudit
             var controls = One("LocoControlsReaderProxy", "HUD and keyboard controls");
             if (controls) foreach (var f in input.controls ?? new string[0]) if (!Ref(controls, f)) errors.Add("no control for the HUD's " + f);
             var indicators = One("LocoIndicatorReaderProxy", "HUD readings");
+            if (indicators && !Ref(indicators, "speed")) errors.Add("Numerical speed HUD has no speed indicator");
+            if (!all.Any(o => o.GetType().Name == "IndicatorPortReaderProxy" && Str(o, "portId") == "traction.WHEEL_SPEED_KMH_EXT_IN"))
+                errors.Add("Numerical speed HUD has no km/h traction port reader");
             if (indicators) foreach (var f in input.indicators ?? new string[0]) if (!Ref(indicators, f)) warnings.Add("the HUD has no reading for " + f + " (no instrument for it in the model)");
             foreach (var p in input.ports ?? new string[0]) if (!feeders.Contains(p)) errors.Add("no control feeds " + p);
             One("CabTeleportDestinationProxy", "cab teleport");
+            var openings = all.OfType<Component>().Where(c => c.name.StartsWith("C_rr2dvOpening", StringComparison.Ordinal) &&
+                (c.GetType().Name == "LeverProxy" || c.GetType().Name == "PullerProxy" || c.GetType().Name == "ButtonProxy")).ToArray();
+            if (openings.Length != input.openingCount) errors.Add("Expected " + input.openingCount + " ancillary controls, exported " + openings.Length);
+            foreach (var control in openings)
+            {
+                string id = control.name.Substring(2);
+                if (!feeders.Contains(id + ".EXT_IN")) errors.Add("Opening has no saved control feeder: " + control.name);
+                if (!all.Any(o => o.GetType().Name == "ExternalControlDefinitionProxy" && Str(o, "ID") == id && new SerializedObject(o).FindProperty("saveState").boolValue))
+                    errors.Add("Opening has no persistent simulation control: " + control.name);
+                if (control.GetType().Name == "ButtonProxy")
+                {
+                    if (!all.Any(o => o.GetType().Name == "SmoothedOutputDefinitionProxy" && Str(o, "ID") == id + "Motion" && new SerializedObject(o).FindProperty("smoothTime").floatValue > 0))
+                        errors.Add("Click opening has no native animated transition: " + control.name);
+                    if (!all.Any(o => o.GetType().Name == "AnimatorPortReaderProxy" && Str(o, "portId") == id + "Motion.OUTPUT"))
+                        errors.Add("Click opening animation is not connected to its transition: " + control.name);
+                }
+                var highlight = control.GetComponents<Component>().FirstOrDefault(c => c && c.GetType().Name == "HighlightTagProxy");
+                var renderers = highlight ? new SerializedObject(highlight).FindProperty("renderers") : null;
+                if (renderers == null || renderers.arraySize == 0) { errors.Add("Opening has no explicit highlight: " + control.name); continue; }
+                var root = control.transform;
+                while (root.parent) root = root.parent;
+                for (int i = 0; i < renderers.arraySize; i++)
+                {
+                    var renderer = renderers.GetArrayElementAtIndex(i).objectReferenceValue as Renderer;
+                    if (!renderer || !renderer.transform.IsChildOf(root)) errors.Add("Opening highlight is missing or outside its prefab: " + control.name);
+                }
+            }
 
             var oilCups = all.Where(o => o.GetType().Name == "ManualOilingPoint").ToArray();
             var oilProviders = all.Where(o => o.GetType().Name == "PositionSyncProviderProxy").ToArray();
@@ -172,6 +202,17 @@ public static class Rr2dvAudit
                         if (!actual.SequenceEqual((input.review.spawnTracks ?? new int[0]).OrderBy(i => i))) errors.Add("Exported spawn pool differs from review");
                     }
                     var hud = all.FirstOrDefault(o => o.GetType().Name == "VanillaHUDLayout");
+                    if (hud)
+                    {
+                        if (string.IsNullOrEmpty(Str(hud, "_json"))) errors.Add("Custom HUD has no serialized runtime layout");
+                        hud.GetType().GetMethod("AfterImport")?.Invoke(hud, null);
+                        var imported = new SerializedObject(hud);
+                        if (imported.FindProperty("HUDType").intValue != 1000 || Str(hud, "CustomHUDSettings.Powertrain") != "S" ||
+                            imported.FindProperty("CustomHUDSettings.BasicControls.Speedometer").intValue != 1 ||
+                            imported.FindProperty("CustomHUDSettings.BasicControls.Throttle").intValue == 0 ||
+                            imported.FindProperty("CustomHUDSettings.BasicControls.Reverser").intValue == 0)
+                            errors.Add("Imported HUD is missing its steam driving layout or numerical speedometer");
+                    }
                     if (!hud || new SerializedObject(hud).FindProperty("CustomHUDSettings.Braking.BrakeType").intValue != brake) errors.Add("HUD brake behaviour differs from reviewed valve");
                 }
             }

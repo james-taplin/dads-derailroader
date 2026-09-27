@@ -591,8 +591,8 @@ class _Builder:
         toggles = [c["name"] for c in comps if c["kind"] == "ToggleAnimation"
                    and "firebox" not in str(_extra(c).get("title", "")).casefold()]
         if toggles:
-            self.choose(f"{len(toggles)} Railroader toggle animation(s) (doors, windows, hatches, vents) are not interactive yet and "
-                        f"stay as modelled: {', '.join(toggles)}")
+            self.choose(f"{len(toggles)} Railroader toggle animation(s) will be resolved from their declared targets and complete clips: "
+                        f"{', '.join(toggles)}. Unresolved or overlapping assemblies block the build; reach and feel require gameplay checks.")
         loops = []
         for c in comps:
             e = _extra(c)

@@ -139,7 +139,8 @@ def apply(record, reviewed):
     limitations = list(meta.get('pending', []))
     limitations += ['Steam/fuel consumption and drawbar pull have not been calibrated in game',
                     'Track lengths are CCL 3.1.9 nominal lengths; game settings affect radio availability']
-    if v['physics'] == 'geared': limitations.append('Fixed geared prototype; source animation phase, adhesion and RPM need in-game checks')
+    if v['physics'] == 'geared':
+        limitations.append('Fixed reduction, not a selectable gearbox: Gearbox 1/2 cannot change ratio; source animation phase, adhesion and RPM need in-game checks')
     if v['steamHeat'] == 'basis-approximation': limitations.append('Steam thermal regime retains DV basis; not source-validated')
     meta['simulationProfile'] = {'id': v['physics'], 'version': ADAPTER_VERSION, 'runtimeValidated': False,
         'physicalCylinders': v['cylinders'], 'simulationBoreM': bore, 'steamHeat': v['steamHeat'],
@@ -149,6 +150,13 @@ def apply(record, reviewed):
         'results': [], 'limitations': limitations,
         'controlAllocation': {'dynamicBrake': 'reserved for oil firing', 'gearboxA': 'reserved for atomizer',
                               'gearboxB': 'reserved for simpling; not implemented'}}
+    if v['physics'] == 'geared':
+        meta['simulationProfile']['speedDiagnostics'] = [
+            {'speedKmh': speed,
+             'wheelRpm': round(speed / 3.6 / (2 * math.pi * v['wheelRadius']) * 60, 2),
+             'engineRpm': round(speed / 3.6 / (2 * math.pi * v['wheelRadius']) * 60 * v['gearRatio'], 2),
+             'doubleActingExhaustEventsPerSecond': round(speed / 3.6 / (2 * math.pi * v['wheelRadius']) * v['gearRatio'] * v['cylinders'] * 2, 2)}
+            for speed in (10, 30, 50, 60)]
     return rec
 
 

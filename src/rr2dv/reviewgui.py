@@ -36,7 +36,7 @@ def show(parent, req, answer):
         ttk.Label(setup, text=label).grid(row=row, column=0, sticky='w', pady=4)
         fields[key] = tk.StringVar(value='1' if key == 'efficiency' else (str(req.get('initialRadius') or '') if key == 'wheelRadius' else ''))
         ttk.Entry(setup, textvariable=fields[key], width=40).grid(row=row, column=1, sticky='w')
-    ttk.Label(setup, text='Check Source evidence for measured tyres and wheelset indices.\nGeared: all other indices are shafts/placeholders, with no physical axles.\nIndependent and handbrakes remain separate.\nCompound switching, oil regime combinations and diesel adapters are pending.', wraplength=790).grid(row=12, column=0, columnspan=2, sticky='w', pady=12)
+    ttk.Label(setup, text='Check Source evidence for measured tyres and wheelset indices.\nGeared uses a fixed reduction; Gearbox 1/2 do not change gears.\nOther indices are shafts/placeholders, with no physical axles.\nIndependent and handbrakes remain separate.\nCompound switching, oil regime combinations and diesel adapters are pending.', wraplength=790).grid(row=12, column=0, columnspan=2, sticky='w', pady=12)
     ttk.Label(tracks, text=f"Required length: {req['requiredTrackLengthM']} m including coupling and clearance.\nAutomatic uses every suitable track. Radio only uses none. Select tracks here for manual mode.", wraplength=790).pack(anchor='w')
     listing = tk.Listbox(tracks, selectmode='multiple', exportselection=False, height=20)
     listing.pack(fill='both', expand=True)

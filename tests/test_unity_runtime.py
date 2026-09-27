@@ -11,6 +11,21 @@ from rr2dv.unityrun import _launch
 @unittest.skipUnless(os.environ.get('RR2DV_TEST_UNITY') and os.environ.get('RR2DV_TEST_BUILDER_PROJECT'),
                      'requires Unity and a disposable assembled builder project')
 class RealPlacement(unittest.TestCase):
+    def test_declared_ancillary_target_and_saved_highlights(self):
+        repo = Path(__file__).resolve().parents[1]
+        project = Path(os.environ['RR2DV_TEST_BUILDER_PROJECT']).resolve()
+        editor = project / 'Assets/Editor'
+        for name in ('Rr2dvPlacement.cs', 'Rr2dvFeatures.cs', 'Rr2dvInteractions.cs', 'Rr2dvAudit.cs'):
+            shutil.copyfile(repo / 'src/rr2dv/unity' / name, editor / name)
+        shutil.copyfile(repo / 'tests/unity_runtime/InteractionRegression.cs', editor / 'InteractionRegression.cs')
+        receipt = project / 'interaction-regression.txt'
+        receipt.unlink(missing_ok=True)
+        log = project / 'interaction-regression.log'
+        code = _launch(Path(os.environ['RR2DV_TEST_UNITY']), project, 'CclLocoBuild.InteractionRegression', log,
+                       dict(os.environ), 180)
+        self.assertEqual(code, 0, log.read_text(errors='replace')[-10000:])
+        self.assertEqual(len(receipt.read_text().splitlines()), 7)
+
     def test_end_beam_height_search(self):
         repo = Path(__file__).resolve().parents[1]
         project = Path(os.environ['RR2DV_TEST_BUILDER_PROJECT']).resolve()
@@ -32,7 +47,7 @@ class RealPlacement(unittest.TestCase):
         editor = project / 'Assets/Editor'
         self.assertTrue((editor / 'CclLocoBuild.cs').is_file(), 'assembled builder project required')
         # Explicitly supplied disposable project; never a source game project.
-        for name in ('Rr2dvPlacement.cs', 'Rr2dvFeatures.cs'):
+        for name in ('Rr2dvPlacement.cs', 'Rr2dvFeatures.cs', 'Rr2dvInteractions.cs'):
             shutil.copyfile(repo / 'src/rr2dv/unity' / name, editor / name)
         shutil.copyfile(repo / 'tests/unity_runtime/PlacementRegression.cs', editor / 'PlacementRegression.cs')
         receipt = project / 'placement-regression-passed.json'

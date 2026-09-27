@@ -47,7 +47,22 @@ def audit_input(rec: dict, pack: Path) -> dict:
     controls = sorted({READER_CONTROLS[p] for p in required if p in READER_CONTROLS})
     bundles = [str(f.resolve()) for f in sorted(pack.iterdir())
                if f.is_file() and f.name != "Info.json" and f.suffix.casefold() != ".manifest"]
+    from .buildrecord import _extra
+    opening_clips = set()
+    for car_record in (rec, rec.get('tender')):
+        if not car_record:
+            continue
+        for component in _plain(car_record['config']).get('Components') or []:
+            if component['kind'] != 'ToggleAnimation':
+                continue
+            data = _extra(component)
+            title = str(data.get('title', '')).casefold()
+            if data.get('enabled', True) is False or 'firebox' in title or 'cylinder cocks' in title or str(data.get('key', '')).casefold() == 'cylcock':
+                continue
+            opening_clips.add((car_record.get('vehicleId', _plain(car_record['config'])['CarId']),
+                               (data.get('animation') or {}).get('clipName')))
     return {"schema": 1, "bundles": bundles, "carFolders": folders, "cars": cars, "controls": controls, "ports": required,
+            "openingCount": len(opening_clips),
             "indicators": INDICATORS, "review": rec.get("metadata", {}).get("review", {}).get("values")}
 
 

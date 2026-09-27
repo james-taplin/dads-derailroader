@@ -7,6 +7,10 @@ The tool is called `rr2dv` on the command line. It takes a steam locomotive mod 
 folder, rebuilds it for the Derail Valley Custom Car Loader (CCL 3.1.9), and installs the result into your own Derail
 Valley `Mods` folder. It never changes the Railroader mod it reads.
 
+Version 0.1.2 addresses the first C-70 gameplay report: populated steam HUD,
+explicit control highlights, source-derived ancillary interactions and clearer fixed-gearing information.
+See [the follow-up and validation notes](docs/c70-first-gameplay.md). Gameplay acceptance is still pending.
+
 > **Work in progress: first end-to-end version.** Every stage is written, from finding the mod to installing the pack.
 > Windows/Unity 2019.4 testing now reaches export and bundle audit for S16, C21 and A18; A18 also completed
 > installation through the normal notice. Remaining visual/control warnings are recorded in X46. An installed pack is a **candidate**: it
@@ -67,9 +71,9 @@ archive. Avoid third-party download mirrors.
 
 ### Install and check Derailroader
 
-For the [0.1.1 release](https://github.com/james-taplin/derailroader/releases/tag/v0.1.1), download
-`Derailroader-0.1.1-Windows.zip`, extract the **whole** folder, and double-click `Derailroader.exe`. Keep its
-`_internal` folder beside the `.exe`. To run from scripts instead, download `Derailroader-0.1.1-Source.zip`, extract
+For the [0.1.2 release](https://github.com/james-taplin/derailroader/releases/tag/v0.1.2), download
+`Derailroader-0.1.2-Windows.zip`, extract the **whole** folder, and double-click `Derailroader.exe`. Keep its
+`_internal` folder beside the `.exe`. To run from scripts instead, download `Derailroader-0.1.2-Source.zip`, extract
 it, and double-click `Launch Derailroader.bat` (or `Derailroader.pyw` if Python is associated with `.pyw` files).
 The source download needs Python 3.11+ with Tk; neither download includes Unity, AssetRipper or CarCreator.
 

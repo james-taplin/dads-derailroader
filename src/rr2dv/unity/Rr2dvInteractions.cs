@@ -1,0 +1,334 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UnityEditor;
+using UnityEditor.Animations;
+using UnityEngine;
+using CCL.Types.Proxies.Ports;
+using CCL.Types.Proxies.Simulation;
+using Object = UnityEngine.Object;
+
+// Source-declared targets and complete clips, never a vehicle name or the first rotating bone.
+public static partial class CclLocoBuild
+{
+    [Serializable] class RrToggleAnimation { public string clipName; }
+    [Serializable] class RrToggleTarget { public string[] path; }
+    [Serializable] class RrToggleData
+    {
+        public RrToggleAnimation animation;
+        public RrToggleTarget targetColliderObject;
+        public string key, title;
+        public float speed = 1f;
+        public bool enabled = true;
+    }
+    class RrOpening
+    {
+        public string name, clip, target, hinge, port;
+        public string[] roots;
+        public float transitionTime;
+        public bool clickToggle;
+    }
+    static readonly List<RrOpening> RrOpenings = new List<RrOpening>();
+
+    static void PrepareRr2dvInteractions()
+    {
+        RrOpenings.Clear();
+        var removed = new HashSet<string>(Cfg.CabControlObjects);
+        var noWalk = new HashSet<string>(Cfg.NoWalkParts);
+        var ports = new HashSet<string>(Cfg.SimControls);
+        foreach (var component in Cfg.Components.Where(c => c.kind == "ToggleAnimation"))
+        {
+            var data = JsonUtility.FromJson<RrToggleData>(component.extra);
+            if (!data.enabled || (data.title ?? "").IndexOf("firebox", StringComparison.OrdinalIgnoreCase) >= 0 ||
+                string.Equals(data.key, "cylCock", StringComparison.OrdinalIgnoreCase) ||
+                (data.title ?? "").IndexOf("cylinder cocks", StringComparison.OrdinalIgnoreCase) >= 0) continue;
+            var key = data.animation?.clipName;
+            if (string.IsNullOrEmpty(key) || !Cfg.AnimationMap.ContainsKey(key))
+                throw new InvalidOperationException("Toggle has no resolved source clip: " + component.name);
+            string target = string.Join("/", data.targetColliderObject?.path ?? new string[0]);
+            if (string.IsNullOrEmpty(target) || !RefBody.Find(target))
+                throw new InvalidOperationException("Toggle has no resolved declared target: " + component.name + " / " + target);
+            var targetNode = RefBody;
+            foreach (var segment in target.Split('/'))
+            {
+                var matches = targetNode.Cast<Transform>().Where(t => t.name == segment).ToArray();
+                if (matches.Length != 1) throw new InvalidOperationException("Ambiguous declared toggle target: " + target);
+                targetNode = matches[0];
+            }
+            var clip = Clip(key);
+            var bindings = AnimationUtility.GetCurveBindings(clip);
+            if (clip.length <= 0 || bindings.Length == 0 || bindings.Any(b => b.type != typeof(Transform) || string.IsNullOrEmpty(b.path)) ||
+                AnimationUtility.GetObjectReferenceCurveBindings(clip).Length != 0 || AnimationUtility.GetAnimationEvents(clip).Length != 0)
+                throw new InvalidOperationException("Toggle requires a nonempty Transform-only clip without events: " + key);
+            var paths = bindings.Select(b => b.path).Distinct().ToArray();
+            if (paths.Any(p => !RefBody.Find(p))) throw new InvalidOperationException("Unresolved toggle binding: " + key);
+            var ancestors = paths.Where(p => target == p || target.StartsWith(p + "/", StringComparison.Ordinal)).OrderBy(p => p.Length).ToArray();
+            if (ancestors.Length == 0) throw new InvalidOperationException("Declared toggle target is not moved by its clip: " + key + " / " + target);
+            var existing = RrOpenings.FirstOrDefault(o => o.clip == key);
+            if (existing != null)
+            {
+                if (existing.target != target) throw new InvalidOperationException("Shared clip has multiple declared grab targets; explicit resolution required: " + key);
+                continue;
+            }
+            var roots = paths.Where(p => !paths.Any(a => a != p && p.StartsWith(a + "/", StringComparison.Ordinal))).ToArray();
+            if (roots.Any(p => removed.Any(a => p == a || p.StartsWith(a + "/") || a.StartsWith(p + "/"))))
+                throw new InvalidOperationException("Toggle overlaps another converted moving assembly: " + key);
+            string name = "rr2dvOpening" + RrOpenings.Count + "_" + Safe(key);
+            string port = name + ".EXT_IN";
+            ports.Add(name);
+            RrOpenings.Add(new RrOpening { name = name, clip = key, target = target, hinge = ancestors[0], roots = roots, port = port,
+                transitionTime = clip.length / (data.speed > 0 ? data.speed : 1f) });
+            foreach (var path in roots) { removed.Add(path); noWalk.Add(path); }
+            Line($"rr2dv opening source {key}: declared target {target}, animated ancestor {ancestors[0]}, {paths.Length} bound transforms, port {port}");
+        }
+        Cfg.CabControlObjects = removed.ToArray();
+        Cfg.NoWalkParts = noWalk.ToArray();
+        Cfg.SimControls = ports.ToArray();
+        // These complete assemblies are now animated in the external interactables prefab.
+        Cfg.LoadAnimations = Cfg.LoadAnimations.Where(a => !RrOpenings.Any(o => o.clip == a.Item1)).ToArray();
+    }
+
+    static void FinishRr2dvInteriorControls()
+    {
+        string path = $"{carFolder}/{CarId}_interior.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            foreach (var control in root.GetComponentsInChildren<Component>(true).Where(c => c && c.GetType().Name == "LeverProxy"))
+            {
+                var renderers = control.GetComponentsInChildren<Renderer>(true).Where(r => r.enabled).ToArray();
+                if (renderers.Length > 0) RrHighlight(control.gameObject, renderers);
+                RrControlResponse(control);
+            }
+            SaveRr2dvPrefab(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    static void ConfigureRrOpeningMotion()
+    {
+        string template = $"{carFolder}/{CarId}_template.prefab";
+        var root = PrefabUtility.LoadPrefabContents(template);
+        try
+        {
+            var sim = root.transform.Find("[sim]");
+            var connections = sim.GetComponent<SimConnectionsDefinitionProxy>();
+            connections.AfterImport();
+            foreach (var opening in RrOpenings.Where(o => o.clickToggle))
+            {
+                var smooth = Child(sim, opening.name + "Motion", Vector3.zero).gameObject.AddComponent<SmoothedOutputDefinitionProxy>();
+                smooth.ID = opening.name + "Motion";
+                smooth.smoothTime = opening.transitionTime;
+                smooth.OnValidate();
+                connections.portReferenceConnections.Add(new PortReferenceConnectionProxy { portReferenceId = smooth.ID + ".CONTROL", portId = opening.port });
+                connections.executionOrder.RemoveAll(p => p == smooth);
+                connections.executionOrder.Add(smooth);
+                Line($"rr2dv opening motion {opening.clip}: native smoothed output, response time {smooth.smoothTime:F3} s from source clip length/speed; no runtime helper");
+            }
+            connections.OnValidate();
+            SaveRr2dvPrefab(root, template);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    static void RrHighlight(GameObject control, Renderer[] renderers)
+    {
+        if (renderers.Length == 0) throw new InvalidOperationException("No highlight renderers: " + control.name);
+        var highlight = control.GetComponent(T("CCL.Types.Proxies.HighlightTagProxy")) ?? Add(control, "CCL.Types.Proxies.HighlightTagProxy");
+        Set(highlight, "renderers", renderers.Cast<Object>().ToList());
+        Line($"rr2dv highlight {control.name}: {renderers.Length} explicit same-prefab renderers");
+    }
+
+    static void RrControlResponse(Component control)
+    {
+        // Normalize the inertial load using the actual physical grip radius. Retain the
+        // role's detents, limits, spring-return behaviour and keyboard/scroll increments.
+        var colliders = control.GetComponentsInChildren<BoxCollider>(true).Where(c => !c.isTrigger && c.gameObject.activeSelf).ToArray();
+        if (colliders.Length == 0) return;
+        Vector3 axis = Get<Vector3>(control, "jointAxis").normalized;
+        float radius2 = 0;
+        foreach (var box in colliders)
+        {
+            Vector3 arm = control.transform.InverseTransformPoint(box.transform.TransformPoint(box.center));
+            arm -= axis * Vector3.Dot(arm, axis);
+            radius2 = Mathf.Max(radius2, arm.sqrMagnitude + box.size.sqrMagnitude / 12f);
+        }
+        float previous = Get<float>(control, "rigidbodyMass");
+        // 0.04 kg m² is a response target, not a model dimension or accepted runtime claim.
+        float mass = Mathf.Clamp(.04f / Mathf.Max(radius2, .0001f), .15f, 2f);
+        Set(control, "rigidbodyMass", mass);
+        Set(control, "rigidbodyDrag", 0f);
+        Line($"rr2dv control response {control.name}: grip radius {Mathf.Sqrt(radius2):F4} m, mass {previous:F3} -> {mass:F3} kg, translational drag 0; detents and endpoints retained; gameplay acceptance pending");
+    }
+
+    static void BuildRr2dvAncillaries()
+    {
+        if (RrOpenings.Count == 0) return;
+        string path = $"{carFolder}/{CarId}_interactables.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            foreach (var opening in RrOpenings) BuildRrOpening(root.transform, opening);
+            SaveRr2dvPrefab(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+        ConfigureRrOpeningMotion();
+    }
+
+    static void BuildRrOpening(Transform parent, RrOpening opening)
+    {
+        var clip = Clip(opening.clip);
+        clip.SampleAnimation(RefBody.gameObject, 0);
+        var source = RefBody.Find(opening.target);
+        var rs = source.GetComponentsInChildren<Renderer>(true).Where(r => r.enabled).ToArray();
+        if (rs.Length == 0) throw new InvalidOperationException("Declared grab target has no visible geometry: " + opening.target);
+        var bounds = rs[0].bounds;
+        foreach (var r in rs) bounds.Encapsulate(r.bounds);
+        Vector3 grip = bounds.center;
+        var copy = Object.Instantiate(RefBody.gameObject);
+        copy.name = opening.name + " source";
+        try
+        {
+            StripScripts(copy);
+            foreach (var collider in copy.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
+            ApplyMaterials(copy, quiet: true);
+            var paths = AnimationUtility.GetCurveBindings(clip).Select(b => b.path).Distinct().ToArray();
+            var mapped = paths.ToDictionary(p => p, p => copy.transform.Find(p));
+            var liveTarget = copy.transform.Find(opening.target);
+            // Preserve the original coordinate hierarchy and curves. Keeping only the
+            // complete moving subtrees plus their transform ancestors avoids re-rooting
+            // multi-bone clips, and avoids copying the stationary locomotive.
+            foreach (var t in copy.GetComponentsInChildren<Transform>(true).OrderByDescending(AnimatedToggleDepth))
+            {
+                if (t == copy.transform) continue;
+                string sourcePath = AnimationUtility.CalculateTransformPath(t, copy.transform);
+                bool moving = opening.roots.Any(p => sourcePath == p || sourcePath.StartsWith(p + "/"));
+                bool ancestor = opening.roots.Any(p => p.StartsWith(sourcePath + "/"));
+                if (!moving && !ancestor) Object.DestroyImmediate(t.gameObject);
+                else if (!moving)
+                {
+                    foreach (var r in t.GetComponents<Renderer>()) Object.DestroyImmediate(r);
+                    foreach (var m in t.GetComponents<MeshFilter>()) Object.DestroyImmediate(m);
+                }
+            }
+            Folder($"{Work}/Animators");
+            var controller = AnimatorController.CreateAnimatorControllerAtPath($"{Work}/Animators/{opening.name}.controller");
+            var state = controller.layers[0].stateMachine.AddState(opening.name);
+            state.motion = clip; state.speed = 0;
+            controller.layers[0].stateMachine.defaultState = state;
+            var animation = copy.AddComponent<Animator>();
+            animation.runtimeAnimatorController = controller;
+            animation.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            animation.applyRootMotion = false;
+            var animators = new[] { animation };
+            foreach (var animator in animators)
+            {
+                PortAnim(animator.gameObject, opening.port, .999f, 0);
+                animator.transform.SetParent(parent, true);
+            }
+            if (!liveTarget.IsChildOf(parent)) throw new InvalidOperationException("Grab target was not moved with its complete assembly: " + opening.target);
+            foreach (float phase in new[] { 0f, .25f, .5f, .75f, 1f })
+            {
+                clip.SampleAnimation(RefBody.gameObject, phase * clip.length);
+                foreach (var animator in animators.OrderBy(a => AnimatedToggleDepth(a.transform)))
+                {
+                    var generated = animator.runtimeAnimatorController.animationClips.Distinct().Single();
+                    generated.SampleAnimation(animator.gameObject, phase * generated.length);
+                }
+                foreach (var pair in mapped)
+                {
+                    var expected = RefBody.Find(pair.Key);
+                    if (Vector3.Distance(pair.Value.position, expected.position) > .001f || Quaternion.Angle(pair.Value.rotation, expected.rotation) > .05f ||
+                        Vector3.Distance(pair.Value.lossyScale, expected.lossyScale) > .001f)
+                        throw new InvalidOperationException($"Opening source-pose mismatch {opening.clip}: {pair.Key}, phase {phase}");
+                }
+            }
+            clip.SampleAnimation(RefBody.gameObject, 0);
+            foreach (var animator in animators)
+                animator.runtimeAnimatorController.animationClips.Distinct().Single().SampleAnimation(animator.gameObject, 0);
+            var renderers = animators.SelectMany(a => a.GetComponentsInChildren<Renderer>(true)).Where(r => r.enabled).Distinct().ToArray();
+            foreach (var skin in renderers.OfType<SkinnedMeshRenderer>())
+                if (skin.bones.Any(b => b && !b.IsChildOf(parent))) throw new InvalidOperationException("Opening has bones outside its prefab: " + opening.clip);
+            GameObject control = RrOpeningGrip(parent, opening, grip, liveTarget);
+            if (opening.clickToggle)
+                foreach (var animator in animators)
+                    Set(animator.GetComponent(T("CCL.Types.Proxies.Ports.AnimatorPortReaderProxy")), "portId", opening.name + "Motion.OUTPUT");
+            RrHighlight(control, renderers);
+            Layer(control, 13, true);
+            var spec = control.GetComponents<Component>().First(c => c.GetType().Name == "LeverProxy" || c.GetType().Name == "PullerProxy" || c.GetType().Name == "ButtonProxy");
+            var area = (Component)new SerializedObject(spec).FindProperty("nonVrStaticInteractionArea").objectReferenceValue;
+            area.transform.position = bounds.center;
+            area.transform.rotation = Quaternion.identity;
+            var box = area.GetComponent<BoxCollider>();
+            box.center = Vector3.zero;
+            box.size = Vector3.Max(bounds.size, Vector3.one * .14f);
+            box.isTrigger = true;
+            if (spec.GetType().Name != "ButtonProxy") Add(control, "CCL.Types.Proxies.Weather.OpenableControlProxy");
+            Line($"rr2dv opening verified {opening.clip}: {paths.Length} transforms at 5 phases, complete visual assembly, declared-target grip {V(grip)}, {spec.GetType().Name}; {opening.port}");
+        }
+        finally { if (!copy.transform.IsChildOf(parent)) Object.DestroyImmediate(copy); clip.SampleAnimation(RefBody.gameObject, 0); }
+    }
+
+    static GameObject RrOpeningGrip(Transform parent, RrOpening opening, Vector3 grip, Transform liveTarget)
+    {
+        var clip = Clip(opening.clip);
+        var hinge = RefBody.Find(opening.hinge);
+        var target = RefBody.Find(opening.target);
+        clip.SampleAnimation(RefBody.gameObject, 0);
+        Vector3 p0 = hinge.position;
+        Quaternion q0 = hinge.rotation;
+        Vector3 targetPosition = hinge.InverseTransformPoint(target.position);
+        Quaternion targetRotation = Quaternion.Inverse(q0) * target.rotation;
+        clip.SampleAnimation(RefBody.gameObject, clip.length);
+        Vector3 p1 = hinge.position;
+        Quaternion q1 = hinge.rotation;
+        float angle = Quaternion.Angle(q0, q1);
+        bool rotates = angle > .5f && angle < 179.9f && Vector3.Distance(p0, p1) < .001f;
+        bool slides = angle < .05f && Vector3.Distance(p0, p1) > .01f;
+        foreach (float phase in new[] { .25f, .5f, .75f, 1f })
+        {
+            clip.SampleAnimation(RefBody.gameObject, phase * clip.length);
+            if (Quaternion.Angle(hinge.rotation, Quaternion.Slerp(q0, q1, phase)) > .05f ||
+                Vector3.Distance(hinge.position, Vector3.Lerp(p0, p1, phase)) > .001f ||
+                Vector3.Distance(hinge.InverseTransformPoint(target.position), targetPosition) > .001f ||
+                Quaternion.Angle(Quaternion.Inverse(hinge.rotation) * target.rotation, targetRotation) > .05f)
+                { rotates = false; slides = false; }
+        }
+        clip.SampleAnimation(RefBody.gameObject, 0);
+        GameObject result;
+        if (rotates)
+        {
+            result = RrLever(parent, new RrLeverCfg { Path = opening.hinge, AnimKey = opening.clip, Port = opening.port,
+                Hidden = true, Toggle = true, Grip = grip, GripSize = Vector3.one * .08f,
+                Phys = (spec, a) => Phys(spec, 0, a, 11, 50, 10, 1, 0, 0, 1, 0) });
+            RrControlResponse(result.GetComponent(T("CCL.Types.Proxies.Controls.LeverProxy")));
+        }
+        else if (slides)
+            result = RrPuller(parent, new PullerCfg { Path = opening.hinge, AnimKey = opening.clip, Port = opening.port,
+                Name = opening.name, Grip = grip, GripSize = Vector3.one * .08f });
+        else
+        {
+            opening.clickToggle = true;
+            // Compound/eased motion keeps the exact clip; the button and its grip ride on
+            // the declared source target instead of pretending it is a single-axis lever.
+            var c = Child(liveTarget, "C_" + opening.name, liveTarget.InverseTransformPoint(grip));
+            var scale = liveTarget.lossyScale;
+            if (!AnimatedToggleFinite(scale) || Mathf.Abs(scale.x) < .000001f || Mathf.Abs(scale.y) < .000001f || Mathf.Abs(scale.z) < .000001f)
+                throw new InvalidOperationException("Declared grip target has invalid scale: " + opening.target);
+            c.localScale = new Vector3(1f / scale.x, 1f / scale.y, 1f / scale.z);
+            if (Vector3.Distance(c.lossyScale, Vector3.one) > .001f)
+                throw new InvalidOperationException("Cannot preserve physical grip size under the target hierarchy: " + opening.target);
+            var col = Child(c, "collider", Vector3.zero);
+            col.gameObject.AddComponent<BoxCollider>().size = Vector3.one * .08f;
+            var spec = Add(c.gameObject, "CCL.Types.Proxies.Controls.ButtonProxy");
+            Set(spec, "createRigidbody", false); Set(spec, "useJoints", false);
+            Set(spec, "isToggle", true); Set(spec, "isTogglingBack", false);
+            Set(spec, "pushLocalOffset", Vector3.zero); Set(spec, "disableTouchUse", false);
+            Interactable(c, col, spec, opening.port, -1, false);
+            result = c.gameObject;
+        }
+        if (!result) throw new InvalidOperationException("Opening control was not created: " + opening.clip);
+        result.name = "C_" + opening.name;
+        return result;
+    }
+}

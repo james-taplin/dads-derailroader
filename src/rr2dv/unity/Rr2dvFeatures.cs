@@ -36,7 +36,14 @@ public static partial class CclLocoBuild
         var hud = AssetDatabase.LoadAssetAtPath<ScriptableObject>($"{carFolder}/{CarId}_hud.asset");
         Set(hud, "HUDType", 1000);
         var settings = hud.GetType().GetField("CustomHUDSettings").GetValue(hud);
+        // Changing HUDType alone leaves the custom layout empty. CCL imports its
+        // serialized JSON, so initialize the whole steam preset and refresh that JSON.
+        settings.GetType().GetMethod("SetToS").Invoke(settings, null);
         settings.GetType().GetMethod(self ? "SelfLappingBrakeSetup" : "NonSelfLappingBrakeSetup").Invoke(settings, null);
+        var basic = settings.GetType().GetField("BasicControls").GetValue(settings);
+        var speed = basic.GetType().GetField("Speedometer");
+        speed.SetValue(basic, Enum.ToObject(speed.FieldType, 1));
+        hud.GetType().GetMethod("OnValidate").Invoke(hud, null);
         EditorUtility.SetDirty(hud);
         EditorUtility.SetDirty(type);
         var livery = FindAsset("CustomCarVariant");

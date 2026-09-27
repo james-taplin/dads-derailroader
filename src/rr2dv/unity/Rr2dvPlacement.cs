@@ -80,14 +80,16 @@ public static partial class CclLocoBuild
         if (c.OilAnchors != null && c.OilPoints == null) c.OilPoints = root => c.OilAnchors.Select(a => (a.Tag, a.CarPosition));
         if (c.RodOilers != null) c.OilPoints = root => RodOilerPoints(root, c.RodOilers).Select(p => (p.tag, root.InverseTransformPoint(p.world)));
         PrepareClips();
+        PrepareRr2dvInteractions();
         matMap = BuildMaterials(Livery);
         CreateCar();
         BuildExterior();
         SeatRr2dvOilCups();
         AlignRr2dvBogieSupports();
         SeatRr2dvPlates();
-        if (!c.IsTender) { BuildInterior(); SeatRr2dvControls(); BuildInteriorLOD(); }
+        if (!c.IsTender) { BuildInterior(); SeatRr2dvControls(); FinishRr2dvInteriorControls(); BuildInteriorLOD(); }
         BuildInteractables();
+        BuildRr2dvAncillaries();
         var sound = c.IsTender ? null : BuildSound();
         ConfigureAssets(sound);
         builtFolders[c] = carFolder;
