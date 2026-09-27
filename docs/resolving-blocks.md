@@ -6,7 +6,9 @@ the item for review. This page covers each case and what to do about it.
 **The tool cannot ask you questions mid-conversion or resume a stopped run yet.** You give your answers when you
 start a conversion (command-line options, or the app's Options row), and after fixing a block you convert again from
 the start. That is safe: every run gets a fresh folder, the input mod is never changed, and AssetRipper exports are
-cached, so a rerun skips the slowest step. Your answers are saved in the run, so the same answers give the same result.
+cached. The imported Unity project and its measurements are cached too (under `<workRoot>\_cache\projects`, the three
+most recent), so converting again with a new answer skips the import and the measuring and goes straight to building.
+Your answers are saved in the run, so the same answers give the same result.
 
 ## First: where to look
 
@@ -41,9 +43,16 @@ Inside a run folder:
 | `import/clips-*-diagnosis.json` | written when an animation stops the import: which model names it, how many of its targets each model has, and where each missing target is found |
 | `probe/unity-1.log`, `probe/result.json`, `probe/probe.json` | what Unity reported while measuring the model |
 | `record/vehicle-record.json` | the draft record: `metadata.pending` (review items), `metadata.wheelCandidates`, `metadata.leftOut` |
+| `build/blocks.json` | why the build stage stopped, one entry per thing to resolve (with the measured candidate for the wheel radius) |
+| `build/vehicle-record.json`, `build/review.json` | the record the pack was built from, and every choice made automatically to complete it (`choices`), for review |
+| `build/out/build_report.txt` | our builder's full report: every step, every `WARN`, and any `EXCEPTION` that stopped it |
+| `build/out/*.png` | the builder's renders: outside, cab, lamps, markers (oil cups, plates, cab teleport, targets), couplers |
+| `build/out/prep.json` | what was done to the project before building: animation bindings removed, AudioSources removed, parts placed |
+| `build/out/<pack name>/` | the exported pack (`Info.json` and the bundle), before installing |
+| `audit/summary.json`, `audit/audit.json` | the audit's findings: errors (stop the install), notes, and the builder's warnings |
 
-Command-line exit codes: `0` finished, `1` stopped (a block, or an error), `3` stopped cleanly at a stage that is not
-built yet (currently `build`).
+Command-line exit codes: `0` installed, `1` stopped (a block, or an error), `3` stopped cleanly and waiting for you: an
+answer is needed (the wheel radius), or the pack was built and audited but not installed (the notice was not agreed to).
 
 ## Before a conversion starts
 
@@ -106,7 +115,56 @@ Not blocking, but worth reading (amber ! in the app):
 | `probe` | *did not finish … within … s* / *wrote no result.json* | see `probe/unity-1.log`; a licence prompt or a crash is the usual cause. Open Unity once by hand to settle the licence, then convert again |
 | `record` | *definition lacks maximumBoilerPressure / pistonDiameterInches / …* | the loco's definition is missing figures the simulation needs; report it to the mod's author |
 | `record` | *livery … is not one of …* | choose one of the liveries listed in the message (`--livery`, or the app's Livery box) |
-| `build` | *stopped before 'build' … not implemented yet* | expected for now: everything up to the draft record is done. Review the draft record (below) |
+
+## Stage `build`
+
+The build first completes the draft record from the definitions and the measurements (every choice it makes is listed
+in `build/review.json`), then builds the pack with our builder in Unity. It stops with a block when something cannot
+be worked out; `build/blocks.json` lists them all at once.
+
+| Code / message | Why | What to do |
+|---|---|---|
+| `needs-wheel-radius` (*the driving wheel tread radius needs your review*) | the first conversion of every loco stops here: the tread radius sets the pull (cylinder bore), and a person must confirm it (board X30). The message gives the probe's candidate | check the candidate (see `WheelRadius` under review items below), then convert again with it: in the app, **Use measured radius** fills it in (or type your own) and **Convert**; on the command line, the output ends with the exact command. The rerun reuses the imported project, so it goes straight to building |
+| `missing-anchor` (*no Chuff (chimney) / Whistle / CylinderCock component*) | the builder places the smoke, steam and their sounds from these Railroader components | the mod's definition lacks one; report it on the app board with the loco id |
+| `drivers-not-found`, `drivers-no-clip`, `no-drivers`, `one-axle` | the driving wheels could not be matched to turning wheels in the model | report it with `probe/probe.json` (its `wheels`); the definition and the model disagree |
+| `no-backhead` | no flat backhead plate was found from the cab, and the definition has no firebox glow to fall back on | report it with `probe/probe.json` (`cabRays`) |
+| `no-room-for-controls` | too little flat backhead plate for the generated controls | report it with `probe/probe.json` (`cabRays`) |
+| `tender-trucks`, `truck-wheels`, `tender-data`, `tender-empty` | the tender's trucks, their wheels, or its weight and load slots could not be found | report it with the tender and truck ids; the message says which |
+| `no-materials`, `no-weight`, `no-geometry`, `probe-missing` | the model or definition lacks something every build needs | report it; the message names it |
+| *the builder did not export a pack: EXCEPTION …* | our builder stopped while building (the most common: *insufficient end-beam rays* when no buffer beam is found at coupler height, or a placement check for the handbrake wheel or brake release) | send `build/out/build_report.txt` and `run.log`; the renders in `build/out` often show the cause |
+| *Vehicle record validation failed* | the loader rejected the record (a `rr2dv` bug: the record is checked before Unity starts) | send `build/out/build_report.txt` and `build/vehicle-record.json` |
+| *preparing the Unity project failed* | removing the listed animation bindings, removing AudioSources, or placing a part failed | send `build/out/prep.json` |
+| *scripts did not compile* | as for the probe | check the Unity version is exactly 2019.4.40f1 and that CarCreator 3.1.9 is the package set in the settings |
+
+## Stage `audit`
+
+The audit reads the exported pack with Unity's own loader, in a second Unity run, before anything is installed.
+
+| Message | Why | What to do |
+|---|---|---|
+| *AudioClip(s) in the bundle* / *audio in the built car's dependencies* | Railroader audio must never reach a pack; every sound is a stock Derail Valley sound | report it: it means a model carried audio that was not removed |
+| *behaviour outside CCL.Types* / *missing behaviour script* | only Custom Car Loader's own components may be in a pack | report it with `audit/audit.json` |
+| *no control for the HUD's …* / *no control feeds …* | a control the HUD and keyboard need was not built (usually a generated backhead control that found no plate) | check `build/out/build_report.txt` for the control's `WARN`, report it |
+| *car type … mass / wheel radius* | the pack does not carry the recorded values | report it |
+| *the HUD has no reading for …* (a note, not an error) | the model has no instrument for that reading (for example no brake-pipe gauge) | nothing to do; the HUD shows no value there |
+
+A passed audit is **not** acceptance: the pack is a candidate until it has been checked in game (below).
+
+## Stage `publish`
+
+| Message | What to do |
+|---|---|
+| *the personal-use notice was not agreed to; nothing was installed* | the pack was built and audited; convert again when you want to install it (the rerun reuses the imported project) |
+| *already exists and was not made by rr2dv* | a folder of that name in Derail Valley's `Mods` belongs to another mod; `rr2dv` never touches it. Rename or remove it yourself if you want this conversion there |
+| *cannot show the personal-use notice* | the notice needs a window (Tk); run from a desktop session |
+
+## After installing: checking the candidate in Derail Valley
+
+Every installed pack is a candidate. Before calling it done, check in game, by grabbing, with the HUD and with the
+keyboard: every control moves in fine steps across its full range, holds where it is left, and momentary controls
+(the whistle) return; nothing sticks, lags or overshoots (CTRL-01). A closed throttle and a closed whistle give no
+steam flow at all, also after saving and loading (CTRL-02). Then the brakes, lamps, the cab teleport, coupling (and the
+tender), oiling and firing. `build/review.json` lists what was chosen automatically and is worth reading first.
 
 ## Review items: `metadata.pending` in the draft record
 
@@ -123,7 +181,8 @@ pack can be accepted. Each item says what is missing and where its evidence is.
 | `simulation: carries …, not coal` | an oil burner or similar: Derail Valley simulates a coal-fired boiler, review firing |
 | `animation …: N of its M bindings target objects that are in no model of the export` (or *animates nothing in the exported model*) | the mod's animation points at objects that are not in its exported model (GN A-18: 3 of the 40 `Drivers` targets, and the only `Whistle` target). The targets it does have are restored; the others are listed in `metadata.absentBindings` and are removed during the build, before our builder, which rejects them. We only know they are absent from AssetRipper's export, not how Railroader treats them, so check in Railroader and in the converted pack that nothing that should move is missing. For an animation with no target at all (*animates nothing*), also check the control it belongs to (for example the whistle) still works without it |
 | `left out: N part(s)` | see `metadata.leftOut` for each part, why, and what it takes with it; check the loco still looks and works right |
-| `Bogies`, `CollisionBoxes`, `boiler …`, `tender: trucks layout …` | come from measured geometry in the build stage (not written yet) |
+| `materials: N renderer(s) have an empty material slot` | the export already has an unresolved material in that slot (GN A-18's base-game truck); `rr2dv` neither guesses a replacement nor drops the slot. Check that part in the renders (`build/out`) and in game |
+| `Bogies`, `CollisionBoxes`, `boiler …`, `tender: trucks layout …` | the build stage completes these from the measurements by fixed rules and lists each in `build/review.json` (bogies pivot on the end drivers; one collision box from the model's bounds within the car ends; the boiler keeps Derail Valley's basis boiler until measured); check them in the renders and in game |
 
 ## Still stuck?
 

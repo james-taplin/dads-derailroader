@@ -12,6 +12,7 @@ from fixtures import loco, part, standard_mod, tool_machine, write_pack
 try:
     import tkinter as tk
     _root = tk.Tk()
+    _root.update_idletasks()  # drain ttk's pending ThemeChanged before destroying (board X40)
     _root.destroy()
     HAVE_TK = True
 except Exception:  # no tkinter module, or no display
@@ -76,8 +77,36 @@ class Window(unittest.TestCase):
         self.until(lambda: not self.app.worker.busy and self.app.last_run, timeout=120)
         self.root.update()
         self.assertEqual(self.app.stage_rows["record"].cget("text"), "✓")
-        self.assertIn("Draft record ready", self.app.summary.cget("text"))
+        self.assertEqual(self.app.stage_rows["build"].cget("text"), "?")
+        self.assertIn("Needs your answer: the wheel radius", self.app.summary.cget("text"))
         self.assertEqual(str(self.app.open_record.cget("state")), "normal")
+        # one click fills in the measured candidate; the user still converts
+        self.assertEqual(str(self.app.use_radius.cget("state")), "normal")
+        self.app.use_radius.invoke()
+        self.assertEqual(self.app.wheel.get(), "0.5988")
+
+    def test_convert_with_the_radius_installs_after_the_notice(self):
+        self.select("Test Loco Mod", "ts-260-a")
+        self.app.wheel.set("0.5988")
+        asked = []
+
+        def fake_ask(pack, sources, answer):  # the real notice is tested on its own below
+            asked.append(pack)
+            answer["value"] = True
+            answer["event"].set()
+        self.app._ask = fake_ask
+        shown = []
+        original = self.gui.messagebox.showinfo
+        self.gui.messagebox.showinfo = lambda title, message, **kw: shown.append(message)
+        self.addCleanup(setattr, self.gui.messagebox, "showinfo", original)
+        self.app.convert()
+        self.until(lambda: not self.app.worker.busy and self.app.last_run and shown, timeout=120)
+        self.root.update()
+        self.assertEqual([self.app.stage_rows[s].cget("text") for s in ("build", "audit", "publish")], ["✓", "✓", "✓"])
+        self.assertEqual(asked, ["Test ts-260-a"])
+        self.assertIn("Installed into your Derail Valley Mods folder", self.app.summary.cget("text"))
+        self.assertEqual(str(self.app.open_build.cget("state")), "normal")
+        self.assertTrue((self.m["dv_mods"] / "Test ts-260-a" / "rr2dv.json").is_file())
 
     def test_stopped_conversion_keeps_its_run_folder(self):
         # X39: after a failure inside a run, Open run folder works and the error names run.log

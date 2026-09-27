@@ -23,8 +23,8 @@ STAGES = [
     ("import", "Prepare the Unity project", True),
     ("probe", "Measure the model", True),
     ("record", "Generate the vehicle record", True),
-    ("build", "Build the CCL pack in Unity", False),
-    ("audit", "Check the built pack", False),
+    ("build", "Build the CCL pack in Unity", True),
+    ("audit", "Check the built pack", True),
     ("publish", "Install into the Derail Valley Mods folder after the personal-use notice", True),
 ]
 STAGE_NAMES = [s[0] for s in STAGES]

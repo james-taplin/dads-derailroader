@@ -37,7 +37,7 @@ class Scan(unittest.TestCase):
         self.assertEqual(inv["trucks"][0]["pack"]["root"], "search1")
         self.assertEqual([(p["pack"], p["asset"], p["filename"]) for p in inv["parts"]], [("parts", "bell", "bell.prefab")])
         self.assertEqual([p["name"] for p in inv["packs"]], ["parts", "ts-260-a", "Trucks"])
-        self.assertEqual((inv["audio"]["basis"], inv["audio"]["replaces"]), ("S060", ["Whistle"]))
+        self.assertEqual((inv["audio"]["basis"], inv["audio"]["replaces"]), ("S060", ["Chuff", "Whistle"]))
         self.assertEqual([c["purpose"] for c in inv["controls"]["radial"]], ["Throttle", "Reverser"])
         bundle = self.m["mod"] / "ts-260-a" / "bundle"
         rec = next(p for p in inv["packs"] if p["name"] == "ts-260-a")

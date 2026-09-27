@@ -55,7 +55,7 @@ class Draft(unittest.TestCase):
         self.machine = Machine(None, tool_machine(self.tmp))
 
     def run_convert(self, **kw):
-        out = convert(self.m["mod"], self.machine, search=[self.m["search"]], **kw)
+        out = convert(self.m["mod"], self.machine, search=[self.m["search"]], ask=lambda pack, sources: False, **kw)
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)
         return out.run
 
@@ -113,6 +113,18 @@ class Draft(unittest.TestCase):
         self.assertIn("animation Whistle: animates nothing in the exported model", pending)
         self.assertIn("control it belongs to still works", pending)
         self.assertIn("animation Drivers: 3 of its 40 bindings target objects that are in no model of the export", pending)
+
+    def test_material_problems_and_sources_travel_with_the_record(self):
+        run = self.run_convert()
+        inv = read_json(run.path / "inventory.json")
+        probe_in = read_json(run.path / "unity/project/Assets/Rr2dv/ProbeInput.json")
+        probe_out = {"vehicles": [], "problems": ["truck.x: 1 missing material(s) on truck03/Wheel1_LOD0",
+                                                  "ts-260-a: clip Drivers binds missing path path_0x1"]}
+        rec = record.draft(run.path, inv, probe_in, probe_out, {})
+        self.assertEqual(rec["metadata"]["materialProblems"], ["truck.x: 1 missing material(s) on truck03/Wheel1_LOD0"])
+        self.assertIn("materials: 1 renderer(s) have an empty material slot", " ".join(rec["metadata"]["pending"]))
+        self.assertEqual(rec["metadata"]["sources"], inv["sources"])
+        self.assertTrue(rec["metadata"]["sources"])
 
     def test_reviewed_radius_fills_the_bore(self):
         run = self.run_convert(wheel_radius=0.598)

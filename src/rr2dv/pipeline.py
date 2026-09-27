@@ -15,7 +15,8 @@ from typing import Sequence
 
 from typing import Callable
 
-from . import assetripper, consent, installs, probeinput, publish, record, unityproject, unityrun
+from . import (assetripper, audit, build, buildrecord, consent, installs, probeinput, projectcache, publish, record,
+               unityproject, unityrun)
 from .jsonio import read_json, write_json
 from .machine import Machine, check_work_root
 from .rrmod import Index, blocking, inventory
@@ -101,7 +102,7 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
             + f"audio: {audio or '(boiler-size rule)'}; wheel radius: {wheel_radius or '(pending)'}\n"
             + "search: " + ", ".join(str(r) for r in roots))
     try:
-        return _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius)
+        return _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius, ask)
     except Exception as e:  # record the failure on the run, then let the caller report it
         current = next((n for n, s in run.record["stages"].items() if s["status"] == "running"), None)
         message = f"{type(e).__name__}: {e}"
@@ -140,7 +141,8 @@ def install_pack(run: Run, machine: Machine, pack_dir: Path, expected: dict[str,
 
 
 def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path],
-            audio: str | None, machine: Machine, livery: str | None = None, wheel_radius: float | None = None) -> Outcome:
+            audio: str | None, machine: Machine, livery: str | None = None, wheel_radius: float | None = None,
+            ask: Callable = consent.ask) -> Outcome:
     def fail(stage: str, message: str, code: int = EXIT_FAILED) -> Outcome:
         run.finish(stage, "failed", message)
         run.close("failed", message)
@@ -188,18 +190,30 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     car_creator = machine.path("carCreator")
     if car_creator is None or not car_creator.is_file():
         raise FileNotFoundError("CarCreator 3.1.9 is not set up: add `carCreator` to the settings file (see `rr2dv doctor`)")
-    project = unityproject.assemble(run.path, inv, exports, car_creator)
+    cache_key = projectcache.key(inv, exports, car_creator)
+    project = projectcache.restore(machine.work_root.resolve(), cache_key, run.path)
+    cached = project is not None
+    if cached:
+        run.log(f"  reused the imported project and its probe results from an earlier run (cache {cache_key}); "
+                "Unity does not import or measure again")
+    else:
+        project = unityproject.assemble(run.path, inv, exports, car_creator)
     absent = [{"export": name, **a} for name, c in sorted(project["clips"].items()) for a in c.get("absent_bindings", [])]
     for a in absent:
         run.log(f"  clip {a['clip']} ({', '.join(a['keys'])}): {len(a['absent'])} of {a['bindings']} binding(s) target "
                 f"objects not in any model of the export; kept with the other {a['restored']} restored (review item)")
     run.finish("import", "done", f"Unity {project['unity']} project with {len(project['vehicles'])} vehicle(s), "
-                                 f"{len(project['parts'])} part(s), {project['unique_guids']} GUIDs")
+                                 f"{len(project['parts'])} part(s), {project['unique_guids']} GUIDs"
+                                 + (" (reused from an earlier run)" if cached else ""))
 
     run.begin("probe")
-    probe_in = probeinput.build(run.path, inv, project)
-    result = unityrun.run_method(machine.path("unity"), run.path / project["project"], "Rr2dvProbe.Run", run.path / "probe",
-                                 {"RR2DV_PROBE_OUT": str(run.path / "probe")})
+    if cached:
+        probe_in = read_json(run.path / project["project"] / probeinput.INPUT_ASSET)
+        result = read_json(run.path / "probe" / "result.json")
+    else:
+        probe_in = probeinput.build(run.path, inv, project)
+        result = unityrun.run_method(machine.path("unity"), run.path / project["project"], "Rr2dvProbe.Run", run.path / "probe",
+                                     {"RR2DV_PROBE_OUT": str(run.path / "probe")})
     if result.get("status") not in ("passed", "problems"):
         return fail("probe", f"Unity probe failed: {result.get('error') or result}")
     problems = result.get("problems", 0)
@@ -208,8 +222,14 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     if probe_file.exists():
         for line in (read_json(probe_file).get("problems") or [])[:50]:
             run.log(f"  probe problem: {line}")
+    if not cached:
+        try:
+            if projectcache.save(machine.work_root.resolve(), cache_key, run.path):
+                run.log(f"  saved the imported project and probe results for reruns (cache {cache_key})")
+        except OSError as e:  # a full disk must not stop the conversion: the cache is only a speed-up
+            run.log(f"  could not save the project for reruns: {e}")
     run.finish("probe", "done", f"{len(probe_in['vehicles'])} vehicle(s) measured; {problems} problem(s) to review"
-                                + (" (see probe/probe.json)" if problems else ""))
+                                + (" (see probe/probe.json)" if problems else "") + (" (from an earlier run)" if cached else ""))
 
     run.begin("record")
     probe_out_file = run.path / "probe" / "probe.json"
@@ -228,13 +248,62 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
                 f"source {w.get('sourceRadius')}; notes: {'; '.join(w.get('notes') or []) or 'none'}")
     run.finish("record", "done", f"draft vehicle record with {len(pending)} item(s) pending review (record/vehicle-record.json)")
 
-    for name, description, available in STAGES[7:]:
-        if name == "build":  # found again before the Unity build (W25)
-            _installs(machine)
-        if not available:
-            message = f"stopped before '{name}' ({description}): not implemented yet"
-            run.finish(name, "not_available", message)
+    # build: both installs are found again first (W25)
+    _installs(machine)
+    run.begin("build")
+    try:
+        prepared = build.prepare(run.path, inv, probe_in, probe_out, project, draft, run.record["answers"], absent)
+    except buildrecord.Blocked as blocked:
+        write_json(run.path / "build" / "blocks.json", blocked.items)
+        run.record["blocks"] = blocked.items
+        for item in blocked.items:
+            run.log(f"  block {item['code']}: {item['message']}")
+        message = "; ".join(i["message"] for i in blocked.items)
+        if all(i["code"].startswith("needs-") for i in blocked.items):  # only answers missing: give them and convert again
+            run.finish("build", "needs_answer", message)
             run.close("incomplete", message)
             return Outcome(EXIT_INCOMPLETE, message, run)
-    run.close("done")
-    return Outcome(EXIT_OK, "done", run)
+        return fail("build", f"{len(blocked.items)} thing(s) to resolve before building: {message}")
+    except build.BuildError as e:
+        return fail("build", str(e))
+    for choice in prepared["choices"]:
+        run.log(f"  choice: {choice}")
+    try:
+        built = build.run(run.path, machine.path("unity"), project, prepared["record"])
+    except build.BuildError as e:
+        return fail("build", str(e))
+    write_json(run.path / "build" / "built.json", built)
+    for w in built["warnings"]:
+        run.log(f"  builder warning: {w}")
+    pack = Path(built["pack"])
+    run.record["pack"] = {"name": pack.name, "files": built["files"]}
+    run.finish("build", "done", f"pack {pack.name!r} exported ({len(built['files'])} file(s)); {len(built['warnings'])} builder "
+                                f"warning(s) and {len(prepared['choices'])} automatic choice(s) to review (build/review.json)")
+
+    run.begin("audit")
+    try:
+        summary = audit.run(run.path, machine.path("unity"), project, prepared["record"], built)
+    except audit.AuditError as e:
+        return fail("audit", str(e))
+    for w in summary["warnings"]:
+        run.log(f"  audit note: {w}")
+    if summary["status"] != "passed":
+        for e in summary["errors"]:
+            run.log(f"  audit error: {e}")
+        return fail("audit", f"{len(summary['errors'])} problem(s): " + "; ".join(summary["errors"][:5])
+                    + (" (see audit/summary.json)" if len(summary["errors"]) > 5 else ""))
+    run.finish("audit", "done", "passed (no audio, CCL scripts only, HUD controls present); in-game checks still pending")
+
+    run.begin("publish")
+    try:
+        dest = install_pack(run, machine, pack, built["files"], inv.get("sources", []), ask)
+    except (publish.InstallRefused, consent.ConsentError) as e:
+        run.finish("publish", "not_installed", str(e))
+        run.close("incomplete", f"built and audited, not installed: {e}")
+        return Outcome(EXIT_INCOMPLETE, f"built and audited, not installed: {e}", run)
+    run.record["installed"] = str(dest)
+    run.finish("publish", "done", f"installed into {dest}")
+    message = (f"installed into {dest}. It is a candidate: check it in Derail Valley (controls, closed valves, "
+               "brakes, lamps, coupling) before calling it done")
+    run.close("done", message)
+    return Outcome(EXIT_OK, message, run)

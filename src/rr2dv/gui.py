@@ -27,7 +27,8 @@ APP_NAME = "derailroader"
 COLOURS = {"ok": "#2e7d32", "fail": "#c62828", "warn": "#b26a00", "idle": "#5f6b7a", "header": "#1f2933",
            "accent": "#a31515", "muted": "#6b7280", "panel": "#f4f5f7"}
 STAGE_MARKS = {"pending": ("○", "muted"), "running": ("●", "warn"), "done": ("✓", "ok"), "failed": ("✗", "fail"),
-               "not_available": ("–", "muted"), "incomplete": ("–", "muted")}
+               "not_available": ("–", "muted"), "incomplete": ("–", "muted"), "needs_answer": ("?", "warn"),
+               "not_installed": ("–", "warn")}
 SEVERITY = {"error": ("✗", "fail"), "warning": ("!", "warn"), "info": ("i", "muted")}
 STAGE_NAMES_SHORT = {"locate": "Find the locomotive", "link": "Resolve tender, trucks, parts", "stage": "Copy the inputs",
                      "extract": "Export bundles (AssetRipper)", "import": "Prepare the Unity project",
@@ -222,8 +223,9 @@ class App:
         self.wheel = tk.StringVar()
         wheel_entry = ttk.Entry(options, textvariable=self.wheel, width=8)
         wheel_entry.pack(side="left", padx=(6, 0))
-        wheel_help = ("Leave empty until you have reviewed the measured tread candidates in the draft record "
-                      "(metadata.wheelCandidates); then enter the tread radius and convert again.")
+        wheel_help = ("The driving wheel's tread radius. Leave it empty the first time: the conversion measures the wheels "
+                      "and stops before building with the measured candidate. Check it against the tyre in the model "
+                      "(the draft record's metadata.wheelCandidates), then use it and convert again.")
         Tooltip(wheel_label, wheel_help)
         Tooltip(wheel_entry, wheel_help)
 
@@ -263,6 +265,12 @@ class App:
         self.open_record = ttk.Button(buttons, text="Open draft record", state="disabled",
                                       command=lambda: self.last_run and open_path(self.last_run / "record" / "vehicle-record.json"))
         self.open_record.pack(side="left", padx=6)
+        self.open_build = ttk.Button(buttons, text="Open build folder", state="disabled",
+                                     command=lambda: self.last_run and open_path(self.last_run / "build"))
+        self.open_build.pack(side="left")
+        self.use_radius = ttk.Button(buttons, text="Use measured radius", state="disabled", command=self._use_candidate)
+        self.use_radius.pack(side="left", padx=6)
+        self.candidate: float | None = None
 
     # ---- plumbing -----------------------------------------------------------------------------------------------------
     def _pump(self) -> None:
@@ -438,6 +446,8 @@ class App:
         self.last_run = None
         self.open_run.configure(state="disabled")
         self.open_record.configure(state="disabled")
+        self.open_build.configure(state="disabled")
+        self.use_radius.configure(state="disabled")
         self._log(f"Converting {ident} from {folder}…")
 
         def progress(stage, status, detail):
@@ -470,6 +480,13 @@ class App:
         self.open_run.configure(state="normal")
         has_record = (path / "record" / "vehicle-record.json").is_file()
         self.open_record.configure(state="normal" if has_record else "disabled")
+        self.open_build.configure(state="normal" if (path / "build").is_dir() else "disabled")
+
+    def _use_candidate(self) -> None:
+        """Fills in the measured tread candidate the last run stopped on; the user still starts the conversion."""
+        if self.candidate:
+            self.wheel.set(f"{self.candidate:.4f}")
+            self._log(f"Wheel radius set to the measured candidate {self.candidate:.4f} m; press Convert to build with it.")
 
     def _converted(self, outcome) -> None:
         self._set_busy(False)
@@ -479,15 +496,29 @@ class App:
             self._show_run(outcome.run.path)
         self._log(outcome.message)
         from .pipeline import EXIT_INCOMPLETE, EXIT_OK
+        record = outcome.run.record if outcome.run else {}
+        blocks = record.get("blocks") or []
+        radius = next((b for b in blocks if b.get("code") == "needs-wheel-radius"), None)
+        self.candidate = radius.get("candidate") if radius else None
+        self.use_radius.configure(state="normal" if self.candidate else "disabled",
+                                  text=f"Use measured radius ({self.candidate:.4f} m)" if self.candidate else "Use measured radius")
+        installed = "Installed into your Derail Valley Mods folder. Check it in the game before calling it done: every control, " \
+                    "closed throttle and whistle, brakes, lamps and the coupling (build/review.json lists what was chosen automatically)."
         if outcome.code == EXIT_OK:
-            text, colour = "Installed into your Derail Valley Mods folder.", "ok"
+            text, colour = installed, "ok"
+        elif outcome.code == EXIT_INCOMPLETE and radius:
+            text, colour = (f"Needs your answer: the wheel radius. Measured candidate {self.candidate:.4f} m; check it, then "
+                            "'Use measured radius' (or type yours) and Convert again." if self.candidate else
+                            "Needs your answer: the wheel radius (no candidate measured). Enter it and Convert again."), "warn"
+        elif outcome.code == EXIT_INCOMPLETE and (record.get("stages", {}).get("publish") or {}).get("status") == "not_installed":
+            text, colour = f"Built and audited, but not installed: {outcome.message.split(': ', 1)[-1]}", "warn"
         elif outcome.code == EXIT_INCOMPLETE:
-            text, colour = "Draft record ready for review. Building the pack is not written yet.", "warn"
+            text, colour = f"Stopped before finishing: {outcome.message}", "warn"
         else:
             text, colour = f"Stopped: {outcome.message}", "fail"
         self.summary.configure(text=text, foreground=COLOURS[colour])
-        if outcome.code == 0:
-            messagebox.showinfo(APP_NAME, "Installed into your Derail Valley Mods folder.", parent=self.root)
+        if outcome.code == EXIT_OK:
+            messagebox.showinfo(APP_NAME, installed, parent=self.root)
 
     def _ask(self, pack, sources, answer) -> None:
         top = tk.Toplevel(self.root)

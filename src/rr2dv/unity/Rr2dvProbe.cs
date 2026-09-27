@@ -16,7 +16,9 @@ public static class Rr2dvProbe
     [Serializable] public class MapEntry { public string key, asset, guid; }
     [Serializable] public class Wheelset { public string clip, clipAsset; public float diameter, offset, length; public int axles; }
     [Serializable] public class Comp { public string kind, name, purpose, parentPath, clip, clipAsset; public float[] position, rotation, scale; }
-    [Serializable] public class Vehicle { public string id, role, prefab; public Wheelset[] wheelsets; public Comp[] components; public MapEntry[] animationMap, materialMap; }
+    // Cab rays: a grid of rays along +z (towards the front) from startZ, at each (x, y); the first visible surface each meets.
+    [Serializable] public class CabSpec { public float startZ, length; public float[] xs, ys; }
+    [Serializable] public class Vehicle { public string id, role, prefab; public Wheelset[] wheelsets; public Comp[] components; public MapEntry[] animationMap, materialMap; public CabSpec cab; }
     [Serializable] public class Input { public int schema; public Vehicle[] vehicles; public string[] missing; }
 
     [Serializable] public class Node { public string path; public float[] position, rotation, lossyScale; }
@@ -33,10 +35,14 @@ public static class Rr2dvProbe
     {
         public string clip; public float sourceRadius; public string[] rotatingPaths; public WheelMesh[] meshes; public RadiusBand[] bands;
     }
+    [Serializable] public class RayHit { public float x, y, z, distance, normalZ; public bool hit; public string part; }
+    // A wheel mesh of a truck prefab (a transform named Wheel*, or under one): its centre and radius bands about it.
+    [Serializable] public class TruckWheel { public string path, wheelNode; public float[] centre; public float maxRadius; public int vertices; public RadiusBand[] bands; }
     [Serializable] public class VehicleOut
     {
         public string id, role, prefab; public float[] boundsMin, boundsMax;
         public Node[] nodes; public MeshOut[] meshes; public AnchorOut[] anchors; public WheelOut[] wheels; public ClipOut[] clips;
+        public RayHit[] cabRays; public TruckWheel[] truckWheels; public int audioSources;
     }
     [Serializable] public class Output { public int schema = 1; public string unity; public VehicleOut[] vehicles; public string[] problems; }
     [Serializable] public class Result { public string status; public int exitCode, problems; public bool runtimeValidated; public string error; }
@@ -96,6 +102,9 @@ public static class Rr2dvProbe
             if (bounds.HasValue) { outv.boundsMin = V(bounds.Value.min); outv.boundsMax = V(bounds.Value.max); }
             else Problems.Add(v.id + ": no visible geometry");
             outv.anchors = (v.components ?? new Comp[0]).Select(c => Anchor(v, root, c)).ToArray();
+            outv.audioSources = root.GetComponentsInChildren<AudioSource>(true).Length;
+            outv.cabRays = v.cab != null && v.cab.xs != null && v.cab.xs.Length > 0 && v.cab.ys != null ? CabRays(root, v.cab) : new RayHit[0];
+            outv.truckWheels = v.role == "truck" ? TruckWheels(root) : new TruckWheel[0];
             // Static-pose measurements are finished before any clip is sampled.
             outv.wheels = (v.wheelsets ?? new Wheelset[0]).Select(w => Wheel(v, root, w)).ToArray();
             outv.clips = (v.animationMap ?? new MapEntry[0]).Select(e => Clip(v, go, e)).ToArray();
@@ -227,6 +236,94 @@ public static class Rr2dvProbe
         o.bands = bands.Values.ToArray();
         if (o.bands.Length == 0) Problems.Add(v.id + ": no wheel surface near the source radius for wheelset " + w.clip);
         return o;
+    }
+
+    // As the builder core's VisualHits: temporary MeshColliders on every visible mesh, the model's own colliders off.
+    static RayHit[] CabRays(Transform root, CabSpec spec)
+    {
+        var temp = new List<GameObject>();
+        var off = new List<Collider>();
+        foreach (var c in root.GetComponentsInChildren<Collider>(true)) if (c.enabled) { c.enabled = false; off.Add(c); }
+        foreach (var mf in root.GetComponentsInChildren<MeshFilter>(false))
+        {
+            var r = mf.GetComponent<MeshRenderer>();
+            if (!mf.sharedMesh || mf.sharedMesh.vertexCount == 0 || !r || !r.enabled) continue;
+            var g = new GameObject("[vis]"); g.transform.SetParent(mf.transform, false);
+            g.AddComponent<MeshCollider>().sharedMesh = mf.sharedMesh;
+            temp.Add(g);
+        }
+        Physics.SyncTransforms();
+        var scene = root.gameObject.scene.GetPhysicsScene();
+        var buf = new RaycastHit[256];
+        var list = new List<RayHit>();
+        try
+        {
+            foreach (float y in spec.ys)
+                foreach (float x in spec.xs)
+                {
+                    var o = new RayHit { x = x, y = y };
+                    int n = scene.Raycast(new Vector3(x, y, spec.startZ), Vector3.forward, buf, spec.length, ~0, QueryTriggerInteraction.Ignore);
+                    for (int i = 0; i < n; i++)
+                    {
+                        if (buf[i].collider.name != "[vis]") continue;
+                        if (o.hit && buf[i].distance >= o.distance) continue;
+                        o.hit = true; o.distance = buf[i].distance; o.z = buf[i].point.z; o.normalZ = buf[i].normal.z;
+                        o.part = TPath(buf[i].collider.transform.parent, root);
+                    }
+                    list.Add(o);
+                }
+        }
+        finally
+        {
+            foreach (var g in temp) if (g) Object.DestroyImmediate(g);
+            foreach (var c in off) if (c) c.enabled = true;
+        }
+        return list.ToArray();
+    }
+
+    // Truck prefabs: RR places them at runtime; their wheels are measured about each mesh's own centre (axle along x),
+    // radius bands within 20% below the mesh's largest radius. rr2dv picks the tread from them (wheels.py).
+    static TruckWheel[] TruckWheels(Transform root)
+    {
+        var list = new List<TruckWheel>();
+        foreach (var f in root.GetComponentsInChildren<MeshFilter>(true))
+        {
+            if (!f.sharedMesh || f.sharedMesh.vertexCount == 0) continue;
+            Transform node = null;
+            for (var t = f.transform; t && t != root; t = t.parent)
+                if (t.name.StartsWith("wheel", StringComparison.OrdinalIgnoreCase)) node = t;
+            if (!node) continue;
+            var points = f.sharedMesh.vertices.Select(local => f.transform.TransformPoint(local)).ToArray();
+            var b = new Bounds(points[0], Vector3.zero);
+            foreach (var p in points) b.Encapsulate(p);
+            var c = b.center;
+            float max = points.Max(p => new Vector2(p.y - c.y, p.z - c.z).magnitude);
+            var bands = new SortedDictionary<int, RadiusBand>();
+            var sums = new Dictionary<int, double>();
+            foreach (var p in points)
+            {
+                float r = new Vector2(p.y - c.y, p.z - c.z).magnitude;
+                if (r < 0.8f * max) continue;
+                float lateral = Mathf.Abs(p.x);
+                int key = Mathf.RoundToInt(r * 1000f);
+                RadiusBand band;
+                if (!bands.TryGetValue(key, out band))
+                {
+                    band = new RadiusBand { lateralMin = lateral, lateralMax = lateral, radiusMin = r, radiusMax = r };
+                    bands[key] = band; sums[key] = 0;
+                }
+                band.vertices++;
+                sums[key] += r;
+                if (r < band.radiusMin) band.radiusMin = r;
+                if (r > band.radiusMax) band.radiusMax = r;
+                if (lateral < band.lateralMin) band.lateralMin = lateral;
+                if (lateral > band.lateralMax) band.lateralMax = lateral;
+            }
+            foreach (var kv in bands) { kv.Value.radius = (float)(sums[kv.Key] / kv.Value.vertices); kv.Value.modeRadius = kv.Value.radius; }
+            list.Add(new TruckWheel { path = TPath(f.transform, root), wheelNode = TPath(node, root), centre = V(c), maxRadius = max,
+                                      vertices = points.Length, bands = bands.Values.ToArray() });
+        }
+        return list.ToArray();
     }
 
     static ClipOut Clip(Vehicle v, GameObject go, MapEntry e)

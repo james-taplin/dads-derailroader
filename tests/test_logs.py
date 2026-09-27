@@ -35,11 +35,11 @@ class Logs(unittest.TestCase):
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)
         text = (out.run.path / "run.log").read_text(encoding="utf-8")
         for expected in ("rr2dv ", "Python ", "Railroader: ", "Derail Valley: ", "input: ", "[locate] started",
-                         "[link] done", "warning missing-texture: ts-260-a: image 'nosuchmod.logo.png'", "Unity result: ", "review: WheelRadius", "[build] not_available",
+                         "[link] done", "warning missing-texture: ts-260-a: image 'nosuchmod.logo.png'", "Unity result: ", "review: WheelRadius", "[build] needs_answer",
                          "run incomplete"):
             self.assertIn(expected, text)
         stages = [line.split("[")[1].split("]")[0] for line in text.splitlines() if "] started" in line]
-        self.assertEqual(stages, ["locate", "link", "stage", "extract", "import", "probe", "record"])
+        self.assertEqual(stages, ["locate", "link", "stage", "extract", "import", "probe", "record", "build"])
 
     def test_unexpected_error_keeps_its_traceback(self):
         with mock.patch("rr2dv.pipeline.inventory", side_effect=RuntimeError("boom")):

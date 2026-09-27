@@ -34,6 +34,11 @@ def part(pack_identifier: str, asset: str, name: str) -> dict:
             "parent": None, "enabled": True}
 
 
+def anchor(kind: str, name: str, position, **extra) -> dict:
+    return {"kind": kind, "name": name, "transform": {"position": position, "rotation": [0, 0, 0, 1], "scale": [1, 1, 1]},
+            "parent": None, "enabled": True, **extra}
+
+
 def loco(ident: str, tender: str = "", truck: str = "", parts=(), kind: str = "SteamLocomotive", whistle: str | None = "wh-test",
          heating_surface: float | None = 1200.0, extra_components=()) -> dict:
     components = [
@@ -43,7 +48,13 @@ def loco(ident: str, tender: str = "", truck: str = "", parts=(), kind: str = "S
         *parts,
     ]
     if whistle:
-        components.append({"kind": "Whistle", "defaultWhistleIdentifier": whistle, "name": "Whistle"})
+        components.append({"kind": "Whistle", "defaultWhistleIdentifier": whistle, "name": "Whistle",
+                           "transform": {"position": [0.4, 3.1, -0.3]}})
+    components += [anchor("Chuff", "Chuff", [0, 3.6, 2.3]), anchor("CylinderCock", "CylinderCock 1", [0, 0.5, 2.5], radius=1.1),
+                   anchor("Seat", "Engineer Seat", [1.0, 2.0, -2.3]), anchor("Seat", "Fireman Seat", [-1.0, 2.0, -2.3]),
+                   anchor("FireboxEffect", "FireboxEffect 1", [0, 1.4, -2.0]), anchor("Headlight", "hl1", [0, 2.9, 3.2], forward=True),
+                   anchor("Decal", "Decal 1", [-1.35, 1.7, -1.7], content="RoadNumber"),
+                   anchor("Decal", "Decal 2", [1.35, 1.7, -1.7], content="RoadNumber")]
     components += list(extra_components)
     d = {"kind": kind, "archetype": "LocomotiveSteam", "modelIdentifier": ident, "mainDriverIndex": 0,
          "maximumBoilerPressure": 180.0, "pistonDiameterInches": 16.0, "pistonStrokeInches": 24.0, "publishedTractiveEffort": 0,
@@ -238,12 +249,16 @@ def fake_carcreator(path: Path) -> Path:
 
 
 FAKE_UNITY = r'''#!/usr/bin/env python3
-"""Stand-in for Unity 2019.4 running Rr2dvProbe.Run, for tests. $FAKE_UNITY_MODE: flake-once | no-result | problems."""
-import json, os, sys
+"""Stand-in for Unity 2019.4 running our editor methods, for tests. $FAKE_UNITY_MODE: flake-once | no-result | problems |
+compile-error | build-fails | build-audio | install-cancel (not used here)."""
+import hashlib, json, os, sys
 from pathlib import Path
 args = sys.argv[1:]
 project = Path(args[args.index("-projectPath") + 1]); log = Path(args[args.index("-logFile") + 1])
-out = Path(os.environ["RR2DV_PROBE_OUT"]); mode = os.environ.get("FAKE_UNITY_MODE", "")
+method = args[args.index("-executeMethod") + 1]
+out = Path(os.environ.get({"Rr2dvProbe.Run": "RR2DV_PROBE_OUT", "Rr2dvBuild.Build": "CCL_BUILD_OUT",
+                           "Rr2dvAudit.Run": "RR2DV_AUDIT_OUT"}[method]))
+mode = os.environ.get("FAKE_UNITY_MODE", "")
 state = Path(os.environ.get("FAKE_UNITY_STATE", str(out) + ".state"))
 calls = int(state.read_text()) + 1 if state.exists() else 1
 state.write_text(str(calls))
@@ -253,16 +268,84 @@ if mode == "compile-error":
     time.sleep(300)  # a windowed editor with compiler errors just waits
 if mode == "flake-once" and calls == 1:
     log.write_text("No valid Unity Editor license found\n"); sys.exit(1)
-log.write_text("fake unity " + args[args.index("-executeMethod") + 1] + "\n")
+log.write_text("fake unity " + method + "\n")
 if mode == "no-result":
     sys.exit(0)
-data = json.loads((project / "Assets/Rr2dv/ProbeInput.json").read_text())
-problems = ["fake problem"] if mode == "problems" else []
-(out / "probe.json").write_text(json.dumps({"schema": 1, "vehicles": [{"id": v["id"], "role": v["role"]} for v in data["vehicles"]],
-                                           "problems": problems}))
-(out / "result.json").write_text(json.dumps({"status": "problems" if problems else "passed", "exitCode": 2 if problems else 0,
-                                            "problems": len(problems), "runtimeValidated": False}))
-sys.exit(2 if problems else 0)
+
+def axles(w):
+    n, off, length = w["axles"], w["offset"], w["length"]
+    return [off] * n if n <= 1 else [off + length / 2 - i * length / (n - 1) for i in range(n)]
+
+def probe():
+    data = json.loads((project / "Assets/Rr2dv/ProbeInput.json").read_text())
+    problems = ["fake problem"] if mode == "problems" else []
+    vehicles = []
+    for v in data["vehicles"]:
+        nodes = [{"path": "", "position": [0, 0, 0], "rotation": [0, 0, 0, 1], "lossyScale": [1, 1, 1]}]
+        wheels, clips = [], []
+        for w in v["wheelsets"]:
+            r = w["diameter"] / 2
+            paths = []
+            for i, z in enumerate(axles(w)):
+                p = f"Main/{w['clip']}{i + 1}"
+                paths.append(p)
+                nodes.append({"path": p, "position": [0, r, z], "rotation": [0, 0, 0, 1], "lossyScale": [1, 1, 1]})
+            wheels.append({"clip": w["clip"], "sourceRadius": r, "rotatingPaths": paths,
+                           "meshes": [{"path": p + "/wheel", "used": True} for p in paths],
+                           "bands": [{"radius": r * 0.998, "vertices": 40, "lateralMin": 0.72, "lateralMax": 0.8},
+                                     {"radius": r * 1.07, "vertices": 20, "lateralMin": 0.7, "lateralMax": 0.72}]})
+            clips.append({"key": w["clip"], "poses": [{"path": p} for p in paths]})
+        anchors = [{"kind": c["kind"], "name": c["name"], "resolved": True, "position": c["position"]} for c in v["components"]]
+        out_v = {"id": v["id"], "role": v["role"], "prefab": v["prefab"], "nodes": nodes, "wheels": wheels, "clips": clips,
+                 "anchors": anchors, "boundsMin": [-1.5, 0.0, -4.4], "boundsMax": [1.5, 4.0, 5.5], "audioSources": 0}
+        cab = v.get("cab")
+        if cab:  # a flat backhead 0.5 m ahead of the rays' start, 1.4 m wide
+            out_v["cabRays"] = [{"x": x, "y": y, "hit": abs(x) <= 0.7, "z": cab["startZ"] + 0.5, "distance": 0.5,
+                                 "normalZ": -1.0, "part": "Main/Backhead"} for y in cab["ys"] for x in cab["xs"]]
+        if v["role"] == "truck":
+            out_v["truckWheels"] = [{"path": f"truck/Wheel{i}_LOD0", "wheelNode": f"truck/Wheel{i}_LOD0", "centre": [0, 0.42, z],
+                                     "maxRadius": 0.45, "vertices": 60,
+                                     "bands": [{"radius": 0.42, "vertices": 40, "lateralMin": 0.72, "lateralMax": 0.8},
+                                               {"radius": 0.445, "vertices": 20, "lateralMin": 0.7, "lateralMax": 0.72}]}
+                                    for i, z in ((1, 0.84), (2, -0.84))]
+            out_v["nodes"] += [{"path": "truck", "position": [0, 0, 0]}] + [{"path": w["path"], "position": w["centre"]} for w in out_v["truckWheels"]]
+        vehicles.append(out_v)
+    (out / "probe.json").write_text(json.dumps({"schema": 1, "vehicles": vehicles, "problems": problems}))
+    (out / "result.json").write_text(json.dumps({"status": "problems" if problems else "passed", "exitCode": 2 if problems else 0,
+                                                "problems": len(problems), "runtimeValidated": False}))
+    return 2 if problems else 0
+
+def build():
+    rec = json.loads(Path(os.environ["CCL_VEHICLE_RECORD"]).read_text())
+    inp = json.loads((project / "Assets/Rr2dv/BuildInput.json").read_text())
+    (out / "prep.json").write_text(json.dumps({"schema": 1, "removedBindings": [{"clip": a["clip"], "hash": h, "bindings": 1}
+        for a in inp["absentBindings"] for h in a["hashes"]], "audioStripped": [], "parts": [
+        {"vehicle": c["vehicle"], "part": p["name"]} for c in inp["composites"] for p in c["parts"]]}))
+    if mode == "build-fails":
+        (out / "build_report.txt").write_text("CclLocoBuild\nEXCEPTION System.InvalidOperationException: insufficient end-beam rays: 3\n")
+        (out / "result.json").write_text('{"exported":false,"warnings":0,"runtimeValidated":false}')
+        return 1
+    name = rec["config"]["CarName"]
+    pack = out / name
+    pack.mkdir(parents=True)
+    (pack / "Info.json").write_text(json.dumps({"Id": rec["config"]["CarId"], "DisplayName": name, "Requirements": ["DVCustomCarLoader"]}))
+    (pack / "ccl_bundle").write_bytes(hashlib.sha256(json.dumps(rec, sort_keys=True).encode()).digest())
+    (out / "build_report.txt").write_text("CclLocoBuild\nWARN control sweep: C_Throttle meets C_Reverser at 30 deg\n\nwarnings: 1\n")
+    (out / "record_seen.json").write_text(json.dumps({"env": {k: os.environ.get(k) for k in ("CCL_SHARE", "CCL_NEW_LOCO", "CCL_CATALOG_RECORD")}}))
+    (out / "result.json").write_text('{"exported":true,"warnings":1,"runtimeValidated":false}')
+    return 0
+
+def audit():
+    inp = json.loads((project / "Assets/Rr2dv/AuditInput.json").read_text())
+    errors = ["1 AudioClip(s) in the bundle: whistle"] if mode == "build-audio" else []
+    (out / "audit.json").write_text(json.dumps({"schema": 1, "status": "failed" if errors else "passed", "errors": errors,
+        "warnings": ["the HUD has no reading for brakePipe (no instrument for it in the model)"], "audioClips": len(errors),
+        "scriptAssemblies": ["CCL.Types"], "portFeeders": inp["ports"], "input": inp}))
+    (out / "result.json").write_text(json.dumps({"status": "failed" if errors else "passed", "errors": len(errors), "warnings": 1,
+                                                "runtimeValidated": False}))
+    return 2 if errors else 0
+
+sys.exit({"Rr2dvProbe.Run": probe, "Rr2dvBuild.Build": build, "Rr2dvAudit.Run": audit}[method]())
 '''
 
 

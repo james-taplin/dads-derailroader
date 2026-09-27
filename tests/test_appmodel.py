@@ -48,7 +48,7 @@ class ControllerTests(unittest.TestCase):
         outcome = self.c.convert("Test Loco Mod", "ts-260-a", on_progress=lambda *e: events.append(e))
         self.assertEqual(outcome.code, EXIT_INCOMPLETE, outcome.message)
         self.assertEqual([e[0] for e in events if e[1] == "running"],
-                         ["locate", "link", "stage", "extract", "import", "probe", "record"])
+                         ["locate", "link", "stage", "extract", "import", "probe", "record", "build"])
         self.assertEqual(events[-1][:2], (None, "incomplete"))
 
     def test_saving_settings_merges_and_empty_removes(self):

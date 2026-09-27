@@ -38,6 +38,33 @@ def prefab_maps(prefab: Path, guids: dict[str, str]) -> dict[str, list[dict]]:
     return maps
 
 
+CAB_RAY_STEP = 0.1       # m between rays
+CAB_RAY_HALF_WIDTH = 1.0  # rays across x -1..1 m
+CAB_RAY_BELOW, CAB_RAY_ABOVE = 0.4, 1.6  # around the firebed height, up the backhead
+CAB_RAY_LENGTH = 3.0
+
+
+def _grid(lo: float, hi: float) -> list[float]:
+    n = int(round((hi - lo) / CAB_RAY_STEP))
+    return [round(lo + i * CAB_RAY_STEP, 3) for i in range(n + 1)]
+
+
+def cab_spec(comps: list[dict]) -> dict | None:
+    """Where the probe looks for the backhead: rays forward from the crew seats (else 1 m behind the rearmost firebox
+    glow) across the cab, from just under the firebed up the backhead. Only car-space components (no parent) count."""
+    free = [c for c in comps if not c["parentPath"]]
+    seats = [c["position"] for c in free if c["kind"] == "Seat"]
+    fire = [c["position"] for c in free if c["kind"] == "FireboxEffect"]
+    fire_rear = min(fire, key=lambda p: p[2]) if fire else None
+    start = min(s[2] for s in seats) if seats else (fire_rear[2] - 1.0 if fire_rear else None)
+    ref_y = fire_rear[1] if fire_rear else (min(s[1] for s in seats) - 0.5 if seats else None)
+    if start is None or ref_y is None:
+        return None
+    return {"startZ": round(start, 4), "length": CAB_RAY_LENGTH, "xs": _grid(-CAB_RAY_HALF_WIDTH, CAB_RAY_HALF_WIDTH),
+            "ys": _grid(round(ref_y - CAB_RAY_BELOW, 2), round(ref_y + CAB_RAY_ABOVE, 2)),
+            "basis": "seats" if seats else "firebox effects"}
+
+
 def _vec(values, default):
     return [float(v) for v in values] if isinstance(values, list) and len(values) == len(default) else list(default)
 
@@ -82,8 +109,10 @@ def build(run_path: Path, inv: dict, project_info: dict) -> dict:
                           "position": _vec(t.get("position"), [0.0, 0.0, 0.0]), "rotation": _vec(t.get("rotation"), [0.0, 0.0, 0.0, 1.0]),
                           "scale": _vec(t.get("scale"), [1.0, 1.0, 1.0]),
                           "clip": clip, "clipAsset": clips.get(clip, "")})
+        cab = cab_spec(comps) if v["role"] == "locomotive" else None
         vehicles.append({"id": v["id"], "role": v["role"], "prefab": v["unity_prefab"], "wheelsets": wheelsets,
-                         "components": comps, "animationMap": maps["clip"], "materialMap": maps["material"]})
+                         "components": comps, "animationMap": maps["clip"], "materialMap": maps["material"],
+                         **({"cab": cab} if cab else {})})
     data = {"schema": 1, "vehicles": vehicles, "missing": missing}
     write_json(project / INPUT_ASSET, data)
     return data

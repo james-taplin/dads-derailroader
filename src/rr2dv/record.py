@@ -220,9 +220,16 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
     for a in absent_bindings:
         what = ("animates nothing in the exported model" if not a["restored"] else
                 f"{len(a['absent'])} of its {a['bindings']} bindings target objects that are in no model of the export")
-        pending.append(f"animation {'/'.join(a['keys']) or a['clip']}: {what} (metadata.absentBindings); the build removes "
-                       "those bindings before our builder; check nothing that should move is missing"
+        pending.append(f"animation {'/'.join(a['keys']) or a['clip']}: {what} (metadata.absentBindings); the build stage must "
+                       "remove exactly those bindings before our builder and record that it did (build/prep.json); check nothing "
+                       "that should move is missing"
                        + (", and that the control it belongs to still works without it" if not a["restored"] else ""))
+    # Material slots the probe found empty (X40: an unresolvable reference already in the export). Never guessed or
+    # dropped: the renderer keeps the slot, and a person checks whether it is used.
+    material_problems = [p for p in (probe_output or {}).get("problems", []) if "missing material" in p]
+    if material_problems:
+        pending.append(f"materials: {len(material_problems)} renderer(s) have an empty material slot in the export "
+                       f"(metadata.materialProblems, first: {material_problems[0]}); check the part looks right in the renders")
     code_mods = sorted({c["provider"] for c in inv.get("code_mods", [])})
     if code_mods:
         pending.append(f"simulation: nonstandard running gear ({', '.join(sorted({c['kind'] for c in inv['code_mods']}))} from "
@@ -289,7 +296,8 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
                                           "sourceWeightKg": (d.get("weightEmpty") or 0) * LB_KG,
                                           "interpretation": "working order incl. boiler water (guide E04); spawn water to subtract is pending"},
                            "wheelCandidates": wheel_candidates, "leftOut": inv.get("left_out", []),
-                           "absentBindings": absent_bindings,
+                           "absentBindings": absent_bindings, "materialProblems": material_problems,
+                           "sources": inv.get("sources", []),
                            "audio": inv["audio"], "codeMods": code_mods, "pending": pending}}
     if inv.get("tender"):
         tender_id = inv["tender"]["id"]

@@ -109,6 +109,13 @@ def cmd_convert(args) -> int:
         raise
     _print_run(outcome.run)
     print(outcome.message)
+    radius = next((b for b in (outcome.run.record.get("blocks") or [] if outcome.run else [])
+                   if b.get("code") == "needs-wheel-radius" and b.get("candidate")), None)
+    if radius:  # the rerun command, with every answer already given, for the user to check and run
+        parts = ["rr2dv", "convert", f'"{args.input}"'] + (["--loco", args.loco] if args.loco else []) + \
+                (["--livery", f'"{args.livery}"'] if args.livery else []) + (["--audio", args.audio] if args.audio else []) + \
+                [f"--search \"{s}\"" for s in args.search] + ["--wheel-radius", f"{radius['candidate']:.4f}"]
+        print("\nAfter checking the candidate against the tyre in the model, convert again with:\n  " + " ".join(parts))
     return outcome.code
 
 

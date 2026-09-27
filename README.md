@@ -7,9 +7,10 @@ The tool is called `rr2dv` on the command line. It takes a steam locomotive mod 
 folder, rebuilds it for the Derail Valley Custom Car Loader (CCL 3.1.9), and installs the result into your own Derail
 Valley `Mods` folder. It never changes the Railroader mod it reads.
 
-> **Work in progress.** Everything up to a draft vehicle record works, from the desktop app or the command line,
-> and has been run with real Unity and AssetRipper on Windows. The Unity build and audit stages are next, so no pack
-> is installed yet.
+> **Work in progress: first end-to-end version.** Every stage is written, from finding the mod to installing the pack.
+> Everything up to the draft vehicle record has been run with real Unity and AssetRipper on Windows; the build, audit
+> and install stages are new and are being tried on real locomotives now. An installed pack is a **candidate**: it
+> still has to be checked in Derail Valley (see *What a finished pack must pass*).
 
 ## Personal use only
 
@@ -45,7 +46,11 @@ derailroader                      # opens the app (or: rr2dv gui)
 - The left side lists the steam locomotive mods in your Railroader `Mods` folder; type to filter.
 - Pick a locomotive to see its tender, trucks, parts, controls, sounds, whose work it uses and any problems. Choose
   the livery and sounds, then **Convert**. The stages tick off below as they run; afterwards you can open the run
-  folder and the draft record. The personal-use notice opens inside the app before anything is installed.
+  folder, the draft record and the build folder (the builder's report and renders).
+- The first conversion of a locomotive stops before building and asks for the **wheel radius**: it shows the measured
+  candidate. Check it, click **Use measured radius** (or type your own) and **Convert** again. The second run reuses
+  the imported model, so it goes straight to building.
+- The personal-use notice opens inside the app before anything is installed.
 
 ## Command line
 
@@ -66,7 +71,7 @@ elsewhere are refused.
 | `--loco ID` | which locomotive, when the mod has more than one |
 | `--livery NAME` | livery to use (default: the mod's first) |
 | `--audio S060\|S282` | vanilla sound set instead of the boiler-size rule |
-| `--wheel-radius M` | the driving wheel tread radius, once you have reviewed the measured candidates |
+| `--wheel-radius M` | the driving wheel tread radius, once you have reviewed the measured candidate (the first run stops and prints the command with it) |
 | `--search DIR` | an extra folder to look in for dependencies |
 
 ## What happens
@@ -83,9 +88,9 @@ one that fails or is not built yet:
 | import | assemble a Unity 2019.4 project: restored animation paths, dependencies, CarCreator, our builder | working |
 | probe | measure the model in Unity: hierarchy, anchors, animations, wheel tread candidates | working |
 | record | draft the vehicle record: every value with its unit, basis and evidence; unknowns listed for review | working |
-| build | build the CCL pack in Unity | next |
-| audit | check the built pack | next |
-| publish | show the notice, then install into Derail Valley's `Mods` folder | ready, waits for build |
+| build | complete the record from the measurements (running gear, cab, controls, anchors, collision; every automatic choice listed for review), then build the CCL pack in Unity with our builder | new |
+| audit | read the exported pack with Unity's own loader: no audio, Custom Car Loader scripts only, the controls the HUD needs, the recorded mass and wheel radius | new |
+| publish | show the notice, then install into Derail Valley's `Mods` folder | new |
 
 Both game installs are found before a conversion starts, again before the Unity build, and again just before
 installing.
@@ -96,7 +101,8 @@ It stops rather than guess, and always says why: in the app's Checks list and Co
 line's output, and in the run folder. **[docs/resolving-blocks.md](docs/resolving-blocks.md) lists every block and
 review item and how to resolve each one.** The tool cannot yet ask you questions mid-run or resume a stopped run:
 give your answers when you start (the app's Options, or `--loco`, `--livery`, `--audio`, `--wheel-radius`) and
-convert again after fixing a block. Reruns are safe and reuse the cached AssetRipper exports.
+convert again after fixing a block. Reruns are safe: they reuse the cached AssetRipper exports and, when only your
+answers changed, the imported and measured Unity project.
 
 For diagnosis, every run writes a readable **`run.log`** in its run folder (settings and installs used, every stage,
 every issue, what AssetRipper and Unity reported, review items, and the full traceback of any unexpected error), and
@@ -119,8 +125,8 @@ the app and command line keep **`%LOCALAPPDATA%\rr2dv\logs\rr2dv.log`** for ever
 
 ## What a finished pack must pass
 
-The build and audit stages still to come will only accept a pack that passes our builder's gates (`tooling/`, guide
-rules Q02–Q05), plus two control gates we have learned the hard way (board X36):
+The build uses our builder's own gates (`tooling/`, guide rules Q02–Q05) and the audit checks the exported pack. Two
+control gates we have learned the hard way (board X36) can only be checked in game:
 
 - **Responsive controls (CTRL-01).** Driving controls and valves must behave like our last accepted G-29/C-21
   builds: they respond to fine inputs, cover their full range, keep their settings and release momentary controls
@@ -129,7 +135,10 @@ rules Q02–Q05), plus two control gates we have learned the hard way (board X36
   simulation, not just look closed or round to 0% on the HUD, with no steam flow attributable to it.
 
 A successful build is not enough on its own: these need checking in game, and a pack that has not been checked yet is
-marked as pending, not accepted.
+marked as pending, not accepted. The cab handles Railroader models become Derail Valley levers with the joint settings
+of our last user-accepted G-29 build, per kind of control; functions Railroader has no handle for (injector, blower,
+damper and so on) get generated controls on the backhead. `build/review.json` in the run folder lists every such
+automatic choice.
 
 ## Settings
 

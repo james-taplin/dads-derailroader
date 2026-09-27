@@ -1,0 +1,177 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEditor;
+using UnityEngine;
+using Object = UnityEngine.Object;
+
+// rr2dv audit stage (Unity 2019.4, editor only): read-only checks of the pack the build stage exported, in the same
+// project. Input Assets/Rr2dv/AuditInput.json (rr2dv's audit.py), output audit.json + result.json in RR2DV_AUDIT_OUT.
+// Q05 in our guide audits the bundle itself; here Unity's own loader reads it (no third-party parser):
+//  - no AudioClip anywhere: in the bundle, or among the built car assets' dependencies (James, W5: no Railroader audio);
+//  - behaviours only from CCL.Types, none missing;
+//  - the HUD/keyboard controls and indicators the LocoControlsReader/LocoIndicatorReader need, the driving controls'
+//    port feeders, unique simulation IDs, one cab teleport, and the car types' mass and wheel radius as recorded.
+// Passing is not acceptance: runtime checks (CTRL-01/CTRL-02) stay pending.
+public static class Rr2dvAudit
+{
+    [Serializable] public class Car { public string id; public float mass, wheelRadius; public bool locomotive; }
+    [Serializable] public class Input { public int schema; public string[] bundles; public string[] carFolders; public Car[] cars; public string[] controls, ports, indicators; }
+    [Serializable] public class Output
+    {
+        public int schema = 1; public string status; public string[] errors, warnings, bundleAssets, scriptAssemblies, dependencies;
+        public int audioClips; public string[] audioClipNames; public string[] portFeeders;
+    }
+    [Serializable] public class Result { public string status; public int errors, warnings; public bool runtimeValidated; public string error; }
+
+    const string InputAsset = "Assets/Rr2dv/AuditInput.json";
+
+    public static void Run()
+    {
+        string output = Environment.GetEnvironmentVariable("RR2DV_AUDIT_OUT");
+        var errors = new List<string>();
+        var warnings = new List<string>();
+        var result = new Result { status = "failed" };
+        int exit = 1;
+        var loaded = new List<AssetBundle>();
+        try
+        {
+            if (string.IsNullOrEmpty(output)) throw new InvalidOperationException("RR2DV_AUDIT_OUT is required");
+            Directory.CreateDirectory(output);
+            var project = Directory.GetParent(Application.dataPath).FullName;
+            var input = JsonUtility.FromJson<Input>(File.ReadAllText(Path.Combine(project, InputAsset)));
+            if (input == null || input.schema != 1) throw new InvalidDataException("unsupported audit input");
+            var outp = new Output();
+
+            // built car assets and everything they depend on: what the export packed
+            var assets = (input.carFolders ?? new string[0]).Where(AssetDatabase.IsValidFolder)
+                .SelectMany(f => AssetDatabase.FindAssets("", new[] { f })).Select(AssetDatabase.GUIDToAssetPath).Distinct().ToArray();
+            if (assets.Length == 0) errors.Add("no built car assets found in " + string.Join(", ", input.carFolders ?? new string[0]));
+            var deps = AssetDatabase.GetDependencies(assets, true).Distinct().OrderBy(p => p, StringComparer.Ordinal).ToArray();
+            foreach (var d in deps)
+            {
+                if (AssetDatabase.GetMainAssetTypeAtPath(d) == typeof(AudioClip)) errors.Add("audio in the built car's dependencies: " + d);
+                string ext = Path.GetExtension(d).ToLowerInvariant();
+                if ((ext == ".cs" || ext == ".dll") && Path.GetFileName(d) != "CCL.Types.dll") errors.Add("script outside CCL.Types in the built car's dependencies: " + d);
+            }
+            outp.dependencies = deps;
+
+            // the exported bundle(s), read by Unity's own loader
+            var names = new List<string>();
+            var scripts = new SortedSet<string>(StringComparer.Ordinal);
+            var clips = new List<string>();
+            var feeders = new SortedSet<string>(StringComparer.Ordinal);
+            var objects = new List<Object>();
+            foreach (var path in input.bundles ?? new string[0])
+            {
+                var b = AssetBundle.LoadFromFile(path);
+                if (!b) { errors.Add("the exported bundle could not be loaded: " + path); continue; }
+                loaded.Add(b);
+                names.AddRange(b.GetAllAssetNames());
+                objects.AddRange(b.LoadAllAssets());
+            }
+            if ((input.bundles ?? new string[0]).Length == 0) errors.Add("no exported bundle to audit");
+            var all = new List<Object>();
+            foreach (var o in objects)
+            {
+                all.Add(o);
+                var go = o as GameObject;
+                if (!go) continue;
+                foreach (var c in go.GetComponentsInChildren<Component>(true))
+                {
+                    if (c == null) { errors.Add("missing behaviour script in " + go.name); continue; }
+                    all.Add(c);
+                }
+            }
+            foreach (var o in all)
+            {
+                if (o is AudioClip) clips.Add(o.name);
+                if (o is AudioSource && ((AudioSource)o).clip) clips.Add(((AudioSource)o).clip.name);
+                if (o is MonoBehaviour || o is ScriptableObject)
+                {
+                    var asm = o.GetType().Assembly.GetName().Name;
+                    scripts.Add(asm);
+                    if (asm != "CCL.Types") errors.Add("behaviour outside CCL.Types in the bundle: " + o.GetType().FullName + " (" + asm + ")");
+                }
+                if (o.GetType().Name == "InteractablePortFeederProxy") feeders.Add(Str(o, "portId"));
+            }
+            outp.audioClips = clips.Count;
+            outp.audioClipNames = clips.ToArray();
+            if (clips.Count > 0) errors.Add(clips.Count + " AudioClip(s) in the bundle: " + string.Join(", ", clips.Take(10)));
+            outp.bundleAssets = names.OrderBy(n => n, StringComparer.Ordinal).ToArray();
+            outp.scriptAssemblies = scripts.ToArray();
+            outp.portFeeders = feeders.ToArray();
+
+            Func<string, string, Object> One = (type, what) =>
+            {
+                var hits = all.Where(o => o.GetType().Name == type).ToList();
+                if (hits.Count != 1) { errors.Add("expected one " + type + " (" + what + "), found " + hits.Count); return null; }
+                return hits[0];
+            };
+            var controls = One("LocoControlsReaderProxy", "HUD and keyboard controls");
+            if (controls) foreach (var f in input.controls ?? new string[0]) if (!Ref(controls, f)) errors.Add("no control for the HUD's " + f);
+            var indicators = One("LocoIndicatorReaderProxy", "HUD readings");
+            if (indicators) foreach (var f in input.indicators ?? new string[0]) if (!Ref(indicators, f)) warnings.Add("the HUD has no reading for " + f + " (no instrument for it in the model)");
+            foreach (var p in input.ports ?? new string[0]) if (!feeders.Contains(p)) errors.Add("no control feeds " + p);
+            One("CabTeleportDestinationProxy", "cab teleport");
+
+            foreach (var sim in all.Where(o => o.GetType().Name == "SimConnectionsDefinitionProxy"))
+            {
+                var order = new SerializedObject(sim).FindProperty("executionOrder");
+                var ids = new List<string>();
+                for (int i = 0; order != null && i < order.arraySize; i++)
+                {
+                    var entry = order.GetArrayElementAtIndex(i).objectReferenceValue;
+                    if (!entry) { errors.Add("empty simulation entry"); continue; }
+                    ids.Add(Str(entry, "ID"));
+                }
+                var dup = ids.GroupBy(i => i).Where(g => g.Count() > 1).Select(g => g.Key).ToArray();
+                if (dup.Length > 0) errors.Add("duplicate simulation IDs: " + string.Join(", ", dup));
+            }
+            var types = all.Where(o => o.GetType().Name == "CustomCarType").ToList();
+            foreach (var car in input.cars ?? new Car[0])
+            {
+                var t = types.FirstOrDefault(o => Str(o, "id") == car.id);
+                if (!t) { errors.Add("car type " + car.id + " not in the bundle"); continue; }
+                var so = new SerializedObject(t);
+                float mass = so.FindProperty("mass").floatValue, radius = so.FindProperty("wheelRadius").floatValue;
+                if (Mathf.Abs(mass - car.mass) > 0.5f) errors.Add(car.id + " mass " + mass + " kg, record " + car.mass);
+                if (Mathf.Abs(radius - car.wheelRadius) > 0.0005f) errors.Add(car.id + " wheel radius " + radius + " m, record " + car.wheelRadius);
+            }
+            if (types.Count != (input.cars ?? new Car[0]).Length) errors.Add("expected " + (input.cars ?? new Car[0]).Length + " car type(s), found " + types.Count);
+
+            outp.errors = errors.ToArray();
+            outp.warnings = warnings.ToArray();
+            outp.status = errors.Count == 0 ? "passed" : "failed";
+            File.WriteAllText(Path.Combine(output, "audit.json"), JsonUtility.ToJson(outp, true));
+            result = new Result { status = outp.status, errors = errors.Count, warnings = warnings.Count };
+            exit = errors.Count == 0 ? 0 : 2;
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
+            result = new Result { status = "failed", errors = errors.Count + 1, warnings = warnings.Count, error = e.ToString() };
+            exit = 1;
+        }
+        finally
+        {
+            foreach (var b in loaded) if (b) b.Unload(true);
+            if (!string.IsNullOrEmpty(output) && Directory.Exists(output))
+                File.WriteAllText(Path.Combine(output, "result.json"), JsonUtility.ToJson(result, true));
+            EditorApplication.Exit(exit);
+        }
+    }
+
+    static string Str(Object o, string field)
+    {
+        var p = new SerializedObject(o).FindProperty(field);
+        return p != null && p.propertyType == SerializedPropertyType.String ? p.stringValue : null;
+    }
+
+    static bool Ref(Object o, string field)
+    {
+        var p = new SerializedObject(o).FindProperty(field);
+        return p != null && p.propertyType == SerializedPropertyType.ObjectReference && p.objectReferenceValue;
+    }
+}
