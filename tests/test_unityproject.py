@@ -42,6 +42,8 @@ class Import(unittest.TestCase):
             "tender": "Assets/PrefabInstance/tt-260-a.prefab",
             "truck": "Assets/RR/search1/TruckMod/Trucks/PrefabInstance/Test-Truck-2s.prefab"})
         self.assertIn("path: Wheel", (assets / "AnimationClip" / "Drivers.anim").read_text())
+        truck_clips = info["clips"]["RR/search1/TruckMod/Trucks"]
+        self.assertEqual((truck_clips["clips"], truck_clips["selected"]), (1, 2))  # the truck prefab and its clip only
         self.assertNotIn("path_0x", (assets / "RR/search1/TruckMod/Trucks/AnimationClip/Drivers.anim").read_text())
         # part copied with its material dependency and GUIDs intact
         part = info["parts"][0]
@@ -243,6 +245,25 @@ class TiedClips(unittest.TestCase):
         decisions = read_json(self.tmp / "reports" / "clips-main-bindings.json")["clips"]
         self.assertEqual((decisions["AnimationClip/Hatch.anim"]["decision"], decisions["AnimationClip/Hatch_0.anim"]["decision"]),
                          ("bound", "error"))
+
+    def test_shared_clip_resolves_against_the_one_prefab_we_use(self):
+        # X35: every Fox truck variant names the same Brakes clip; the C21 tender uses one of them.
+        (self.src / "PrefabInstance" / "loco.prefab").write_text(_prefab("loco", "Cab", {"Hatch": "b1"}))
+        with self.assertRaisesRegex(ProjectError, "name it"):
+            resolve_clips(self.src, self.tmp / "all", self.tmp / "reports" / "clips-all.json")
+        dest = self.tmp / "dest"
+        out = resolve_clips(self.src, dest, self.tmp / "reports" / "clips-truck.json",
+                            only={"PrefabInstance/tender.prefab", "AnimationClip/Hatch.anim"})
+        self.assertEqual((out["clips"], out["selected"]), (1, 2))
+        self.assertIn("path: Body/Hatch", (dest / "AnimationClip" / "Hatch.anim").read_text())
+        self.assertFalse((self.tmp / "reports" / "clips-truck-selected").exists())
+        self.assertTrue((self.src / "PrefabInstance" / "loco.prefab").is_file(), "the export is never changed")
+
+    def test_two_used_prefabs_needing_different_paths_stay_an_error(self):
+        (self.src / "PrefabInstance" / "loco.prefab").write_text(_prefab("loco", "Cab", {"Hatch": "b1"}))
+        with self.assertRaisesRegex(ProjectError, "name it"):
+            resolve_clips(self.src, self.tmp / "dest", self.tmp / "reports" / "clips-truck.json",
+                          only={"PrefabInstance/tender.prefab", "PrefabInstance/loco.prefab", "AnimationClip/Hatch.anim"})
 
     def test_clip_named_by_two_prefabs_stays_an_error(self):
         (self.src / "PrefabInstance" / "loco.prefab").write_text(_prefab("loco", "Cab", {"Hatch": "b1"}))

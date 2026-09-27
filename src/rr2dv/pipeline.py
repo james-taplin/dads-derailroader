@@ -78,15 +78,14 @@ def extract(run: Run, inv: dict, machine: Machine) -> dict:
 def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: Sequence[Path] = (),
             audio: str | None = None, livery: str | None = None, wheel_radius: float | None = None,
             ask: Callable = consent.ask) -> Outcome:
-    # Both installs first (W25), then the input must be a mod in the Railroader Mods folder.
-    rr = installs.railroader(machine)
-    dv = installs.derail_valley(machine)
+    # Both installs (and CCL) first (W25), then the input must be a mod in the Railroader Mods folder.
+    rr, dv = _installs(machine)
     input_path = installs.mod_in_railroader(rr, mod)
     work_root = machine.work_root.resolve()
-    # Refuse bad targets before creating anything.
-    check_work_root(work_root)
+    # Refuse bad targets before creating anything: where first (a clearer answer), then Unity's path limit.
     guard = [("input mod", input_path), ("Railroader install", rr.root), ("Derail Valley install", dv.root)]
     check_write_target(work_root, guard)
+    check_work_root(work_root)
     roots = search_roots(rr, search)
 
     request = {"input": str(input_path), "locomotive": loco, "railroader": rr.describe(), "derail_valley": dv.describe(),
@@ -103,13 +102,20 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
         raise
 
 
-def install_pack(run: Run, machine: Machine, pack_dir: Path, expected: dict[str, str], sources: list[dict],
-                 ask: Callable = consent.ask) -> Path:
-    """The publish stage: Derail Valley is found again, CCL must be there, then the notice, then the install."""
+def _installs(machine: Machine) -> tuple[installs.Install, installs.Install]:
+    """Railroader, Derail Valley and Custom Car Loader, found (again) at each boundary W25 names."""
+    rr = installs.railroader(machine)
     dv = installs.derail_valley(machine)
     if not installs.ccl_installed(dv):
         raise installs.InstallError(f"Custom Car Loader ({installs.CCL_MOD_ID}) is not installed in {dv.mods}; "
                                     "install it first, the converted pack needs it")
+    return rr, dv
+
+
+def install_pack(run: Run, machine: Machine, pack_dir: Path, expected: dict[str, str], sources: list[dict],
+                 ask: Callable = consent.ask) -> Path:
+    """The publish stage: Derail Valley is found again, CCL must be there, then the notice, then the install."""
+    _, dv = _installs(machine)
     details = {"run": run.path.name, "input": run.record["request"]["input"],
                "locomotive": run.record.get("answers", {}).get("locomotive"),
                "input_fingerprint": run.record.get("input_fingerprint")}
@@ -192,8 +198,7 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
 
     for name, description, available in STAGES[7:]:
         if name == "build":  # found again before the Unity build (W25)
-            installs.railroader(machine)
-            installs.derail_valley(machine)
+            _installs(machine)
         if not available:
             message = f"stopped before '{name}' ({description}): not implemented yet"
             run.finish(name, "not_available", message)

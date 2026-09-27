@@ -124,21 +124,42 @@ def _resolve(source_assets: Path, dest_assets: Path, report: Path, bindings: Pat
     return json.loads(report.read_text(encoding="utf-8"))
 
 
-def _mirror(source_assets: Path, target: Path, skip: set[str]) -> None:
-    """The resolver's inputs (prefabs and clips) without the clips proven unreachable. Hard links where possible."""
+def _mirror(source_assets: Path, target: Path, skip: set[str] = frozenset(), only: set[str] | None = None) -> None:
+    """The resolver's inputs (prefabs and clips, with their .meta files), limited to `only` when given and without
+    `skip`. Hard links where possible; the source export is never changed."""
     for f in sorted(list(source_assets.rglob("*.prefab")) + list(source_assets.rglob("*.anim"))):
         rel = f.relative_to(source_assets).as_posix()
-        if rel in skip:
+        if rel in skip or (only is not None and rel not in only):
             continue
-        dst = target / rel
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        try:
-            os.link(f, dst)
-        except OSError:
-            shutil.copy2(f, dst)
+        for g in (f, f.with_name(f.name + ".meta")):
+            if not g.is_file():
+                continue
+            dst = target / g.relative_to(source_assets)
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            try:
+                os.link(g, dst)
+            except OSError:
+                shutil.copy2(g, dst)
 
 
-def resolve_clips(source_assets: Path, dest_assets: Path, report: Path) -> dict:
+def resolve_clips(source_assets: Path, dest_assets: Path, report: Path, only: set[str] | None = None) -> dict:
+    """Restore clip paths of `source_assets` into `dest_assets`. With `only` (paths relative to source_assets), just
+    those prefabs and clips take part: a dependency pack is resolved against the prefabs we use from it, not every
+    variant in its export (X35: all six Fox truck prefabs name one shared Brakes clip; the C21 tender uses one)."""
+    if only is None:
+        return _resolve_clips(source_assets, dest_assets, report)
+    selected = report.with_name(report.stem + "-selected")
+    if selected.exists():
+        shutil.rmtree(selected)
+    _mirror(source_assets, selected, only=only)
+    try:
+        out = _resolve_clips(selected, dest_assets, report)
+    finally:
+        shutil.rmtree(selected, ignore_errors=True)
+    return {**out, "selected": len(only)}
+
+
+def _resolve_clips(source_assets: Path, dest_assets: Path, report: Path) -> dict:
     """Restore clip paths with our strict resolver. A clip that fits several prefabs with different paths ("tied") is
     decided from the source, never by first match (X30, X33): bound to the one prefab whose clip map names it, else to
     the one prefab that references it anywhere; a clip no serialized file references at all is unreachable and is left
@@ -319,9 +340,9 @@ def assemble(run_path: Path, inv: dict, exports: dict[str, dict], car_creator: P
               "vehicles": [], "parts": []}
 
     copied: dict[tuple[str, str], str] = {}
-    resolved: set[str] = set()
+    selected: dict[str, tuple[Path, set[str]]] = {}  # vehicle pack subfolder -> (its export Assets, prefabs we use)
 
-    def bring(pack: dict, filename: str, resolve: bool) -> str:
+    def bring(pack: dict, filename: str, vehicle: bool) -> str:
         """Unity path of a prefab: in the main export as is, else copied with its dependencies."""
         if pack == main_pack:
             return find_prefab(assets, filename).relative_to(project).as_posix()
@@ -337,17 +358,21 @@ def assemble(run_path: Path, inv: dict, exports: dict[str, dict], car_creator: P
                 if not f.name.endswith(".meta"):
                     excluded.append(f"{sub}/{f.relative_to(assets / sub).as_posix()}")
                 f.unlink()
-        if resolve and sub not in resolved:
-            name = re.sub(r"[^A-Za-z0-9_-]", "_", sub)
-            result["clips"][sub] = resolve_clips(src_assets, assets / sub, reports / f"clips-{name}.json")
-            resolved.add(sub)
+        if vehicle:
+            selected.setdefault(sub, (src_assets, set()))[1].add(prefab.relative_to(src_assets).as_posix())
         copied[key] = f"Assets/{sub}/{prefab.relative_to(src_assets).as_posix()}"
         return copied[key]
 
     for v in inv.get("vehicles", []):
-        result["vehicles"].append({**v, "unity_prefab": bring(v["pack"], v["prefab"], resolve=True)})
+        result["vehicles"].append({**v, "unity_prefab": bring(v["pack"], v["prefab"], vehicle=True)})
+    # Each vehicle pack from another export is resolved once, against the prefabs we use from it and the clips copied
+    # with them (their dependency closure), before any part is added to the same folder.
+    for sub, (src_assets, prefabs) in sorted(selected.items()):
+        clips = {f.relative_to(assets / sub).as_posix() for f in (assets / sub).rglob("*.anim")}
+        name = re.sub(r"[^A-Za-z0-9_-]", "_", sub)
+        result["clips"][sub] = resolve_clips(src_assets, assets / sub, reports / f"clips-{name}.json", only=prefabs | clips)
     for part in inv.get("parts", []):
-        result["parts"].append({**part, "unity_prefab": bring(part["pack_ref"], part["filename"], resolve=False)})
+        result["parts"].append({**part, "unity_prefab": bring(part["pack_ref"], part["filename"], vehicle=False)})
 
     result["excluded_source_code"] = sorted(excluded)
     set_project_settings(project)

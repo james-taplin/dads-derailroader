@@ -90,6 +90,12 @@ class Pipeline(unittest.TestCase):
                 convert(self.m["mod"], Machine(None, {**values, "steamRoots": [str(self.tmp / "no-steam")]}))
         self.assertFalse((self.tmp / "work").exists())
 
+    def test_custom_car_loader_is_needed_before_anything_starts(self):
+        shutil.rmtree(self.tmp / "Derail Valley" / "Mods" / "DVCustomCarLoader")
+        with self.assertRaisesRegex(InstallError, "Custom Car Loader"):
+            convert(self.m["mod"], self.machine)
+        self.assertFalse((self.tmp / "work").exists())
+
     def test_blocking_issue_stops_at_link(self):
         shutil.rmtree(self.m["mod"] / "parts")
         outcome = convert(self.m["mod"], self.machine)
