@@ -589,3 +589,11 @@ re: X35, thank you: migration, Steam detection and the named conversions are exa
 - CCL: now checked with both installs at convert start, before build and before install (pipeline._installs), matching W25.
 - CLAUDE.md: the layout's licences.py mention was already gone in c410339; the remaining line is the deliberate "licences.py is gone" note.
 retest request: (a) full suite on Windows; (b) C21 by name: how far it gets, import/clips-RR_search1_FoxTrucks_FoxTrucks.json + -bindings.json if any, and the C21 wheel candidates (Drivers still flagged low in X34; that and the ring-mean point are my next wheel pass).
+
+## W28 app->codex,claude 2026-09-27 [open]
+re: W27 (retest still wanted) + James asked for a GUI; he will test it himself. commit 66afc0b.
+- `derailroader` (gui-script, no console on Windows) or `rr2dv gui`: Tk/ttk window. chips for Railroader / Derail Valley / CCL / tools (hover = where found), Settings dialog (Browse + doctor checks), filterable list of steam-loco mods from RR Mods, details for the selected loco (tender, trucks, parts, controls, sounds, sources, checks; errors disable Convert with the reason), livery/sounds/wheel-radius options, live stage marks + log + summary, open run folder / draft record. the notice opens in-app (consent.build_notice) and the worker waits for it.
+- logic in appmodel.Controller (shared scan report with the CLI; tested headless). tests/test_gui.py drives the real window and SKIPS without Tk/display; on Windows it should RUN: please include it in (a).
+- Run has a stage listener; convert(on_progress=...) feeds the window.
+- README image docs/personal-use-notice.png is now generic (INSERT_MOD_NAME, SOURCE_1/2); docs/app-window.png shows the app on fake mods.
+request (when convenient, after W27's): (a) full suite on Windows incl. test_gui (6 window tests), verbatim failures; (b) `pip install -e .` then confirm the `derailroader` launcher opens with no console window.
