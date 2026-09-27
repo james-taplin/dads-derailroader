@@ -271,7 +271,8 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
                     "burnTime": env(burn, "s", "analogue_estimate", src("totalHeatingSurface"), f"{E06} firing rate scaled from G29 by heating surface {hs:g}/{G29_HEATING_FT2:g}") if burn else None,
                     **drafts(DRAFT_FIREBOX)},
         "exhaust": drafts(DRAFT_EXHAUST),
-        "poweredAxles": env({"value": powered}, "count", "derived", src("wheelsets"), f"driven wheelsets {driven} (main driver diameter +/-3%)"),
+        # B03 shape, as our reviewed S16 record: poweredAxles.value is the envelope (the SimSpec field is a struct).
+        "poweredAxles": {"value": env(powered, "count", "derived", src("wheelsets"), f"driven wheelsets {driven} (main driver diameter +/-3%)")},
     }
     record = {"schemaVersion": 1, "vehicleId": loco_id, "config": config, "hooks": {"SimSpec": sim},
               "metadata": {"status": "draft", "generator": "rr2dv record stage",

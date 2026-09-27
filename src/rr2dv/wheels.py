@@ -73,7 +73,8 @@ def tread(wheel: dict) -> dict:
     top = max(bands, key=lambda b: b["radius"])
     out.update(tread=_radius(chosen), lateral=[chosen["lateralMin"], chosen["lateralMax"]], span=chosen["span"],
                radiusSpread=chosen["radiusMax"] - chosen["radiusMin"])
-    rivals = sorted((b for b in outer if b is not chosen and b is not top), key=lambda b: -b["span"])
+    # a real alternative covers some width; single-vertex slivers (sub-millimetre spans) are noise
+    rivals = sorted((b for b in outer if b is not chosen and b is not top and b["span"] >= 0.001), key=lambda b: -b["span"])
     out["alternatives"] = [{"radius": _radius(b), "span": b["span"]} for b in rivals[:3]]
     out["innerSurfaces"] = [{"radius": b["radius"], "span": b["span"], "covered": round(b["covered"], 3)}
                             for b in sorted((b for b in bands if b["covered"] > COVERED_MAX), key=lambda b: -b["span"])[:3]]

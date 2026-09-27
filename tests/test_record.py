@@ -72,7 +72,9 @@ class Draft(unittest.TestCase):
         self.assertEqual(c["Wheelsets"]["value"], [[0.0, 2.4, 1.2, 3, "Drivers"]])
         self.assertIsNone(c["WheelRadius"])                   # fake probe measured nothing: pending, not guessed
         self.assertIsNone(rec["hooks"]["SimSpec"]["steamEngine"]["cylinderBore"])
-        self.assertEqual(rec["hooks"]["SimSpec"]["poweredAxles"]["value"], {"value": 3})
+        powered = rec["hooks"]["SimSpec"]["poweredAxles"]
+        self.assertEqual(sorted(powered), ["value"])  # same shape as the reviewed S16 record
+        self.assertEqual((powered["value"]["value"], powered["value"]["unit"]), (3, "count"))
         pending = " ".join(rec["metadata"]["pending"])
         for item in ("WheelRadius", "cylinderBore", "WeightEmptyKg", "Bogies", "CollisionBoxes", "tender"):
             self.assertIn(item, pending)
