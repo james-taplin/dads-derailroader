@@ -103,7 +103,7 @@ def ask(pack: str, sources: Sequence[str]) -> bool:
     agreed = {"value": False}
     root.title(TITLE)
     root.attributes("-topmost", True)
-    width, height = int(root.winfo_screenwidth() * 0.6), int(root.winfo_screenheight() * 0.7)
+    width, height = int(root.winfo_screenwidth() * 0.6), int(root.winfo_screenheight() * 0.8)
     root.geometry(f"{width}x{height}+{(root.winfo_screenwidth() - width) // 2}+{(root.winfo_screenheight() - height) // 2}")
     root.minsize(640, 480)
     heading = tkfont.Font(size=26, weight="bold")
