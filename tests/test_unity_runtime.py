@@ -8,6 +8,27 @@ from pathlib import Path
 from rr2dv.unityrun import _launch
 
 
+@unittest.skipUnless(os.environ.get('RR2DV_TEST_UNITY') and os.environ.get('RR2DV_TEST_BUILDER_PROJECT'),
+                     'requires Unity and a disposable assembled builder project')
+class RealPlacement(unittest.TestCase):
+    def test_visible_surfaces_survive_prefab_save(self):
+        repo = Path(__file__).resolve().parents[1]
+        project = Path(os.environ['RR2DV_TEST_BUILDER_PROJECT']).resolve()
+        editor = project / 'Assets/Editor'
+        self.assertTrue((editor / 'CclLocoBuild.cs').is_file(), 'assembled builder project required')
+        # Explicitly supplied disposable project; never a source game project.
+        shutil.copyfile(repo / 'src/rr2dv/unity/Rr2dvPlacement.cs', editor / 'Rr2dvPlacement.cs')
+        shutil.copyfile(repo / 'tests/unity_runtime/PlacementRegression.cs', editor / 'PlacementRegression.cs')
+        receipt = project / 'placement-regression-passed.json'
+        receipt.unlink(missing_ok=True)
+        log = project / 'placement-regression.log'
+        code = _launch(Path(os.environ['RR2DV_TEST_UNITY']), project, 'CclLocoBuild.PlacementRegression',
+                       log, dict(os.environ), 180)
+        self.assertEqual(code, 0, log.read_text(errors='replace')[-10000:])
+        self.assertEqual(json.loads(receipt.read_text()),
+                         {'hiddenMeshIgnored': True, 'collisionIgnored': True, 'reloadVerified': True})
+
+
 @unittest.skipUnless(os.environ.get('RR2DV_TEST_UNITY'), 'set RR2DV_TEST_UNITY for real Unity prefab tests')
 class RealPrefabSave(unittest.TestCase):
     def test_missing_script_save_failure_and_recovery(self):

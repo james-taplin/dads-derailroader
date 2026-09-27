@@ -147,4 +147,4 @@ namespace UnityEditor
 }
 
 // the builder core's loader entry point, which Rr2dvBuild hands over to (tooling/builder/tools/unity/LlwVehicleRecord.cs)
-public static class LlwVehicleRecord { public static void Build() { } }
+public static class CclLocoBuild { public static void RunRr2dvRecord() { } }

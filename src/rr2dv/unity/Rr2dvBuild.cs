@@ -7,7 +7,7 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 
 // rr2dv build stage (Unity 2019.4, editor only). Prepares this run's own project, then runs our builder core through its
-// record loader (LlwVehicleRecord.Build, env CCL_VEHICLE_RECORD / CCL_BUILD_OUT), which writes result.json and exits.
+// app placement entry (env CCL_VEHICLE_RECORD / CCL_BUILD_OUT), which writes result.json and exits.
 // What to prepare comes from Assets/Rr2dv/BuildInput.json (rr2dv's build.py); every change is written to prep.json:
 //  1. absent bindings: exactly the listed placeholder bindings (targets in no model of the export, board X39/X40) are
 //     removed through AnimationUtility, never by editing curve YAML; then no placeholder may remain in those clips
@@ -73,7 +73,7 @@ public static class Rr2dvBuild
             EditorApplication.Exit(1);
             return;
         }
-        LlwVehicleRecord.Build();   // our builder core; writes result.json and exits the editor
+        CclLocoBuild.RunRr2dvRecord();   // measured app placement, then the pinned core export
     }
 
     // Placeholder path segments look like path_0x100F2BBC_QROHKiL: the CRC32 of the unresolved path, then a tag.

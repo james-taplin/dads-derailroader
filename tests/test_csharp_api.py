@@ -46,7 +46,10 @@ class UnityApi(unittest.TestCase):
     def test_scripts_compile_against_unity_stand_ins(self):
         stubs = REPO / "tests/unity_stubs/UnityStubs.cs"
         with tempfile.TemporaryDirectory() as tmp:
-            proc = subprocess.run(["mcs", "-target:library", "-langversion:7", f"-out:{tmp}/app.dll", str(stubs), *map(str, APP_CS)],
+            # The placement extension shares private members with the actual pinned builder;
+            # compile and exercise it with PlacementRegression in Unity, not fake core internals.
+            standalone = [p for p in APP_CS if p.name != "Rr2dvPlacement.cs"]
+            proc = subprocess.run(["mcs", "-target:library", "-langversion:7", f"-out:{tmp}/app.dll", str(stubs), *map(str, standalone)],
                                   capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
 

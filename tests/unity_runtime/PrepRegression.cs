@@ -30,12 +30,20 @@ public static class PrepRegression
             PrefabUtility.SaveAsPrefabAsset(root, source);
             Object.DestroyImmediate(root);
             var yaml = File.ReadAllText(source).Replace("\r\n", "\n");
-            int at = yaml.IndexOf("  m_Component:\n", StringComparison.Ordinal);
+            var rootName = AssetDatabase.LoadAssetAtPath<GameObject>(source).name;
+            // Unity does not guarantee that the root GameObject is the first YAML object.
+            var rootBlock = System.Text.RegularExpressions.Regex.Matches(yaml,
+                @"(?ms)^--- !u!1 &(-?\d+)\nGameObject:\n.*?(?=^---|\z)")
+                .Cast<System.Text.RegularExpressions.Match>()
+                .Single(m => System.Text.RegularExpressions.Regex.IsMatch(m.Value,
+                    @"(?m)^  m_Name: " + System.Text.RegularExpressions.Regex.Escape(rootName) + "$"));
+            int componentOffset = rootBlock.Value.IndexOf("  m_Component:\n", StringComparison.Ordinal);
+            int at = componentOffset < 0 ? -1 : rootBlock.Index + componentOffset;
             Require(at >= 0, "fixture did not serialize as YAML");
             yaml = yaml.Insert(at + "  m_Component:\n".Length, "  - component: {fileID: 114999}\n");
             yaml += "\n--- !u!114 &114999\nMonoBehaviour:\n  m_ObjectHideFlags: 0\n  m_GameObject: {fileID: 0}\n  m_Enabled: 1\n  m_EditorHideFlags: 0\n  m_Script: {fileID: 11500000, guid: deadbeefdeadbeefdeadbeefdeadbeef, type: 3}\n  m_Name: \n  m_EditorClassIdentifier: \n";
             // Attach the missing component to the actual root GameObject ID, independent of Unity's generated IDs.
-            var gameId = System.Text.RegularExpressions.Regex.Match(yaml, @"--- !u!1 &(-?\d+)").Groups[1].Value;
+            var gameId = rootBlock.Groups[1].Value;
             yaml = yaml.Replace("m_GameObject: {fileID: 0}", "m_GameObject: {fileID: " + gameId + "}");
             File.WriteAllText(source, yaml);
             AssetDatabase.ImportAsset(source, ImportAssetOptions.ForceUpdate);
@@ -69,7 +77,7 @@ public static class PrepRegression
 }
 
 // Stand-in only for the downstream builder; reaching it in the failure test is itself a regression.
-public static class LlwVehicleRecord
+public static class CclLocoBuild
 {
-    public static void Build() { File.WriteAllText("unexpected-downstream.txt", "called"); EditorApplication.Exit(9); }
+    public static void RunRr2dvRecord() { File.WriteAllText("unexpected-downstream.txt", "called"); EditorApplication.Exit(9); }
 }
