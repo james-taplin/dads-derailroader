@@ -2,6 +2,9 @@
 
 Repository `james-taplin/derailroader` (private), default branch `main`. Formerly `james-taplin/llw-conversions`,
 renamed `claude-cloud`, branch `claude/rr2dv-converter`; the full history moved here on 2026-09-27.
+**Before every push**, check `git remote get-url origin` is `https://github.com/james-taplin/derailroader.git`: a cloud
+session restart can reset `origin` to the old repository (it did once, creating a stray `main` there). Fix it with
+`git remote set-url origin https://github.com/james-taplin/derailroader.git`.
 
 Goal: `rr2dv`, a Windows app that takes **any** Railroader steam locomotive mod from the user's own Railroader `Mods`
 folder and installs a working, mostly finished Derail Valley (CCL 3.1.9) pack into their own Derail Valley `Mods`
