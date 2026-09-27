@@ -30,20 +30,53 @@ acknowledged, which mods and authors the content came from) and an `rr2dv.json` 
 
 ![The personal-use notice](docs/personal-use-notice.png)
 
-## What you need
+## Installation
 
-- Windows. The portable `.exe` download includes Python and Tk; the source download needs Python 3.11 or later with Tk.
-- Railroader and Derail Valley installed through Steam (or in folders you name in the settings file)
-- Unity Mod Manager and Custom Car Loader 3.1.9 installed in Derail Valley
-- Unity 2019.4.40f1, the CCL 3.1.9 CarCreator package (`CarCreator_3.1.9.unitypackage`) and AssetRipper
+These steps are for Windows. Install Railroader and Derail Valley through Steam first, or set their install folders in
+**Settings…**. The portable app includes Python and Tk; the source download needs Python 3.11 or later with Tk.
+Use the linked publisher or project pages below for downloads, and check the version and file name before opening an
+archive. Avoid third-party download mirrors.
 
-## The app
+### Set up Derail Valley mods
+
+1. Download [Unity Mod Manager from its Nexus Mods page](https://www.nexusmods.com/site/mods/21). Extract its archive,
+   run UnityModManager, select **Derail Valley**, and install it using **Doorstop Proxy** as directed on that page.
+2. Download **Custom Car Loader v3.1.9** from the **Main files** on the
+   [CCL Nexus Mods page](https://www.nexusmods.com/derailvalley/mods/324?tab=files). Also install the dependencies
+   listed on that page, including Language Helper. In Unity Mod Manager's **Mods** tab, add the CCL mod archive
+   without extracting it. Confirm CCL shows **OK**. This is the game mod, separate from the Car Creator Package below.
+
+### Install the three build tools
+
+1. **Unity Editor 2019.4.40f1:** Get this exact version from
+   [Unity's 2019.4.40f1 release page](https://unity.com/releases/editor/whats-new/2019.4.40f1) and install the Windows
+   Editor, using Unity Hub or Unity's installer. In the app's **Settings…**, `unity` must point to that installation's
+   `Editor\Unity.exe` (for example, `C:\Program Files\Unity\Hub\Editor\2019.4.40f1\Editor\Unity.exe`). A newer Unity
+   version is not a substitute.
+2. **CCL Car Creator Package v3.1.9:** On the same
+   [CCL Nexus Mods page](https://www.nexusmods.com/derailvalley/mods/324?tab=files), download **Car Creator Package**
+   from **Optional files**, making sure it says v3.1.9. Unzip the downloaded archive into a folder you choose,
+   preferably under **Documents** or on your **Desktop**. Keep the extracted
+   `CarCreator_3.1.9.unitypackage` there; in **Settings…**, set `carCreator` to that file, not to the downloaded ZIP or
+   its containing folder. The app imports the package when it builds a conversion, so you do not need to open it in
+   Unity yourself.
+3. **AssetRipper:** Get the stable **Windows x64** release from the
+   [AssetRipper project's downloads page](https://assetripper.github.io/AssetRipper/articles/Downloads.html). Extract
+   the whole archive into a folder you choose and keep its files together. In **Settings…**, set `assetRipper` to the
+   extracted `AssetRipper.GUI.Free.exe` (or the `AssetRipper.GUI.exe` supplied by your release), not to the ZIP.
+
+### Install and check Derailroader
 
 For the [0.1.1 release](https://github.com/james-taplin/derailroader/releases/tag/v0.1.1), download
 `Derailroader-0.1.1-Windows.zip`, extract the **whole** folder, and double-click `Derailroader.exe`. Keep its
 `_internal` folder beside the `.exe`. To run from scripts instead, download `Derailroader-0.1.1-Source.zip`, extract
 it, and double-click `Launch Derailroader.bat` (or `Derailroader.pyw` if Python is associated with `.pyw` files).
 The source download needs Python 3.11+ with Tk; neither download includes Unity, AssetRipper or CarCreator.
+
+In the app, choose **Settings… → Check**, then **Save** the detected tool paths. If a tool is not found, browse to the
+exact file described above and check again. The command-line equivalent is `rr2dv doctor`.
+
+## Using the app
 
 Developers can also run from a checkout:
 
