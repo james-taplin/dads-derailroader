@@ -64,10 +64,23 @@ def truck(ident: str) -> dict:
     return {"identifier": ident, "definition": {"kind": "Truck", "modelIdentifier": ident, "components": []}}
 
 
+def game_installs(base: Path) -> dict:
+    """Fake Railroader and Derail Valley installs under base (W25: both are required), DV with Custom Car Loader."""
+    rr, dv = base / "Railroader", base / "Derail Valley"
+    (rr / "Railroader_Data" / "StreamingAssets" / "AssetPacks").mkdir(parents=True, exist_ok=True)
+    (rr / "Mods").mkdir(exist_ok=True)
+    (dv / "DerailValley_Data").mkdir(parents=True, exist_ok=True)
+    (dv / "Mods" / "DVCustomCarLoader").mkdir(parents=True, exist_ok=True)
+    (dv / "Mods" / "DVCustomCarLoader" / "Info.json").write_text('{"Id": "DVCustomCarLoader", "Version": "3.1.9"}')
+    return {"railroader": str(rr), "game": str(dv)}
+
+
 def standard_mod(base: Path) -> dict:
-    """A tender loco with one part in a second pack. The tender's trucks live in a separate mod (search root);
-    rr2dv replaces them with vanilla DV bogies and never uses that mod."""
-    mod = base / "input" / "Test Loco Mod"
+    """A tender loco with one part in a second pack, in a fake Railroader install's Mods folder. The tender's trucks
+    live in a separate mod there (search root)."""
+    games = game_installs(base)
+    mods = Path(games["railroader"]) / "Mods"
+    mod = mods / "Test Loco Mod"
     mod.mkdir(parents=True)
     (mod / "info.json").write_text('{"id": "test-loco-mod"}', encoding="utf-8")
     write_pack(mod / "ts-260-a",
@@ -76,10 +89,9 @@ def standard_mod(base: Path) -> dict:
                assets={"ts-260-a": {"filename": "ts-260-a.prefab"}, "tt-260-a": {"filename": "tt-260-a.prefab"}},
                trailing_commas=True)
     write_pack(mod / "parts", assets={"bell": {"filename": "bell.prefab"}})
-    search = base / "rrmods"
-    write_pack(search / "TruckMod" / "Trucks", objects=[truck("test-truck-2s")],
+    write_pack(mods / "TruckMod" / "Trucks", objects=[truck("test-truck-2s")],
                assets={"test-truck-2s": {"filename": "Test-Truck-2s.prefab"}}, bundle_name="Bundle")
-    return {"mod": mod, "search": search}
+    return {"mod": mod, "search": mods, "games": games, "dv_mods": Path(games["game"]) / "Mods"}
 
 
 def tree_state(root: Path) -> dict:
@@ -256,4 +268,5 @@ def tool_machine(tmp: Path) -> dict:
     """Settings for a machine with fake AssetRipper, Unity and CarCreator (POSIX tests)."""
     os.environ["FAKE_AR_STATE"] = str(tmp / "ar-state")
     return {"workRoot": str(tmp / "work"), "assetRipper": str(fake_assetripper(tmp / "tools")),
-            "unity": str(fake_unity(tmp / "tools")), "carCreator": str(fake_carcreator(tmp / "tools" / "CarCreator_3.1.9.unitypackage"))}
+            "unity": str(fake_unity(tmp / "tools")), "carCreator": str(fake_carcreator(tmp / "tools" / "CarCreator_3.1.9.unitypackage")),
+            **game_installs(tmp)}

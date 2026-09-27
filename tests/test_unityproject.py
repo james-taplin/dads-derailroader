@@ -24,11 +24,11 @@ class Import(unittest.TestCase):
         os.environ["FAKE_AR_STATE"] = str(self.tmp / "state")
         self.addCleanup(os.environ.pop, "FAKE_AR_STATE", None)
         self.cc = fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage")
-        self.machine = Machine(None, {"workRoot": str(self.tmp / "work"), "assetRipper": str(fake_assetripper(self.tmp / "tools")),
+        self.machine = Machine(None, {**self.m["games"], "workRoot": str(self.tmp / "work"), "assetRipper": str(fake_assetripper(self.tmp / "tools")),
                                       "carCreator": str(self.cc), "unity": str(fake_unity(self.tmp / "tools"))})
 
     def convert(self):
-        out = convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]])
+        out = convert(self.m["mod"], self.machine, search=[self.m["search"]])
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)
         return out.run.path, out.run.path / "unity" / "project"
 
@@ -88,14 +88,14 @@ class Import(unittest.TestCase):
         for anim in cache.rglob("Drivers.anim"):
             anim.write_text("AnimationClip:\n  - path: path_0xdeadbeef_x\n")
         with self.assertRaisesRegex(ProjectError, "resolve_clip_paths"):
-            convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]])
+            convert(self.m["mod"], self.machine, search=[self.m["search"]])
         record = read_json(sorted((self.tmp / "work").glob("2*"))[-1] / "run.json")
         self.assertEqual((record["status"], record["stages"]["import"]["status"]), ("failed", "failed"))
 
     def test_missing_carcreator_is_reported(self):
         self.machine.values["carCreator"] = str(self.tmp / "nope.unitypackage")
         with self.assertRaisesRegex(FileNotFoundError, "carCreator"):
-            convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]])
+            convert(self.m["mod"], self.machine, search=[self.m["search"]])
 
 
 class Pieces(unittest.TestCase):

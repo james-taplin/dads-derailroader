@@ -1,21 +1,25 @@
 """The conversion pipeline: runs each available stage in order and stops at the first one that fails or is
-not implemented yet. Input folders and archives are only ever read."""
+not implemented yet.
+
+W25: the input is a mod folder in the user's own Railroader Mods folder (never a zip; only ever read), and the
+result goes into their own Derail Valley Mods folder, only after the personal-use notice (consent.py). Both installs
+are found before anything runs, checked again before the Unity build, and again right before installing."""
 from __future__ import annotations
 
 import hashlib
 import json
-import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Sequence
 
-from . import assetripper, probeinput, record, unityproject, unityrun
-from .jsonio import read_json
-from .jsonio import sha256_file, write_json
+from typing import Callable
+
+from . import assetripper, consent, installs, probeinput, publish, record, unityproject, unityrun
+from .jsonio import read_json, write_json
 from .machine import Machine, check_work_root
 from .rrmod import Index, blocking, inventory
 from .runs import STAGES, Run, stage_inputs
-from .safety import check_write_target, safe_extract_zip
+from .safety import check_write_target
 
 EXIT_OK, EXIT_FAILED, EXIT_INCOMPLETE = 0, 1, 3
 
@@ -27,12 +31,17 @@ class Outcome:
     run: Run | None = None
 
 
-def input_kind(path: Path) -> str:
-    if path.is_dir():
-        return "folder"
-    if path.is_file() and zipfile.is_zipfile(path):
-        return "zip"
-    raise FileNotFoundError(f"{path} is not a folder or a zip archive")
+def search_roots(rr: installs.Install, extra: Sequence[Path] = ()) -> list[Path]:
+    """Extra folders first, then the Railroader Mods folder and the base-game asset packs."""
+    roots = [Path(p) for p in extra] + [rr.mods, rr.root / "Railroader_Data" / "StreamingAssets" / "AssetPacks"]
+    return [r for i, r in enumerate(roots) if r not in roots[:i]]
+
+
+def credits(inv: dict, loco_credits: str | None = None) -> list[str]:
+    """Whose work is in the pack, for the notice and the installed NOTICE.txt: authors named in the definitions, then
+    every mod the pack takes content from."""
+    names = [c.strip() for c in (loco_credits or "").replace(";", ",").split(",") if c.strip()]
+    return names + [f"mod {m['id']}" for m in inv.get("mods", []) if f"mod {m['id']}" not in names]
 
 
 def fingerprint(inv: dict) -> str:
@@ -73,27 +82,25 @@ def extract(run: Run, inv: dict, machine: Machine) -> dict:
     return exports
 
 
-def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None = None,
-            search: Sequence[Path] = (), audio: str | None = None, livery: str | None = None,
-            wheel_radius: float | None = None) -> Outcome:
-    input_path = input_path.resolve()
-    out_dir = out_dir.resolve()
-    kind = input_kind(input_path)
+def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: Sequence[Path] = (),
+            audio: str | None = None, livery: str | None = None, wheel_radius: float | None = None,
+            ask: Callable = consent.ask) -> Outcome:
+    # Both installs first (W25), then the input must be a mod in the Railroader Mods folder.
+    rr = installs.railroader(machine)
+    dv = installs.derail_valley(machine)
+    input_path = installs.mod_in_railroader(rr, mod)
     work_root = machine.work_root.resolve()
     # Refuse bad targets before creating anything.
     check_work_root(work_root)
-    guard = [("input mod", input_path)] + machine.protected()
+    guard = [("input mod", input_path), ("Railroader install", rr.root), ("Derail Valley install", dv.root)]
     check_write_target(work_root, guard)
-    check_write_target(out_dir, guard + [("app work folder", work_root)])
+    roots = search_roots(rr, search)
 
-    request = {"input": str(input_path), "input_kind": kind, "locomotive": loco, "output": str(out_dir),
-               "search_roots": [str(p) for p in search], "audio": audio, "livery": livery,
-               "wheel_radius": wheel_radius}
-    if kind == "zip":
-        request["input_sha256"] = sha256_file(input_path)
-    run = Run.create(work_root, loco or input_path.stem, request)
+    request = {"input": str(input_path), "locomotive": loco, "railroader": rr.describe(), "derail_valley": dv.describe(),
+               "search_roots": [str(p) for p in roots], "audio": audio, "livery": livery, "wheel_radius": wheel_radius}
+    run = Run.create(work_root, loco or input_path.name, request)
     try:
-        return _stages(run, input_path, kind, loco, search, audio, machine, livery, wheel_radius)
+        return _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius)
     except Exception as e:  # record the failure on the run, then let the caller report it
         current = next((n for n, s in run.record["stages"].items() if s["status"] == "running"), None)
         message = f"{type(e).__name__}: {e}"
@@ -103,7 +110,20 @@ def convert(input_path: Path, out_dir: Path, machine: Machine, loco: str | None 
         raise
 
 
-def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Sequence[Path],
+def install_pack(run: Run, machine: Machine, pack_dir: Path, expected: dict[str, str], who: list[str],
+                 ask: Callable = consent.ask) -> Path:
+    """The publish stage: Derail Valley is found again, CCL must be there, then the notice, then the install."""
+    dv = installs.derail_valley(machine)
+    if not installs.ccl_installed(dv):
+        raise installs.InstallError(f"Custom Car Loader ({installs.CCL_MOD_ID}) is not installed in {dv.mods}; "
+                                    "install it first, the converted pack needs it")
+    details = {"run": run.path.name, "input": run.record["request"]["input"],
+               "locomotive": run.record.get("answers", {}).get("locomotive"),
+               "input_fingerprint": run.record.get("input_fingerprint")}
+    return publish.install(pack_dir, dv, expected, who, details, ask)
+
+
+def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path],
             audio: str | None, machine: Machine, livery: str | None = None, wheel_radius: float | None = None) -> Outcome:
     def fail(stage: str, message: str, code: int = EXIT_FAILED) -> Outcome:
         run.finish(stage, "failed", message)
@@ -111,11 +131,7 @@ def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Seq
         return Outcome(code, message, run)
 
     run.begin("locate")
-    root = input_path
-    if kind == "zip":
-        root = run.path / "source"
-        safe_extract_zip(input_path, root)
-    index = Index(root, search)
+    index = Index(input_path, search)
     write_json(run.path / "index_issues.json", [i.as_dict() for i in index.issues])
     input_errors = [i for i in index.issues if i.severity == "error"]
     if input_errors:
@@ -179,6 +195,9 @@ def _stages(run: Run, input_path: Path, kind: str, loco: str | None, search: Seq
     run.finish("record", "done", f"draft vehicle record with {len(pending)} item(s) pending review (record/vehicle-record.json)")
 
     for name, description, available in STAGES[7:]:
+        if name == "build":  # found again before the Unity build (W25)
+            installs.railroader(machine)
+            installs.derail_valley(machine)
         if not available:
             message = f"stopped before '{name}' ({description}): not implemented yet"
             run.finish(name, "not_available", message)

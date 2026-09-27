@@ -14,7 +14,7 @@ from .jsonio import read_json, sha256_file, write_json
 # Unity inspected -> exported -> audited. `available` marks what this version implements.
 STAGES = [
     ("locate", "Find the locomotive in the input", True),
-    ("link", "Resolve tender and parts; trucks become vanilla DV bogies", True),
+    ("link", "Resolve tender, trucks and parts", True),
     ("stage", "Copy the required packs into the run folder", True),
     ("extract", "Export the bundles with AssetRipper", True),
     ("import", "Prepare the Unity project", True),
@@ -22,7 +22,7 @@ STAGES = [
     ("record", "Generate the vehicle record", True),
     ("build", "Build the CCL pack in Unity", False),
     ("audit", "Check the built pack", False),
-    ("publish", "Copy the finished pack to the output folder", True),
+    ("publish", "Install into the Derail Valley Mods folder after the personal-use notice", True),
 ]
 STAGE_NAMES = [s[0] for s in STAGES]
 

@@ -79,12 +79,12 @@ class Export(unittest.TestCase):
 
     def test_second_conversion_reuses_every_export(self):
         m = standard_mod(self.tmp / "mods")
-        machine = Machine(None, {"workRoot": str(self.tmp / "work"), "assetRipper": str(self.exe),
+        machine = Machine(None, {**m["games"], "workRoot": str(self.tmp / "work"), "assetRipper": str(self.exe),
                                  "unity": str(fake_unity(self.tmp / "tools")), "carCreator": str(fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage"))})
-        a = convert(m["mod"], self.tmp / "out", machine, search=[m["search"]])
+        a = convert(m["mod"], machine, search=[m["search"]])
         self.assertEqual(a.code, EXIT_INCOMPLETE, a.message)
         self.assertIn("3 bundle(s) exported (0 reused", a.run.record["stages"]["extract"]["detail"])
-        b = convert(m["mod"], self.tmp / "out", machine, search=[m["search"]])
+        b = convert(m["mod"], machine, search=[m["search"]])
         self.assertIn("3 bundle(s) exported (3 reused", b.run.record["stages"]["extract"]["detail"])
         self.assertEqual(self.exports_made(), 3)
 

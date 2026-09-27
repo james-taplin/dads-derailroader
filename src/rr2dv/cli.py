@@ -1,25 +1,26 @@
-"""Command line: `rr2dv doctor`, `rr2dv scan`, `rr2dv convert`."""
+"""Command line: `rr2dv doctor`, `rr2dv list`, `rr2dv scan`, `rr2dv convert`.
+
+Mods are named as they appear in the Railroader Mods folder (W25): `rr2dv scan "Some Loco Mod"`."""
 from __future__ import annotations
 
 import argparse
 import sys
-import tempfile
 from pathlib import Path
 
-from . import __version__, machine as machine_mod
+from . import __version__, installs, machine as machine_mod
+from .consent import ConsentError
 from .jsonio import write_json
-from .pipeline import EXIT_FAILED, convert, input_kind
+from .pipeline import EXIT_FAILED, convert, search_roots
+from .publish import InstallRefused
 from .rrmod import Index, blocking, inventory
-from .safety import UnsafePath, safe_extract_zip
+from .safety import UnsafePath
 
 MARK = {"ok": "ok  ", "warn": "WARN", "fail": "FAIL", "skip": "--  ", "error": "ERROR", "warning": "WARN", "info": "info"}
 
 
-def _search_roots(args, machine) -> list[Path]:
-    roots = [Path(p) for p in args.search]
-    if not args.no_default_search:
-        roots += [r for r in machine.search_roots() if r not in roots]
-    return roots
+def _search_roots(args, machine, rr: installs.Install) -> list[Path]:
+    extra = [Path(p) for p in args.search] + [r for r in machine.search_roots() if r not in args.search]
+    return extra if args.no_default_search else search_roots(rr, extra)
 
 
 def cmd_doctor(args) -> int:
@@ -47,17 +48,25 @@ def _scan(root: Path, search: list[Path], hash_files: bool) -> dict:
     return report
 
 
+def cmd_list(args) -> int:
+    machine = machine_mod.load(args.machine)
+    rr = installs.railroader(machine)
+    found = 0
+    for folder in sorted((p for p in rr.mods.iterdir() if p.is_dir()), key=lambda p: p.name.casefold()):
+        locos = Index(folder).steam_locomotives(input_only=True)
+        if locos:
+            found += 1
+            names = ", ".join(f"{o['identifier']} ({(o.get('metadata') or {}).get('name') or '?'})" for _, o in locos)
+            print(f"{folder.name}: {names}")
+    print(f"\n{found} mod(s) with steam locomotives in {rr.mods}" if found else f"No steam locomotive mods found in {rr.mods}")
+    return 0
+
+
 def cmd_scan(args) -> int:
     machine = machine_mod.load(args.machine)
-    target = Path(args.input)
-    kind = input_kind(target)
-    search = _search_roots(args, machine)
-    if kind == "zip":
-        with tempfile.TemporaryDirectory(prefix="rr2dv-scan-") as tmp:
-            safe_extract_zip(target, Path(tmp) / "source")
-            report = _scan(Path(tmp) / "source", search, not args.no_hash)
-    else:
-        report = _scan(target, search, not args.no_hash)
+    rr = installs.railroader(machine)
+    target = installs.mod_in_railroader(rr, args.input)
+    report = _scan(target, _search_roots(args, machine, rr), not args.no_hash)
 
     for issue in report["index_issues"]:
         print(f"[{MARK[issue['severity']]}] {issue['message']}")
@@ -97,8 +106,8 @@ def cmd_scan(args) -> int:
 
 def cmd_convert(args) -> int:
     machine = machine_mod.load(args.machine)
-    outcome = convert(Path(args.input), Path(args.out), machine, args.loco, _search_roots(args, machine), args.audio, args.livery,
-                      args.wheel_radius)
+    extra = [Path(p) for p in args.search] + machine.search_roots()
+    outcome = convert(args.input, machine, args.loco, extra, args.audio, args.livery, args.wheel_radius)
     run = outcome.run
     if run:
         for name, stage in run.record["stages"].items():
@@ -115,29 +124,30 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--machine", type=Path, help=f"settings file (default {machine_mod.default_path()})")
     sub = parser.add_subparsers(dest="command", required=True)
 
-    sub.add_parser("doctor", help="check that the tools this machine needs are in place").set_defaults(func=cmd_doctor)
+    sub.add_parser("doctor", help="check that the tools and both game installs are in place").set_defaults(func=cmd_doctor)
+    sub.add_parser("list", help="list the steam locomotive mods in the Railroader Mods folder").set_defaults(func=cmd_list)
 
-    def with_search(p):
+    def with_search(p, optional_default=True):
         p.add_argument("--search", action="append", default=[], metavar="DIR", help="extra folder to look in for dependencies (repeatable)")
-        p.add_argument("--no-default-search", action="store_true", help="do not search the Railroader install from the settings file")
+        if optional_default:
+            p.add_argument("--no-default-search", action="store_true", help="do not search the Railroader Mods folder and base-game packs")
 
     scan = sub.add_parser("scan", help="list the steam locomotives in a mod and what each one needs (read-only)")
-    scan.add_argument("input", help="Railroader mod folder or .zip")
+    scan.add_argument("input", help="mod folder name in the Railroader Mods folder")
     scan.add_argument("--json", metavar="FILE", help="also write the full report as JSON")
     scan.add_argument("--no-hash", action="store_true", help="skip file hashes (faster)")
     with_search(scan)
     scan.set_defaults(func=cmd_scan)
 
-    conv = sub.add_parser("convert", help="convert one steam locomotive")
-    conv.add_argument("input", help="Railroader mod folder or .zip (never modified)")
-    conv.add_argument("--out", required=True, help="folder to put the finished Derail Valley pack in")
+    conv = sub.add_parser("convert", help="convert one steam locomotive into your Derail Valley Mods folder")
+    conv.add_argument("input", help="mod folder name in the Railroader Mods folder (never modified)")
     conv.add_argument("--loco", help="locomotive identifier, when the mod has more than one")
     conv.add_argument("--livery", help="livery name to use (default: the mod's first)")
     conv.add_argument("--audio", choices=["S060", "S282"],
                       help="vanilla Derail Valley sound set to use instead of the boiler-size rule")
     conv.add_argument("--wheel-radius", type=float, metavar="METRES",
                       help="driving wheel tread radius you have reviewed (see metadata.wheelCandidates in the draft record)")
-    with_search(conv)
+    with_search(conv, optional_default=False)
     conv.set_defaults(func=cmd_convert)
     return parser
 
@@ -146,7 +156,8 @@ def main(argv=None) -> int:
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
-    except (UnsafePath, FileNotFoundError, FileExistsError, ValueError, OSError, RuntimeError) as e:
+    except (UnsafePath, FileNotFoundError, FileExistsError, ValueError, OSError, RuntimeError,
+            installs.InstallError, InstallRefused, ConsentError) as e:
         print(f"error: {e}", file=sys.stderr)
         return EXIT_FAILED
 

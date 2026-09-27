@@ -1,7 +1,8 @@
 """Per-machine settings (tool locations) and the `doctor` preflight check.
 
-Keys match tooling/machine.local.example.json, so an existing LLW machine.local.json loads unchanged. The app adds
-`workRoot` (where run folders go) and `searchRoots` (extra folders to look in for dependencies).
+Keys match tooling/machine.local.example.json, so an existing machine.local.json loads unchanged. The app adds
+`workRoot` (where run folders go), `searchRoots` (extra folders to look in for dependencies) and `steamRoots`.
+`railroader` and `game`/`mods` (Derail Valley) are optional: without them both installs are found through Steam.
 """
 from __future__ import annotations
 
@@ -61,28 +62,16 @@ class Machine:
         return self.path("workRoot") or default_work_root()
 
     def search_roots(self) -> list[Path]:
-        """Explicit searchRoots first, then the Railroader Mods folder and base-game asset packs."""
+        """Extra folders from `searchRoots`; the Railroader install's own folders are added by the pipeline."""
         listed = self.values.get("searchRoots", [])
         if isinstance(listed, str):
             listed = [listed]
         roots = [Path(p) for p in listed if isinstance(p, str) and p.strip()] if isinstance(listed, list) else []
-        rr = self.path("railroader")
-        if rr:
-            roots += [rr / "Mods", rr / "Railroader_Data" / "StreamingAssets" / "AssetPacks"]
         unique = []
         for r in roots:
             if r not in unique:
                 unique.append(r)
         return unique
-
-    def protected(self) -> list[tuple[str, Path]]:
-        """Folders the app must never write into without an explicit, separate install step."""
-        out = []
-        for key, label in (("mods", "Derail Valley Mods folder"), ("game", "Derail Valley install"), ("railroader", "Railroader install")):
-            p = self.path(key)
-            if p:
-                out.append((label, p))
-        return out
 
 
 def load(path: Path | None = None) -> Machine:
@@ -139,8 +128,18 @@ def doctor(machine: Machine) -> list[Check]:
 
     checks.append(_exists(machine, "assetRipper", "file", True, "AssetRipper")[0])
     checks.append(_exists(machine, "unityPySitePackages", "dir", False, "UnityPy site-packages (audits)")[0])
-    checks.append(_exists(machine, "railroader", "dir", False, "Railroader install (dependency search)")[0])
-    checks.append(_exists(machine, "mods", "dir", False, "Derail Valley Mods (install only)")[0])
+    from . import installs
+    for name, find in (("Railroader", installs.railroader), ("Derail Valley", installs.derail_valley)):
+        try:
+            found = find(machine)
+            checks.append(Check("ok", f"{name} install", f"{found.root} ({'from settings' if found.source == 'settings' else 'found via Steam'})"))
+            checks.append(Check("ok", f"{name} Mods folder", str(found.mods)))
+            if name == "Derail Valley":
+                has_ccl = installs.ccl_installed(found)
+                checks.append(Check("ok" if has_ccl else "fail", "Custom Car Loader",
+                                    f"installed in {found.mods}" if has_ccl else f"{installs.CCL_MOD_ID} not found in {found.mods}; install it"))
+        except installs.InstallError as e:
+            checks.append(Check("fail", f"{name} install", str(e)))
 
     for root in machine.search_roots():
         checks.append(Check("ok" if root.is_dir() else "warn", "search root", str(root)))

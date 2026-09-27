@@ -139,9 +139,8 @@ class Scan(unittest.TestCase):
     def test_same_bytes_give_same_inventory_anywhere(self):
         first = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
         moved = self.tmp / "elsewhere"
-        shutil.copytree(self.tmp / "input", moved / "input")
-        shutil.copytree(self.m["search"], moved / "rrmods")
-        second = inventory(Index(moved / "input" / "Test Loco Mod", [moved / "rrmods"]), "ts-260-a")
+        shutil.copytree(self.m["search"], moved / "Mods")
+        second = inventory(Index(moved / "Mods" / "Test Loco Mod", [moved / "Mods"]), "ts-260-a")
         self.assertEqual(json.dumps(first, sort_keys=True), json.dumps(second, sort_keys=True))
 
     def test_non_steam_locomotives_are_listed_not_converted(self):

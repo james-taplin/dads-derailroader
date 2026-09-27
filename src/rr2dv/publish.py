@@ -1,51 +1,100 @@
-"""Put a finished pack into the output folder without ever overwriting or half-writing anything."""
+"""Install a finished pack into the Derail Valley Mods folder, only after the personal-use notice (W25).
+
+Nothing is written until the user has clicked "I agree" the required number of times (consent.py). The pack is
+assembled in a hidden staging folder beside the destination, every file is hash-checked, a NOTICE.txt and an
+rr2dv.json marker are added, and only then is it renamed into place. An existing folder of the same name is replaced
+only if rr2dv made it (it carries our marker); any other mod's folder is never touched. Saves are never touched.
+"""
 from __future__ import annotations
 
+import datetime as dt
+import json
 import os
 import shutil
 import uuid
 from pathlib import Path
-from typing import Iterable
+from typing import Callable, Sequence
 
-from .jsonio import sha256_file
-from .safety import UnsafePath, check_write_target, is_link
+from . import __version__, consent as consent_mod
+from .installs import Install
+from .jsonio import read_json, sha256_file
+from .safety import UnsafePath, is_link
+
+MARKER = "rr2dv.json"
+NOTICE_FILE = "NOTICE.txt"
+GENERATOR = "rr2dv"
 
 
-def publish(pack_dir: Path, out_dir: Path, expected: dict[str, str], protected: Iterable[tuple[str, Path]]) -> Path:
-    """Copy exactly the `expected` files (name -> sha256) from pack_dir to out_dir/<pack name>.
+class InstallRefused(RuntimeError):
+    """The pack was not installed: the notice was declined, or the destination belongs to another mod."""
 
-    The copy is assembled in a hidden staging folder beside the destination, every file is hash-checked,
-    and only then is the folder renamed into place (atomic on one volume). An existing destination is an
-    error, never overwritten."""
-    protected = list(protected)
-    check_write_target(out_dir, protected)
-    if out_dir.exists() and is_link(out_dir):
-        raise UnsafePath(f"output folder is a link or junction: {out_dir}")
-    if not expected:
-        raise ValueError("nothing to publish")
-    for name in expected:
-        if Path(name).name != name or name in (".", ".."):
-            raise UnsafePath(f"publish expects plain file names, got {name!r}")
-    dest = out_dir / pack_dir.name
-    if dest.exists() or is_link(dest):
-        raise FileExistsError(f"{dest} already exists; choose another output folder or remove it yourself")
 
-    out_dir.mkdir(parents=True, exist_ok=True)
-    stage = out_dir / f".rr2dv-stage-{uuid.uuid4().hex[:12]}"
-    stage.mkdir()
+def made_by_rr2dv(folder: Path) -> bool:
+    marker = folder / MARKER
+    if not marker.is_file() or is_link(marker):
+        return False
     try:
-        for name, digest in sorted(expected.items()):
-            src = pack_dir / name
+        data = read_json(marker)
+    except (OSError, ValueError):
+        return False
+    return isinstance(data, dict) and data.get("generator") == GENERATOR
+
+
+def install(pack_dir: Path, dv: Install, expected: dict[str, str], credits: Sequence[str], details: dict,
+            ask: Callable[[str, Sequence[str]], bool] = consent_mod.ask) -> Path:
+    """Copy exactly the `expected` files (name -> sha256) from pack_dir to <DV Mods>/<pack name>, after consent."""
+    name = pack_dir.name
+    if Path(name).name != name or name in (".", "..") or name.startswith("."):
+        raise UnsafePath(f"unsafe pack folder name {name!r}")
+    if not dv.mods.is_dir() or is_link(dv.mods):
+        raise UnsafePath(f"Derail Valley Mods folder missing or a link: {dv.mods}")
+    if not expected:
+        raise ValueError("nothing to install")
+    for f in expected:
+        if Path(f).name != f or f in (".", "..", MARKER, NOTICE_FILE):
+            raise UnsafePath(f"install expects plain file names other than {MARKER}/{NOTICE_FILE}, got {f!r}")
+    dest = dv.mods / name
+    replacing = dest.exists() or is_link(dest)
+    if replacing and (is_link(dest) or not made_by_rr2dv(dest)):
+        raise InstallRefused(f"{dest} already exists and was not made by rr2dv; it was left untouched. Rename or remove "
+                             "it yourself if you want to install this conversion")
+
+    text = consent_mod.notice_text(name, credits)
+    if not ask(name, credits):
+        raise InstallRefused("the personal-use notice was not agreed to; nothing was installed")
+    agreed_at = dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds")
+
+    stage = dv.mods / f".rr2dv-stage-{uuid.uuid4().hex[:12]}"
+    stage.mkdir()
+    old = None
+    try:
+        for f, digest in sorted(expected.items()):
+            src = pack_dir / f
             if not src.is_file() or is_link(src):
                 raise FileNotFoundError(f"{src} is missing or not a regular file")
-            shutil.copyfile(src, stage / name)
-            actual = sha256_file(stage / name)
+            shutil.copyfile(src, stage / f)
+            actual = sha256_file(stage / f)
             if actual != digest:
-                raise ValueError(f"{name}: copied hash {actual[:12]} does not match the audited {digest[:12]}")
-        if dest.exists() or is_link(dest):
-            raise FileExistsError(f"{dest} appeared while publishing; nothing was replaced")
+                raise ValueError(f"{f}: copied hash {actual[:12]} does not match the audited {digest[:12]}")
+        (stage / NOTICE_FILE).write_text(text + "\n", encoding="utf-8")
+        marker = {"generator": GENERATOR, "version": __version__, **details, "credits": list(credits),
+                  "notice_sha256": consent_mod.notice_sha256(text), "agreed_clicks": consent_mod.REQUIRED_CLICKS,
+                  "agreed_at": agreed_at, "files": expected}
+        (stage / MARKER).write_text(json.dumps(marker, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        if replacing:
+            if not made_by_rr2dv(dest):
+                raise InstallRefused(f"{dest} changed while installing; nothing was replaced")
+            old = dv.mods / f".rr2dv-old-{uuid.uuid4().hex[:12]}"
+            os.rename(dest, old)
+        elif dest.exists() or is_link(dest):
+            raise FileExistsError(f"{dest} appeared while installing; nothing was replaced")
         os.rename(stage, dest)
     except BaseException:
         shutil.rmtree(stage, ignore_errors=True)  # only ever our own fresh staging folder
+        if old is not None and not dest.exists():
+            os.rename(old, dest)  # put the previous conversion back
+            old = None
         raise
+    if old is not None:
+        shutil.rmtree(old, ignore_errors=True)  # our own previous conversion, already moved aside
     return dest

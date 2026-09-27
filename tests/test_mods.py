@@ -28,7 +28,7 @@ class Base(unittest.TestCase):
         self.m = standard_mod(self.tmp)
         os.environ["FAKE_AR_STATE"] = str(self.tmp / "ar-state")
         self.addCleanup(os.environ.pop, "FAKE_AR_STATE", None)
-        self.machine = Machine(None, {"workRoot": str(self.tmp / "work"), "assetRipper": str(fake_assetripper(self.tmp / "tools")),
+        self.machine = Machine(None, {**self.m["games"], "workRoot": str(self.tmp / "work"), "assetRipper": str(fake_assetripper(self.tmp / "tools")),
                                       "unity": str(fake_unity(self.tmp / "tools")), "carCreator": str(fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage"))})
 
     def inv(self, **kw):
@@ -80,7 +80,7 @@ class Dependencies(Base):
 
     def test_broken_part_is_left_out_never_staged_or_placed(self):
         self.parts_mod(catalogue=False)
-        out = convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]])
+        out = convert(self.m["mod"], self.machine, search=[self.m["search"]])
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)
         self.assertFalse((out.run.path / "inputs" / "search1" / "PartsMod").exists())
         rec = read_json(out.run.path / "record" / "vehicle-record.json")
@@ -125,7 +125,7 @@ class GroupsAndImages(Base):
         self.assertEqual([g["group_name"] for g in inv["optional_groups"]], ["Herald 1912"])
         self.assertEqual(inv["textures"][0]["file"], {"root": "input", "path": "images/Herald-1912.PNG"})
         self.assertEqual(sorted(r["role"] for r in inv["extra_files"]), ["component-group", "texture"])
-        out = convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]])
+        out = convert(self.m["mod"], self.machine, search=[self.m["search"]])
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)
         self.assertEqual((out.run.path / "inputs/input/images/Herald-1912.PNG").read_bytes(), b"png")
         self.assertTrue((out.run.path / "inputs/input/TT-Herald1912.json").is_file())
@@ -193,10 +193,10 @@ class Audio(Base):
         write_pack(self.m["mod"] / "ts-260-a",
                    objects=[loco("ts-260-a", tender="tt-260-a", heating_surface=None), tender("tt-260-a", truck="test-truck-2s")],
                    assets={"ts-260-a": {"filename": "a.prefab"}, "tt-260-a": {"filename": "t.prefab"}})
-        out = convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]])
+        out = convert(self.m["mod"], self.machine, search=[self.m["search"]])
         self.assertEqual(out.code, EXIT_FAILED)
         self.assertIn("--audio", out.message)
-        out = convert(self.m["mod"], self.tmp / "out", self.machine, search=[self.m["search"]], audio="S282")
+        out = convert(self.m["mod"], self.machine, search=[self.m["search"]], audio="S282")
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)
         self.assertEqual(out.run.record["answers"]["audio"]["basis"], "S282")
         self.assertEqual(read_json(out.run.file)["answers"]["audio"]["rule"], "chosen by the user")
