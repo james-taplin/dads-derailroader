@@ -53,7 +53,7 @@ class BuildStages(unittest.TestCase):
         self.assertEqual(cfg["SrcPrefab"], "Assets/RR2DV/RR2DV_TS_260_A/source/ts-260-a.prefab")  # the model with its bell part
         t = buildrecord._plain(rec["tender"]["config"])
         self.assertEqual([b["Axles"] for b in t["Bogies"]], [[2.84, 1.16], [-1.16, -2.84]])
-        self.assertEqual((t["Trucks"][0]["Wheelset"], t["WheelRadius"]), ("Wheel", 0.42))
+        self.assertEqual((t["Trucks"][0]["Wheelset"], t["WheelRadius"]), (buildrecord.TRUCK_WHEEL_PREFIX, 0.42))
         # Rr2dvBuild's input: the part is placed, every prefab loses its AudioSources
         inp = read_json(run.path / "unity/project/Assets/Rr2dv/BuildInput.json")
         self.assertEqual([p["name"] for p in inp["composites"][0]["parts"]], ["bell1"])
@@ -173,6 +173,19 @@ class BuildStages(unittest.TestCase):
 
 
 class Rules(unittest.TestCase):
+    def test_each_truck_axle_gets_its_own_wheel_node(self):
+        w = lambda path, z: {"path": path, "wheelNode": "", "centre": [0, 0.42, z]}
+        # truck.archbar.diamond (L-27 tender): one container for both axles' bones -> the bones, never the container
+        self.assertEqual(buildrecord.axle_nodes([w("t/Wheels Animation/Bone.001/Frame2_LOD0", -0.842),
+                                                 w("t/Wheels Animation/Bone.002/Frame1_LOD0", 0.842)]),
+                         ["t/Wheels Animation/Bone.001", "t/Wheels Animation/Bone.002"])
+        # truck.commonwealth.a (H9 tender): one mesh per axle per LOD, siblings under each LOD group
+        lods = [w(f"t/truck_LOD{l}/whl{i}_LOD{l}", z) for l in (0, 1) for i, z in ((1, 1.275), (2, 0.0), (3, -1.288))]
+        self.assertEqual(len(buildrecord.axle_nodes(lods)), 6)
+        # Fox-style: a Wheel node per axle holding its meshes
+        self.assertEqual(buildrecord.axle_nodes([w("t/Wheel1/a", 0.8), w("t/Wheel1/b", 0.8), w("t/Wheel2/a", -0.8)]),
+                         ["t/Wheel1", "t/Wheel2"])
+
     def test_a_small_backhead_uses_the_upper_plate_before_stopping(self):
         # PLW Trojan shape: a flat plate from 1.7 to 2.9 m with the fire door at 1.32 m
         points = [(round(-0.7 + 0.1 * i, 1), round(1.72 + 0.1 * j, 2)) for i in range(14) for j in range(13)]

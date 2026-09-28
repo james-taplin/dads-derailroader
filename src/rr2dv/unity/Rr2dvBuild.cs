@@ -20,7 +20,8 @@ public static class Rr2dvBuild
     [Serializable] public class Absent { public string clip; public string[] hashes; }
     [Serializable] public class Part { public string name, parentPath, prefab; public float[] position, rotation, scale; }
     [Serializable] public class Composite { public string vehicle, source, target; public Part[] parts; }
-    [Serializable] public class Input { public int schema; public Absent[] absentBindings; public string[] audioStrip; public Composite[] composites; }
+    [Serializable] public class TruckWheels { public string prefab, prefix; public string[] nodes; }
+    [Serializable] public class Input { public int schema; public Absent[] absentBindings; public string[] audioStrip; public Composite[] composites; public TruckWheels[] truckWheels; }
 
     [Serializable] public class Removed { public string clip, hash; public int bindings; }
     [Serializable] public class MissingScript { public string path; public int count; }
@@ -49,6 +50,7 @@ public static class Rr2dvBuild
                 if (entry.audioSources > 0 || entry.missingScripts.Length > 0) stripped.Add(entry);
                 prep.audioStripped = stripped.ToArray();
             }
+            foreach (var truck in input.truckWheels ?? new TruckWheels[0]) RenameTruckWheels(truck);
             var placed = new List<Placed>();
             foreach (var composite in input.composites ?? new Composite[0])
             {
@@ -170,6 +172,28 @@ public static class Rr2dvBuild
         }
         finally { Object.DestroyImmediate(go); }
         return placed;
+    }
+
+    // One node per axle gets a unique name the builder's wheel prefix matches, in the run's own copy of the truck prefab:
+    // source names can be shared with brake gear or wrap both axles (truck.archbar.diamond 'Wheels Animation').
+    static void RenameTruckWheels(TruckWheels truck)
+    {
+        var root = PrefabUtility.LoadPrefabContents(truck.prefab);
+        try
+        {
+            if (root.GetComponentsInChildren<Transform>(true).Any(t => t.name.StartsWith(truck.prefix)))
+                throw new InvalidOperationException("truck already has objects named " + truck.prefix + "*: " + truck.prefab);
+            for (int i = 0; i < truck.nodes.Length; i++)
+            {
+                var path = truck.nodes[i];
+                var node = root.transform.Find(path);   // probe paths are relative to the prefab root
+                if (!node) throw new InvalidOperationException("truck wheel node not found: " + path + " in " + truck.prefab);
+                Debug.Log($"rr2dv truck wheel node {path} -> {truck.prefix}{i}");
+                node.name = truck.prefix + i;
+            }
+            SaveChecked(root, truck.prefab);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
     // A failed save must stop preparation before the record loader can misreport a missing source prefab.

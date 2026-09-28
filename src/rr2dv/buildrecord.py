@@ -362,6 +362,35 @@ def is_wheel_name(name: str) -> bool:
     return "wheel" in n or n.startswith("whl")
 
 
+TRUCK_WHEEL_PREFIX = "rr2dvWheel_"  # per-axle truck wheel nodes are renamed to this in the run's own truck prefab
+
+
+def axle_nodes(truck_wheels: list[dict]) -> list[str]:
+    """For each truck wheel mesh (every LOD), the highest node holding it and no wheel of another axle: what one DV
+    [axle] may turn. A shared wheel-named container is never picked (truck.archbar.diamond's 'Wheels Animation' holds
+    both axles' bones; turning it on one axle swung the other wheelset round the tender, L-27 game test 2026-09-28)."""
+    groups: list[tuple[float, list[str]]] = []
+    for w in truck_wheels:
+        z = w["centre"][2]
+        g = next((g for g in groups if abs(g[0] - z) <= AXLE_GROUP_M), None)
+        if g is None:
+            groups.append((z, [w["path"]]))
+        else:
+            g[1].append(w["path"])
+    nodes: set[str] = set()
+    for i, (_, paths) in enumerate(groups):
+        others = [p for j, (_, ps) in enumerate(groups) if j != i for p in ps]
+        for path in paths:
+            node = path
+            while "/" in node:
+                parent = node.rsplit("/", 1)[0]
+                if "/" not in parent or any(o == parent or o.startswith(parent + "/") for o in others):
+                    break  # the prefab's top node, or a node that also holds another axle
+                node = parent
+            nodes.add(node)
+    return sorted(n for n in nodes if not any(n != m and n.startswith(m + "/") for m in nodes))
+
+
 def truck_geometry(truck_out: dict) -> dict | None:
     """Axle offsets, tread radius and wheel-node name prefix of a truck prefab, from the probe's truck wheels."""
     meshes = [w for w in truck_out.get("truckWheels") or [] if "lod" not in w["path"].casefold() or "lod0" in w["path"].casefold()]
@@ -393,6 +422,7 @@ def truck_geometry(truck_out: dict) -> dict | None:
     strays = [p for p in nodes if p.rsplit("/", 1)[-1].startswith(prefix)
               and not any(p == w or p.startswith(w + "/") for w in wheel_nodes)] if prefix else []
     return {"axles": [a["z"] for a in axles], "radius": sum(treads) / len(treads), "treads": [a["tread"] for a in axles],
+            "axleNodes": axle_nodes(truck_out.get("truckWheels") or []),
             "prefix": prefix if is_wheel_name(prefix) and not strays else None, "strays": strays,
             "names": names}
 
@@ -863,7 +893,7 @@ class _Builder:
         if not geo:
             self.block("truck-wheels", f"{trucks[0]['id']}: the probe found no wheel meshes (transforms named *wheel* or whl*) on the truck prefab")
             return rec
-        if not geo["prefix"]:
+        if not geo["axleNodes"] and not geo["prefix"]:
             self.block("truck-wheels", f"{trucks[0]['id']}: the truck's wheel objects ({', '.join(geo['names'])}) share no name prefix "
                                        "naming a wheel ('...wheel...' or 'whl...') that no other object uses" +
                                        (f" (also: {', '.join(geo['strays'][:3])})" if geo["strays"] else ""))
@@ -876,8 +906,13 @@ class _Builder:
         cfg["Bogies"] = env([{"Bogie": "BogieF", "BogieCollider": "front", "Axles": [_r(z + o) for o in offs]},
                              {"Bogie": "BogieR", "BogieCollider": "rear", "Axles": [_r(-z + o) for o in offs]}],
                             "m", "derived", f"Definitions {tid}.truckSeparation / 2", "probe/probe.json truckWheels axle offsets")
-        cfg["Trucks"] = env([{"Prefab": truck_v["unity_prefab"], "Wheelset": geo["prefix"], "Z": _r(z)},
-                             {"Prefab": truck_v["unity_prefab"], "Wheelset": geo["prefix"], "Z": _r(-z)}],
+        wheelset = TRUCK_WHEEL_PREFIX if geo["axleNodes"] else geo["prefix"]
+        if geo["axleNodes"]:
+            rec.setdefault("metadata", {})["truckWheelNodes"] = {"prefab": truck_v["unity_prefab"], "nodes": geo["axleNodes"], "prefix": TRUCK_WHEEL_PREFIX}
+            self.choose(f"tender truck wheel nodes, one per axle, renamed {TRUCK_WHEEL_PREFIX}N in the run's truck copy: "
+                        + ", ".join(geo["axleNodes"]))
+        cfg["Trucks"] = env([{"Prefab": truck_v["unity_prefab"], "Wheelset": wheelset, "Z": _r(z)},
+                             {"Prefab": truck_v["unity_prefab"], "Wheelset": wheelset, "Z": _r(-z)}],
                             "m", "source", f"Definitions {tid}.truckSeparation / 2 (RR places the trucks at +-half)")
         span = max(offs) - min(offs)
         cfg["Wheelsets"] = env([[_r(z), _r(span), _r(2 * geo["radius"]), len(offs), ""], [_r(-z), _r(span), _r(2 * geo["radius"]), len(offs), ""]],

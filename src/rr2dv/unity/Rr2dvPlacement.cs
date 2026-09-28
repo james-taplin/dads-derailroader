@@ -89,6 +89,7 @@ public static partial class CclLocoBuild
         SeatRr2dvOilCups();
         AlignRr2dvBogieSupports();
         SeatRr2dvPlates();
+        AlignRr2dvDefaultPlates();
         if (!c.IsTender) { BuildInterior(); SeatRr2dvControls(); FinishRr2dvInteriorControls(); BuildInteriorLOD(); }
         BuildInteractables();
         BuildRr2dvAncillaries();
@@ -229,9 +230,10 @@ public static partial class CclLocoBuild
 
     static bool Rr2dvIsRod(string name)
     {
-        string n = name.ToLowerInvariant();
-        return n.Contains("main rod") || n.Contains("side rod") || n.Contains("connecting rod") ||
-            n.Contains("coupling rod") || n.Contains("drive rod") || n.Contains("conrod");
+        // Spaces and underscores ignored: 'DriverDriveRod' (GN L-27) is a drive rod as much as 'Drive Rod'.
+        string n = name.ToLowerInvariant().Replace(" ", "").Replace("_", "");
+        return n.Contains("mainrod") || n.Contains("siderod") || n.Contains("connectingrod") ||
+            n.Contains("couplingrod") || n.Contains("driverod") || n.Contains("conrod");
     }
 
     static System.Collections.Generic.List<(Transform rod, Vector3 pos)> Rr2dvRodNubs(Transform body)
@@ -246,7 +248,8 @@ public static partial class CclLocoBuild
             if (world.Length == 0) continue;
             var whole = new Bounds(world[0], Vector3.zero);
             foreach (var v in world) whole.Encapsulate(v);
-            if (Mathf.Max(whole.size.y, whole.size.z) < .5f) continue;
+            if (Mathf.Max(whole.size.y, whole.size.z) < .5f) { Line($"rr2dv oil rod {mf.name}: shorter than 0.5 m, no nub search"); continue; }
+            int small = 0, size = 0, notEnd = 0, noTop = 0, found = 0;
             var groups = Islands(mesh);
             for (int sub = 0; sub < mesh.subMeshCount; sub++)
             {
@@ -256,15 +259,15 @@ public static partial class CclLocoBuild
             }
             foreach (var group in groups)
             {
-                if (group.Count < 35) continue;
+                if (group.Count < 35) { small++; continue; }
                 var box = new Bounds(world[group[0].a], Vector3.zero);
                 foreach (var t in group) { box.Encapsulate(world[t.a]); box.Encapsulate(world[t.b]); box.Encapsulate(world[t.c]); }
                 var size = box.size;
                 if (size.x < .035f || size.z < .035f || size.y < .035f ||
-                    size.x > .3f || size.z > .3f || size.y > .3f) continue;
+                    size.x > .3f || size.z > .3f || size.y > .3f) { size++; continue; }
                 int axis = whole.size.z >= whole.size.y ? 2 : 1;
                 if (Mathf.Min(Mathf.Abs(box.center[axis] - whole.min[axis]),
-                    Mathf.Abs(box.center[axis] - whole.max[axis])) > .35f) continue;
+                    Mathf.Abs(box.center[axis] - whole.max[axis])) > .35f) { notEnd++; continue; }
                 Vector3 top = Vector3.zero; float area = 0;
                 foreach (var t in group)
                 {
@@ -276,11 +279,15 @@ public static partial class CclLocoBuild
                     top += (a + b + c) / 3 * weight;
                     area += weight;
                 }
-                if (area < .0003f) continue;
+                if (area < .0003f) { noTop++; continue; }
                 var pos = top / area + Vector3.up * (CupPivotAboveBase - CupSeatSink);
                 if (Mathf.Abs(pos.x) < .3f || result.Any(p => p.rod == mf.transform && Vector3.Distance(p.pos, pos) < .08f)) continue;
                 result.Add((mf.transform, pos));
+                found++;
             }
+            // Why a rod gave no nub is otherwise invisible (L-27: 0 candidates on rods with visible big-end bosses).
+            Line($"rr2dv oil rod {mf.name}: {found} nub(s); islands rejected: {small} under 35 triangles, {size} outside 3.5-30 cm, " +
+                 $"{notEnd} not within 0.35 m of a rod end, {noTop} without an upward face");
         }
         return result.OrderByDescending(p => p.pos.z).ThenBy(p => p.pos.x).ToList();
     }
@@ -315,6 +322,50 @@ public static partial class CclLocoBuild
                 Line($"rr2dv support {support.name}: donor centre {V(oldCentre)} cleared; car centre (0,{radius:F5},{z:F5}), radius {radius:F5}, rail contact y=0");
             }
             SaveRr2dvPrefab(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    // A tender with no Railroader number decals keeps the template's plate anchors, which CCL places diagonally (one toward
+    // each end on opposite sides, as DV wagons): read as misplaced in the L-27 game test (2026-09-28). James's rule, tenders
+    // only: both plates at the midpoint of the two, lowered to just above the bottom edge of the tender body's side sheet
+    // (measured by rays at that point, top down), keeping CCL's depth. Locomotives keep the template positions.
+    static void AlignRr2dvDefaultPlates()
+    {
+        if (!Cfg.IsTender || (Cfg.PlateDecals != null && Cfg.PlateDecals.Length > 0)) return;
+        string path = $"{carFolder}/{CarId}_template.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            var a = root.transform.Find("[car plate anchor1]");
+            var b = root.transform.Find("[car plate anchor2]");
+            var body = root.transform.Find("Model/" + Cfg.BodyName);
+            if (!a || !b || !body || Mathf.Sign(a.localPosition.x) == Mathf.Sign(b.localPosition.x)) return;
+            float z = (a.localPosition.z + b.localPosition.z) / 2;
+            var renderers = body.GetComponentsInChildren<Renderer>().Where(r => r.enabled).ToArray();
+            if (renderers.Length == 0) return;
+            var extent = renderers[0].bounds; foreach (var r in renderers) extent.Encapsulate(r.bounds);
+            using (var hits = new VisualHits(body))
+            foreach (var anchor in new[] { a, b })
+            {
+                float side = Mathf.Sign(anchor.localPosition.x), outside = Mathf.Max(Mathf.Abs(extent.min.x), Mathf.Abs(extent.max.x)) + 1;
+                var dummy = anchor.GetComponentInChildren<Renderer>(true);
+                float half = dummy ? dummy.bounds.extents.y : .16f;
+                var row = new System.Collections.Generic.List<(float y, float x)>();
+                for (float y = extent.max.y; y >= extent.min.y; y -= .02f)
+                    if (hits.Ray(new Vector3(side * outside, y, z), Vector3.left * side, outside, out var hit, body) && hit.normal.x * side > .9f)
+                        row.Add((y, Mathf.Abs(hit.point.x)));
+                if (row.Count == 0) { Line($"rr2dv tender plate {anchor.name}: no side sheet found at z {z:F3}; template height kept"); anchor.localPosition = new Vector3(anchor.localPosition.x, anchor.localPosition.y, z); continue; }
+                // The side sheet: the most common outward face depth; its bottom edge ends the first long run at that depth.
+                float sheet = row.GroupBy(h => Mathf.Round(h.x * 100)).OrderByDescending(g => g.Count()).First().Key / 100f;
+                int top = row.FindIndex(h => Mathf.Abs(h.x - sheet) <= .02f), i = top;
+                while (i + 1 < row.Count && Mathf.Abs(row[i + 1].x - sheet) <= .02f && row[i].y - row[i + 1].y < .03f) i++;
+                float y0 = row[i].y + half + .03f;
+                Line($"rr2dv tender plate {anchor.name}: z {anchor.localPosition.z:F3} -> {z:F3} (midpoint), y {anchor.localPosition.y:F3} -> {y0:F3} " +
+                     $"(side sheet at |x| {sheet:F3}, bottom edge y {row[i].y:F3})");
+                anchor.localPosition = new Vector3(anchor.localPosition.x, y0, z);
+            }
+            PrefabUtility.SaveAsPrefabAsset(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
