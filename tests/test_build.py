@@ -213,6 +213,31 @@ class Rules(unittest.TestCase):
         truck["nodes"].append({"path": "t/WheelGuard"})
         self.assertIsNone(buildrecord.truck_geometry(truck)["prefix"])
 
+    def test_abbreviated_truck_wheel_names(self):
+        # truck.commonwealth.a (Western Maryland H9 tender): whl1..3, each one mesh for both sides, with LOD copies
+        wheel = lambda i, lod, z: {"path": f"truck/truck_LOD{lod}/whl{i}_LOD{lod}", "wheelNode": f"truck/truck_LOD{lod}/whl{i}_LOD{lod}",
+                                   "centre": [0, 0.43, z], "bands": [{"radius": 0.44, "vertices": 9, "lateralMin": 0.7, "lateralMax": 0.8}]}
+        wheels = [wheel(i, lod, z) for lod in (0, 1) for i, z in ((1, 1.275), (2, 0.0), (3, -1.288))]
+        truck = {"truckWheels": wheels, "nodes": [{"path": w["wheelNode"]} for w in wheels] + [{"path": "truck/truck_LOD0/truck.004_LOD0"}]}
+        geo = buildrecord.truck_geometry(truck)
+        self.assertEqual((geo["prefix"], geo["axles"]), ("whl", [1.275, 0.0, -1.288]))
+
+    def test_one_axle_definition_over_a_long_wheelset_counts_the_model_wheels(self):
+        # Western Maryland H9 (real probe figures): the definition gives Drivers 1 axle over 5.51 m; the model has four
+        # wheels at axle height, one of them off-centre (counterweight), and rods/cranks higher up that must not count.
+        nodes = {"e/D/drivers": [0, 0.7816, -0.8333], "e/D/drivers.001": [0, 0.7815, 0.9610], "e/D/drivers.002": [0, 0.7815, -2.6091],
+                 "e/D/drivers.003": [0, 0.7815, 2.7555], "e/D/rods_008_L": [-1.4055, 1.4901, 1.5831]}
+        mesh = lambda p, used, reason="", r=0.805: {"path": p, "used": used, "reason": reason, "maxRadius": r}
+        wout = {"sourceRadius": 0.775, "rotatingPaths": sorted(nodes), "meshes": [
+            mesh("e/D/drivers/driver2", False, "not centred on the axle"), mesh("e/D/drivers.001/driver1", True),
+            mesh("e/D/drivers.002/driver3", True), mesh("e/D/drivers.003/driver0", True),
+            mesh("e/D/rods_008_L/Cylinder.076", True, r=0.67), mesh("e/D/drivers/rods/Cylinder.761", False, "not centred on the axle", 3.75)]}
+        ws = {"clip": "Drivers", "offset": 0.0, "length": 5.51094, "diameter": 1.55, "axles": 1}
+        self.assertEqual(buildrecord.inferred_axle_count(ws, wout, nodes), 4)
+        axles = buildrecord.measured_axles({**ws, "axles": 4}, wout, nodes)
+        self.assertEqual([a["part"] for a in axles], ["e/D/drivers.003", "e/D/drivers.001", "e/D/drivers", "e/D/drivers.002"])
+        self.assertIsNone(buildrecord.inferred_axle_count({**ws, "axles": 4}, wout, nodes))  # a consistent definition is kept
+
     def test_safe_names(self):
         self.assertEqual(buildrecord.safe_name('GN A-18 "American"', "X"), "GN A-18 American")
         self.assertEqual(buildrecord.safe_name("::", "RR2DV_X"), "RR2DV_X")

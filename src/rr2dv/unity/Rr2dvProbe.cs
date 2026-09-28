@@ -36,7 +36,7 @@ public static class Rr2dvProbe
         public string clip; public float sourceRadius; public string[] rotatingPaths; public WheelMesh[] meshes; public RadiusBand[] bands;
     }
     [Serializable] public class RayHit { public float x, y, z, distance, normalZ; public bool hit; public string part; }
-    // A wheel mesh of a truck prefab (a transform named Wheel*, or under one): its centre and radius bands about it.
+    // A wheel mesh of a truck prefab (a transform named Wheel* or whl*, or under one): its centre and radius bands about it.
     [Serializable] public class TruckWheel { public string path, wheelNode; public float[] centre; public float maxRadius; public int vertices; public RadiusBand[] bands; }
     [Serializable] public class VehicleOut
     {
@@ -283,6 +283,12 @@ public static class Rr2dvProbe
 
     // Truck prefabs: RR places them at runtime; their wheels are measured about each mesh's own centre (axle along x),
     // radius bands within 20% below the mesh's largest radius. rr2dv picks the tread from them (wheels.py).
+    // "Wheel..." or the common abbreviation "whl..." (truck.commonwealth.a: whl1_LOD0 .. whl3_LOD3).
+    static bool IsWheelName(string name)
+    {
+        return name.StartsWith("wheel", StringComparison.OrdinalIgnoreCase) || name.StartsWith("whl", StringComparison.OrdinalIgnoreCase);
+    }
+
     static TruckWheel[] TruckWheels(Transform root)
     {
         var list = new List<TruckWheel>();
@@ -291,7 +297,7 @@ public static class Rr2dvProbe
             if (!f.sharedMesh || f.sharedMesh.vertexCount == 0) continue;
             Transform node = null;
             for (var t = f.transform; t && t != root; t = t.parent)
-                if (t.name.StartsWith("wheel", StringComparison.OrdinalIgnoreCase)) node = t;
+                if (IsWheelName(t.name)) node = t;
             if (!node) continue;
             var points = f.sharedMesh.vertices.Select(local => f.transform.TransformPoint(local)).ToArray();
             var b = new Bounds(points[0], Vector3.zero);

@@ -163,18 +163,32 @@ def wheel_evidence(wheel_out: dict | None) -> str:
     return f"the clip rotates {len(turned)} transform(s) ({shown}); meshes under them: {meshes}"
 
 
-def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[float]]) -> list[dict]:
-    """Each RR axle of a wheelset, with the probe's rotating wheel node at that position when there is one."""
-    expected = rr_axles(ws_in)
+AXLE_HEIGHT_SHARE = 0.15     # a wheel node sits at axle height: its y within 15% of the source radius of it
+WHEEL_SIZE_SHARE = 0.15      # an off-centre mesh still counts as the wheel if its outer radius is within 15% of the source
+
+
+def _wheel_node_at_axle(mesh: dict, owner: str | None, nodes: dict, radius: float) -> bool:
+    """An off-centre wheel mesh (a counterweight or crank boss pulls its centre off the axle) still marks the axle when
+    its rotating node sits at axle height and its outer radius is the wheel's. Rods and cranks sit higher or are
+    larger, so they stay out (H9: rods at y 1.5 m, wheels at 0.78 m on a 0.775 m radius)."""
+    if not radius or owner is None or owner not in nodes or mesh.get("reason") != "not centred on the axle":
+        return False
+    return (abs(nodes[owner][1] - radius) <= AXLE_HEIGHT_SHARE * radius
+            and abs((mesh.get("maxRadius") or 0) - radius) <= WHEEL_SIZE_SHARE * radius)
+
+
+def axle_evidence(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[float]]) -> list[dict]:
+    """Rotating wheel nodes grouped by z, from meshes the probe used and off-centre wheels at axle height."""
     groups: list[dict] = []
     rotating = (wheel_out or {}).get("rotatingPaths") or []
+    radius = float((wheel_out or {}).get("sourceRadius") or 0)
     for mesh in (wheel_out or {}).get("meshes") or []:
-        if not mesh.get("used"):
+        owner = _owner(mesh["path"], rotating)
+        if not mesh.get("used") and not _wheel_node_at_axle(mesh, owner, nodes, radius):
             continue
         declared = ws_in.get('transformPath')
         if declared and not (mesh['path'] == declared or mesh['path'].startswith(declared + '/')):
             continue
-        owner = _owner(mesh["path"], rotating)
         if owner is None or owner not in nodes:
             continue
         z = nodes[owner][2]
@@ -183,6 +197,28 @@ def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[fl
             groups.append({"z": z, "paths": [owner]})
         elif owner not in g["paths"]:
             g["paths"].append(owner)
+    return groups
+
+
+def inferred_axle_count(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[float]]) -> int | None:
+    """The definition gives one axle (or none) over a wheelset length that holds several (H9: 1 axle over 5.51 m, four
+    wheels in the model): count the wheel nodes at axle height inside that length instead. None when the definition is
+    consistent or the model does not show more than one axle there."""
+    n = int(ws_in.get("axles") or ws_in.get("numberOfAxles") or 0)
+    off, length = float(ws_in.get("offset") or 0), float(ws_in.get("length") or 0)
+    radius = float((wheel_out or {}).get("sourceRadius") or 0)
+    if n > 1 or length <= 0 or not radius:
+        return None
+    inside = [g for g in axle_evidence(ws_in, wheel_out, nodes)
+              if abs(g["z"] - off) <= length / 2 + AXLE_MATCH_M
+              and all(abs(nodes[p][1] - radius) <= AXLE_HEIGHT_SHARE * radius for p in g["paths"])]
+    return len(inside) if len(inside) > 1 else None
+
+
+def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[float]]) -> list[dict]:
+    """Each RR axle of a wheelset, with the probe's rotating wheel node at that position when there is one."""
+    expected = rr_axles(ws_in)
+    groups = axle_evidence(ws_in, wheel_out, nodes)
     if ws_in.get('transformPath') and len(groups) == len(expected) and groups:
         # An explicit source transform identifies the physical truck even when its mesh positions
         # differ from the source simulation offsets. Keep the measured geometry and report both.
@@ -251,6 +287,9 @@ def _anchor(anchors: dict, name: str) -> list[float] | None:
     return a["position"] if a and a.get("resolved") and a.get("position") else None
 
 
+WHEEL_NAMES = ("wheel", "whl")  # truck wheel objects: "Wheel..." or the abbreviation "whl..." (truck.commonwealth.a)
+
+
 def truck_geometry(truck_out: dict) -> dict | None:
     """Axle offsets, tread radius and wheel-node name prefix of a truck prefab, from the probe's truck wheels."""
     meshes = [w for w in truck_out.get("truckWheels") or [] if "lod" not in w["path"].casefold() or "lod0" in w["path"].casefold()]
@@ -282,7 +321,7 @@ def truck_geometry(truck_out: dict) -> dict | None:
     strays = [p for p in nodes if p.rsplit("/", 1)[-1].startswith(prefix)
               and not any(p == w or p.startswith(w + "/") for w in wheel_nodes)] if prefix else []
     return {"axles": [a["z"] for a in axles], "radius": sum(treads) / len(treads), "treads": [a["tread"] for a in axles],
-            "prefix": prefix if prefix.casefold().startswith("wheel") and not strays else None, "strays": strays,
+            "prefix": prefix if prefix.casefold().startswith(WHEEL_NAMES) and not strays else None, "strays": strays,
             "names": names}
 
 
@@ -297,6 +336,7 @@ def _r(v, n: int = 4):
 class _Builder:
     def __init__(self, draft: dict, inv: dict, probe_in: dict, probe_out: dict, project: dict, answers: dict):
         self.draft, self.inv, self.answers, self.project = draft, inv, answers, project
+        self._inferred_axles: dict[int, int] = {}
         self.pin = {v["id"]: v for v in probe_in["vehicles"]}
         self.pout = {v["id"]: v for v in (probe_out or {}).get("vehicles", [])}
         self.blocks: list[dict] = []
@@ -422,6 +462,13 @@ class _Builder:
                     self.choose(f"wheelset {ws['clip']!r} has no wheel mesh: its clip turns with the car at the source radius "
                                 f"{ws['diameter'] / 2:g} m (as G-29's lubricator ratchet), no axle")
                 continue
+            inferred = inferred_axle_count(ws, wout, nodes) if i in driver_idx else None
+            if inferred:
+                self.choose(f"wheelset {i} ({ws.get('clip')}): the definition gives {ws.get('axles') or 0} axle(s) over "
+                            f"{ws.get('length'):g} m but the model has {inferred} wheels at axle height there; "
+                            f"using {inferred} evenly spaced axles, also for the simulation's powered axles (review)")
+                ws = {**ws, "axles": inferred}
+                self._inferred_axles[i] = inferred
             ax = measured_axles(ws, wout, nodes)
             for a in ax:
                 a.update(driver=i in driver_idx, clip=ws.get("clip"), wheelset=i)
@@ -443,6 +490,16 @@ class _Builder:
                                   "StartOffset": 0})
             elif ws.get("clip") in anims:
                 ponies.append((ws["clip"], ax, ws))
+        if self._inferred_axles:
+            sets = (cfg.get("Wheelsets") or {}).get("value") or []
+            for i, n in self._inferred_axles.items():
+                if i < len(sets):
+                    sets[i][3] = n
+            powered = ((rec.get("hooks") or {}).get("SimSpec") or {}).get("poweredAxles")
+            if powered and isinstance(powered.get("value"), dict):
+                total = sum(a["driver"] for a in axles)
+                powered["value"] = env(total, "count", "measured", "probe/probe.json wheels: wheel nodes at axle height",
+                                       "the definition's numberOfAxles disagreed with the model (see review.json)")
         drivers = sorted((a for a in axles if a["driver"]), key=lambda a: -a["z"])
         if not drivers:
             self.block("no-drivers", f"{lid}: no driving wheelset found in the definition")
@@ -739,11 +796,11 @@ class _Builder:
             self.block("tender-trucks", f"{tid}: the definition lacks truckSeparation")
             return rec
         if not geo:
-            self.block("truck-wheels", f"{trucks[0]['id']}: the probe found no wheel meshes (transforms named Wheel*) on the truck prefab")
+            self.block("truck-wheels", f"{trucks[0]['id']}: the probe found no wheel meshes (transforms named Wheel* or whl*) on the truck prefab")
             return rec
         if not geo["prefix"]:
             self.block("truck-wheels", f"{trucks[0]['id']}: the truck's wheel objects ({', '.join(geo['names'])}) share no name prefix "
-                                       "starting with 'Wheel' that no other object uses" +
+                                       "starting with 'Wheel' or 'whl' that no other object uses" +
                                        (f" (also: {', '.join(geo['strays'][:3])})" if geo["strays"] else ""))
             return rec
         z = sep / 2
