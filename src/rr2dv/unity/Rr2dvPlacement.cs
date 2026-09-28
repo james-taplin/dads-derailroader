@@ -440,9 +440,15 @@ public static partial class CclLocoBuild
                 for (int y = -10; y <= 10; y++) candidates.Add(new Vector3(side * outside, source.pos.y + y * .05f, z));
                 candidates.Insert(0, new Vector3(side * outside, source.pos.y, source.pos.z));
                 bool found = false; RaycastHit hit = new RaycastHit();
+                // Flat to 5.7 degrees within 8 mm first; then a curved or panelled side (PLW Trojan saddle tank, 2026-09-28)
+                // to 18 degrees within 25 mm; then the plate stays at the source decal with a WARN rather than stopping.
+                string fit = null;
+                foreach (var (flat, relief, rule) in new[] { (.995f, .008f, "flat"), (.95f, .025f, "curved side") })
+                {
+                if (found) break;
                 foreach (var origin in candidates.OrderBy(p => Mathf.Pow(p.y-source.pos.y,2) + Mathf.Pow(p.z-source.pos.z,2)))
                 {
-                    if (!hits.Ray(origin, Vector3.left * side, outside, out hit, body) || hit.normal.x * side < .995f) continue;
+                    if (!hits.Ray(origin, Vector3.left * side, outside, out hit, body) || hit.normal.x * side < flat) continue;
                     bool supported = true;
                     int ny = Mathf.CeilToInt(footprint.size.y / .1f), nz = Mathf.CeilToInt(footprint.size.z / .1f);
                     for (int iy = 0; iy <= ny && supported; iy++)
@@ -450,15 +456,20 @@ public static partial class CclLocoBuild
                     {
                         var sample = origin + new Vector3(0, Mathf.Lerp(-footprint.extents.y, footprint.extents.y, (float)iy/ny), Mathf.Lerp(-footprint.extents.z, footprint.extents.z, (float)iz/nz));
                         if (!hits.Ray(sample, Vector3.left * side, outside, out var edge, body) || edge.collider != hit.collider ||
-                            edge.normal.x * side < .995f || Mathf.Abs(edge.point.x-hit.point.x) > .008f) { supported = false; break; }
+                            edge.normal.x * side < flat || Mathf.Abs(edge.point.x-hit.point.x) > relief) { supported = false; break; }
                     }
-                    if (supported) { found = true; break; }
+                    if (supported) { found = true; fit = rule; break; }
                 }
-                if (!found) throw new InvalidOperationException("No fully supported visible surface for plate " + pair.Item1);
+                }
+                if (!found)
+                {
+                    Warn($"plate {pair.Item1}: no fully supported visible surface; left at the source decal {V(anchor.localPosition)} (check it in game)");
+                    continue;
+                }
                 var old = anchor.localPosition;
                 anchor.position = hit.point + Vector3.right * side * .01f;
                 anchor.localRotation = Quaternion.Euler(0, side > 0 ? 0 : 180, 0);
-                Line($"rr2dv visible plate {pair.Item1}: {V(old)} -> {V(anchor.localPosition)} on {hit.collider.transform.parent.name}; full {footprint.size.y:F3} x {footprint.size.z:F3} m footprint supported");
+                Line($"rr2dv visible plate {pair.Item1}: {V(old)} -> {V(anchor.localPosition)} on {hit.collider.transform.parent.name}; full {footprint.size.y:F3} x {footprint.size.z:F3} m footprint supported ({fit})");
             }
             SaveRr2dvPrefab(root, path);
         }

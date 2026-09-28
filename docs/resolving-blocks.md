@@ -245,6 +245,9 @@ is kept: the whole declared assembly, mesh and bones, becomes the opening, and i
 Generated backhead controls are placed against the visible model only: a model whose own collision shape has no
 backhead face (Reading B8a camelback) no longer loses every control with `no backhead found`.
 
+Number plates are seated on a flat side first, then on a curved or panelled side (a saddle tank); if neither fits,
+the plate stays at the source decal with `WARN plate …: no fully supported visible surface` instead of stopping the build.
+
 ## Stage `audit`
 
 The audit loads binary bundles, excluding text `.manifest` sidecars, then follows the pack's serialized references
