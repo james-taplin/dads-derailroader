@@ -173,6 +173,15 @@ class BuildStages(unittest.TestCase):
 
 
 class Rules(unittest.TestCase):
+    def test_a_leaning_backhead_is_one_plate(self):
+        # Western Maryland H9 shape: the plate leans forward 0.38 m over 1.7 m of height (z = -4.48 at y 2.3)
+        rays = [{"hit": True, "normalZ": -0.95, "x": round(-0.6 + 0.1 * i, 1), "y": round(2.3 + 0.1 * j, 1),
+                 "z": -4.48 + 0.22 * (0.1 * j)} for i in range(13) for j in range(18)]
+        plate = buildrecord.backhead(rays)
+        self.assertTrue(plate["sloped"])
+        self.assertEqual(plate["hits"], len(rays))
+        self.assertAlmostEqual(plate["z"], -4.48 + 0.22 * 0.2, places=1)  # the lower part, where the fire door is
+
     def test_a_lone_driver_off_the_definition_is_matched_and_side_cranks_are_not_wheels(self):
         # RLW RPP-1 single-wheeler (real probe figures): driver at z 0 (definition 0.5 m), crank pivots 6-9 m to the side
         nodes = {"Second Driver.001": [0.0, 1.238, 0.0], "Empty.001": [-8.708, 1.255, 2.1], "Empty.010": [6.012, 1.254, 1.773]}

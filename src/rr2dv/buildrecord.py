@@ -75,6 +75,7 @@ AXLE_GROUP_M = 0.05        # wheel nodes this close in z are one axle (left and 
 BACKHEAD_BIN_M = 0.02
 BACKHEAD_MIN_HITS = 12
 BACKHEAD_HALF_WIDTH = 0.7
+BACKHEAD_PLANE_M = 0.03    # hits within this of the fitted (possibly leaning) backhead plane are plate
 CONTROL_SPACING_X, CONTROL_SPACING_Y = 0.2, 0.25
 DOOR_CLEARANCE_M = 0.3
 RENDER = "rr2dv render views from the model bounds"
@@ -311,10 +312,38 @@ def backhead(rays: list[dict]) -> dict | None:
     for r in facing:
         bins.setdefault(round(r["z"] / BACKHEAD_BIN_M), []).append(r)
     key, hits = max(bins.items(), key=lambda kv: (len(kv[1]), -kv[0]))
+    sloped = _sloped_plate(facing)
+    if sloped and len(sloped) > len(hits):
+        hits = sloped  # a raked backhead (Western Maryland H9: z -4.48 at y 2.3 to -4.1 at y 4.0) spans many 2 cm bins
     if len(hits) < BACKHEAD_MIN_HITS:
         return None
-    z = sum(h["z"] for h in hits) / len(hits)
-    return {"z": z, "hits": len(hits), "of": len(rays), "points": [(h["x"], h["y"]) for h in hits]}
+    if hits is sloped:  # depth where the fire door is: the plate's lowest quarter, not the average of a leaning plate
+        low = sorted(hits, key=lambda h: h["y"])[:max(1, len(hits) // 4)]
+        z = sum(h["z"] for h in low) / len(low)
+    else:
+        z = sum(h["z"] for h in hits) / len(hits)
+    return {"z": z, "hits": len(hits), "of": len(rays), "points": [(h["x"], h["y"]) for h in hits],
+            "sloped": hits is sloped}
+
+
+def _sloped_plate(facing: list[dict]) -> list[dict] | None:
+    """Cab-facing hits on one plane z = a + b*y (least squares, outliers beyond 5 cm dropped twice), kept within 3 cm:
+    a backhead that leans is still one flat plate. None when too few hits or steeper than 30 degrees from vertical."""
+    pts = list(facing)
+    for tolerance in (0.05, 0.05, BACKHEAD_PLANE_M):
+        if len(pts) < BACKHEAD_MIN_HITS:
+            return None
+        n = len(pts)
+        my, mz = sum(p["y"] for p in pts) / n, sum(p["z"] for p in pts) / n
+        vy = sum((p["y"] - my) ** 2 for p in pts)
+        if vy <= 0:
+            return None
+        b = sum((p["y"] - my) * (p["z"] - mz) for p in pts) / vy
+        a = mz - b * my
+        if abs(b) > math.tan(math.radians(30)):
+            return None
+        pts = [p for p in facing if abs(p["z"] - (a + b * p["y"])) <= tolerance]
+    return pts if len(pts) >= BACKHEAD_MIN_HITS else None
 
 
 # Placement rules tried in order until every generated control fits: the usual band 0.2 m below to 1.2 m above the fire
