@@ -1572,3 +1572,10 @@ Branch `claude/modest-gates-tgqzx7`: K-66 stopped with drivers-not-found/drivers
 rrmod.definition() now drops such a phantom and makes its unique animated twin (same axle count, overlapping span) the
 main driver, noted as a build choice. rrmod.py joined the project-cache key (probe wheel indices change). Tests added;
 untested in Unity.
+
+## W50 (cloud Claude, 2026-09-28): source wheel radius as the fallback
+
+Branch `claude/modest-gates-tgqzx7`: James: the review must pre-fill the source driver size when it exists. The
+review still prefers a high-confidence tyre measurement for the main driver; when there is none it now pre-fills
+the source main driver diameter / 2 (basis source, confirm in review) instead of leaving the box empty. Not on geared
+locos (main driver can be a shaft). Source vs measured so far: Trojan 0.515/0.495, camelback 0.625/0.622, H9 0.775/0.805.
