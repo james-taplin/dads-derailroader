@@ -137,8 +137,44 @@ class BuildStages(unittest.TestCase):
         self.assertIn("no Chuff (chimney) component", out.message)
         self.assertEqual(read_json(out.run.path / "build/blocks.json")[0]["code"], "missing-anchor")
 
+    def test_no_cylinder_cock_gets_an_estimated_one_for_review(self):
+        defs = self.m["mod"] / "ts-260-a" / "Definitions.json"
+        data = json.loads(defs.read_text().replace(",\n  ],\n}", "\n  ]\n}"))
+        comps = data["objects"][0]["definition"]["components"]
+        data["objects"][0]["definition"]["components"] = [c for c in comps if c.get("kind") != "CylinderCock"]
+        defs.write_text(json.dumps(data))
+        out = self.convert(wheel_radius=0.598)
+        self.assertEqual(out.code, EXIT_OK, out.message)
+        cfg = read_json(out.run.path / "build/vehicle-record.json")["config"]
+        cock = next(c for c in cfg["Components"]["value"] if c["kind"] == "CylinderCock")
+        self.assertEqual(cock["pos"]["basis"], "analogue_estimate")
+        self.assertEqual(abs(cock["pos"]["value"][0]), buildrecord.COCK_HALF_SPAN_M)
+        self.assertTrue(any("no CylinderCock component" in c for c in read_json(out.run.path / "build/review.json")["choices"]))
+
+    def test_model_file_without_extension_is_found(self):
+        from rr2dv.rrmod import Pack
+        pack = Pack(root=None, path=Path("p"), files={}, assets={"t": {"filename": "truck.usra-andrews70t"}})
+        self.assertEqual(pack.model_prefab("t"), "truck.usra-andrews70t.prefab")
+        self.assertEqual(pack.model_prefab("other"), "other.prefab")
+
+    def test_missing_model_names_what_the_export_holds(self):
+        from rr2dv.unityproject import ModelNotExported, find_prefab
+        assets = self.tmp / "x" / "ExportedProject" / "Assets"
+        (assets / "PrefabInstance").mkdir(parents=True)
+        (assets / "PrefabInstance" / "USRA_Andrews.prefab").write_text("")
+        self.assertEqual(find_prefab(assets, "usra_andrews").name, "USRA_Andrews.prefab")
+        with self.assertRaisesRegex(ModelNotExported, "truck.usra-andrews70t.prefab is not in the exported pack x.*PrefabInstance/USRA_Andrews.prefab"):
+            find_prefab(assets, "truck.usra-andrews70t")
+
 
 class Rules(unittest.TestCase):
+    def test_wheel_evidence_says_why_no_wheel_was_found(self):
+        self.assertIn("rotates no transform", buildrecord.wheel_evidence({"rotatingPaths": []}))
+        text = buildrecord.wheel_evidence({"rotatingPaths": ["Main/Drivers"], "meshes": [
+            {"used": False, "reason": "not centred on the axle"}, {"used": False, "reason": "not centred on the axle"}]})
+        self.assertIn("1 transform(s) (Main/Drivers)", text)
+        self.assertIn("2 not centred on the axle", text)
+
     def test_rr_axles_are_evenly_spaced_about_the_offset(self):
         self.assertEqual(buildrecord.rr_axles({"offset": 0, "length": 4.1, "axles": 3}), [2.05, 0.0, -2.05])
         self.assertEqual(buildrecord.rr_axles({"offset": 4.38, "length": 0, "axles": 1}), [4.38])

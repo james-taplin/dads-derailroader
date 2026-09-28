@@ -223,7 +223,10 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
         run.log(f"  reused the imported project and its probe results from an earlier run (cache {cache_key}); "
                 "Unity does not import or measure again")
     else:
-        project = unityproject.assemble(run.path, inv, exports, car_creator)
+        try:
+            project = unityproject.assemble(run.path, inv, exports, car_creator)
+        except unityproject.ModelNotExported as e:
+            return fail("import", str(e))
     absent = [{"export": name, **a} for name, c in sorted(project["clips"].items()) for a in c.get("absent_bindings", [])]
     for a in absent:
         run.log(f"  clip {a['clip']} ({', '.join(a['keys'])}): {len(a['absent'])} of {a['bindings']} binding(s) target "

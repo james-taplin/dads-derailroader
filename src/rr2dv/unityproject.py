@@ -66,11 +66,24 @@ def _tool(script: str, *args) -> str:
     return proc.stdout
 
 
+class ModelNotExported(ProjectError):
+    """A catalogue model the export does not hold exactly once: a clear stop for the user, not an unexpected error."""
+
+
 def find_prefab(assets: Path, filename: str) -> Path:
-    hits = [p for p in assets.rglob("*.prefab") if p.name.casefold() == filename.casefold()]
-    if len(hits) != 1:
-        raise ProjectError(f"expected exactly one {filename} in {assets}, found {len(hits)}")
-    return hits[0]
+    if not filename.casefold().endswith(".prefab"):
+        filename += ".prefab"
+    prefabs = sorted(assets.rglob("*.prefab"))
+    hits = [p for p in prefabs if p.name.casefold() == filename.casefold()]
+    if len(hits) == 1:
+        return hits[0]
+    if not hits:
+        names = ", ".join(p.relative_to(assets).as_posix() for p in prefabs[:12]) or "none"
+        more = f" (and {len(prefabs) - 12} more)" if len(prefabs) > 12 else ""
+        raise ModelNotExported(f"the model {filename} is not in the exported pack {assets.parent.parent.name}: the pack's "
+                           f"Catalog.json names it, but the export holds these prefabs: {names}{more}")
+    raise ModelNotExported(f"the model {filename} is in the exported pack {assets.parent.parent.name} more than once: "
+                       + ", ".join(p.relative_to(assets).as_posix() for p in hits) + "; never a first match (D03)")
 
 
 TIED = "Tied prefabs"

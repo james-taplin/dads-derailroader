@@ -36,6 +36,9 @@ class TemporaryConversions(unittest.TestCase):
         for name in ('inputs', 'unity', 'extracted', 'build'):
             self.assertFalse((run.path / name).exists(), name)
         self.assertEqual(read_json(run.file)['cleanup']['status'], 'done')
+        if run.record['stages']['probe']['status'] == 'done':  # blocks point the user at these measurements
+            for name in ('probe/probe.json', 'probe/result.json', 'probe/probe-input.json'):
+                self.assertTrue((run.path / name).is_file(), name)
 
     def test_installed_output_survives_cleanup_without_a_duplicate(self):
         source = tree_state(Path(self.machine.values['railroader']))

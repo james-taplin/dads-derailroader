@@ -145,6 +145,24 @@ def _owner(path: str, rotating: list[str]) -> str | None:
     return max(hits, key=len) if hits else None
 
 
+COCK_HALF_SPAN_M = 1.0  # cylinder-cock jets each side of the centreline when the mod gives no anchor
+
+
+def wheel_evidence(wheel_out: dict | None) -> str:
+    """Why the probe did not find a wheel, in its own words: what the clip turns and why each mesh was not used."""
+    out = wheel_out or {}
+    turned = out.get("rotatingPaths") or []
+    if not turned:
+        return "the wheelset clip rotates no transform in the model"
+    reasons: dict[str, int] = {}
+    for m in out.get("meshes") or []:
+        key = "used" if m.get("used") else (m.get("reason") or "not used")
+        reasons[key] = reasons.get(key, 0) + 1
+    meshes = ", ".join(f"{n} {r}" for r, n in sorted(reasons.items())) or "no meshes under them"
+    shown = ", ".join(turned[:4]) + (f" (+{len(turned) - 4} more)" if len(turned) > 4 else "")
+    return f"the clip rotates {len(turned)} transform(s) ({shown}); meshes under them: {meshes}"
+
+
 def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[float]]) -> list[dict]:
     """Each RR axle of a wheelset, with the probe's rotating wheel node at that position when there is one."""
     expected = rr_axles(ws_in)
@@ -413,7 +431,8 @@ class _Builder:
                 if None in parts:
                     self.block("drivers-not-found", f"{lid}: wheelset {i} ({ws.get('clip')}) has {len(ax)} driving axle(s) in the "
                                                     f"definition but the probe found a turning wheel for only {len(ax) - parts.count(None)} "
-                                                    "(probe/probe.json wheels); the builder needs every driving axle's wheel")
+                                                    "(probe/probe.json wheels); the builder needs every driving axle's wheel; "
+                                                    + wheel_evidence(wout))
                 if ws.get("clip") not in anims:
                     self.block("drivers-no-clip", f"{lid}: driving wheelset {i} has no animation clip in the model's clip map")
                 shared_unit = next((u for u in units if u['AnimKey'] == ws.get('clip')), None)
@@ -496,6 +515,19 @@ class _Builder:
         chuff = next((c["name"] for c in comps if c["kind"] == "Chuff"), None)
         whistle = next((c["name"] for c in comps if c["kind"] == "Whistle"), None)
         cocks = [c for c in comps if c["kind"] == "CylinderCock"]
+        if not cocks:
+            # Some mods fit no cylinder-cock anchor. The drain jets still need a place: ahead of the leading driver at
+            # axle height, one per side (the core mirrors x). An estimate for review, never a measurement.
+            pos = [COCK_HALF_SPAN_M, _r(radius), _r(drivers[0]["z"] + 1.0)]
+            cocks = [{"kind": "CylinderCock", "name": "rr2dv CylinderCock (estimated)", "parentPath": "",
+                      "extra": "{}", "pos": env(pos, "m", "analogue_estimate", f"Definitions {lid}: no CylinderCock component",
+                                                    f"x {COCK_HALF_SPAN_M} m each side (S16 reviewed drain pipes +/-1.0683 m), "
+                                                    "y axle height (wheel radius), z 1.0 m ahead of the leading driver"),
+                      "rot": [0.0, 0.0, 0.0, 1.0], "scale": [1.0, 1.0, 1.0]}]
+            cfg["Components"]["value"].append(cocks[0])
+            comps.append({**cocks[0], "pos": pos})
+            self.choose(f"{lid}: the definition has no CylinderCock component; cylinder-cock steam placed at an estimated "
+                        f"{pos} m (ahead of the leading driver, both sides); check it in game")
         for what, val in (("Chuff (chimney)", chuff), ("Whistle", whistle), ("CylinderCock", cocks)):
             if not val:
                 self.block("missing-anchor", f"{lid}: the definition has no {what} component; the builder places the smoke, "

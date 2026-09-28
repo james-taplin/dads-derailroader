@@ -152,9 +152,9 @@ class Pack:
     def model_prefab(self, model: str) -> str:
         """Prefab file name for a model identifier: the catalogue entry's file, else "<model>.prefab"."""
         asset = self.assets.get(model)
-        if isinstance(asset, dict) and isinstance(asset.get("filename"), str):
-            return asset["filename"]
-        return model + ".prefab"
+        name = asset["filename"] if isinstance(asset, dict) and isinstance(asset.get("filename"), str) else model
+        # some catalogues give the file without its extension (e.g. "truck.usra-andrews70t"); dots in ids are not one
+        return name if name.casefold().endswith(".prefab") else name + ".prefab"
 
     def has_model(self, model: str) -> bool:
         """A model identifier names a catalogue key or a prefab file (LLW uses one string for both; others don't)."""

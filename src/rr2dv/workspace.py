@@ -133,6 +133,9 @@ def finish(run, lease: Lease) -> None:
             ('geometry-review.json', 'geometry-review.json'),
             ('review-questions.json', 'review-questions.json'), ('prebuild-review.json', 'prebuild-review.json'),
             ('rebuild.json', 'rebuild.json'),
+            # Measurements only (transform paths, radii, ray hits), no ripped assets: blocks point the user at them.
+            ('probe/probe.json', 'probe/probe.json'), ('probe/result.json', 'probe/result.json'),
+            ('unity/project/Assets/Rr2dv/ProbeInput.json', 'probe/probe-input.json'),
             ('probe/unity-1.log', 'probe.log'), ('build/out/unity-1.log', 'build.log'),
             ('audit/unity-1.log', 'audit.log'),
         ):
