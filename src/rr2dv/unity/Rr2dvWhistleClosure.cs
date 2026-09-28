@@ -63,7 +63,9 @@ public static partial class CclLocoBuild
             connections.portReferenceConnections.Add(new PortReferenceConnectionProxy { portReferenceId = "whistleClosure.ZERO", portId = "whistleZero.VALUE" });
             link[0].portId = "whistleClosure.OUT";
 
-            // Evaluated before the exhaust reads it, in this order.
+            // Evaluated before the exhaust reads it, in this order. CCL's Reset() already appended each new component to
+            // the execution order when it was added; take them out first or they are listed twice (camelback audit).
+            connections.executionOrder.RemoveAll(c => c == zero || c == dead || c == closure);
             var exhaust = connections.executionOrder.FindIndex(c => c && c.ID == "exhaust");
             if (exhaust < 0) throw new InvalidOperationException("Missing exhaust in the simulation execution order");
             connections.executionOrder.InsertRange(exhaust, new SimComponentDefinitionProxy[] { zero, dead, closure });
