@@ -160,8 +160,27 @@ public static partial class CclLocoBuild
             if (notches < 2 || range <= 0) throw new InvalidOperationException("Invalid stepped control: " + control.name);
             Set(control, "scrollWheelHoverScroll", range / (notches - 1));
         }
+        else if (Get<bool>(control, "useSpring"))
+        {
+            // A spring-return control (whistle): the joint spring pulls in proportion to the angle, so a short lever keeps
+            // almost no pull near closed and stops short of zero, still passing steam (RLW RPP-1 whistle, 12.9 deg, game
+            // test 2026-09-28; CTRL-02). Keep the pull per fraction of travel of a ~45 deg lever at the role's spring.
+            // 45 deg is an estimate of the G-29 reference travel, not a measurement: runtime-pending.
+            float range = Get<float>(control, "jointLimitMax") - Get<float>(control, "jointLimitMin");
+            float spring = Get<float>(control, "jointSpring");
+            if (range > 0 && range < SpringReferenceTravelDeg)
+            {
+                float scaled = spring * SpringReferenceTravelDeg / range;
+                Set(control, "jointSpring", scaled);
+                Line($"rr2dv control response {control.name}: spring return over {range:F1} deg, spring {spring:F0} -> {scaled:F0} " +
+                     $"(pull per fraction of travel of a {SpringReferenceTravelDeg:F0} deg lever; closed = 0 still needs the in-game check)");
+                return;
+            }
+        }
         Line($"rr2dv control response {control.name}: role mass/damping retained; scroll follows one measured detent");
     }
+
+    const float SpringReferenceTravelDeg = 45f;
 
     static void BuildRr2dvAncillaries()
     {

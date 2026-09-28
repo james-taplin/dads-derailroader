@@ -302,16 +302,23 @@ public static partial class CclLocoBuild
             foreach (var front in new[] { true, false })
             {
                 var bogie = root.transform.Find((front ? "BogieF" : "BogieR") + "/bogie_car");
-                var axles = bogie.Cast<Transform>().Where(t => t.name == "[axle]").Select(t => root.transform.InverseTransformPoint(t.position).z).ToArray();
+                var axleNodes = bogie.Cast<Transform>().Where(t => t.name == "[axle]").ToArray();
+                var axles = axleNodes.Select(t => root.transform.InverseTransformPoint(t.position).z).ToArray();
                 if (axles.Length == 0) throw new InvalidOperationException("No support axles");
-                float z = front ? axles.Max() : axles.Min();
-                float radius = WheelRadius;
-                var ws = Cfg.Wheelsets.Where(w => w.axles > 0).OrderBy(w => Mathf.Abs(z - (w.offset + (front ? 1 : -1) * (w.axles > 1 ? w.length / 2 : 0)))).First();
-                bool reviewedPowered = RrChoices != null && RrChoices.physics == "geared" &&
-                    (RrChoices.poweredWheelsets ?? new int[0]).Contains(Array.IndexOf(Cfg.Wheelsets, ws));
-                if (!Cfg.IsTender && !reviewedPowered && !Cfg.EngineUnits.Any(u => u.AnimKey == ws.clip))
-                    radius = Cfg.PonyRadii.TryGetValue(ws.clip ?? "", out var measured) ? measured : ws.diameter / 2;
+                // The body rests at the bogie pivot, which can be a driver behind an articulated pilot or the centre of
+                // a leading truck: not the outermost axle (Codex X52, A-18; RLW RPP-1's front sank through its leading
+                // truck, 2026-09-28). Each axle sits at its own wheel's radius, not the driver's.
+                float z = root.transform.InverseTransformPoint(bogie.position).z;
+                float pivotAxleZ = axles.OrderBy(a => Mathf.Abs(a - z)).First();
+                float radius = Rr2dvAxleRadius(pivotAxleZ);
                 if (radius <= 0) throw new InvalidOperationException("Invalid end-wheel support radius");
+                for (int i = 0; i < axleNodes.Length; i++)
+                {
+                    float axleRadius = Rr2dvAxleRadius(axles[i]);
+                    var oldAxle = axleNodes[i].localPosition;
+                    axleNodes[i].localPosition = new Vector3(oldAxle.x, axleRadius, oldAxle.z);
+                    Line($"rr2dv axle z {axles[i]:F5}: y {oldAxle.y:F5} -> {axleRadius:F5}");
+                }
                 var support = root.transform.Find("[colliders]/[bogies]/" + (front ? "front" : "rear"));
                 var collider = support.GetComponent<CapsuleCollider>();
                 if (!collider) throw new InvalidOperationException("Missing bogie support capsule");
@@ -320,11 +327,23 @@ public static partial class CclLocoBuild
                 collider.radius = radius;
                 collider.height = Mathf.Max(collider.height, radius * 2);
                 support.position = root.transform.TransformPoint(new Vector3(0, radius, z));
-                Line($"rr2dv support {support.name}: donor centre {V(oldCentre)} cleared; car centre (0,{radius:F5},{z:F5}), radius {radius:F5}, rail contact y=0");
+                Line($"rr2dv support {support.name}: donor centre {V(oldCentre)} cleared; pivot z {z:F5}, nearest axle z {pivotAxleZ:F5}, car centre (0,{radius:F5},{z:F5}), radius {radius:F5}, rail contact y=0");
             }
             SaveRr2dvPrefab(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    static float Rr2dvAxleRadius(float axleZ)
+    {
+        if (Cfg.IsTender) return WheelRadius;
+        var ws = Cfg.Wheelsets.Where(w => w.axles > 0).OrderBy(w =>
+            Enumerable.Range(0, w.axles).Min(i => Mathf.Abs(axleZ -
+                (w.offset + (w.axles > 1 ? w.length / 2 - i * w.length / (w.axles - 1) : 0))))).First();
+        bool reviewedPowered = RrChoices != null && RrChoices.physics == "geared" &&
+            (RrChoices.poweredWheelsets ?? new int[0]).Contains(Array.IndexOf(Cfg.Wheelsets, ws));
+        if (reviewedPowered || Cfg.EngineUnits.Any(u => u.AnimKey == ws.clip)) return WheelRadius;
+        return Cfg.PonyRadii.TryGetValue(ws.clip ?? "", out var radius) ? radius : ws.diameter / 2;
     }
 
     // A tender with no Railroader number decals keeps the template's plate anchors, which CCL places diagonally (one toward

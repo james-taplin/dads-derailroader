@@ -659,6 +659,17 @@ class _Builder:
             return rec
         f_pivot = f_ax.index(front_drivers[0])
         r_pivot = r_ax.index(drivers[-1]) if drivers[-1] in r_ax else len(r_ax) - 1
+        leading = [a for a in allax if a["z"] > drivers[0]["z"] + 1e-6]
+        if len(drivers) == 1 and len(leading) >= 2:
+            # One driving axle behind a leading bogie (RLW RPP-1 4-2-2): the body rides on that bogie. Pivoting the front
+            # bogie on the driver left a 2.7 m base under a 4.4 m front overhang and the body sagged through the leading
+            # truck (game test 2026-09-28). Front bogie = the leading truck; the driver heads the rear bogie.
+            f_ax, r_ax = leading, [a for a in allax if a not in leading]
+            f_pivot = -1  # the core's "average of the bogie's axles": the leading truck's centre
+            r_pivot = r_ax.index(drivers[0])
+            centre = sum(a["z"] for a in leading) / len(leading)
+            self.choose(f"single driving axle behind a {len(leading)}-axle leading truck: the front bogie is the leading "
+                        f"truck (pivot at its centre, z {centre:.3f}), the rear bogie pivots on the driver")
         evidence = [f"probe/probe.json wheels (nodes turned by the wheelset clips)", "Definitions wheelsets (RR axle positions)",
                     "guide A04; G-29 profile: bogies pivot on the end drivers (rigid wheelbase)"]
         cfg["Bogies"] = env([{"Bogie": "BogieF", "BogieCollider": "front", "Axles": [_r(a["z"]) for a in f_ax], "PivotAxle": f_pivot},
