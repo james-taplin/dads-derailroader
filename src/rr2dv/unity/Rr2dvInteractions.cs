@@ -31,6 +31,8 @@ public static partial class CclLocoBuild
     }
     static readonly List<RrOpening> RrOpenings = new List<RrOpening>();
 
+    static string[] paths0(EditorCurveBinding[] bindings) => bindings.Select(b => b.path).Distinct().ToArray();
+
     static void PrepareRr2dvInteractions()
     {
         RrOpenings.Clear();
@@ -63,8 +65,15 @@ public static partial class CclLocoBuild
             if (clip.length <= 0 || bindings.Length == 0 || bindings.Any(b => b.type != typeof(Transform) || string.IsNullOrEmpty(b.path)) ||
                 AnimationUtility.GetObjectReferenceCurveBindings(clip).Length != 0 || AnimationUtility.GetAnimationEvents(clip).Length != 0)
                 { LeaveOutOpening(component.name, "Toggle requires a nonempty Transform-only clip without events: " + key); continue; }
-            var paths = bindings.Select(b => b.path).Distinct().ToArray();
-            if (paths.Any(p => !RefBody.Find(p))) { LeaveOutOpening(component.name, "Unresolved toggle binding: " + key); continue; }
+            if (paths0(bindings).Any(p => !RefBody.Find(p))) { LeaveOutOpening(component.name, "Unresolved toggle binding: " + key); continue; }
+            // Only parts the clip moves belong to the opening. A Blender export can key every animated part in every
+            // clip with flat curves (DM&IR M-3: 11 of 12 cab toggles left out as overlapping the first door, 2026-09-29).
+            var paths = bindings.GroupBy(b => b.path)
+                .Where(g => g.Any(b => { var keys = AnimationUtility.GetEditorCurve(clip, b).keys; return keys.Length > 0 && keys.Any(k => Mathf.Abs(k.value - keys[0].value) > 1e-4f); }))
+                .Select(g => g.Key).ToArray();
+            if (paths.Length == 0) { LeaveOutOpening(component.name, "Toggle clip moves nothing: " + key); continue; }
+            if (paths.Length < paths0(bindings).Length)
+                Line($"rr2dv opening source {key}: {paths0(bindings).Length - paths.Length} keyed but unmoved transform(s) ignored");
             var ancestors = paths.Where(p => target == p || target.StartsWith(p + "/", StringComparison.Ordinal)).OrderBy(p => p.Length).ToArray();
             // A rigged opening declares its armature as the target and the clip moves the bones inside it (H9 windows,
             // deflectors and roof hatch, 2026-09-28): the whole declared assembly moves as one, with its skinned mesh.

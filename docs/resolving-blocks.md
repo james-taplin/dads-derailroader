@@ -229,10 +229,20 @@ Material slots: a slot the export left empty or filled with Unity's white `Defau
 truck rims, the `…deadbeef…` references) is given rr2dv's own dark matte gunmetal
 (`src/rr2dv/unity/materials/rr2dv_gunmetal.mat`), and a slot whose material is named `…glass…` gets rr2dv's own clear
 glass (`rr2dv_glass.mat`). An empty slot on a part named `…coal…` gets a bump-mapped coal (`rr2dv_coal.mat`), and
-glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow inside does not show. The whole car
+glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow inside does not show. Lamp glass that Railroader
+draws fully transparent (alpha 0: a flare disc) stays invisible. When lamp glass shares the window material on one mesh,
+its triangles within a lamp lens of a lamp (`LampLenses`) are split onto the lens (`rr2dv glass: … split off`). The whole car
 is searched, trucks included (tender truck rims). A tender whose model has no coal of its own (Railroader draws it at
 runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount. All
 are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
+
+Oil cups: the driving groups' own clips are played through a revolution; a part whose middle travels is a rod (a cup
+on it rides with it), a part that turns in place is a wheel, axle or crank (no cup on it), whatever the parts are called
+(`rr2dv oil running gear by motion` in `build_report.txt`).
+
+Door, window and hatch toggles: only the parts a clip actually moves count. A clip that also keys other parts with
+flat curves no longer claims them, so later toggles are not left out as "Toggle overlaps another converted moving
+assembly"; a clip that moves nothing is left out as "Toggle clip moves nothing".
 
 Main driver with nothing behind it: when the definition's `mainDriverIndex` names a wheelset with no animation and no
 model part (ALCo 3-cylinder Mikado), and exactly one animated wheelset has the same axle count over the same span, that

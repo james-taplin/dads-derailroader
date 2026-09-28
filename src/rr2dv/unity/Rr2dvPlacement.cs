@@ -236,6 +236,7 @@ public static partial class CclLocoBuild
             var body = root.transform.Find("Model/" + Cfg.BodyName);
             if (!body) throw new InvalidOperationException("Missing built body for oil-cup placement");
             var placed = new System.Collections.Generic.List<(string tag, Vector3 pos, Transform rod, string seat)>();
+            Rr2dvMotion = Rr2dvGearMotion(body);
             var nubs = Rr2dvRodNubs(body);
             using (var hits = new VisualHits(body))
             {
@@ -362,7 +363,7 @@ public static partial class CclLocoBuild
             if (!hits.Ray(origin, Vector3.down, 2f, out var hit, body) || hit.normal.y < .95f ||
                 hit.point.y > top || hit.point.y < low) continue;
             var part = hit.collider.transform.parent;
-            if (part.name.ToLowerInvariant().Contains("wheel")) continue;
+            if (part.name.ToLowerInvariant().Contains("wheel") || Rr2dvSpins(part)) continue;
             bool footprint = true;
             foreach (var offset in new[] { new Vector3(.025f, 0, 0), new Vector3(-.025f, 0, 0), new Vector3(0, 0, .025f), new Vector3(0, 0, -.025f) })
                 if (!hits.Ray(origin + offset, Vector3.down, 2f, out var edge, body) || edge.normal.y < .95f ||
@@ -371,10 +372,50 @@ public static partial class CclLocoBuild
             var pos = hit.point + Vector3.up * (CupPivotAboveBase - CupSeatSink);
             if (hits.Ray(pos + Vector3.up * .08f, Vector3.up, .12f, out var overhead, body)) continue;
             if (hits.Ray(pos + Vector3.up * .08f, Vector3.right * side, .6f, out var sideHit, body)) continue;
-            bool moving = Rr2dvIsRod(part.name) || part.name.ToLowerInvariant().Contains("crosshead");
+            bool moving = Rr2dvIsRod(part.name) || part.name.ToLowerInvariant().Contains("crosshead") || Rr2dvTravels(part);
             return (true, pos, moving ? part : null, "running gear top on " + part.name);
         }
         return (false, Vector3.zero, null, null);
+    }
+
+    // Running gear by what it does, not what it is called (DM&IR M-3: wheels and rods are all 'Cylinder.nnn', so cups
+    // sat on wheel tops and rod cups stayed behind while the rods moved, 2026-09-29). Each driving group's own clip is
+    // sampled over a revolution: a part whose middle travels is a rod (the cup rides on it); a part that turns about a
+    // fixed middle is a wheel, axle or crank (no cup on it).
+    static System.Collections.Generic.Dictionary<Transform, bool> Rr2dvMotion = new System.Collections.Generic.Dictionary<Transform, bool>();
+    static bool Rr2dvTravels(Transform t) => Rr2dvMotion.TryGetValue(t, out var travels) && travels;
+    static bool Rr2dvSpins(Transform t) => Rr2dvMotion.TryGetValue(t, out var travels) && !travels;
+
+    static System.Collections.Generic.Dictionary<Transform, bool> Rr2dvGearMotion(Transform body)
+    {
+        var result = new System.Collections.Generic.Dictionary<Transform, bool>();
+        foreach (var u in Cfg.EngineUnits)
+        foreach (var animator in body.GetComponentsInChildren<Animator>(true)
+                     .Where(a => a.name == $"[anim] {u.GroupName}" || a.name.StartsWith($"[anim] {u.GroupName} ")))
+        {
+            var clip = animator.runtimeAnimatorController ? animator.runtimeAnimatorController.animationClips.FirstOrDefault() : null;
+            if (!clip) continue;
+            var renderers = animator.GetComponentsInChildren<Renderer>(true);
+            var samples = renderers.ToDictionary(r => r, r => new System.Collections.Generic.List<(Vector3 centre, Quaternion rot)>());
+            try
+            {
+                foreach (var phase in new[] { 0f, .25f, .5f, .75f })
+                {
+                    clip.SampleAnimation(animator.gameObject, phase * clip.length);
+                    foreach (var r in renderers) samples[r].Add((r.bounds.center, r.transform.rotation));
+                }
+            }
+            finally { clip.SampleAnimation(animator.gameObject, 0); }
+            foreach (var kv in samples)
+            {
+                float travel = kv.Value.Max(a => kv.Value.Max(b => Vector3.Distance(a.centre, b.centre)));
+                float turn = kv.Value.Max(a => kv.Value.Max(b => Quaternion.Angle(a.rot, b.rot)));
+                if (travel > .02f) result[kv.Key.transform] = true;
+                else if (turn > 5f) result[kv.Key.transform] = false;
+            }
+        }
+        Line($"rr2dv oil running gear by motion: {result.Count(kv => kv.Value)} travelling parts (rods), {result.Count(kv => !kv.Value)} turning in place (wheels, axles, cranks)");
+        return result;
     }
 
     static bool Rr2dvIsRod(string name)
@@ -388,7 +429,7 @@ public static partial class CclLocoBuild
     static System.Collections.Generic.List<(Transform rod, Vector3 pos)> Rr2dvRodNubs(Transform body)
     {
         var result = new System.Collections.Generic.List<(Transform rod, Vector3 pos)>();
-        foreach (var mf in body.GetComponentsInChildren<MeshFilter>(true).Where(m => Rr2dvIsRod(m.name)))
+        foreach (var mf in body.GetComponentsInChildren<MeshFilter>(true).Where(m => Rr2dvIsRod(m.name) || Rr2dvTravels(m.transform)))
         {
             var mesh = mf.sharedMesh;
             var renderer = mf.GetComponent<MeshRenderer>();

@@ -70,9 +70,19 @@ public static partial class CclLocoBuild
                     }
                     else if (mats[i].name.IndexOf("glass", StringComparison.OrdinalIgnoreCase) >= 0 && mats[i] != clear && mats[i] != lens)
                     {
-                        var pane = Rr2dvPathHas(at, "lamp", "light", "lantern") ? lens : clear;
+                        bool onLamp = Rr2dvPathHas(at, "lamp", "light", "lantern");
+                        if (onLamp && mats[i].HasProperty("_Color") && mats[i].color.a <= .01f)
+                        {
+                            // Railroader draws this lamp glass fully transparent (PLW Trojan: a disc over each lamp that
+                            // our glass or lens turned into a pale blob, 2026-09-29): keep it invisible.
+                            Line($"rr2dv glass: {at} slot {i} {mats[i].name} kept invisible (alpha 0 in the source)");
+                            continue;
+                        }
+                        var pane = onLamp ? lens : clear;
                         Line($"rr2dv glass: {at} slot {i} {mats[i].name} -> {pane.name}");
                         mats[i] = pane; changed = true; glazed++;
+                        if (!onLamp && Rr2dvSplitLampGlass(r, i, root.transform, lens, ref mats))
+                            Line($"rr2dv glass: {at} slot {i}: the glass in front of the lamp(s) split off -> {lens.name}");
                     }
                 }
                 if (changed) r.sharedMaterials = mats;
@@ -82,6 +92,35 @@ public static partial class CclLocoBuild
             PrefabUtility.SaveAsPrefabAsset(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    // A lamp's glass sharing the window material on one big mesh (ALCo K-66: 'RRR Window Glass' on the body, so the
+    // headlight got clear glass and you saw through it, 2026-09-29): the triangles of that slot within a lamp lens's
+    // radius of a lamp (LampLenses) move to a new slot with the opaque lens. The mesh is copied, never edited in place.
+    static bool Rr2dvSplitLampGlass(Renderer r, int slot, Transform root, Material lens, ref Material[] mats)
+    {
+        var mf = r.GetComponent<MeshFilter>();
+        if (!mf || !mf.sharedMesh || !(r is MeshRenderer) || Cfg.LampLenses.Length == 0 || slot >= mf.sharedMesh.subMeshCount) return false;
+        var mesh = mf.sharedMesh;
+        var verts = mesh.vertices;
+        var tris = mesh.GetTriangles(slot);
+        var keep = new List<int>(); var lamp = new List<int>();
+        for (int t = 0; t < tris.Length; t += 3)
+        {
+            var centre = root.InverseTransformPoint(mf.transform.TransformPoint((verts[tris[t]] + verts[tris[t + 1]] + verts[tris[t + 2]]) / 3));
+            bool near = Cfg.LampLenses.Any(l => Vector3.Distance(centre, l.centre) <= Mathf.Max(l.dia, .2f) * .75f);
+            (near ? lamp : keep).AddRange(new[] { tris[t], tris[t + 1], tris[t + 2] });
+        }
+        if (lamp.Count == 0) return false;
+        var copy = Object.Instantiate(mesh);
+        copy.name = mesh.name + "_lamps";
+        copy.subMeshCount = mesh.subMeshCount + 1;
+        copy.SetTriangles(keep.ToArray(), slot);
+        copy.SetTriangles(lamp.ToArray(), mesh.subMeshCount);
+        AssetDatabase.CreateAsset(copy, $"{carFolder}/{CarId}_{mf.name}_{slot}_lamps.asset".Replace(" ", "_"));
+        mf.sharedMesh = copy;
+        mats = mats.Concat(new[] { lens }).ToArray();
+        return true;
     }
 
     static string TPathOf(Transform t, Transform root)
