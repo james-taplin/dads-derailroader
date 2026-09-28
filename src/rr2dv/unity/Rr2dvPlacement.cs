@@ -357,10 +357,10 @@ public static partial class CclLocoBuild
                     if (hits.Ray(new Vector3(side * outside, y, z), Vector3.left * side, outside, out var hit, body) && hit.normal.x * side > .9f)
                         row.Add((y, Mathf.Abs(hit.point.x)));
                 if (row.Count == 0) { Line($"rr2dv tender plate {anchor.name}: no side sheet found at z {z:F3}; template height kept"); anchor.localPosition = new Vector3(anchor.localPosition.x, anchor.localPosition.y, z); continue; }
-                // The side sheet: the most common outward face depth; its bottom edge ends the first long run at that depth.
+                // The side sheet: the most common outward face depth; its bottom edge is the lowest hit at that depth
+                // (beading or lining bands break a top-down run early: RPP-1 plates landed under the top rail).
                 float sheet = row.GroupBy(h => Mathf.Round(h.x * 100)).OrderByDescending(g => g.Count()).First().Key / 100f;
-                int top = row.FindIndex(h => Mathf.Abs(h.x - sheet) <= .02f), i = top;
-                while (i + 1 < row.Count && Mathf.Abs(row[i + 1].x - sheet) <= .02f && row[i].y - row[i + 1].y < .03f) i++;
+                int i = row.FindLastIndex(h => Mathf.Abs(h.x - sheet) <= .02f);
                 float y0 = row[i].y + half + .03f;
                 Line($"rr2dv tender plate {anchor.name}: z {anchor.localPosition.z:F3} -> {z:F3} (midpoint), y {anchor.localPosition.y:F3} -> {y0:F3} " +
                      $"(side sheet at |x| {sheet:F3}, bottom edge y {row[i].y:F3})");

@@ -56,6 +56,12 @@ public static partial class CclLocoBuild
         // 2026-09-28). Every converted steam loco has a whistle control, RR or generated: show it as Whistle.
         var horn = cab.GetType().GetField("HornStyle");
         horn.SetValue(cab, Enum.ToObject(horn.FieldType, 2));
+        // SetToS shows tender water but not tender coal (RPP-1 game test: no coal amount on the HUD).
+        if (Loco.Tender != null)
+        {
+            var coal = cab.GetType().GetField("TenderCoal");
+            coal.SetValue(cab, Enum.ToObject(coal.FieldType, 1));
+        }
         hud.GetType().GetMethod("OnValidate").Invoke(hud, null);
         EditorUtility.SetDirty(hud);
         EditorUtility.SetDirty(type);

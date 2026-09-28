@@ -1,8 +1,9 @@
 // rr2dv material slot finishing, after the builder has converted the source materials (partial of the builder core).
-//  - A slot left empty (the export could not resolve its material: Railroader base-game truck rims, the '...deadbeef...'
-//    references) gets rr2dv's own dark matte gunmetal (Assets/Rr2dv/Materials/rr2dv_gunmetal.mat), never pink or white.
-//  - A slot whose converted material is named '...glass...' is swapped at load time for Derail Valley's own S282 cab
-//    window glass through CCL's MaterialGrabberRenderer (source glass converts opaque: L-27 game test, 2026-09-28).
+//  - A slot left empty, or holding Unity's white 'Default-Material' (how the export fills an unresolved reference:
+//    Railroader base-game truck rims), gets rr2dv's dark matte gunmetal (Assets/Rr2dv/Materials/rr2dv_gunmetal.mat).
+//  - A slot whose converted material is named '...glass...' gets rr2dv's own clear glass (rr2dv_glass.mat, Standard
+//    transparent). DV's S282 window glass was tried first: its smudge texture showed as a dark circle pattern on other
+//    models' window UVs (L-27 game test, 2026-09-28).
 // Every fallback is written to the build report.
 using System;
 using System.Collections.Generic;
@@ -14,7 +15,12 @@ using Object = UnityEngine.Object;
 public static partial class CclLocoBuild
 {
     const string Rr2dvGunmetal = "Assets/Rr2dv/Materials/rr2dv_gunmetal.mat";
-    const string DvWindowGlass = "Glass (LocoS282A_Windows_01d)";
+    const string Rr2dvGlass = "Assets/Rr2dv/Materials/rr2dv_glass.mat";
+
+    static bool Rr2dvUnresolvedMaterial(Material m)
+    {
+        return !m || m.name == "Default-Material" || m.name == "Default-Diffuse";
+    }
 
     static void FinishRr2dvMaterialSlots()
     {
@@ -25,45 +31,31 @@ public static partial class CclLocoBuild
             var model = root.transform.Find("Model");
             if (!model) return;
             var gunmetal = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvGunmetal);
-            if (!gunmetal) throw new InvalidOperationException("rr2dv fallback material missing: " + Rr2dvGunmetal);
-            int filled = 0;
-            var glass = new Dictionary<int, List<Renderer>>();   // material slot -> renderers whose slot is glass
+            var clear = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvGlass);
+            if (!gunmetal || !clear) throw new InvalidOperationException("rr2dv fallback materials missing under Assets/Rr2dv/Materials");
+            int filled = 0, glazed = 0;
             foreach (var r in model.GetComponentsInChildren<Renderer>(true))
             {
                 var mats = r.sharedMaterials;
                 bool changed = false;
                 for (int i = 0; i < mats.Length; i++)
                 {
-                    if (!mats[i])
+                    if (Rr2dvUnresolvedMaterial(mats[i]))
                     {
+                        Line($"rr2dv material fallback: {TPathOf(r.transform, root.transform)} slot {i} " +
+                             $"{(mats[i] ? "had " + mats[i].name : "was empty")} -> rr2dv_gunmetal");
                         mats[i] = gunmetal; changed = true; filled++;
-                        Line($"rr2dv material fallback: {TPathOf(r.transform, root.transform)} slot {i} was empty -> rr2dv_gunmetal");
                     }
-                    else if (mats[i].name.IndexOf("glass", StringComparison.OrdinalIgnoreCase) >= 0)
+                    else if (mats[i].name.IndexOf("glass", StringComparison.OrdinalIgnoreCase) >= 0 && mats[i] != clear)
                     {
-                        if (!glass.TryGetValue(i, out var list)) glass[i] = list = new List<Renderer>();
-                        list.Add(r);
+                        Line($"rr2dv glass: {TPathOf(r.transform, root.transform)} slot {i} {mats[i].name} -> rr2dv_glass");
+                        mats[i] = clear; changed = true; glazed++;
                     }
                 }
                 if (changed) r.sharedMaterials = mats;
             }
-            foreach (var kv in glass)
-            {
-                var host = new GameObject("[rr2dv glass slot " + kv.Key + "]").transform;
-                host.SetParent(model, false);
-                var grabber = Add(host.gameObject, "CCL.Types.Components.MaterialGrabberRenderer");
-                var entryType = T("CCL.Types.Components.MaterialGrabberRenderer+IndexToName");
-                var entry = Activator.CreateInstance(entryType);
-                entryType.GetField("RendererIndex").SetValue(entry, kv.Key);
-                entryType.GetField("ReplacementName").SetValue(entry, DvWindowGlass);
-                var entries = Array.CreateInstance(entryType, 1); entries.SetValue(entry, 0);
-                grabber.GetType().GetField("RenderersToAffect").SetValue(grabber, kv.Value.ToArray());
-                grabber.GetType().GetField("Replacements").SetValue(grabber, entries);
-                grabber.GetType().GetMethod("OnValidate").Invoke(grabber, null);
-                Line($"rr2dv glass: {kv.Value.Count} renderer(s), slot {kv.Key} -> DV '{DvWindowGlass}' at load: " +
-                     string.Join(", ", kv.Value.Select(r => r.name)));
-            }
-            if (filled > 0) Warn($"rr2dv material fallback: {filled} empty material slot(s) given rr2dv_gunmetal (check them in the renders)");
+            if (filled > 0) Warn($"rr2dv material fallback: {filled} unresolved material slot(s) given rr2dv_gunmetal (check them in the renders)");
+            if (glazed > 0) Line($"rr2dv glass: {glazed} slot(s) given rr2dv_glass");
             PrefabUtility.SaveAsPrefabAsset(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
