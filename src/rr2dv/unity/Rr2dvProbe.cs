@@ -105,7 +105,10 @@ public static class Rr2dvProbe
             outv.audioSources = root.GetComponentsInChildren<AudioSource>(true).Length;
             // Python cannot turn parented RR seat/firebox coordinates into car space before import.
             // Once the prefab is loaded, their measured anchors can supply the same cab grid.
-            var cab = v.cab ?? CabFromAnchors(outv.anchors);
+            // JsonUtility never leaves a serializable field null: an input without "cab" arrives as an empty CabSpec,
+            // so test for an actual grid, not null (the L-27 got no cab rays at all, 2026-09-28).
+            bool given = v.cab != null && v.cab.xs != null && v.cab.xs.Length > 0 && v.cab.ys != null && v.cab.ys.Length > 0;
+            var cab = given ? v.cab : CabFromAnchors(outv.anchors);
             outv.cabRays = cab != null && cab.xs != null && cab.xs.Length > 0 && cab.ys != null ? CabRays(root, cab) : new RayHit[0];
             outv.truckWheels = v.role == "truck" ? TruckWheels(root) : new TruckWheel[0];
             // Static-pose measurements are finished before any clip is sampled.
