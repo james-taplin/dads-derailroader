@@ -1531,3 +1531,13 @@ stopped at "release is below clearance floor": the core's PlaceBrakeRelease sear
 RRPlacementValidation needs position.y - 0.0806 >= 0.30. Core mismatch noted for a future tooling refresh (not edited).
 App-side Rr2dvReleaseSeat tries the fitter at the hint then +-0.4 m steps and hands the core the first hint that clears.
 Untested in Unity. Note for tooling: the fitter's yLow should be 0.3806.
+
+## W47 (cloud Claude, 2026-09-28): grab pass-through default, rear brake release
+
+Branch `claude/modest-gates-tgqzx7` (758d737), untested in Unity/game; suite green except the known Rr2dvAudit stub gaps.
+- James: default for all conversions: every collider under [colliders]/[walkable] and [items] (copies of the mod's
+  collision meshes) gets GrabberRaycastPassThroughProxy, so the control-grab ray is not stopped by an invisible,
+  blockier cab shell (H9 patchy grabs). Walking/standing unchanged.
+- Loco brake-release hint moved to 0.5 m inside the rear end, right side, under the cab (was between the rear drivers:
+  rod came out through pipes). Rr2dvReleaseSeat now searches forward first. Tender release unchanged (James: fine).
+- James: keep our coal material and generated heap (CCL offers DV's Coal material and S060 bunker meshes only).
