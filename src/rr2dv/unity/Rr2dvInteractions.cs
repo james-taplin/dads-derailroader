@@ -45,35 +45,37 @@ public static partial class CclLocoBuild
                 (data.title ?? "").IndexOf("cylinder cocks", StringComparison.OrdinalIgnoreCase) >= 0) continue;
             var key = data.animation?.clipName;
             if (string.IsNullOrEmpty(key) || !Cfg.AnimationMap.ContainsKey(key))
-                throw new InvalidOperationException("Toggle has no resolved source clip: " + component.name);
+                { LeaveOutOpening(component.name, "Toggle has no resolved source clip: " + component.name); continue; }
             string target = string.Join("/", data.targetColliderObject?.path ?? new string[0]);
             if (string.IsNullOrEmpty(target) || !RefBody.Find(target))
-                throw new InvalidOperationException("Toggle has no resolved declared target: " + component.name + " / " + target);
+                { LeaveOutOpening(component.name, "Toggle has no resolved declared target: " + component.name + " / " + target); continue; }
             var targetNode = RefBody;
+            bool ambiguous = false;
             foreach (var segment in target.Split('/'))
             {
                 var matches = targetNode.Cast<Transform>().Where(t => t.name == segment).ToArray();
-                if (matches.Length != 1) throw new InvalidOperationException("Ambiguous declared toggle target: " + target);
+                if (matches.Length != 1) { ambiguous = true; break; }
                 targetNode = matches[0];
             }
+            if (ambiguous) { LeaveOutOpening(component.name, "Ambiguous declared toggle target: " + target); continue; }
             var clip = Clip(key);
             var bindings = AnimationUtility.GetCurveBindings(clip);
             if (clip.length <= 0 || bindings.Length == 0 || bindings.Any(b => b.type != typeof(Transform) || string.IsNullOrEmpty(b.path)) ||
                 AnimationUtility.GetObjectReferenceCurveBindings(clip).Length != 0 || AnimationUtility.GetAnimationEvents(clip).Length != 0)
-                throw new InvalidOperationException("Toggle requires a nonempty Transform-only clip without events: " + key);
+                { LeaveOutOpening(component.name, "Toggle requires a nonempty Transform-only clip without events: " + key); continue; }
             var paths = bindings.Select(b => b.path).Distinct().ToArray();
-            if (paths.Any(p => !RefBody.Find(p))) throw new InvalidOperationException("Unresolved toggle binding: " + key);
+            if (paths.Any(p => !RefBody.Find(p))) { LeaveOutOpening(component.name, "Unresolved toggle binding: " + key); continue; }
             var ancestors = paths.Where(p => target == p || target.StartsWith(p + "/", StringComparison.Ordinal)).OrderBy(p => p.Length).ToArray();
-            if (ancestors.Length == 0) throw new InvalidOperationException("Declared toggle target is not moved by its clip: " + key + " / " + target);
+            if (ancestors.Length == 0) { LeaveOutOpening(component.name, "Declared toggle target is not moved by its clip: " + key + " / " + target); continue; }
             var existing = RrOpenings.FirstOrDefault(o => o.clip == key);
             if (existing != null)
             {
-                if (existing.target != target) throw new InvalidOperationException("Shared clip has multiple declared grab targets; explicit resolution required: " + key);
+                if (existing.target != target) LeaveOutOpening(component.name, "Shared clip has multiple declared grab targets; explicit resolution required: " + key);
                 continue;
             }
             var roots = paths.Where(p => !paths.Any(a => a != p && p.StartsWith(a + "/", StringComparison.Ordinal))).ToArray();
             if (roots.Any(p => removed.Any(a => p == a || p.StartsWith(a + "/") || a.StartsWith(p + "/"))))
-                throw new InvalidOperationException("Toggle overlaps another converted moving assembly: " + key);
+                { LeaveOutOpening(component.name, "Toggle overlaps another converted moving assembly: " + key); continue; }
             string name = "rr2dvOpening" + RrOpenings.Count + "_" + Safe(key);
             string port = name + ".EXT_IN";
             ports.Add(name);
@@ -87,6 +89,14 @@ public static partial class CclLocoBuild
         Cfg.SimControls = ports.ToArray();
         // These complete assemblies are now animated in the external interactables prefab.
         Cfg.LoadAnimations = Cfg.LoadAnimations.Where(a => !RrOpenings.Any(o => o.clip == a.Item1)).ToArray();
+    }
+
+    // A door, window or hatch animation that cannot be resolved is left out with a WARN naming it and why, so the rest
+    // of the loco still builds (L-27: a second roof-hatch toggle whose clip does not move its declared target,
+    // 2026-09-28). Never silent: the warning reaches build/review.json. Driving controls keep their hard checks.
+    static void LeaveOutOpening(string component, string reason)
+    {
+        Warn($"rr2dv ancillary toggle '{component}' left out (not interactive; its model stays as modelled): {reason}");
     }
 
     static void FinishRr2dvInteriorControls()
