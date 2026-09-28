@@ -1513,3 +1513,13 @@ Branch `claude/modest-gates-tgqzx7`, all untested in Unity/game; suite green exc
   controls; dynamo/headlight OverridableControls removed from the HUD; dynamo sim left unpowered (no jet).
 - a3ba2b2: oil cups: rod nub (min 20 triangles, was 35) -> flat running-gear top (big end, crosshead, axlebox) -> board.
 Awaiting logs: L-27 tender white rims, RPP-1 physical coal missing, H9 cab grab coverage.
+
+## W45 (cloud Claude, 2026-09-28): whistle closure, truck rims, tender coal
+
+Branch `claude/modest-gates-tgqzx7`, untested in Unity/game (C# checked against stand-ins only where not excluded):
+- 68976ca: CTRL-02 whistle: James reports every route leaves the whistle a fraction open after use (constant low
+  chime). exhaust.WHISTLE_CONTROL now reads MAX(0, (whistle.EXT_IN - 0.05) / 0.95) via CCL ConstantMultiplierOffset +
+  ConfigurableFunction MAX with a constant-0 ConfigurablePort (Rr2dvWhistleClosure.cs); control/HUD/linkage unchanged.
+- a2a9cbf: material fallbacks now cover the whole car (L-27 tender truck rims were under BogieF/R, outside Model);
+  a tender with a coal slot but no coal LoadAnimation gets the core's CoalLoad in its CoalPile box (RPP-1), with rr2dv_coal.
+- Trojan built on 6713876+ (plates left at decals with WARN). H9 grab coverage: open, waiting for which controls.
