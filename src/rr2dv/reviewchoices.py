@@ -63,6 +63,12 @@ def suggest(req, source):
         put('wheelRadius', matched[0]['tread'], 'measured', 'High-confidence tyre candidate for the source main driving animation; confirm')
     elif len(radii) == 1:
         put('wheelRadius', high[0]['tread'], 'measured', 'Only distinct high-confidence measured tyre radius; confirm it belongs to the powered wheels')
+    elif values.get('physics') != 'geared' and isinstance(main.get('diameter'), (int, float)) and main['diameter'] > 0:
+        # never on a geared loco: its main driver can be a shaft, whose diameter is no tyre
+        # No confident measurement: the source's own driver diameter, not a blank box or a doubtful measurement
+        # (James, 2026-09-28; K-66). It has been within ~4% of the measured tyre on every loco tested so far.
+        put('wheelRadius', round(main['diameter'] / 2, 4), 'source',
+            'Source main driver diameter / 2 (no confident tyre measurement); confirm against the renders')
     if main_clip and not matched and high and any(c.get('clip') == main_clip for c in candidates) and values['physics'] != 'geared':
         put('physics', '', 'DV_choice',
             'The source main animation is not a confirmed tyre group. Choose direct-drive approximation or geared reduction; do not treat a shaft as a driving wheel')

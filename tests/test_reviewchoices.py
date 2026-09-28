@@ -30,12 +30,21 @@ class Suggestions(unittest.TestCase):
         self.assertEqual(value['values']['trainBrake'], 'manual-lap')
         self.assertFalse(req['prefill']['values']['acknowledgeExperimental'])
 
-    def test_missing_geometry_does_not_promote_nominal_radius(self):
+    def test_missing_geometry_falls_back_to_the_source_driver_radius(self):
+        # James, 2026-09-28: the source size beats a blank box; labelled as source for confirmation
         req = questions()
         req['wheelCandidates'] = []
         prefill = reviewchoices.suggest(req, {'mainDriverIndex': 1})
-        self.assertNotIn('wheelRadius', prefill['values'])
+        main = req['wheelsets'][1]
+        self.assertEqual(prefill['values']['wheelRadius'], round(main['diameter'] / 2, 4))
+        self.assertEqual(prefill['provenance']['wheelRadius']['basis'], 'source')
         self.assertNotIn('gearRatio', prefill['values'])
+
+    def test_a_geared_loco_never_takes_a_shaft_diameter_as_its_radius(self):
+        req = questions()
+        req['wheelCandidates'] = []
+        prefill = reviewchoices.suggest(req, {'mainDriverIndex': 1, 'gearRatio': 3.5})
+        self.assertNotIn('wheelRadius', prefill['values'])
 
     def test_unique_high_confidence_tyre_wins_over_low_confidence_shaft(self):
         req = questions()
