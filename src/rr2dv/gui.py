@@ -319,9 +319,13 @@ class App:
                 elif kind == "review":
                     questions, answer = rest
                     from .reviewgui import show
-                    show(self.root, questions, answer)
+                    self._surface()
+                    shown = show(self.root, questions, answer)
+                    if shown:
+                        self._front(shown['window'])
                 elif kind == "ask":
                     pack, sources, answer = rest
+                    self._surface()
                     self._ask(pack, sources, answer)
         except queue.Empty:
             pass
@@ -552,6 +556,21 @@ class App:
         if outcome.code == EXIT_OK:
             messagebox.showinfo(APP_NAME, installed, parent=self.root)
 
+    def _surface(self) -> None:
+        """A question needs the user: restore the main window first. A dialog made while its parent is minimised is
+        hidden with it on Windows, and its input grab then blocks the main window: the app looks frozen and will not
+        come back from the taskbar while the conversion waits for an answer (Trojan, 2026-09-28)."""
+        self.root.deiconify()
+        self.root.lift()
+        self.root.bell()
+
+    def _front(self, window) -> None:
+        window.deiconify()
+        window.lift()
+        window.attributes("-topmost", True)  # above other programs once, then an ordinary window again
+        window.after(500, lambda: window.winfo_exists() and window.attributes("-topmost", False))
+        window.focus_force()
+
     def _ask(self, pack, sources, answer) -> None:
         top = tk.Toplevel(self.root)
         top.transient(self.root)
@@ -563,6 +582,7 @@ class App:
             answer["event"].set()
 
         consent.build_notice(top, pack, sources, done)
+        self._front(top)
         top.grab_set()
 
     # ---- settings ---------------------------------------------------------------------------------------------------
