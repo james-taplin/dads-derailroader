@@ -1587,3 +1587,14 @@ ancillary controls, exported 8". Two loco toggles are both named 'ToggleAnimatio
 hatches likewise); audit.left_out_openings matched by name only and removed both. Now (name, clip) parsed from the WARN
 ("...: CLIP / TARGET"), name-only when the warning names no clip. K-66 expected = 5 loco + 3 tender = 8. Suite green
 except the known Rr2dvAudit stub gaps.
+
+## W52 (cloud Claude, 2026-09-28): code-mod settings become vehicle choices
+
+Branch `claude/modest-gates-tgqzx7`: James: detect RR code-mod behaviour (power, gearing) that will not carry over and
+build it in through vehicle choices. New `codemods.py` reads code-mod components' fields from the definition only
+(never DLLs). Interpreter registry; first entry LegosBetterSteam ArticulatedSteamEngineComponent (diamater/stroke,
+cylinderType, baseIsLP) using our guide's decompile-note formulas: "Pull to build to" offers compound / simple (the
+mod's mode first), then published or plain-RR figure. legacy-equivalent: equivalent bore scaled by sqrt(target/current);
+physical-bore profiles get a limitation note. Unknown code-mod kinds: settings listed in the window, multiplier/ratio/
+gear-like fields flagged. Gap: detection still keys on CODE_MOD_KINDS; kinds from unknown code mods are not recognised
+as code-mod at all yet (needs a base-game component list). Tests + Xvfb render check; untested on a real loco.
