@@ -234,7 +234,12 @@ is searched, trucks included (tender truck rims). A tender whose model has no co
 runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount. All
 are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
 
-Brake release: when the fitted seat at the hint is below the 0.30 m clearance floor (a low frame, Reading B8a
+Cab controls: the walkable/items copies of the mod's own collision meshes let the control-grab ray pass through
+(`rr2dv grab rays pass through` in `build_report.txt`), so a handle you can see is never hidden behind an invisible,
+blockier collision shell. You still stand on and walk into them.
+
+Brake release: hinted 0.5 m inside the loco's rear end, under the cab, where the rod stays clear of pipes and valve
+gear; when the fitted seat at the hint is below the 0.30 m clearance floor (a low frame, Reading B8a
 camelback), the hint moves along the frame in 0.4 m steps to the first seat that clears it (`rr2dv brake release: … moved`).
 
 Oil cups are seated, per side and axle, on a rod big-end nub (islands of 20+ triangles), else on a flat top of the

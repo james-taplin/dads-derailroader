@@ -87,6 +87,7 @@ public static partial class CclLocoBuild
         CreateCar();
         BuildExterior();
         FinishRr2dvMaterialSlots();
+        PassRr2dvGrabRays();
         if (!c.IsTender && Rr2dvNoDynamo) StripRr2dvDynamoHud();
         if (!c.IsTender) CloseRr2dvWhistle();
         SeatRr2dvOilCups();
@@ -151,7 +152,7 @@ public static partial class CclLocoBuild
         var probe = new GameObject("rr2dv release probe").transform;
         try
         {
-            foreach (int step in new[] { 0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6 })
+            foreach (int step in new[] { 0, 1, 2, 3, 4, 5, 6, -1, -2 })  // forward first: the hint is at the loco's rear
             {
                 var candidate = hint + new Vector3(0, 0, step * .4f);
                 int before = warnings;
@@ -172,6 +173,31 @@ public static partial class CclLocoBuild
             Warn("rr2dv brake release: no seat along the frame clears the 0.30 m floor; the core's own check decides");
         }
         finally { Object.DestroyImmediate(probe.gameObject); }
+    }
+
+    // The control-grab ray stops at the first collider it meets. The walkable/items copies of the mod's own cab
+    // collision meshes are blockier than the model and cover handles you can see (H9: brake cutout, lubricator, cab
+    // light, headlights, coal dump, throttle grabbed only at some angles, 2026-09-28). They let the ray pass (CCL's
+    // GrabberRaycastPassThrough, as on the cab teleport box); you still stand on and walk into them. Every conversion.
+    static void PassRr2dvGrabRays()
+    {
+        string path = $"{carFolder}/{CarId}_template.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            int n = 0;
+            foreach (var group in new[] { "[colliders]/[walkable]", "[colliders]/[items]" })
+            {
+                var g = root.transform.Find(group);
+                if (!g) continue;
+                foreach (var col in g.GetComponentsInChildren<Collider>(true))
+                    if (!col.GetComponent(T("CCL.Types.Proxies.GrabberRaycastPassThroughProxy")))
+                    { Add(col.gameObject, "CCL.Types.Proxies.GrabberRaycastPassThroughProxy"); n++; }
+            }
+            Line($"rr2dv grab rays pass through {n} walkable/items collider(s) copied from the mod's collision meshes");
+            SaveRr2dvPrefab(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
     static void StripRr2dvSourceColliders()

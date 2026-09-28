@@ -898,9 +898,12 @@ class _Builder:
                     "then tries running boards; a pair with no valid seat is omitted")
         coal_slot, water_slot = self._slots(self.definition_of(lid))
         self._resources(cfg, rec, comps, coal_slot, water_slot, tank=not tender)
-        rel_z = (drivers[-1]["z"] + drivers[-2]["z"]) / 2 if len(drivers) > 1 else cab_z + 0.5
+        # At the rear of the engine, under the cab bodywork by the steps (James, 2026-09-28): between the drivers the
+        # rod kept coming out through pipes and valve gear. The core fits it to the frame; the app moves it forward
+        # along the frame if that seat is too low.
+        rel_z = rear_end + 0.5
         rec["hooks"]["BrakeRelease"] = env({"pos": _r([min(1.1, half), 0.8, rel_z]), "euler": [0, 90, 0]}, "m/deg", "analogue_estimate",
-                                           "hint between the rear drivers, right side; the core fits it to the frame (S-16)")
+                                           "hint 0.5 m inside the loco's rear end, right side, under the cab; the core fits it to the frame")
         if not tender:
             rec["hooks"]["HandbrakeWheel"] = env({"pos": _r([-0.9, cab_y - 0.3, rear_end + 0.05]), "euler": [0, 180, 0]}, "m/deg",
                                                  "analogue_estimate", "hint on the cab back, fireman's side; the core fits it to the face (S-16)")
