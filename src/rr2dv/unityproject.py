@@ -600,6 +600,16 @@ def assemble(run_path: Path, inv: dict, exports: dict[str, dict], car_creator: P
         shutil.copyfile(script, target)
         app[f"rr2dv/unity/{script.name}"] = sha256_file(script)
     result["app_scripts"] = app
+    # rr2dv's own materials (fallbacks, e.g. the dark gunmetal for material slots the export left empty)
+    materials = assets / "Rr2dv" / "Materials"
+    materials.mkdir(parents=True, exist_ok=True)
+    for mat in sorted((Path(__file__).parent / "unity" / "materials").iterdir()):
+        target = materials / mat.name
+        if target.exists():
+            raise ProjectError(f"app material {mat.name} clashes with {target}")
+        shutil.copyfile(mat, target)
+        if mat.suffix == ".mat":
+            app[f"rr2dv/unity/materials/{mat.name}"] = sha256_file(mat)
     result["unique_guids"] = check_guids(assets)
     write_json(run_path / "unity" / "project.json", result)
     return result

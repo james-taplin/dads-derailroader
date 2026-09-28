@@ -86,6 +86,7 @@ public static partial class CclLocoBuild
         PrepareRr2dvGrips();
         CreateCar();
         BuildExterior();
+        FinishRr2dvMaterialSlots();
         SeatRr2dvOilCups();
         AlignRr2dvBogieSupports();
         SeatRr2dvPlates();

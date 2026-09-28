@@ -225,6 +225,11 @@ An explicit override remains a manual geometry review and will not be silently r
 Automatic beam placement is a build-time measurement, not in-game acceptance: check that the stopcock, hook
 and hanging hose end are reachable. Cosmetic overlap with decorative pipework is acceptable.
 
+Material slots: a slot the export left empty (Railroader base-game truck rims, the `…deadbeef…` references) is given
+rr2dv's own dark matte gunmetal (`src/rr2dv/unity/materials/rr2dv_gunmetal.mat`), and a slot whose material is named
+`…glass…` becomes Derail Valley's own S282 cab window glass when the car loads (CCL MaterialGrabberRenderer). Both
+are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
+
 A Railroader cab handle that does not swing in its own animation (the GN L-27's throttle slides 50 mm) cannot become a
 Derail Valley lever: a generated backhead lever works that function, the modelled handle follows the same setting, and
 `review.json` says so.
