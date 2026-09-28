@@ -359,9 +359,7 @@ class App:
 
             def open_review():
                 from .reviewgui import show
-                shown = show(self.root, questions, answer)
-                if shown:
-                    self._front(shown['window'])
+                show(self.root, questions, answer)
             self._when_shown(kind, answer, open_review)
         elif kind == "ask":
             pack, sources, answer = rest
@@ -593,19 +591,14 @@ class App:
             messagebox.showinfo(APP_NAME, installed, parent=self.root)
 
     def _when_shown(self, kind: str, answer: dict, open_dialog, tries: int = 50) -> None:
-        """A question needs the user: restore the main window, then open the dialog once Windows has really restored it.
-        A dialog made while its parent is still minimised is hidden with it, and its input grab then blocks the main
-        window: the app looked frozen after Unity finished (Trojan, then L-27 when opened at once, 2026-09-28)."""
-        if tries == 50:
-            self.root.deiconify()
-            self.root.lift()
-            self.root.bell()
-        if self.root.state() not in ("normal", "zoomed") and tries > 0:  # zoomed = maximised on Windows
+        """A question needs the user: if the main window is minimised, restore it and wait until Windows has, then open
+        the dialog. A dialog made on a minimised parent is hidden with it and its grab blocks the app (Trojan,
+        2026-09-28). Nothing else is forced: forcing the dialog to the front (topmost) coincided with it never showing (L-27, 2026-09-28)."""
+        if self.root.state() == "iconic" and tries > 0:
             self.root.deiconify()
             self.root.after(100, lambda: self._when_shown(kind, answer, open_dialog, tries - 1))
             return
         try:
-            self.root.update_idletasks()
             open_dialog()
         except Exception as e:
             self._dialog_failed(kind, answer, e)
@@ -619,16 +612,6 @@ class App:
         messagebox.showerror(APP_NAME, f"The {'vehicle choices' if kind == 'review' else kind} window could not open:\n\n"
                                        f"{error}\n\nThe details are in the app log: {applog.log_file()}", parent=self.root)
 
-    def _front(self, window) -> None:
-        try:
-            window.deiconify()
-            window.lift()
-            window.attributes("-topmost", True)  # above other programs once, then an ordinary window again
-            window.after(500, lambda: window.winfo_exists() and window.attributes("-topmost", False))
-            window.focus_force()
-        except tk.TclError as e:  # raising is a convenience; the dialog is already open
-            applog.get().warning("could not bring a dialog forward: %s", e)
-
     def _ask(self, pack, sources, answer) -> None:
         top = tk.Toplevel(self.root)
         top.transient(self.root)
@@ -640,7 +623,6 @@ class App:
             answer["event"].set()
 
         consent.build_notice(top, pack, sources, done)
-        self._front(top)
         top.grab_set()
 
     # ---- settings ---------------------------------------------------------------------------------------------------
