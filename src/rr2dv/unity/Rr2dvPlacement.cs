@@ -82,6 +82,8 @@ public static partial class CclLocoBuild
         PrepareClips();
         PrepareRr2dvInteractions();
         matMap = BuildMaterials(Livery);
+        FinishRr2dvMaterials();
+        PrepareRr2dvGrips();
         CreateCar();
         BuildExterior();
         SeatRr2dvOilCups();
@@ -332,14 +334,38 @@ public static partial class CclLocoBuild
                 float side = Mathf.Sign(source.pos.x);
                 var anchor = root.transform.Find(pair.Item1);
                 if (!anchor || side == 0) throw new InvalidOperationException("Invalid plate anchor " + pair.Item1);
-                var origin = new Vector3(side * 3f, source.pos.y, source.pos.z);
-                if (!hits.Ray(origin, new Vector3(-side, 0, 0), 3f, out var hit, body))
-                    throw new InvalidOperationException("No visible surface for plate " + pair.Item1);
-                if (hit.normal.x * side < .5f)
-                    throw new InvalidOperationException("Plate surface does not face outward: " + pair.Item1);
+                var dummy = anchor.GetComponentInChildren<Renderer>(true);
+                if (!dummy) throw new InvalidOperationException("No plate footprint supplied by template: " + pair.Item1);
+                var footprint = dummy.bounds;
+                var bodyBounds = body.GetComponentsInChildren<Renderer>().Where(r => r.enabled).Select(r => r.bounds).ToArray();
+                if (bodyBounds.Length == 0) throw new InvalidOperationException("No visible body for plates");
+                var extent = bodyBounds[0]; foreach (var b in bodyBounds) extent.Encapsulate(b);
+                float outside = Mathf.Max(Mathf.Abs(extent.min.x), Mathf.Abs(extent.max.x)) + 1;
+                // Search nearest to the source label, then verify the entire native plate footprint.
+                var candidates = new System.Collections.Generic.List<Vector3>();
+                for (float z = extent.min.z + footprint.extents.z; z <= extent.max.z - footprint.extents.z; z += .05f)
+                for (int y = -10; y <= 10; y++) candidates.Add(new Vector3(side * outside, source.pos.y + y * .05f, z));
+                candidates.Insert(0, new Vector3(side * outside, source.pos.y, source.pos.z));
+                bool found = false; RaycastHit hit = new RaycastHit();
+                foreach (var origin in candidates.OrderBy(p => Mathf.Pow(p.y-source.pos.y,2) + Mathf.Pow(p.z-source.pos.z,2)))
+                {
+                    if (!hits.Ray(origin, Vector3.left * side, outside, out hit, body) || hit.normal.x * side < .995f) continue;
+                    bool supported = true;
+                    int ny = Mathf.CeilToInt(footprint.size.y / .1f), nz = Mathf.CeilToInt(footprint.size.z / .1f);
+                    for (int iy = 0; iy <= ny && supported; iy++)
+                    for (int iz = 0; iz <= nz; iz++)
+                    {
+                        var sample = origin + new Vector3(0, Mathf.Lerp(-footprint.extents.y, footprint.extents.y, (float)iy/ny), Mathf.Lerp(-footprint.extents.z, footprint.extents.z, (float)iz/nz));
+                        if (!hits.Ray(sample, Vector3.left * side, outside, out var edge, body) || edge.collider != hit.collider ||
+                            edge.normal.x * side < .995f || Mathf.Abs(edge.point.x-hit.point.x) > .008f) { supported = false; break; }
+                    }
+                    if (supported) { found = true; break; }
+                }
+                if (!found) throw new InvalidOperationException("No fully supported visible surface for plate " + pair.Item1);
                 var old = anchor.localPosition;
-                anchor.localPosition = new Vector3(hit.point.x + side * .01f, source.pos.y, source.pos.z);
-                Line($"rr2dv visible plate {pair.Item1}: {V(old)} -> {V(anchor.localPosition)} on {hit.collider.transform.parent.name}");
+                anchor.position = hit.point + Vector3.right * side * .01f;
+                anchor.localRotation = Quaternion.Euler(0, side > 0 ? 0 : 180, 0);
+                Line($"rr2dv visible plate {pair.Item1}: {V(old)} -> {V(anchor.localPosition)} on {hit.collider.transform.parent.name}; full {footprint.size.y:F3} x {footprint.size.z:F3} m footprint supported");
             }
             SaveRr2dvPrefab(root, path);
         }

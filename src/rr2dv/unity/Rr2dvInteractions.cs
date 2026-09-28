@@ -27,6 +27,7 @@ public static partial class CclLocoBuild
         public string[] roots;
         public float transitionTime;
         public bool clickToggle;
+        public AnimationClip motion;
     }
     static readonly List<RrOpening> RrOpenings = new List<RrOpening>();
 
@@ -141,24 +142,15 @@ public static partial class CclLocoBuild
 
     static void RrControlResponse(Component control)
     {
-        // Normalize the inertial load using the actual physical grip radius. Retain the
-        // role's detents, limits, spring-return behaviour and keyboard/scroll increments.
-        var colliders = control.GetComponentsInChildren<BoxCollider>(true).Where(c => !c.isTrigger && c.gameObject.activeSelf).ToArray();
-        if (colliders.Length == 0) return;
-        Vector3 axis = Get<Vector3>(control, "jointAxis").normalized;
-        float radius2 = 0;
-        foreach (var box in colliders)
+        // Keep mass, spring and damping together; 0.1.2 changed mass alone and removed drag.
+        if (Get<bool>(control, "useSteppedJoint"))
         {
-            Vector3 arm = control.transform.InverseTransformPoint(box.transform.TransformPoint(box.center));
-            arm -= axis * Vector3.Dot(arm, axis);
-            radius2 = Mathf.Max(radius2, arm.sqrMagnitude + box.size.sqrMagnitude / 12f);
+            int notches = Get<int>(control, "notches");
+            float range = Get<float>(control, "jointLimitMax") - Get<float>(control, "jointLimitMin");
+            if (notches < 2 || range <= 0) throw new InvalidOperationException("Invalid stepped control: " + control.name);
+            Set(control, "scrollWheelHoverScroll", range / (notches - 1));
         }
-        float previous = Get<float>(control, "rigidbodyMass");
-        // 0.04 kg m² is a response target, not a model dimension or accepted runtime claim.
-        float mass = Mathf.Clamp(.04f / Mathf.Max(radius2, .0001f), .15f, 2f);
-        Set(control, "rigidbodyMass", mass);
-        Set(control, "rigidbodyDrag", 0f);
-        Line($"rr2dv control response {control.name}: grip radius {Mathf.Sqrt(radius2):F4} m, mass {previous:F3} -> {mass:F3} kg, translational drag 0; detents and endpoints retained; gameplay acceptance pending");
+        Line($"rr2dv control response {control.name}: role mass/damping retained; scroll follows one measured detent");
     }
 
     static void BuildRr2dvAncillaries()
@@ -177,7 +169,7 @@ public static partial class CclLocoBuild
 
     static void BuildRrOpening(Transform parent, RrOpening opening)
     {
-        var clip = Clip(opening.clip);
+        var clip = opening.motion = RrDirectOpeningClip(opening);
         clip.SampleAnimation(RefBody.gameObject, 0);
         var source = RefBody.Find(opening.target);
         var rs = source.GetComponentsInChildren<Renderer>(true).Where(r => r.enabled).ToArray();
@@ -271,7 +263,7 @@ public static partial class CclLocoBuild
 
     static GameObject RrOpeningGrip(Transform parent, RrOpening opening, Vector3 grip, Transform liveTarget)
     {
-        var clip = Clip(opening.clip);
+        var clip = opening.motion ?? Clip(opening.clip);
         var hinge = RefBody.Find(opening.hinge);
         var target = RefBody.Find(opening.target);
         clip.SampleAnimation(RefBody.gameObject, 0);
@@ -304,8 +296,14 @@ public static partial class CclLocoBuild
             RrControlResponse(result.GetComponent(T("CCL.Types.Proxies.Controls.LeverProxy")));
         }
         else if (slides)
+        {
             result = RrPuller(parent, new PullerCfg { Path = opening.hinge, AnimKey = opening.clip, Port = opening.port,
                 Name = opening.name, Grip = grip, GripSize = Vector3.one * .08f });
+            var spec = result.GetComponent(T("CCL.Types.Proxies.Controls.PullerProxy"));
+            // Native puller notches count intervals (unlike lever notches), and scroll is normalized.
+            Set(spec, "useSteppedPuller", true); Set(spec, "notches", 10);
+            Set(spec, "scrollWheelHoverScroll", .1f);
+        }
         else
         {
             opening.clickToggle = true;

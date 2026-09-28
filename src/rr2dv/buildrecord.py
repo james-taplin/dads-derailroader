@@ -495,8 +495,8 @@ class _Builder:
         # ---------------- anchors
         chuff = next((c["name"] for c in comps if c["kind"] == "Chuff"), None)
         whistle = next((c["name"] for c in comps if c["kind"] == "Whistle"), None)
-        cocks = [c for c in comps if c["kind"] == "CylinderCock"]
-        for what, val in (("Chuff (chimney)", chuff), ("Whistle", whistle), ("CylinderCock", cocks)):
+        cocks, fallback_cock = self._ensure_cylinder_cock(cfg, comps, f_ax, bmin, bmax, radius)
+        for what, val in (("Chuff (chimney)", chuff), ("Whistle", whistle)):
             if not val:
                 self.block("missing-anchor", f"{lid}: the definition has no {what} component; the builder places the smoke, "
                                              "steam and their sounds from it")
@@ -506,7 +506,7 @@ class _Builder:
         self._cylinder_cocks(cfg, comps, lid)
         chimney = _anchor(anchors, chuff) or [0, bmax[1], bmax[2] - 1]
         whistle_at = _anchor(anchors, whistle) or chimney
-        cock_at = _anchor(anchors, cocks[0]["name"]) or [0, radius, drivers[0]["z"] + 1.0]
+        cock_at = fallback_cock or _anchor(anchors, cocks[0]["name"]) or [0, radius, drivers[0]["z"] + 1.0]
 
         # ---------------- cab, backhead, fire door
         seats = [c["name"] for c in comps if c["kind"] == "Seat" and _anchor(anchors, c["name"])]
@@ -840,6 +840,30 @@ class _Builder:
             pos = _plain(c["pos"])
             if r and abs(pos[0]) < 0.05:
                 c["pos"] = env([float(r), pos[1], pos[2]], "m", "source", f"Definitions {lid} CylinderCock {c['name']}: RR spawns the jets at +-radius")
+
+    def _ensure_cylinder_cock(self, cfg: dict, comps: list[dict], front_axles: list[dict],
+                              bmin: list[float], bmax: list[float], radius: float) -> tuple[list[dict], list[float] | None]:
+        cocks = [c for c in comps if c["kind"] == "CylinderCock"]
+        if cocks:
+            return cocks, None
+        # The shared builder indexes the first CylinderCock for drain jets and sound. Supply a
+        # car-space anchor just behind the forward bogie when the source has none.
+        front_rear_z = min(a["z"] for a in front_axles)
+        half_width = min(abs(bmin[0]), abs(bmax[0]))
+        pos = _r([min(1.1, max(0.15, half_width * 0.8)), max(0.15, radius * 0.7),
+                  max(bmin[2] + 0.1, min(bmax[2] - 0.1, front_rear_z - 0.25))])
+        evidence = ("probe/probe.json bounds and forward bogie axle positions; 0.25 m behind its rearmost axle, "
+                    "80% of the narrower model half-width and 70% of driving wheel radius above rail")
+        synthetic = {"kind": "CylinderCock", "name": "rr2dv fallback cylinder cock", "parentPath": "",
+                     "extra": "{}", "pos": env(pos, "m", "analogue_estimate", evidence),
+                     "rot": [0, 0, 0, 1], "scale": [1, 1, 1]}
+        cfg["Components"]["value"].append(synthetic)
+        cfg["Components"]["basis"] = "derived"
+        cfg["Components"]["evidence"].append(evidence)
+        comps.append(_plain(synthetic))
+        self.choose(f"no source CylinderCock: generated drain particle and sound anchor at {pos} m "
+                    "just behind the forward bogie; review the exhaust placement in the build renders and in game")
+        return [comps[-1]], pos
 
     def _levers(self, cfg, comps, ov, anims, lid):
         levers, cab_objects, loads, taken = [], [], [], set()

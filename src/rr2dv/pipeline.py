@@ -277,6 +277,8 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     if prebuild_review is not None:
         run.begin("review")
         questions = review.request(draft, build.definitions(run.path, inv), probe_out, run.record['input_fingerprint'])
+        from . import reviewchoices
+        questions = reviewchoices.prepare(questions, machine.work_root)
         write_json(run.path / 'review-questions.json', questions)
         try:
             response = prebuild_review(questions) if callable(prebuild_review) else read_json(Path(prebuild_review))
@@ -290,6 +292,10 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
         draft = record.draft(run.path, inv, probe_in, probe_out, run.record['answers'], absent_bindings=absent)
         draft['metadata']['review'] = reviewed
         write_json(run.path / 'prebuild-review.json', reviewed)
+        try:
+            reviewchoices.remember(machine.work_root, reviewed)
+        except OSError as error:
+            run.log(f'Could not remember vehicle choices for the next conversion: {error}; this run retains its review')
         write_json(run.path / 'record/vehicle-record.json', draft)
         run.finish('review', 'done', 'Saved brake, spawning, wheel and simulation choices with source identity')
     else:

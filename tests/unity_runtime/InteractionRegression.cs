@@ -43,6 +43,9 @@ public static partial class CclLocoBuild
             BuildRrOpening(output.transform, RrOpenings.Single());
             if (!output.GetComponentsInChildren<Component>(true).Any(c => c.GetType().Name == "PullerProxy"))
                 throw new Exception("Linear declared target did not become a puller");
+            var puller = output.GetComponentsInChildren<Component>(true).Single(c => c.GetType().Name == "PullerProxy");
+            if (!Get<bool>(puller, "useSteppedPuller") || Mathf.Abs(Get<float>(puller, "scrollWheelHoverScroll") * Get<int>(puller, "notches") - 1) > .0001f)
+                throw new Exception("Puller scroll is not exactly one normalized detent");
             string prefab = folder + "/external.prefab";
             SaveRr2dvPrefab(output, prefab);
             Object.DestroyImmediate(output);
@@ -63,10 +66,17 @@ public static partial class CclLocoBuild
             RrOpenings[0].name += "Eased";
             output = new GameObject("EasedExternal");
             BuildRrOpening(output.transform, RrOpenings.Single());
+            if (!output.GetComponentsInChildren<Component>(true).Any(c => c.GetType().Name == "PullerProxy"))
+                throw new Exception("Eased single-axis motion lost direct manipulation");
+            Object.DestroyImmediate(output);
+            clip.SetCurve("Body/Wanted", typeof(Transform), "localPosition.y", AnimationCurve.EaseInOut(0, 1, .5f, 1.2f));
+            RrOpenings[0].name += "Compound";
+            output = new GameObject("CompoundExternal");
+            BuildRrOpening(output.transform, RrOpenings.Single());
             var button = output.GetComponentsInChildren<Component>(true).Single(c => c.GetType().Name == "ButtonProxy");
             if (Vector3.Distance(button.transform.lossyScale, Vector3.one) > .001f)
                 throw new Exception("Small source target shrank the physical grip");
-            if (!RrOpenings[0].clickToggle) throw new Exception("Eased source motion was forced into a linear joint");
+            if (!RrOpenings[0].clickToggle) throw new Exception("Compound source motion was forced into a linear joint");
             Object.DestroyImmediate(output);
             Cfg.Components[0].extra = Cfg.Components[0].extra.Replace("Wanted", "Missing");
             bool blocked = false;
@@ -75,7 +85,7 @@ public static partial class CclLocoBuild
             if (!blocked) throw new Exception("Missing declared target was silently ignored");
             Object.DestroyImmediate(source);
             File.WriteAllText(Path.Combine(Application.dataPath, "../interaction-regression.txt"),
-                "declared-target-over-first-binding\ncomplete-multipart-source-poses\nlinear-puller\nsaved-same-prefab-highlights\neased-click-control\nphysical-grip-scale\nunresolved-target-blocked\n");
+                "declared-target-over-first-binding\ncomplete-multipart-source-poses\nstepped-puller-scroll\nsaved-same-prefab-highlights\neased-direct-and-compound-click\nphysical-grip-scale\nunresolved-target-blocked\n");
             EditorApplication.Exit(0);
         }
         catch (Exception e) { Debug.LogException(e); EditorApplication.Exit(1); }

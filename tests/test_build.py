@@ -137,8 +137,49 @@ class BuildStages(unittest.TestCase):
         self.assertIn("no Chuff (chimney) component", out.message)
         self.assertEqual(read_json(out.run.path / "build/blocks.json")[0]["code"], "missing-anchor")
 
+    def test_missing_cylinder_cock_uses_reviewable_front_bogie_fallback(self):
+        defs = self.m["mod"] / "ts-260-a" / "Definitions.json"
+        data = json.loads(defs.read_text().replace(",\n  ],\n}", "\n  ]\n}"))
+        comps = data["objects"][0]["definition"]["components"]
+        data["objects"][0]["definition"]["components"] = [c for c in comps if c.get("kind") != "CylinderCock"]
+        defs.write_text(json.dumps(data))
+
+        out = self.convert(wheel_radius=0.598)
+        self.assertEqual(out.code, EXIT_OK, out.message)
+        rec = read_json(out.run.path / "build/vehicle-record.json")
+        self.assertEqual(recordcheck.check(rec), [])
+        cocks = [c for c in rec["config"]["Components"]["value"] if c["kind"] == "CylinderCock"]
+        self.assertEqual(len(cocks), 1)
+        self.assertEqual(cocks[0]["pos"]["basis"], "analogue_estimate")
+        self.assertEqual(cocks[0]["pos"]["value"], [1.1, 0.4186, 0.95])
+        self.assertEqual(buildrecord._plain(rec["config"]["CrackPos"]), [0.0, 0.4186, 0.95])
+        self.assertTrue(any("no source CylinderCock" in c for c in rec["metadata"]["buildChoices"]))
+
 
 class Rules(unittest.TestCase):
+    def test_cylinder_cock_fallback_injects_only_when_source_anchor_is_missing(self):
+        builder = buildrecord._Builder({}, {}, {"vehicles": []}, {}, {}, {})
+        cfg = {"Components": buildrecord.env([], "mixed", "source", "source definitions")}
+        comps = []
+        cocks, pos = builder._ensure_cylinder_cock(cfg, comps, [{"z": 1.2}, {"z": 0.8}],
+                                                     [-1.5, 0, -4.4], [1.5, 4, 5.5], 0.598)
+        self.assertEqual(pos, [1.1, 0.4186, 0.55])
+        self.assertEqual(cocks[0]["kind"], "CylinderCock")
+        self.assertEqual(cfg["Components"]["value"][0]["pos"]["basis"], "analogue_estimate")
+        self.assertEqual(cfg["Components"]["basis"], "derived")
+        evidence_errors = []
+        recordcheck._evidence(cfg["Components"], "config.Components", False, evidence_errors)
+        self.assertEqual(evidence_errors, [])
+        self.assertTrue(any("no source CylinderCock" in c for c in builder.choices))
+
+        original = {"kind": "CylinderCock", "name": "source cock", "pos": [0.9, 0.3, 1.0]}
+        cfg = {"Components": buildrecord.env([original], "mixed", "source", "source definitions")}
+        cocks, pos = builder._ensure_cylinder_cock(cfg, [original], [{"z": 1.2}],
+                                                     [-1.5, 0, -4.4], [1.5, 4, 5.5], 0.598)
+        self.assertIsNone(pos)
+        self.assertEqual(cocks, [original])
+        self.assertEqual(cfg["Components"]["value"], [original])
+
     def test_rr_axles_are_evenly_spaced_about_the_offset(self):
         self.assertEqual(buildrecord.rr_axles({"offset": 0, "length": 4.1, "axles": 3}), [2.05, 0.0, -2.05])
         self.assertEqual(buildrecord.rr_axles({"offset": 4.38, "length": 0, "axles": 1}), [4.38])
