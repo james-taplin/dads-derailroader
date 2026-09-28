@@ -1598,3 +1598,10 @@ mod's mode first), then published or plain-RR figure. legacy-equivalent: equival
 physical-bore profiles get a limitation note. Unknown code-mod kinds: settings listed in the window, multiplier/ratio/
 gear-like fields flagged. Gap: detection still keys on CODE_MOD_KINDS; kinds from unknown code mods are not recognised
 as code-mod at all yet (needs a base-game component list). Tests + Xvfb render check; untested on a real loco.
+
+## W53 (cloud Claude, 2026-09-28): export with no clips
+
+Branch `claude/modest-gates-tgqzx7`: DM&IR M-3 stopped at import: "resolve_clip_paths: 1 clip(s) did not resolve, first :
+No animation clips found" for the tender truck bundle m-3tenderTA. The resolver treats an export with no .anim as an error;
+_resolve_clips now returns an empty result first when the (selected) export has no clips. Also from rr2dv.log: K-66 and RLW
+0_10_0 (R48 Class) installed. Test added; M-3 untested past import.
