@@ -49,9 +49,17 @@ class Suggestions(unittest.TestCase):
     def test_unique_high_confidence_tyre_wins_over_low_confidence_shaft(self):
         req = questions()
         req['wheelCandidates'][1]['confidence'] = 'low'
+        req['wheelCandidates'][1]['tread'] = .3  # a shaft: far from the source 0.75 m
         prefill = reviewchoices.suggest(req, {'mainDriverIndex': 1})
         self.assertEqual(prefill['values']['wheelRadius'], .4)
         self.assertEqual(prefill['values']['physics'], '')
+
+    def test_a_low_confidence_main_tread_near_the_source_size_is_a_tyre(self):
+        # DM&IR M-3: 0.8001 m measured, 0.80 m source; the steam profile stays suggested
+        req = questions()
+        req['wheelCandidates'][1]['confidence'] = 'low'
+        prefill = reviewchoices.suggest(req, {'mainDriverIndex': 1})
+        self.assertEqual(prefill['values']['physics'], 'legacy-equivalent')
         self.assertIn('confirm', prefill['provenance']['wheelRadius']['evidence'])
 
     def test_source_facts_and_articulated_assumption_are_distinguished(self):
