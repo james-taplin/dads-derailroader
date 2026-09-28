@@ -173,6 +173,18 @@ class BuildStages(unittest.TestCase):
 
 
 class Rules(unittest.TestCase):
+    def test_a_whistle_handle_resting_at_its_clip_end_is_reversed(self):
+        import math
+        def q(deg):  # rotation about x as (x, y, z, w)
+            return [math.sin(math.radians(deg) / 2), 0, 0, math.cos(math.radians(deg) / 2)]
+        def vehicle(rest):
+            return {"nodes": [{"path": "W", "rotation": q(rest)}],
+                    "clips": [{"key": "Whistle", "poses": [{"path": "W", "startEuler": [0, 0, 0], "endEuler": [20, 0, 0]}]}]}
+        self.assertTrue(buildrecord.rest_at_clip_end(vehicle(20), "Whistle", "W"))
+        self.assertFalse(buildrecord.rest_at_clip_end(vehicle(0), "Whistle", "W"))
+        self.assertFalse(buildrecord.rest_at_clip_end(vehicle(10.2), "Whistle", "W"))  # halfway: not clearly at the end
+        self.assertFalse(buildrecord.rest_at_clip_end(vehicle(20), "Whistle", "missing"))
+
     def test_a_leaning_backhead_is_one_plate(self):
         # Western Maryland H9 shape: the plate leans forward 0.38 m over 1.7 m of height (z = -4.48 at y 2.3)
         rays = [{"hit": True, "normalZ": -0.95, "x": round(-0.6 + 0.1 * i, 1), "y": round(2.3 + 0.1 * j, 1),

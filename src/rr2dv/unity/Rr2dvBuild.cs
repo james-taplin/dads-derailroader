@@ -21,7 +21,8 @@ public static class Rr2dvBuild
     [Serializable] public class Part { public string name, parentPath, prefab; public float[] position, rotation, scale; }
     [Serializable] public class Composite { public string vehicle, source, target; public Part[] parts; }
     [Serializable] public class TruckWheels { public string prefab, prefix; public string[] nodes; }
-    [Serializable] public class Input { public int schema; public Absent[] absentBindings; public string[] audioStrip; public Composite[] composites; public TruckWheels[] truckWheels; }
+    [Serializable] public class Input { public int schema; public Absent[] absentBindings; public string[] audioStrip; public Composite[] composites; public TruckWheels[] truckWheels; public ReversedClip[] reversedClips; }
+    [Serializable] public class ReversedClip { public string from, to; }
 
     [Serializable] public class Removed { public string clip, hash; public int bindings; }
     [Serializable] public class MissingScript { public string path; public int count; }
@@ -51,6 +52,7 @@ public static class Rr2dvBuild
                 prep.audioStripped = stripped.ToArray();
             }
             foreach (var truck in input.truckWheels ?? new TruckWheels[0]) RenameTruckWheels(truck);
+            foreach (var reversed in input.reversedClips ?? new ReversedClip[0]) ReverseClip(reversed);
             var placed = new List<Placed>();
             foreach (var composite in input.composites ?? new Composite[0])
             {
@@ -194,6 +196,27 @@ public static class Rr2dvBuild
             SaveChecked(root, truck.prefab);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    // A copy of a clip played backwards (a whistle handle that rests at its clip's last frame: 0 must be the resting end).
+    // Every curve key moves to length - time with its tangents mirrored; the original clip is untouched.
+    static void ReverseClip(ReversedClip r)
+    {
+        var source = AssetDatabase.LoadAssetAtPath<AnimationClip>(r.from);
+        if (!source) throw new InvalidOperationException("clip to reverse not found: " + r.from);
+        if (AnimationUtility.GetObjectReferenceCurveBindings(source).Length != 0)
+            throw new InvalidOperationException("clip to reverse has object-reference curves: " + r.from);
+        float length = source.length;
+        var copy = new AnimationClip { name = Path.GetFileNameWithoutExtension(r.to), frameRate = source.frameRate };
+        foreach (var binding in AnimationUtility.GetCurveBindings(source))
+        {
+            var curve = AnimationUtility.GetEditorCurve(source, binding);
+            var keys = curve.keys.Select(k => new Keyframe(length - k.time, k.value, -k.outTangent, -k.inTangent)).OrderBy(k => k.time).ToArray();
+            AnimationUtility.SetEditorCurve(copy, binding, new AnimationCurve(keys));
+        }
+        Folder(Path.GetDirectoryName(r.to).Replace('\\', '/'));
+        AssetDatabase.CreateAsset(copy, r.to);
+        Debug.Log($"rr2dv reversed clip {r.from} -> {r.to}");
     }
 
     // A failed save must stop preparation before the record loader can misreport a missing source prefab.

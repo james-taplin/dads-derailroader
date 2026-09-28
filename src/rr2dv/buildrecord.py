@@ -170,6 +170,28 @@ def pose_turn_deg(probe_vehicle: dict, clip: str, path: str) -> float | None:
     return math.degrees(2 * math.acos(dot))
 
 
+REST_END_MARGIN_DEG = 1.0  # the modelled pose must be this much nearer the clip's end than its start to count as resting there
+
+
+def rest_at_clip_end(probe_vehicle: dict, clip: str, path: str) -> bool:
+    """Whether a handle as modelled (the prefab's pose, probed before any clip is sampled) sits at the END of its clip:
+    then the clip's last frame is the resting end, and 0 (whistle closed) must be that end (James, 2026-09-28)."""
+    c = next((c for c in probe_vehicle.get("clips") or [] if c.get("key") == clip), None)
+    pose = next((p for p in (c or {}).get("poses") or [] if p.get("path") == path), None)
+    node = next((n for n in probe_vehicle.get("nodes") or [] if n.get("path") == path), None)
+    if not pose or not node or pose.get("startEuler") is None or pose.get("endEuler") is None or not node.get("rotation"):
+        return False
+    rest = tuple(node["rotation"])
+
+    def apart(q):
+        return math.degrees(2 * math.acos(min(1.0, abs(sum(i * j for i, j in zip(q, rest))))))
+    return apart(_quat(pose["endEuler"])) + REST_END_MARGIN_DEG < apart(_quat(pose["startEuler"]))
+
+
+REVERSED_CLIP_SUFFIX = " (rr2dv reversed)"
+REVERSED_CLIP_FOLDER = "Assets/Rr2dv/Reversed"
+
+
 def wheel_evidence(wheel_out: dict | None) -> str:
     """Why the probe did not find a wheel, in its own words: what the clip turns and why each mesh was not used."""
     out = wheel_out or {}
@@ -774,7 +796,10 @@ class _Builder:
             cfg["MainPressureGauge"] = gauges[0]
 
         # ---------------- controls
+        self._reversed = []
         levers, cab_objects, loads, taken = self._levers(cfg, comps, ov, anims, lid)
+        if self._reversed:
+            rec["metadata"]["reversedClips"] = self._reversed
         cfg["RrLevers"] = env([{k: v for k, v in l.items() if k != "_phys"} for l in levers], "1", "source",
                               "Definitions RadialControl components (purpose, clip, part); ControlControlsWizard types as G-29")
         rec["hooks"]["LeverPhysics"] = env([l["_phys"] for l in levers], "mixed deg/N/kg", "analogue_estimate",
@@ -1161,6 +1186,16 @@ class _Builder:
                 self.choose(f"RR control {c['name']!r}: part {path!r} also carries parts other clips move; a generated lever replaces it")
                 continue
             n, spring, damper, mass, drag, ang, scroll, sspring, frac = LEVER_PHYSICS[role]
+            if role == "whistle" and rest_at_clip_end(ov, clip, path) and clip in anims:
+                # 0 must be the handle's resting end on every loco: this handle rests at its clip's last frame, so the
+                # lever uses the clip played backwards (made in the build stage from the original).
+                reversed_key = clip + REVERSED_CLIP_SUFFIX
+                reversed_asset = f"{REVERSED_CLIP_FOLDER}/{safe_name(clip, 'clip')}.anim"
+                self._reversed.append({"from": anims[clip], "to": reversed_asset})
+                anims[reversed_key] = reversed_asset
+                self.choose(f"RR control {c['name']!r}: its handle rests at the end of {clip!r}, so the whistle lever "
+                            "uses the clip reversed: closed (0) is the resting end")
+                clip = reversed_key
             lever = {"Path": path, "AnimKey": clip, "Port": port, "Ctl": ctl, "Toggle": toggle, "Hidden": False, "External": False,
                      **({"Label": label} if label else {})}
             phys = {"path": path, "min": 0, "notches": n, "spring": spring, "damper": damper, "mass": mass, "drag": drag,

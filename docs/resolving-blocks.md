@@ -232,6 +232,10 @@ glass (`rr2dv_glass.mat`). An empty slot on a part named `…coal…` gets a bum
 glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow inside does not show. All
 are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
 
+Whistle closed (0) is always the whistle handle's resting end. When a Railroader whistle handle is modelled at the end of
+its clip rather than the start, the lever uses the clip reversed (`RR control …: its handle rests at the end of …`).
+Generated whistle levers rest at 0 already.
+
 A Railroader cab handle that does not swing in its own animation (the GN L-27's throttle slides 50 mm) cannot become a
 Derail Valley lever: a generated backhead lever works that function, the modelled handle follows the same setting, and
 `review.json` says so.
