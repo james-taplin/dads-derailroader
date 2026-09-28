@@ -216,12 +216,15 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     car_creator = machine.path("carCreator")
     if car_creator is None or not car_creator.is_file():
         raise FileNotFoundError("CarCreator 3.1.9 is not set up: add `carCreator` to the settings file (see `rr2dv doctor`)")
-    cache_key = projectcache.key(inv, exports, car_creator) if workspace.keep_files(machine) else None
-    project = projectcache.restore(machine.work_root.resolve(), cache_key, run.path) if cache_key else None
+    # The measured project is kept for a rerun until this loco builds and passes its audit (James, 2026-09-28), also
+    # when temporary files are otherwise deleted: a failed build must not repeat a long import and probe.
+    cache_key = projectcache.key(inv, exports, car_creator)
+    project = projectcache.restore(machine.work_root.resolve(), cache_key, run.path)
     cached = project is not None
     if cached:
+        project = projectcache.refresh_scripts(run.path)
         run.log(f"  reused the imported project and its probe results from an earlier run (cache {cache_key}); "
-                "Unity does not import or measure again")
+                "Unity does not import or measure again (current build scripts copied in)")
     else:
         try:
             project = unityproject.assemble(run.path, inv, exports, car_creator)
@@ -251,10 +254,11 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     if probe_file.exists():
         for line in (read_json(probe_file).get("problems") or [])[:50]:
             run.log(f"  probe problem: {line}")
-    if not cached and cache_key:
+    if not cached:
         try:
             if projectcache.save(machine.work_root.resolve(), cache_key, run.path):
-                run.log(f"  saved the imported project and probe results for reruns (cache {cache_key})")
+                run.log(f"  saved the imported project and probe results for reruns (cache {cache_key}; "
+                        + ("kept" if workspace.keep_files(machine) else "deleted once this loco builds and passes its audit") + ")")
         except OSError as e:  # a full disk must not stop the conversion: the cache is only a speed-up
             run.log(f"  could not save the project for reruns: {e}")
     run.finish("probe", "done", f"{len(probe_in['vehicles'])} vehicle(s) measured; {problems} problem(s) to review"
@@ -349,6 +353,8 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
         return fail("audit", f"{len(summary['errors'])} problem(s): " + "; ".join(summary["errors"][:5])
                     + (" (see audit/summary.json)" if len(summary["errors"]) > 5 else ""))
     run.finish("audit", "done", "passed (no audio, CCL scripts only, HUD controls present); in-game checks still pending")
+    if not workspace.keep_files(machine) and projectcache.discard(machine.work_root.resolve(), cache_key):
+        run.log(f"  built and audited: the saved project for reruns is deleted (cache {cache_key})")
 
     run.begin("publish")
     try:

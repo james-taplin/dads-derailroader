@@ -6,8 +6,8 @@ import unittest
 from pathlib import Path
 
 from fixtures import loco, part, standard_mod, tender, tool_machine, tree_state
-from rr2dv import buildrecord, recordcheck
-from rr2dv.jsonio import read_json
+from rr2dv import buildrecord, projectcache, recordcheck
+from rr2dv.jsonio import read_json, write_json
 from rr2dv.machine import Machine
 from rr2dv.pipeline import EXIT_FAILED, EXIT_INCOMPLETE, EXIT_OK, convert
 
@@ -408,3 +408,48 @@ class RerunCache(unittest.TestCase):
             break
         again = convert(self.m["mod"], self.machine, search=[self.m["search"]])
         self.assertNotIn("reused", again.run.record["stages"]["import"]["detail"])
+
+
+class RerunCacheWithoutKeptFiles(unittest.TestCase):
+    """Temporary files deleted (the default): the measured project is kept after a stop and deleted once the loco
+    builds and passes its audit (James, 2026-09-28)."""
+
+    def setUp(self):
+        self.tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, self.tmp)
+        self.addCleanup(os.environ.pop, "FAKE_AR_STATE", None)
+        self.m = standard_mod(self.tmp)
+        values = tool_machine(self.tmp)
+        values["keepWorkFiles"] = False
+        self.machine = Machine(None, values)
+        self.cache = self.tmp / "work" / "_cache" / "projects"
+
+    def entries(self):
+        return [p for p in self.cache.iterdir() if (p / "complete.json").is_file()] if self.cache.is_dir() else []
+
+    def test_kept_after_a_stop_reused_then_deleted_after_a_build(self):
+        first = convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        self.assertEqual(first.code, EXIT_INCOMPLETE, first.message)
+        self.assertEqual(len(self.entries()), 1)
+        second = convert(self.m["mod"], self.machine, search=[self.m["search"]], wheel_radius=0.5988, ask=lambda p, s: False)
+        self.assertEqual(second.run.record["stages"]["audit"]["status"], "done", second.message)
+        self.assertIn("reused from an earlier run", second.run.record["stages"]["import"]["detail"])
+        self.assertEqual(self.entries(), [])
+
+    def test_a_restored_project_gets_the_current_editor_scripts(self):
+        convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        entry = self.entries()[0]
+        editor = entry / "project" / "Assets" / "Editor"
+        (editor / "Rr2dvPlacement.cs").write_text("// stale\n")
+        (editor / "Rr2dvGone.cs").write_text("// removed since\n")
+        info = read_json(entry / "project.json")
+        info["app_scripts"]["rr2dv/unity/Rr2dvGone.cs"] = "0"
+        write_json(entry / "project.json", info)
+        run = self.tmp / "restored"
+        projectcache.restore(self.tmp / "work", entry.name, run)
+        info = projectcache.refresh_scripts(run)
+        restored = run / info["project"] / "Assets" / "Editor"
+        current = Path(projectcache.__file__).parent / "unity" / "Rr2dvPlacement.cs"
+        self.assertEqual((restored / "Rr2dvPlacement.cs").read_bytes(), current.read_bytes())
+        self.assertFalse((restored / "Rr2dvGone.cs").exists())
+        self.assertNotIn("rr2dv/unity/Rr2dvGone.cs", info["app_scripts"])

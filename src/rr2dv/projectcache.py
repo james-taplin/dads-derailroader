@@ -27,22 +27,69 @@ SKIP = ("Temp", "Logs", "obj")  # Unity's lock and session files never travel
 
 
 def _scripts() -> dict[str, str]:
+    """What shapes the imported project and the probe's measurements. The build-only editor scripts are not in the key:
+    a restored project gets the current ones (refresh_scripts), so a builder fix does not repeat the import and probe
+    (PLW Trojan: about 10 minutes, 2026-09-28)."""
     from .unityproject import tooling_root
     here = Path(__file__).resolve().parent
     tools = tooling_root() / "builder" / "tools"
     files = [here / n for n in ("unityproject.py", "probeinput.py", "assetripper.py", "projectcache.py")]
-    files += sorted((here / "unity").glob("*.cs")) + sorted((tools / "unity").glob("*.cs"))
+    files += [here / "unity" / "Rr2dvProbe.cs"]
     files += [tools / "resolve_clip_paths.py", tools / "pilot" / "copy_deps.py"]
     return {f.name: sha256_file(f) for f in files if f.is_file()}
 
 
+def refresh_scripts(run_path: Path) -> dict:
+    """Replace a restored project's editor scripts and app materials with the current ones (Unity recompiles them at
+    the next launch; the imported assets and their Library stay). Returns the updated project info."""
+    from .unityproject import tooling_root
+    info_file = run_path / "unity" / "project.json"
+    info = read_json(info_file)
+    project = run_path / info["project"]
+    editor = project / "Assets" / "Editor"
+    here = Path(__file__).resolve().parent
+    groups = {"core_scripts": ("builder/tools/unity/", tooling_root() / "builder" / "tools" / "unity"),
+              "app_scripts": ("rr2dv/unity/", here / "unity")}
+    for field, (prefix, folder) in groups.items():
+        current = {f.name: f for f in sorted(folder.glob("*.cs"))}
+        for name in [k[len(prefix):] for k in (info.get(field) or {}) if k.startswith(prefix) and k.endswith(".cs")]:
+            if name not in current:  # a script since removed must not stay behind and break the compile
+                for stale in (editor / name, editor / (name + ".meta")):
+                    if stale.is_file():
+                        stale.unlink()
+        kept = {k: v for k, v in (info.get(field) or {}).items() if not k.endswith(".cs")}
+        for name, script in current.items():
+            shutil.copyfile(script, editor / name)
+            kept[prefix + name] = sha256_file(script)
+        info[field] = kept
+    materials = project / "Assets" / "Rr2dv" / "Materials"
+    materials.mkdir(parents=True, exist_ok=True)
+    for mat in sorted((here / "unity" / "materials").iterdir()):
+        shutil.copyfile(mat, materials / mat.name)
+    write_json(info_file, info)
+    return info
+
+
+def discard(work_root: Path, cache_key: str) -> bool:
+    """Delete one entry (after that loco built and passed its audit); returns whether there was one."""
+    entry = _root(work_root) / cache_key
+    if not (entry / COMPLETE).is_file():
+        return False
+    shutil.rmtree(entry, ignore_errors=True)
+    for folder in (entry.parent, entry.parent.parent):  # _cache/projects, then _cache, only when left empty
+        try:
+            folder.rmdir()
+        except OSError:
+            break
+    return True
+
+
 def _export_signature(path: Path) -> str:
-    """Every file of a cached export by path, size and modification time: the export cache is content-addressed by
-    bundle, but a changed or damaged export must still miss this cache."""
+    """Every file of an export by path and size: the export folder is named by its bundle's content, and a fresh
+    export of the same bundle in each run (temporary files deleted) must still hit; a changed file size misses."""
     h = hashlib.sha256()
     for f in sorted(p for p in path.rglob("*") if p.is_file()):
-        st = f.stat()
-        h.update(f"{f.relative_to(path).as_posix()}|{st.st_size}|{st.st_mtime_ns}\n".encode())
+        h.update(f"{f.relative_to(path).as_posix()}|{f.stat().st_size}\n".encode())
     return h.hexdigest()
 
 
