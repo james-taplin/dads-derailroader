@@ -240,6 +240,10 @@ Oil cups: the driving groups' own clips are played through a revolution; a part 
 on it rides with it), a part that turns in place is a wheel, axle or crank (no cup on it), whatever the parts are called
 (`rr2dv oil running gear by motion` in `build_report.txt`).
 
+Control response: the train and independent brakes, headlights and cab light move one notch per key press (a tap ran
+their few coarse notches end to end); a generated whistle (no Railroader handle) gets the same whistle physics as a
+Railroader whistle handle. Both are listed as `rr2dv control response` and still need the in-game check.
+
 Door, window and hatch toggles: only the parts a clip actually moves count. A clip that also keys other parts with
 flat curves no longer claims them, so later toggles are not left out as "Toggle overlaps another converted moving
 assembly"; a clip that moves nothing is left out as "Toggle clip moves nothing".

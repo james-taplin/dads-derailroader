@@ -163,8 +163,29 @@ public static partial class CclLocoBuild
         Line($"rr2dv highlight {control.name}: {renderers.Length} explicit same-prefab renderers");
     }
 
+    // Coarse stepped controls where one key tap ran the whole range (James, 2026-09-29: train/independent brake 11 notches
+    // over 60 deg, headlights 7 over 90 deg; the throttle's 21 felt right): the key moves one notch per press.
+    static readonly string[] Rr2dvOneNotchPerPress = { "brake.EXT_IN", "indBrake.EXT_IN", "headlightDecoder.HEADLIGHTS_EXT_IN", "cabLight.EXT_IN" };
+
     static void RrControlResponse(Component control)
     {
+        var feeder = control.GetComponents<Component>().FirstOrDefault(c => c.GetType().Name == "InteractablePortFeederProxy");
+        string port = feeder ? Get<string>(feeder, "portId") : null;
+        if (Rr2dvOneNotchPerPress.Contains(port))
+            foreach (var keys in control.GetComponents<Component>().Where(c => c.GetType().Name == "MouseScrollKeyboardInputProxy"))
+            {
+                Set(keys, "onlyScrollOnce", true);
+                Line($"rr2dv control response {control.name}: keyboard moves one notch per press");
+            }
+        // A generated whistle (Railroader has no handle) had the core's generic lever physics, heavy and slow next to an RR
+        // whistle handle (James, 2026-09-29: most whistles slow, the R48's RR handle good): the same G-29 whistle role as
+        // RR whistle handles (buildrecord LEVER_PHYSICS 'whistle'), then the short-lever spring rule below.
+        if (port == "whistle.EXT_IN" && Cfg.Placed.Any(p => "C_" + p.Name == control.name && p.Port == port))
+        {
+            float travel = Get<float>(control, "jointLimitMax") - Get<float>(control, "jointLimitMin");
+            Phys(control, 0, travel, 0, 50, 5, 5, 5, 0, travel * .25f, 100);
+            Line($"rr2dv control response {control.name}: generated whistle given the RR whistle role physics (spring 50, damper 5, mass 5, drag 5)");
+        }
         // Keep mass, spring and damping together; 0.1.2 changed mass alone and removed drag.
         if (Get<bool>(control, "useSteppedJoint"))
         {
