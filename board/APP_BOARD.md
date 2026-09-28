@@ -1500,3 +1500,16 @@ The imported and probed project is saved after the probe and deleted once that l
 core and app editor scripts and app materials are copied in (removed scripts deleted), so a builder fix re-runs only
 the build (Unity recompiles). Export signature is path+size (fresh exports each run must still hit). Tests: suite
 green except the known Rr2dvAudit stub gaps; untested on Windows/Unity.
+
+## W44 (cloud Claude, 2026-09-28): game-test notes round (materials, whistle, dynamo, oil cups)
+
+Branch `claude/modest-gates-tgqzx7`, all untested in Unity/game; suite green except the known Rr2dvAudit stub gaps.
+- 266f0c3: `rr2dv_coal` (bump-mapped, generated tileable textures) for unresolved slots on parts named coal; `rr2dv_lens`
+  (pale opaque) for glass on lamps, which were see-through into the hollow lamp. rr2dv_glass confirmed good in game.
+- 2f0d07c: James's rule: whistle 0% = the handle's resting end on every loco. A RR whistle handle modelled at its clip's
+  end (probe node rotation vs clip start/end) gets the clip reversed (build stage makes the reversed .anim).
+  Still open: "doesn't close positively" on all tested locos needs per-route detail (drag release, scroll, Enter, HUD).
+- 99af285: Vehicle choice "Dynamo" yes/no, suggested from a Dynamo component. No: no lamps, cab light or their backhead
+  controls; dynamo/headlight OverridableControls removed from the HUD; dynamo sim left unpowered (no jet).
+- a3ba2b2: oil cups: rod nub (min 20 triangles, was 35) -> flat running-gear top (big end, crosshead, axlebox) -> board.
+Awaiting logs: L-27 tender white rims, RPP-1 physical coal missing, H9 cab grab coverage.
