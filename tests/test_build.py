@@ -173,6 +173,18 @@ class BuildStages(unittest.TestCase):
 
 
 class Rules(unittest.TestCase):
+    def test_a_crowded_leaning_backhead_keeps_more_plate_with_a_looser_plane(self):
+        # DM&IR M-3: a raked plate with fittings 4-7 cm proud of it; 3 cm keeps too little, 8 cm keeps the plate
+        rays = []
+        for i in range(21):
+            for j in range(11):
+                x, y = -1 + i * .1, 2.6 + j * .2
+                proud = .06 if (i + j) % 2 else 0  # every other point sits on a fitting
+                rays.append({"x": x, "y": y, "z": -9.3 + .3 * (y - 2.6) + proud, "hit": True, "normalZ": -1})
+        tight, loose = buildrecord.backhead(rays), buildrecord.backhead(rays, .08)
+        self.assertGreater(loose["hits"], tight["hits"])
+        self.assertTrue(loose["sloped"])
+
     def test_a_whistle_handle_resting_at_its_clip_end_is_reversed(self):
         import math
         def q(deg):  # rotation about x as (x, y, z, w)

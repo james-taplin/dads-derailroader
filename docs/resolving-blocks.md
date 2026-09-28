@@ -239,6 +239,10 @@ model part (ALCo 3-cylinder Mikado), and exactly one animated wheelset has the s
 one is the main driver and the empty one is left out (listed as a choice). This used to stop the build with
 `drivers-not-found` / `drivers-no-clip`.
 
+`no-room-for-controls` on a leaning backhead crowded with pipes and fittings (DM&IR M-3): the fit retries with points up
+to 5, then 8 cm off the plate's plane, and uses the tightest that fits every control; each control is still seated on the
+visible surface.
+
 Cab controls: the walkable/items copies of the mod's own collision meshes let the control-grab ray pass through
 (`rr2dv grab rays pass through` in `build_report.txt`), so a handle you can see is never hidden behind an invisible,
 blockier collision shell. You still stand on and walk into them.

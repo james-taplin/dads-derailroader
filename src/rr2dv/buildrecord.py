@@ -75,6 +75,7 @@ AXLE_GROUP_M = 0.05        # wheel nodes this close in z are one axle (left and 
 BACKHEAD_BIN_M = 0.02
 BACKHEAD_MIN_HITS = 12
 BACKHEAD_HALF_WIDTH = 0.7
+LOOSE_BACKHEAD_PLANES_M = (0.05, 0.08)  # a crowded leaning backhead: wider plane bands, tightest that fits
 BACKHEAD_PLANE_M = 0.03    # hits within this of the fitted (possibly leaning) backhead plane are plate
 CONTROL_SPACING_X, CONTROL_SPACING_Y = 0.2, 0.25
 DOOR_CLEARANCE_M = 0.3
@@ -324,7 +325,7 @@ def common_parent(paths: list[str]) -> str:
     return "/".join(prefix)
 
 
-def backhead(rays: list[dict]) -> dict | None:
+def backhead(rays: list[dict], plane: float = BACKHEAD_PLANE_M) -> dict | None:
     """The backhead plate: the most common z (2 cm bins) of rays that meet a surface facing the cab."""
     # within +-0.7 m of the centreline: further out the cab's front wall faces the cab too and could outvote the plate
     facing = [r for r in rays or [] if r.get("hit") and r.get("normalZ", 0) < -0.5 and abs(r.get("x", 0)) <= BACKHEAD_HALF_WIDTH]
@@ -334,7 +335,7 @@ def backhead(rays: list[dict]) -> dict | None:
     for r in facing:
         bins.setdefault(round(r["z"] / BACKHEAD_BIN_M), []).append(r)
     key, hits = max(bins.items(), key=lambda kv: (len(kv[1]), -kv[0]))
-    sloped = _sloped_plate(facing)
+    sloped = _sloped_plate(facing, plane)
     if sloped and len(sloped) > len(hits):
         hits = sloped  # a raked backhead (Western Maryland H9: z -4.48 at y 2.3 to -4.1 at y 4.0) spans many 2 cm bins
     if len(hits) < BACKHEAD_MIN_HITS:
@@ -348,11 +349,11 @@ def backhead(rays: list[dict]) -> dict | None:
             "sloped": hits is sloped}
 
 
-def _sloped_plate(facing: list[dict]) -> list[dict] | None:
+def _sloped_plate(facing: list[dict], plane: float = BACKHEAD_PLANE_M) -> list[dict] | None:
     """Cab-facing hits on one plane z = a + b*y (least squares, outliers beyond 5 cm dropped twice), kept within 3 cm:
     a backhead that leans is still one flat plate. None when too few hits or steeper than 30 degrees from vertical."""
     pts = list(facing)
-    for tolerance in (0.05, 0.05, BACKHEAD_PLANE_M):
+    for tolerance in (max(0.05, plane), max(0.05, plane), plane):
         if len(pts) < BACKHEAD_MIN_HITS:
             return None
         n = len(pts)
@@ -813,6 +814,19 @@ class _Builder:
         if plate:
             avoid = [tuple(nodes[l["Path"]][:2]) for l in levers if l["Path"] in nodes]
             spots, tier = fitted_positions(plate["points"], (door[0], door[1]), avoid, len(wanted))
+            # A leaning backhead crowded with pipes and fittings (DM&IR M-3, 2026-09-28: 13 of 20 at 3 cm) keeps more of
+            # its plate when points up to 5, then 8 cm off the fitted plane count. Only where controls go changes: each is
+            # seated on the visible surface in the build.
+            for loose in LOOSE_BACKHEAD_PLANES_M:
+                if len(spots) >= len(wanted) or not plate.get("sloped"):
+                    break
+                wider = backhead(ov.get("cabRays"), loose)
+                if wider:
+                    spots, tier = fitted_positions(wider["points"], (door[0], door[1]), avoid, len(wanted))
+                    if len(spots) >= len(wanted):
+                        self.choose(f"generated backhead controls placed on the leaning backhead with points up to "
+                                    f"{loose * 100:.0f} cm off its plane (pipes and fittings leave too few within 3 cm); "
+                                    "each is seated on the visible surface: check reach and clearance in the cab renders")
             if tier and len(spots) == len(wanted):
                 self.choose(f"generated backhead controls placed with the relaxed rule '{PLACEMENT_TIERS[tier][3]}': "
                             "the usual band did not fit them all; check reach and grip spacing in the cab renders")
