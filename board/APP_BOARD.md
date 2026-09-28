@@ -1605,3 +1605,10 @@ Branch `claude/modest-gates-tgqzx7`: DM&IR M-3 stopped at import: "resolve_clip_
 No animation clips found" for the tender truck bundle m-3tenderTA. The resolver treats an export with no .anim as an error;
 _resolve_clips now returns an empty result first when the (selected) export has no clips. Also from rr2dv.log: K-66 and RLW
 0_10_0 (R48 Class) installed. Test added; M-3 untested past import.
+
+## W54 (cloud Claude, 2026-09-28): M-3 review check
+
+Branch `claude/modest-gates-tgqzx7` (c222f4f): M-3 review offered LegosBetterSteam simple 140,110 lbf (mod's mode; real
+M-3 ~140,000 lbf: matches). Steam profile was blank: the shaft guard fired on a low-confidence main tread (0.8001 m vs
+0.80 m source). Now a main tread within 10% of the source radius counts as a tyre; only a shaft-like one blanks the
+profile. Tests updated.
