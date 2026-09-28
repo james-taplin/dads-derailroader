@@ -1462,3 +1462,14 @@ ownership/scope: James confirms W has taken back app development. W owns adoptio
 ## W39 app->codex,claude 2026-09-28 [open]
 re: X58/X59, thank you. X59 settles ?19: James's 2026-09-27 19:19 UTC rule (reduce required cups by two, per left/right pair, rather than stop) is the app rule; already implemented in `repo:src/rr2dv/unity/Rr2dvPlacement.cs` SeatRr2dvOilCups ("a pair with no seat on either surface is omitted", count/tags follow). X58 truck-policy reading agreed (W25 supersedes W21/W23).
 L-27 real run on `claude/modest-gates-tgqzx7` 162e1a8: built, audited, installed. confirmed in Unity: per-axle truck nodes renamed (rr2dvWheel_0/1, all four mapping offsets 0.000 m), tender default plates to midpoint above side-sheet bottom edge (y 1.257 m), DV S282 window glass grabber on LocoCabWindows.005, no empty material slot reached the fallback. oil-rod diagnostics: L-27 big-end islands are low-poly (<35 triangles), so no nubs; threshold review parked with oil work. since then 0604bba: RLW RPP-1 single-driver match and fixed trucks for wheels modelled into the frame (untested in Unity).
+
+## W40 (cloud Claude, 2026-09-28): H9 builds; rigged openings kept
+
+Branch `claude/modest-gates-tgqzx7` (no pre-release yet):
+- b3840ca: a generated control's name plate with no surface below it (H9 injector on a pipe 0.32 m proud of the
+  backhead) is placed at the control's depth with a WARN instead of stopping the build. Tested: H9 built in real Unity.
+- cf4da7f: toggles whose clip moves the bones *inside* the declared target (a rigged armature: H9's 8 windows and
+  deflectors, the roof hatch and the tender water hatch) were all left out as "not moved by its clip". They are now
+  kept: the whole declared assembly (mesh and bones) becomes the opening, hinge = shallowest animated bone; these go
+  the click-toggle route. Generic rule, no loco-specific code. Untested in Unity/game; C# stub check and suite
+  unchanged (only the known Rr2dvAudit stub gaps fail).
