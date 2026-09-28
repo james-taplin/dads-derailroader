@@ -173,6 +173,16 @@ class BuildStages(unittest.TestCase):
 
 
 class Rules(unittest.TestCase):
+    def test_a_handle_that_only_slides_is_not_a_lever(self):
+        # GN L-27 (real probe poses): the throttle handle slides 50 mm; the reverser swings 46.2 deg
+        v = {"clips": [{"key": "Throttle", "poses": [{"path": "e/Throttle", "startEuler": [0, 0, 0], "endEuler": [0, 0, 0]}]},
+                       {"key": "Reverser", "poses": [{"path": "e/Rev", "startEuler": [0, 180, 180], "endEuler": [-12.7, 0, 0]}]}]}
+        self.assertEqual(buildrecord.pose_turn_deg(v, "Throttle", "e/Throttle"), 0.0)
+        self.assertAlmostEqual(buildrecord.pose_turn_deg(v, "Reverser", "e/Rev"), 167.3, places=1)
+        self.assertAlmostEqual(buildrecord.pose_turn_deg(
+            {"clips": [{"key": "R", "poses": [{"path": "p", "startEuler": [10, 0, 0], "endEuler": [56.2, 0, 0]}]}]}, "R", "p"), 46.2, places=3)
+        self.assertIsNone(buildrecord.pose_turn_deg(v, "Throttle", "elsewhere"))
+
     def test_wheel_evidence_says_why_no_wheel_was_found(self):
         self.assertIn("rotates no transform", buildrecord.wheel_evidence({"rotatingPaths": []}))
         text = buildrecord.wheel_evidence({"rotatingPaths": ["Main/Drivers"], "meshes": [

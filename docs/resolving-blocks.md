@@ -225,6 +225,10 @@ An explicit override remains a manual geometry review and will not be silently r
 Automatic beam placement is a build-time measurement, not in-game acceptance: check that the stopcock, hook
 and hanging hose end are reachable. Cosmetic overlap with decorative pipework is acceptable.
 
+A Railroader cab handle that does not swing in its own animation (the GN L-27's throttle slides 50 mm) cannot become a
+Derail Valley lever: a generated backhead lever works that function, the modelled handle follows the same setting, and
+`review.json` says so.
+
 A door, window or hatch animation (Railroader `ToggleAnimation`) that cannot be resolved (no clip, no or ambiguous
 target, a clip that does not move its declared target, overlap with another moving assembly) no longer stops the build:
 that one animation is left out, its model stays as modelled, and a `WARN rr2dv ancillary toggle '…' left out` line in

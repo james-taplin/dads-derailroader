@@ -148,6 +148,27 @@ def _owner(path: str, rotating: list[str]) -> str | None:
 COCK_HALF_SPAN_M = 1.1  # at most this far each side of the centreline when the mod gives no cylinder-cock anchor
 
 
+MIN_LEVER_SWEEP_DEG = 1.0  # a source handle turning less than this in its clip cannot be a Derail Valley lever
+
+
+def _quat(euler_deg: list[float]) -> tuple[float, float, float, float]:
+    """Unity Euler angles (applied Z, then X, then Y) as a quaternion (x, y, z, w)."""
+    x, y, z = (math.radians(a) / 2 for a in euler_deg)
+    cx, sx, cy, sy, cz, sz = math.cos(x), math.sin(x), math.cos(y), math.sin(y), math.cos(z), math.sin(z)
+    return (cy * sx * cz + sy * cx * sz, sy * cx * cz - cy * sx * sz, cy * cx * sz - sy * sx * cz, cy * cx * cz + sy * sx * sz)
+
+
+def pose_turn_deg(probe_vehicle: dict, clip: str, path: str) -> float | None:
+    """How far a transform turns between the first and last frame of a clip (probe poses), in degrees."""
+    c = next((c for c in probe_vehicle.get("clips") or [] if c.get("key") == clip), None)
+    pose = next((p for p in (c or {}).get("poses") or [] if p.get("path") == path), None)
+    if not pose or pose.get("startEuler") is None or pose.get("endEuler") is None:
+        return None
+    a, b = _quat(pose["startEuler"]), _quat(pose["endEuler"])
+    dot = min(1.0, abs(sum(i * j for i, j in zip(a, b))))
+    return math.degrees(2 * math.acos(dot))
+
+
 def wheel_evidence(wheel_out: dict | None) -> str:
     """Why the probe did not find a wheel, in its own words: what the clip turns and why each mesh was not used."""
     out = wheel_out or {}
@@ -1012,6 +1033,15 @@ class _Builder:
                                     "grip ownership, pivot/travel and response remain pending")
             if not path:
                 self.choose(f"RR control {c['name']!r}: its clip {clip!r} does not move its part {parent!r}; a generated lever replaces it")
+                continue
+            turn = pose_turn_deg(ov, clip, path)
+            if turn is not None and turn < MIN_LEVER_SWEEP_DEG:
+                # Derail Valley levers only swing. A handle that slides (L-27's push-pull throttle: 0 deg, 50 mm) gets a
+                # generated backhead lever; its own clip still follows the port, so the modelled handle moves with it.
+                self.choose(f"RR control {c['name']!r}: its handle {path!r} turns only {turn:.1f} deg in {clip!r} "
+                            "(it slides or is moved by linkage); a generated backhead lever works the function and the "
+                            "modelled handle follows the same setting")
+                loads.append([clip, "", port, False])
                 continue
             others = [p for k in anims if k != clip for p in self.bound_paths(ov, k)]
             if any(o.startswith(path + "/") for o in others):
