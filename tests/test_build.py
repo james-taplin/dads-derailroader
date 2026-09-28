@@ -173,6 +173,17 @@ class BuildStages(unittest.TestCase):
 
 
 class Rules(unittest.TestCase):
+    def test_a_lone_driver_off_the_definition_is_matched_and_side_cranks_are_not_wheels(self):
+        # RLW RPP-1 single-wheeler (real probe figures): driver at z 0 (definition 0.5 m), crank pivots 6-9 m to the side
+        nodes = {"Second Driver.001": [0.0, 1.238, 0.0], "Empty.001": [-8.708, 1.255, 2.1], "Empty.010": [6.012, 1.254, 1.773]}
+        wout = {"sourceRadius": 1.24, "rotatingPaths": sorted(nodes), "meshes": [
+            {"path": "Second Driver.001", "used": True, "reason": "", "maxRadius": 1.273},
+            {"path": "Empty.001/Cylinder.013", "used": False, "reason": "not centred on the axle", "maxRadius": 1.359},
+            {"path": "Empty.010/Cylinder.043", "used": False, "reason": "not centred on the axle", "maxRadius": 1.359}]}
+        axles = buildrecord.measured_axles({"offset": 0.5, "length": 0, "axles": 1}, wout, nodes)
+        self.assertEqual([(a["part"], a["shift"]) for a in axles], [("Second Driver.001", -0.5)])
+        self.assertEqual(buildrecord.measured_axles({"offset": 1.6, "length": 0, "axles": 1}, wout, nodes)[0]["part"], None)
+
     def test_each_truck_axle_gets_its_own_wheel_node(self):
         w = lambda path, z: {"path": path, "wheelNode": "", "centre": [0, 0.42, z]}
         # truck.archbar.diamond (L-27 tender): one container for both axles' bones -> the bones, never the container

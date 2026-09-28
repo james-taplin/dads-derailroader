@@ -184,6 +184,8 @@ def wheel_evidence(wheel_out: dict | None) -> str:
     return f"the clip rotates {len(turned)} transform(s) ({shown}); meshes under them: {meshes}"
 
 
+WHEEL_MAX_SIDE_M = 2.0     # a wheel's pivot lies within this of the centreline (x); wider nodes are not wheels
+SINGLE_AXLE_SHIFT_M = 1.0  # a lone driving wheel may sit this far from the definition's axle position
 AXLE_HEIGHT_SHARE = 0.15     # a wheel node sits at axle height: its y within 15% of the source radius of it
 WHEEL_SIZE_SHARE = 0.15      # an off-centre mesh still counts as the wheel if its outer radius is within 15% of the source
 
@@ -195,6 +197,7 @@ def _wheel_node_at_axle(mesh: dict, owner: str | None, nodes: dict, radius: floa
     if not radius or owner is None or owner not in nodes or mesh.get("reason") != "not centred on the axle":
         return False
     return (abs(nodes[owner][1] - radius) <= AXLE_HEIGHT_SHARE * radius
+            and abs(nodes[owner][0]) <= WHEEL_MAX_SIDE_M  # RLW RPP-1: crank pivots 6-9 m to the side are no wheels
             and abs((mesh.get("maxRadius") or 0) - radius) <= WHEEL_SIZE_SHARE * radius)
 
 
@@ -243,7 +246,7 @@ def _shifted_axles(expected: list[float], groups: list[dict], wheel_out: dict | 
     definition's spacing, all 0.875 m further forward). Accepted only when no definition axle has a wheel near it, the
     model shows exactly as many wheels at axle height and every gap between them matches the definition's gap."""
     radius = float((wheel_out or {}).get("sourceRadius") or 0)
-    if len(expected) < 2 or not radius:
+    if not expected or not radius:
         return None
     if any(abs(g["z"] - z) <= AXLE_MATCH_M for g in groups for z in expected):
         return None
@@ -251,6 +254,8 @@ def _shifted_axles(expected: list[float], groups: list[dict], wheel_out: dict | 
                     key=lambda g: -g["z"])
     if len(wheels) != len(expected):
         return None
+    if len(expected) == 1 and abs(wheels[0]["z"] - expected[0]) > SINGLE_AXLE_SHIFT_M:
+        return None  # one axle has no spacing to confirm it: only a nearby unique wheel is accepted (RLW RPP-1: 0.5 m)
     want = sorted(expected, reverse=True)
     gaps = [(a["z"] - b["z"]) - (x - y) for a, b, x, y in zip(wheels, wheels[1:], want, want[1:])]
     if any(abs(d) > AXLE_MATCH_M for d in gaps):
@@ -362,6 +367,8 @@ def is_wheel_name(name: str) -> bool:
     return "wheel" in n or n.startswith("whl")
 
 
+DV_DEFAULT_HALF_WHEELBASE_M = 1.0   # CCL v3.1.9 GetBogieOffset(Default) (board W21: CCL source, not measured)
+DV_DEFAULT_WHEEL_RADIUS_M = 0.459   # CCL v3.1.9 default car wheelRadius (board W21)
 TRUCK_WHEEL_PREFIX = "rr2dvWheel_"  # per-axle truck wheel nodes are renamed to this in the run's own truck prefab
 
 
@@ -891,17 +898,25 @@ class _Builder:
             self.block("tender-trucks", f"{tid}: the definition lacks truckSeparation")
             return rec
         if not geo:
-            self.block("truck-wheels", f"{trucks[0]['id']}: the probe found no wheel meshes (transforms named *wheel* or whl*) on the truck prefab")
-            return rec
+            # The truck model has no separate wheel objects (RLW RPP-1 tender: one 'Tender Truck' mesh with the wheels
+            # baked in). Build it as a fixed truck on DV's default bogie layout: the wheels cannot turn.
+            geo = {"axles": [DV_DEFAULT_HALF_WHEELBASE_M, -DV_DEFAULT_HALF_WHEELBASE_M], "radius": DV_DEFAULT_WHEEL_RADIUS_M,
+                   "treads": [], "axleNodes": [], "prefix": "rr2dvNoWheels_", "strays": [], "names": [], "fixed": True}
+            self.choose(f"{trucks[0]['id']}: the truck model has no separate wheel objects (wheels modelled into the frame); "
+                        f"built as a fixed truck on Derail Valley's default bogie layout (axles +/-{DV_DEFAULT_HALF_WHEELBASE_M} m, "
+                        f"wheel radius {DV_DEFAULT_WHEEL_RADIUS_M} m): its wheels will not turn")
         if not geo["axleNodes"] and not geo["prefix"]:
             self.block("truck-wheels", f"{trucks[0]['id']}: the truck's wheel objects ({', '.join(geo['names'])}) share no name prefix "
                                        "naming a wheel ('...wheel...' or 'whl...') that no other object uses" +
                                        (f" (also: {', '.join(geo['strays'][:3])})" if geo["strays"] else ""))
             return rec
         z = sep / 2
-        cfg["WheelRadius"] = env(_r(geo["radius"]), "m", "measured", f"probe/probe.json truckWheels ({trucks[0]['id']}): tread band of "
-                                                                     f"{len(geo['axles'])} axle(s)")
-        self.choose(f"tender wheel radius {geo['radius']:.4f} m from the truck's measured tread (turns the wheels; review with the renders)")
+        if geo.get("fixed"):
+            cfg["WheelRadius"] = env(_r(geo["radius"]), "m", "DV_choice", "CCL v3.1.9 default car wheelRadius (the truck has no separate wheels)")
+        else:
+            cfg["WheelRadius"] = env(_r(geo["radius"]), "m", "measured", f"probe/probe.json truckWheels ({trucks[0]['id']}): tread band of "
+                                                                         f"{len(geo['axles'])} axle(s)")
+            self.choose(f"tender wheel radius {geo['radius']:.4f} m from the truck's measured tread (turns the wheels; review with the renders)")
         offs = [_r(a) for a in geo["axles"]]
         cfg["Bogies"] = env([{"Bogie": "BogieF", "BogieCollider": "front", "Axles": [_r(z + o) for o in offs]},
                              {"Bogie": "BogieR", "BogieCollider": "rear", "Axles": [_r(-z + o) for o in offs]}],
