@@ -36,7 +36,7 @@ public static class Rr2dvProbe
         public string clip; public float sourceRadius; public string[] rotatingPaths; public WheelMesh[] meshes; public RadiusBand[] bands;
     }
     [Serializable] public class RayHit { public float x, y, z, distance, normalZ; public bool hit; public string part; }
-    // A wheel mesh of a truck prefab (a transform named Wheel* or whl*, or under one): its centre and radius bands about it.
+    // A wheel mesh of a truck prefab (a transform whose name contains "wheel" or starts with "whl", or under one): its centre and radius bands about it.
     [Serializable] public class TruckWheel { public string path, wheelNode; public float[] centre; public float maxRadius; public int vertices; public RadiusBand[] bands; }
     [Serializable] public class VehicleOut
     {
@@ -283,10 +283,10 @@ public static class Rr2dvProbe
 
     // Truck prefabs: RR places them at runtime; their wheels are measured about each mesh's own centre (axle along x),
     // radius bands within 20% below the mesh's largest radius. rr2dv picks the tread from them (wheels.py).
-    // "Wheel..." or the common abbreviation "whl..." (truck.commonwealth.a: whl1_LOD0 .. whl3_LOD3).
+    // A name containing "wheel" ('Standard 33" Wheels.001') or starting with "whl" (whl1_LOD0). Must match buildrecord.is_wheel_name.
     static bool IsWheelName(string name)
     {
-        return name.StartsWith("wheel", StringComparison.OrdinalIgnoreCase) || name.StartsWith("whl", StringComparison.OrdinalIgnoreCase);
+        return name.IndexOf("wheel", StringComparison.OrdinalIgnoreCase) >= 0 || name.StartsWith("whl", StringComparison.OrdinalIgnoreCase);
     }
 
     static TruckWheel[] TruckWheels(Transform root)

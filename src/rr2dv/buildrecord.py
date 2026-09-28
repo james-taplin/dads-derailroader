@@ -186,6 +186,8 @@ def axle_evidence(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[flo
         owner = _owner(mesh["path"], rotating)
         if not mesh.get("used") and not _wheel_node_at_axle(mesh, owner, nodes, radius):
             continue
+        if radius and (mesh.get("maxRadius") or 0) > (1 + WHEEL_SIZE_SHARE) * radius:
+            continue  # centred but far larger than the wheel: a rod swinging about the crank pin (ROF-1 connecting rods)
         declared = ws_in.get('transformPath')
         if declared and not (mesh['path'] == declared or mesh['path'].startswith(declared + '/')):
             continue
@@ -215,6 +217,28 @@ def inferred_axle_count(ws_in: dict, wheel_out: dict | None, nodes: dict[str, li
     return len(inside) if len(inside) > 1 else None
 
 
+def _shifted_axles(expected: list[float], groups: list[dict], wheel_out: dict | None, nodes: dict) -> list[dict] | None:
+    """The model's wheels sit as a whole set away from the definition's positions (ROF-1: five drivers at the
+    definition's spacing, all 0.875 m further forward). Accepted only when no definition axle has a wheel near it, the
+    model shows exactly as many wheels at axle height and every gap between them matches the definition's gap."""
+    radius = float((wheel_out or {}).get("sourceRadius") or 0)
+    if len(expected) < 2 or not radius:
+        return None
+    if any(abs(g["z"] - z) <= AXLE_MATCH_M for g in groups for z in expected):
+        return None
+    wheels = sorted((g for g in groups if all(abs(nodes[p][1] - radius) <= AXLE_HEIGHT_SHARE * radius for p in g["paths"])),
+                    key=lambda g: -g["z"])
+    if len(wheels) != len(expected):
+        return None
+    want = sorted(expected, reverse=True)
+    gaps = [(a["z"] - b["z"]) - (x - y) for a, b, x, y in zip(wheels, wheels[1:], want, want[1:])]
+    if any(abs(d) > AXLE_MATCH_M for d in gaps):
+        return None
+    shift = sum(g["z"] for g in wheels) / len(wheels) - sum(want) / len(want)
+    return [{"z": g["z"], "part": sorted(g["paths"])[0], "basis": "measured", "rr": z, "shift": round(shift, 4)}
+            for g, z in zip(wheels, want)]
+
+
 def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[float]]) -> list[dict]:
     """Each RR axle of a wheelset, with the probe's rotating wheel node at that position when there is one."""
     expected = rr_axles(ws_in)
@@ -224,6 +248,9 @@ def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[fl
         # differ from the source simulation offsets. Keep the measured geometry and report both.
         return [{'z': g['z'], 'part': sorted(g['paths'])[0], 'basis': 'measured', 'rr': z}
                 for g, z in zip(sorted(groups, key=lambda g: -g['z']), expected)]
+    shifted = _shifted_axles(expected, groups, wheel_out, nodes)
+    if shifted:
+        return shifted
     out = []
     for z in expected:
         near = sorted((g for g in groups if abs(g["z"] - z) <= AXLE_MATCH_M), key=lambda g: (abs(g["z"] - z), g["z"]))
@@ -287,7 +314,11 @@ def _anchor(anchors: dict, name: str) -> list[float] | None:
     return a["position"] if a and a.get("resolved") and a.get("position") else None
 
 
-WHEEL_NAMES = ("wheel", "whl")  # truck wheel objects: "Wheel..." or the abbreviation "whl..." (truck.commonwealth.a)
+def is_wheel_name(name: str) -> bool:
+    """Truck wheel objects: a name containing "wheel" ('Standard 33" Wheels.001', truck.usra-andrews70t) or starting
+    with the abbreviation "whl" (truck.commonwealth.a). Must match Rr2dvProbe.IsWheelName."""
+    n = name.casefold()
+    return "wheel" in n or n.startswith("whl")
 
 
 def truck_geometry(truck_out: dict) -> dict | None:
@@ -321,7 +352,7 @@ def truck_geometry(truck_out: dict) -> dict | None:
     strays = [p for p in nodes if p.rsplit("/", 1)[-1].startswith(prefix)
               and not any(p == w or p.startswith(w + "/") for w in wheel_nodes)] if prefix else []
     return {"axles": [a["z"] for a in axles], "radius": sum(treads) / len(treads), "treads": [a["tread"] for a in axles],
-            "prefix": prefix if prefix.casefold().startswith(WHEEL_NAMES) and not strays else None, "strays": strays,
+            "prefix": prefix if is_wheel_name(prefix) and not strays else None, "strays": strays,
             "names": names}
 
 
@@ -470,6 +501,9 @@ class _Builder:
                 ws = {**ws, "axles": inferred}
                 self._inferred_axles[i] = inferred
             ax = measured_axles(ws, wout, nodes)
+            if ax and "shift" in ax[0]:
+                self.choose(f"wheelset {i} ({ws.get('clip')}): the model's {len(ax)} wheels are {ax[0]['shift']:+.3f} m from the "
+                            "definition's axle positions at the definition's spacing; the running gear uses the model's positions (review)")
             for a in ax:
                 a.update(driver=i in driver_idx, clip=ws.get("clip"), wheelset=i)
             axles += ax
@@ -796,11 +830,11 @@ class _Builder:
             self.block("tender-trucks", f"{tid}: the definition lacks truckSeparation")
             return rec
         if not geo:
-            self.block("truck-wheels", f"{trucks[0]['id']}: the probe found no wheel meshes (transforms named Wheel* or whl*) on the truck prefab")
+            self.block("truck-wheels", f"{trucks[0]['id']}: the probe found no wheel meshes (transforms named *wheel* or whl*) on the truck prefab")
             return rec
         if not geo["prefix"]:
             self.block("truck-wheels", f"{trucks[0]['id']}: the truck's wheel objects ({', '.join(geo['names'])}) share no name prefix "
-                                       "starting with 'Wheel' or 'whl' that no other object uses" +
+                                       "naming a wheel ('...wheel...' or 'whl...') that no other object uses" +
                                        (f" (also: {', '.join(geo['strays'][:3])})" if geo["strays"] else ""))
             return rec
         z = sep / 2

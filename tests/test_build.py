@@ -238,6 +238,25 @@ class Rules(unittest.TestCase):
         self.assertEqual([a["part"] for a in axles], ["e/D/drivers.003", "e/D/drivers.001", "e/D/drivers", "e/D/drivers.002"])
         self.assertIsNone(buildrecord.inferred_axle_count({**ws, "axles": 4}, wout, nodes))  # a consistent definition is kept
 
+    def test_wheels_offset_as_a_set_from_the_definition(self):
+        # RLW ROF-1 (real probe figures): five drivers at the definition's spacing, all 0.875 m further forward, and a
+        # centred connecting rod (4.4x the wheel) at axle height that must not count as a wheel
+        zs = [4.279, 2.577, 0.875, -0.827, -2.529]
+        nodes = {f"D{i}": [0.004, 0.804, z] for i, z in enumerate(zs)} | {"D2/Rod": [0.874, 0.804, 0.454]}
+        meshes = [{"path": f"D{i}/wheel", "used": True, "reason": "", "maxRadius": 0.835} for i in range(5)]
+        meshes.append({"path": "D2/Rod/rod", "used": True, "reason": "", "maxRadius": 3.532})
+        wout = {"sourceRadius": 0.8025, "rotatingPaths": sorted(nodes), "meshes": meshes}
+        axles = buildrecord.measured_axles({"offset": 0.0, "length": 6.808, "axles": 5}, wout, nodes)
+        self.assertEqual([a["part"] for a in axles], ["D0", "D1", "D2", "D3", "D4"])
+        self.assertEqual({a["shift"] for a in axles}, {0.875})
+        # a different spacing is not a shift: the axles stay unmatched and the build stops
+        axles = buildrecord.measured_axles({"offset": 0.0, "length": 9.0, "axles": 5}, wout, nodes)
+        self.assertTrue(any(a["part"] is None for a in axles))
+
+    def test_truck_wheel_names(self):
+        self.assertTrue(all(map(buildrecord.is_wheel_name, ['Standard 33" Wheels.001', "whl1_LOD0", "Wheel2"])))
+        self.assertFalse(any(map(buildrecord.is_wheel_name, ["Bolster", "Journal Box.001", "Circle.001"])))
+
     def test_safe_names(self):
         self.assertEqual(buildrecord.safe_name('GN A-18 "American"', "X"), "GN A-18 American")
         self.assertEqual(buildrecord.safe_name("::", "RR2DV_X"), "RR2DV_X")
