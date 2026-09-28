@@ -163,3 +163,32 @@ class Dynamo(unittest.TestCase):
         req = review.request(record, {'example': {'wheelsets': [{'diameter': .9}], 'pistonDiameterInches': 14}}, {}, 'fingerprint')
         self.assertTrue(req['sourceHasDynamo'])
         self.assertEqual(req['prefill']['values']['dynamo'], 'yes')
+
+
+class Firing(unittest.TestCase):
+    def test_hand_fired_is_the_suggestion_and_changes_nothing(self):
+        record, req, values = fixture()
+        self.assertEqual(values['firing'], 'hand-fired')
+        result = review.apply(record, resolve(req, values))
+        self.assertNotIn('OilFiring', result['config'])
+
+    def test_oil_burner_on_a_tank_loco_uses_the_core_oil_firing(self):
+        record, req, values = fixture()
+        record['config']['CoalTargetComp'] = 'Bunker'
+        record['config']['LoadAnimations'] = [['Coal', '', 'coal.NORMALIZED', False], ['Water', '', 'water.NORMALIZED', True]]
+        record['hooks']['CoalPile'] = env({'centre': [0, 1, 0], 'size': [1, 1, 1]}, 'm', 'analogue_estimate', 'test')
+        result = review.apply(record, resolve(req, {**values, 'firing': 'oil-burner'}))
+        cfg = result['config']
+        self.assertEqual(cfg['OilFiring']['value'], {'ValveId': 'oilValve', 'AtomizerValveId': 'atomizerValve', 'FireboxMultiplier': 1})
+        self.assertEqual(cfg['ControlsReaderExtra']['value'], {'gearboxA': 'atomizerValve.EXT_IN'})
+        self.assertNotIn('CoalTargetComp', cfg)
+        self.assertNotIn('CoalPile', result['hooks'])
+        self.assertEqual([l[0] for l in cfg['LoadAnimations']], ['Water'])
+        self.assertEqual(result['metadata']['firing'], 'oil-burner')
+
+    def test_oil_burner_with_a_tender_and_the_stoker_are_refused(self):
+        record, req, values = fixture()
+        with self.assertRaisesRegex(review.ReviewError, 'not built yet'):
+            resolve(req, {**values, 'firing': 'mechanical-stoker'})
+        with self.assertRaisesRegex(review.ReviewError, 'tank locos only'):
+            resolve({**req, 'hasTender': True}, {**values, 'firing': 'oil-burner'})

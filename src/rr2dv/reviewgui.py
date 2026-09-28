@@ -97,6 +97,10 @@ def show(parent, req, answer):
         + (f" (check: {', '.join(u['flagged'])})" if u['flagged'] else '') for u in code.get('unrecognised', [])]
     if listed:
         ttk.Label(setup, text='\n'.join(listed), wraplength=900, foreground='#8a4b00').grid(row=13, column=0, columnspan=3, sticky='w', pady=4)
+    ttk.Label(setup, text='Firing').grid(row=14, column=0, sticky='w', pady=4)
+    fields['firing'] = tk.StringVar(value=str(initial.get('firing', 'hand-fired')))
+    ttk.Combobox(setup, textvariable=fields['firing'], values=review.FIRING, state='readonly', width=30).grid(row=14, column=1, sticky='w')
+    note('firing', 14)
     candidates = [c for c in req.get('wheelCandidates', []) if c.get('tread')]
     if candidates:
         ttk.Label(setup, text='Measured tyre candidates').grid(row=10, column=0, sticky='w', pady=6)

@@ -19,6 +19,11 @@ DYNAMO = ('yes', 'no')
 # What a loco without a dynamo leaves out: electric lamps and cab light, and the controls that work them (James, 2026-09-28:
 # the RLW RPP-1 has none, but got a dynamo, its steam jet by the chimney, lamps and their controls).
 DYNAMO_CONTROLS = ('Dynamo', 'Cab light', 'Headlights')
+# How the fire is fed (James, 2026-09-28). Oil burner: our builder core's OilFiring (the 'coal' container holds fuel oil, a
+# CCL stoker fires it; oil valve in the HUD dynamic-brake slot, atomizer valve in gearbox 1). Mechanical stoker: shown so it
+# can be chosen, but not buildable until the builder core keeps coal and gives the stoker steam use (board W57).
+FIRING = ('hand-fired', 'oil-burner', 'mechanical-stoker')
+OIL_VALVE, ATOMIZER_VALVE = 'oilValve', 'atomizerValve'
 
 
 class ReviewError(ValueError):
@@ -60,6 +65,7 @@ def request(record, definitions, probe, fingerprint):
         'wheelCandidates': record['metadata'].get('wheelCandidates', []),
         'initialRadius': cfg.get('WheelRadius', {}).get('value') if isinstance(cfg.get('WheelRadius'), dict) else None,
         'suggestedBrake': source.get('brakeValveType') if source.get('brakeValveType') in BRAKES else None,
+        'hasTender': bool(record.get('tender')),
         'sourceHasDynamo': any(isinstance(c, dict) and c.get('kind') == 'Dynamo' for c in _components(record)),
         'pendingCapabilities': ['Compound/simple switching: prototype not validated',
             'Oil-fired regime combinations: not validated', 'Diesel mechanical/hydraulic/electric: adapters pending',
@@ -106,8 +112,16 @@ def resolve(req, answer):
         v.pop('pullBasis', None)
     if 'dynamo' not in v:  # a review saved before this choice existed: the source's own answer
         v['dynamo'] = 'yes' if req.get('sourceHasDynamo', True) else 'no'
-    for key, allowed in (('trainBrake', BRAKES), ('spawnMode', SPAWNING), ('physics', PHYSICS), ('steamHeat', HEAT), ('dynamo', DYNAMO)):
+    v.setdefault('firing', 'hand-fired')  # a review saved before this choice existed
+    for key, allowed in (('trainBrake', BRAKES), ('spawnMode', SPAWNING), ('physics', PHYSICS), ('steamHeat', HEAT), ('dynamo', DYNAMO),
+                         ('firing', FIRING)):
         if v.get(key) not in allowed: raise ReviewError(f'Choose {key}: {", ".join(allowed)}')
+    if v['firing'] == 'oil-burner' and req.get('hasTender'):
+        raise ReviewError('Oil burner firing is built for tank locos only so far: the builder core turns the loco\'s own coal '
+                          'container into fuel oil, and a tender\'s coal space would still take coal. Choose hand-fired')
+    if v['firing'] == 'mechanical-stoker':
+        raise ReviewError('Mechanical stoker firing is not built yet: it needs a builder core change (keep coal, stoker steam use). '
+                          'Choose hand-fired or oil-burner')
     def number(key, lo, hi):
         try: value = float(v.get(key))
         except (ValueError, TypeError): raise ReviewError(f'{key} requires a number')
@@ -196,6 +210,8 @@ def apply(record, reviewed):
     sim['cylinderBore'] = env(bore, 'm', basis, why)
     if v.get('dynamo') == 'no':
         _without_dynamo(rec)
+    if v.get('firing') == 'oil-burner':
+        _oil_burner(rec)
     from . import enginemetrics
     enginemetrics.apply(rec, reviewed)
     bore = sim['cylinderBore']['value']
@@ -204,6 +220,9 @@ def apply(record, reviewed):
                     'Track lengths are CCL 3.1.9 nominal lengths; game settings affect radio availability']
     if v['physics'] == 'geared':
         limitations.append('Fixed reduction, not a selectable gearbox: Gearbox 1/2 cannot change ratio; source animation phase, adhesion and RPM need in-game checks')
+    if v.get('firing') == 'oil-burner':
+        limitations.append('Oil burner: feed rate, firebox multiplier and atomizer pressure are our builder core defaults (ALCo 1610 '
+                           'pattern), not calibrated for this loco; refuelling from the diesel pump is untested in game')
     if v['steamHeat'] == 'basis-approximation': limitations.append('Steam thermal regime retains DV basis; not source-validated')
     meta['simulationProfile'] = {'id': v['physics'], 'version': ADAPTER_VERSION, 'runtimeValidated': False,
         'physicalCylinders': v['cylinders'], 'simulationBoreM': bore, 'steamHeat': v['steamHeat'],
@@ -243,6 +262,28 @@ def _pull_basis(rec, reviewed, v):
     elif v['physics'] != 'legacy-equivalent':
         meta['simulationProfile'].setdefault('limitations', []).append(
             f"{option['label']} ({option['lbf']} lbf) cannot be matched with a physical-bore profile; choose legacy-equivalent to build to it")
+
+
+def _oil_burner(rec):
+    """Oil firing through our builder core (guide D05): fuel oil in the 'coal' container, oil valve on the HUD's
+    dynamic-brake slot, atomizer valve on gearbox 1 (lights the burner from cold), no coal pile to shovel from."""
+    cfg, hooks, meta = rec['config'], rec['hooks'], rec['metadata']
+    firing = {'ValveId': OIL_VALVE, 'AtomizerValveId': ATOMIZER_VALVE}
+    # CCL's stoker multiplier "MUST match the multiplier in the firebox controller" (SteamMechanicalStokerDefinition)
+    multiplier = ((hooks.get('SimSpec') or {}).get('firebox') or {}).get('coalConsumptionMultiplier')
+    if isinstance(multiplier, dict): multiplier = multiplier.get('value')
+    if isinstance(multiplier, (int, float)): firing['FireboxMultiplier'] = multiplier
+    cfg['OilFiring'] = env(firing, 'config', 'DV_choice',
+                           'Pre-build review: oil burner; feed rate and pressures are the builder core defaults, the firebox '
+                           'multiplier matches the firebox')
+    cfg['ControlsReaderExtra'] = env({'gearboxA': ATOMIZER_VALVE + '.EXT_IN'}, 'port', 'DV_choice',
+                                     'Pre-build review: oil burner atomizer on the gearbox 1 HUD slot')
+    cfg.pop('CoalTargetComp', None)  # no coal to shovel
+    cfg.pop('CoalLoad', None)
+    hooks.pop('CoalPile', None)
+    if isinstance(cfg.get('LoadAnimations'), list):
+        cfg['LoadAnimations'] = [l for l in cfg['LoadAnimations'] if l[2] != 'coal.NORMALIZED']
+    meta['firing'] = 'oil-burner'
 
 
 def _without_dynamo(rec):

@@ -12,7 +12,7 @@ public static partial class CclLocoBuild
 {
     [Serializable] public class RrReview
     {
-        public string trainBrake, spawnMode, physics, steamHeat;
+        public string trainBrake, spawnMode, physics, steamHeat, firing;
         public float gearRatio, efficiency;
         public int[] spawnTracks;
         public int[] poweredWheelsets;
@@ -62,6 +62,15 @@ public static partial class CclLocoBuild
             var coal = cab.GetType().GetField("TenderCoal");
             coal.SetValue(cab, Enum.ToObject(coal.FieldType, 1));
         }
+        // Oil burner (review choice): oil valve in the dynamic-brake slot, atomizer in gearbox 1; no shovel or coal dump.
+        if (RrChoices.firing == "oil-burner")
+            foreach (var (section, slot, show) in new[] { ("Braking", "DynamicBrake", 1), ("BasicControls", "GearboxA", 1),
+                                                          ("Steam", "Shovel", 0), ("Steam", "FuelDump", 0) })
+            {
+                var sec = settings.GetType().GetField(section).GetValue(settings);
+                var field = sec.GetType().GetField(slot);
+                field.SetValue(sec, Enum.ToObject(field.FieldType, show));
+            }
         hud.GetType().GetMethod("OnValidate").Invoke(hud, null);
         EditorUtility.SetDirty(hud);
         EditorUtility.SetDirty(type);

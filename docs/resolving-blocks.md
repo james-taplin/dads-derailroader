@@ -259,6 +259,14 @@ Dynamo (Vehicle choices): suggested from the Railroader definition (a `Dynamo` c
 has no electric lamps, cab light, or Dynamo/Cab light/Headlights backhead controls, and the HUD has no dynamo or
 headlight controls; the dynamo stays off, so no dynamo steam jet.
 
+Firing (Vehicle choices): Railroader definitions do not say how the fire is fed, so the suggestion is always hand-fired.
+"oil-burner" (tank locos only for now) builds our builder core's oil firing: the loco's coal space holds fuel oil
+(refilled at the diesel pump; untested in game), the oil valve is on the HUD's dynamic-brake slot, the atomizer valve on
+Gearbox 1 (it lights the burner from cold); there is no shovel, coal dump or coal pile. Feed rate and pressures are the
+core's defaults, not calibrated for the loco. "Oil burner firing is built for tank locos only so far": a tender's coal
+space would still take coal; choose hand-fired. "Mechanical stoker firing is not built yet": it needs a builder core
+change (keep coal, give the stoker steam use); choose hand-fired or oil-burner.
+
 Whistle closed (0) is always the whistle handle's resting end. When a Railroader whistle handle is modelled at the end of
 its clip rather than the start, the lever uses the clip reversed (`RR control …: its handle rests at the end of …`).
 Generated whistle levers rest at 0 already.
