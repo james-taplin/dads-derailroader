@@ -1564,3 +1564,11 @@ backhead overflow, Trojan's missing-CylinderCock stop, the X51 end-beam patch no
 grab coverage, the camelback release-floor tooling mismatch, the ungraceful `rlw-2-10-2-usra-t` traceback).
 Tested: none needed, no app behaviour changed; nothing to review in Unity/game. Untested: n/a.
 Not merged to main; James to look over the branch and say when to merge (per Workflow: merges happen on his say-so).
+
+## W49 (cloud Claude, 2026-09-28): phantom main driver (ALCo 3-cyl Mikado K-66)
+
+Branch `claude/modest-gates-tgqzx7`: K-66 stopped with drivers-not-found/drivers-no-clip. Its definition's mainDriverIndex
+(2) is a 4-axle 0.99 m wheelset with no clip and no transform, overlapping the animated 4-axle 1.5 m 'Drivers' (1).
+rrmod.definition() now drops such a phantom and makes its unique animated twin (same axle count, overlapping span) the
+main driver, noted as a build choice. rrmod.py joined the project-cache key (probe wheel indices change). Tests added;
+untested in Unity.
