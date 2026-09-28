@@ -1549,3 +1549,18 @@ seated, brake release moved +0.4 m to a seat above the floor, cached project reu
 "duplicate simulation IDs: whistleZero, whistleDeadzone, whistleClosure": CCL's SimComponentDefinitionProxy.Reset()
 appends a new component to executionOrder on AddComponent, and CloseRr2dvWhistle inserted them again. d95bf9f removes
 them before inserting (as ConfigureRrOpeningMotion does). Every loco built on 68976ca..758d737 would fail this audit.
+
+## W49 (cloud Claude, 2026-09-28): mod design-case catalogue
+
+Branch `claude/confident-planck-l7fv5h` (a8c5c14, doc-only, no app code touched): James asked for a running list of
+Railroader mod-authoring styles/techniques the app has had to recognise, grouped by author or technique, so new mods
+can be matched against known cases. Added `repo:docs/mod-design-cases.md`: ~30 cases pulled from this board (W1-W48)
+and `tooling/GUIDE_SHARED.md`/`GUIDE_UNIFIED_LLW_CONVERSION.md`, grouped by technique (catalogue/identifier quirks,
+code-mod dependencies, clip resolution, wheel/truck detection, cab/control layout, end beam/coupler/plate placement,
+oil cups, material fallbacks, brake release, whistle conventions), each citing the discovering mod and evidence
+(board id, file:line). Closes with the X36/X42 policy note (G-29/C-21 are regression evidence, never templates; no
+loco-ID branches anywhere in the app, confirmed by grep of `unity/*.cs`) and an index of still-open items (L-27
+backhead overflow, Trojan's missing-CylinderCock stop, the X51 end-beam patch not yet ported to local tooling, H9
+grab coverage, the camelback release-floor tooling mismatch, the ungraceful `rlw-2-10-2-usra-t` traceback).
+Tested: none needed, no app behaviour changed; nothing to review in Unity/game. Untested: n/a.
+Not merged to main; James to look over the branch and say when to merge (per Workflow: merges happen on his say-so).
