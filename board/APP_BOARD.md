@@ -1628,3 +1628,23 @@ Branch `claude/modest-gates-tgqzx7`: M-3 built (20 controls on the 8 cm plane) a
 side. Rr2dvAudit now judges the side from the handle end (root + 1.0676 m along +z). App audit only; core's own release
 validation already passed. Note from the report: all 11 cab toggles left out as overlapping another converted assembly
 (M-3 toggles share assemblies); investigate next.
+
+## W57 (cloud Claude, 2026-09-29): Firing choice; core request for a coal stoker
+
+Branch `claude/modest-gates-tgqzx7`, 3eed00c. James approved all three (2026-09-29).
+- **Firing** vehicle choice: hand-fired (always the suggestion; RR definitions carry no firing marker), oil-burner,
+  mechanical-stoker. Oil burner = the core's `OilFiring` (valve `oilValve` in the HUD dynamic-brake slot, atomizer
+  `atomizerValve` on gearboxA via `ControlsReaderExtra`, `FireboxMultiplier` = the record's firebox multiplier); coal
+  target, coal pile and coal load animation dropped; the app's HUD step shows DynamicBrake/GearboxA and hides Shovel/FuelDump.
+  Tank locos only: the core turns the loco's own `coal` container into Fuel, a tender's stays coal. Mechanical stoker is
+  shown but the review refuses it until the core supports it.
+- Tested: unit tests (new `Firing` class), GUI tests. Untested: any Unity build or game run with oil firing; the diesel-pump
+  refuel socket (guide D05 says it needs `[fuel de2]`, not added).
+
+**Request to the local sessions (core change, James approved; local tooling first, then a snapshot):** generalise
+`BuildOilFiring` / `OilFiringCfg` so it can build a coal mechanical stoker: (1) keep the container type Coal (don't
+`Set(coal, "type", 1)`), (2) configurable non-zero `MaxSteamConsumption` from boiler pressure, (3) keep the shovel/coal pile
+as a backup. Please also say whether the vanilla shovel's feed into `firebox.COAL_CONTROL_EXT_IN` is overwritten by the
+stoker's write each tick. Evidence: the ALCo K-66 has a "Stoker" toggle (loco) and an "auger" toggle (tender), which the
+app would then drive from `STOKING_NORMALIZED` via `LoadAnimations`. Oil firing on tender locos needs the tender's
+container handled too.
