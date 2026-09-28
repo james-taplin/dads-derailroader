@@ -1620,3 +1620,11 @@ legacy-equivalent, 4 cyl, legos-simple 140,110 lbf). Its backhead leans ~18 deg 
 within the 3 cm plane band. For a sloped plate, the fit now retries at 5 then 8 cm (LOOSE_BACKHEAD_PLANES_M) and takes the
 tightest that places every control; BackheadZ unchanged (-9.257 -> -9.247 at 8 cm). Checked on the M-3 probe: 14/17/20.
 Seating in Unity still uses the visible surface. The M-3's cached project stays valid (buildrecord not in the key).
+
+## W56 (cloud Claude, 2026-09-29): M-3 builds; BR-01 side from the handle end
+
+Branch `claude/modest-gates-tgqzx7`: M-3 built (20 controls on the 8 cm plane) and failed BR-01: release upright, handle
++x outward, but its root (valve end) at x -0.23 on the narrow rear frame (handle 0.63..0.84) made the audit take the left
+side. Rr2dvAudit now judges the side from the handle end (root + 1.0676 m along +z). App audit only; core's own release
+validation already passed. Note from the report: all 11 cab toggles left out as overlapping another converted assembly
+(M-3 toggles share assemblies); investigate next.
