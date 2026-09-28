@@ -1612,3 +1612,11 @@ Branch `claude/modest-gates-tgqzx7` (c222f4f): M-3 review offered LegosBetterSte
 M-3 ~140,000 lbf: matches). Steam profile was blank: the shaft guard fired on a low-confidence main tread (0.8001 m vs
 0.80 m source). Now a main tread within 10% of the source radius counts as a tyre; only a shaft-like one blanks the
 profile. Tests updated.
+
+## W55 (cloud Claude, 2026-09-28): M-3 backhead room
+
+Branch `claude/modest-gates-tgqzx7`: M-3 blocked at no-room-for-controls (13 of 20; review choices all accepted:
+legacy-equivalent, 4 cyl, legos-simple 140,110 lbf). Its backhead leans ~18 deg and is dense with fittings: only 67 rays
+within the 3 cm plane band. For a sloped plate, the fit now retries at 5 then 8 cm (LOOSE_BACKHEAD_PLANES_M) and takes the
+tightest that places every control; BackheadZ unchanged (-9.257 -> -9.247 at 8 cm). Checked on the M-3 probe: 14/17/20.
+Seating in Unity still uses the visible surface. The M-3's cached project stays valid (buildrecord not in the key).
