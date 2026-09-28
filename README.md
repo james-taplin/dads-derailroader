@@ -82,6 +82,25 @@ exact file described above and check again. The command-line equivalent is `rr2d
 
 ## Using the app
 
+### Vehicle choices (0.1.3)
+
+The pre-build review populates source facts, suitable measured wheel candidates and labelled starting
+assumptions. Confirm or change them directly in the app; no review JSON or offline conversion folder is needed.
+Previously confirmed choices are restored automatically for the same vehicle and unchanged source, including
+choices saved by 0.1.2 in the app's run reports. Changed source data requires a fresh review.
+
+Geared-only fields are hidden for other profiles. The **Geared wheels** tab uses named groups with
+**Powered**, **Unpowered** and **Excluded** choices instead of comma-separated indices. A ratio absent from
+the source still needs your input; the app does not invent it. Optional JSON import is under **Advanced / source details**.
+Profiles live in the configured work folder's `reviews` directory and survive temporary conversion cleanup.
+
+The **Engine specifications** tab exposes bore, stroke, gauge pressure, heating area, boiler dimensions/capacity
+and a coal-consumption adjustment, with units, provenance and per-field **Restore** buttons. Inherited boiler
+values are labelled as CCL simulation defaults, not measurements of the source engine. Accepting the populated
+metrics preserves current simulation values. Edited specifications are checked against the exported bundle.
+Nominal TE and factor of adhesion update live; published TE is a comparison figure, and weight on driven wheels
+is reference data rather than a mass/axle-loading override. Unknown driven weight stays unknown.
+
 Developers can also run from a checkout:
 
 ```
@@ -100,7 +119,7 @@ derailroader                      # opens the app (or: rr2dv gui)
   report folder, the vehicle record and the finished pack folder.
 - After measurement, **Pre-build review** asks for the train-brake valve type, spawning mode, physical driving-wheel
   **radius**, cylinder count and steam profile. The source evidence tab shows measured wheel candidates. Choices
-  are saved in `prebuild-review.json`; load that file on a rerun. A changed source or adapter rejects stale answers.
+  are saved in `prebuild-review.json` and restored automatically on a rerun. A changed source or adapter rejects stale answers.
 - Normal spawning can be radio only, a manually selected suitable track pool, or all suitable tracks. Track filtering
   uses the whole locomotive/tender length, coupling allowance and clearance; reserved stock tracks are excluded.
 - Simple and fixed-geared steam profiles are experimental. Compound switching, oil-regime combinations, articulated

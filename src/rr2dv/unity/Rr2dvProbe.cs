@@ -103,7 +103,10 @@ public static class Rr2dvProbe
             else Problems.Add(v.id + ": no visible geometry");
             outv.anchors = (v.components ?? new Comp[0]).Select(c => Anchor(v, root, c)).ToArray();
             outv.audioSources = root.GetComponentsInChildren<AudioSource>(true).Length;
-            outv.cabRays = v.cab != null && v.cab.xs != null && v.cab.xs.Length > 0 && v.cab.ys != null ? CabRays(root, v.cab) : new RayHit[0];
+            // Python cannot turn parented RR seat/firebox coordinates into car space before import.
+            // Once the prefab is loaded, their measured anchors can supply the same cab grid.
+            var cab = v.cab ?? CabFromAnchors(outv.anchors);
+            outv.cabRays = cab != null && cab.xs != null && cab.xs.Length > 0 && cab.ys != null ? CabRays(root, cab) : new RayHit[0];
             outv.truckWheels = v.role == "truck" ? TruckWheels(root) : new TruckWheel[0];
             // Static-pose measurements are finished before any clip is sampled.
             outv.wheels = (v.wheelsets ?? new Wheelset[0]).Select(w => Wheel(v, root, w)).ToArray();
@@ -236,6 +239,21 @@ public static class Rr2dvProbe
         o.bands = bands.Values.ToArray();
         if (o.bands.Length == 0) Problems.Add(v.id + ": no wheel surface near the source radius for wheelset " + w.clip);
         return o;
+    }
+
+    static CabSpec CabFromAnchors(AnchorOut[] anchors)
+    {
+        var seats = anchors.Where(a => a.resolved && a.kind == "Seat" && a.position != null).ToArray();
+        var fire = anchors.Where(a => a.resolved && a.kind == "FireboxEffect" && a.position != null)
+            .OrderBy(a => a.position[2]).FirstOrDefault();
+        if (seats.Length == 0 && fire == null) return null;
+        float start = seats.Length > 0 ? seats.Min(a => a.position[2]) : fire.position[2] - 1f;
+        float refY = fire != null ? fire.position[1] : seats.Min(a => a.position[1]) - 0.5f;
+        return new CabSpec {
+            startZ = start, length = 3f,
+            xs = Enumerable.Range(0, 21).Select(i => -1f + i * 0.1f).ToArray(),
+            ys = Enumerable.Range(0, 21).Select(i => refY - 0.4f + i * 0.1f).ToArray()
+        };
     }
 
     // As the builder core's VisualHits: temporary MeshColliders on every visible mesh, the model's own colliders off.

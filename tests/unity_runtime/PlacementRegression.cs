@@ -24,7 +24,7 @@ public static partial class CclLocoBuild
             Cfg = new LocoConfig { CarId = "test", BodyName = "body", BackheadRayStartZ = -1,
                 Components = new List<Comp>() };
             carFolder = folder;
-            Cfg.Components.Add(new Comp { name = "number", pos = new Vector3(1, 1, 0) });
+            Cfg.Components.Add(new Comp { name = "number", pos = new Vector3(1, 1, .95f) });
             Cfg.PlateDecals = new[] { ("plate", "number") };
             var exterior = new GameObject("exterior");
             var model = Child(exterior.transform, "Model", Vector3.zero);
@@ -35,12 +35,14 @@ public static partial class CclLocoBuild
             // Reproduce the builder's collision transfer: no original colliders remain on the model.
             Object.DestroyImmediate(wall.GetComponent<Collider>());
             Object.DestroyImmediate(hidden.GetComponent<Collider>());
-            Child(exterior.transform, "plate", new Vector3(1.51f, 1, 0));
+            var plate = Child(exterior.transform, "plate", new Vector3(1.51f, 1, .95f));
+            PlacementCube(plate, "DummyPlate", Vector3.zero, new Vector3(.02f, .3f, .5f));
             SaveRr2dvPrefab(exterior, folder + "/test_template.prefab");
             Object.DestroyImmediate(exterior);
             SeatRr2dvPlates();
             var saved = AssetDatabase.LoadAssetAtPath<GameObject>(folder + "/test_template.prefab");
             PlacementNear(saved.transform.Find("plate").localPosition.x, 1.01f, "plate ignored hidden mesh");
+            if (saved.transform.Find("plate").position.z > .7501f) throw new Exception("Plate edge extends beyond supporting wall");
 
             var source = new GameObject("source");
             refBody = source.transform;
@@ -98,6 +100,17 @@ public static partial class CclLocoBuild
                     throw new Exception("running boards did not seat a fallback pair");
             }
             Object.DestroyImmediate(oilBody.gameObject);
+            Cfg.Livery = "test";
+            Cfg.Liveries = new[] { ("test", new[] { ("frame", "#112233") }) };
+            Cfg.Components.Add(new Comp { kind = "MaterialColorizerComponent", name = "frame tint", extra = "{\"material\":null,\"colorID\":\"frame\",\"materialName\":\"frame\",\"enabled\":true}" });
+            var sourceMaterial = new Material(Shader.Find("Standard")) { name = "frame", color = Color.white };
+            var targetMaterial = new Material(Shader.Find("Standard")) { color = Color.white };
+            var texture = new Texture2D(2,2);
+            sourceMaterial.mainTexture = texture;
+            matMap = new Dictionary<Material,Material> { { sourceMaterial, targetMaterial } };
+            FinishRr2dvMaterials();
+            if (ColorUtility.ToHtmlStringRGB(targetMaterial.color) != "112233" || targetMaterial.mainTexture != texture)
+                throw new Exception("Non-Railroader shader lost source tint or texture");
             File.WriteAllText("placement-regression-passed.json", "{\"hiddenMeshIgnored\":true,\"collisionIgnored\":true,\"reloadVerified\":true,\"rodNubsFirst\":true,\"boardFallback\":true,\"pairOmission\":true}");
         }
         catch (Exception e) { Debug.LogException(e); code = 1; }

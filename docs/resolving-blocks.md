@@ -1,13 +1,32 @@
 # When a conversion stops: how to resolve it
 
-`rr2dv` never guesses. When something is missing, ambiguous or needs your decision, it stops and says why, or lists
-the item for review. This page covers each case and what to do about it.
+`rr2dv` distinguishes source facts, measured candidates and labelled starting assumptions. Unresolved or ambiguous
+items require review. This page covers each case and what to do about it.
 
-**The tool cannot ask you questions mid-conversion or resume a stopped run yet.** You give your answers when you
-start a conversion (command-line options, or the app's Options row), and after fixing a block you convert again from
+**Engine specifications:** review cylinder bore/stroke (inches), boiler pressure (psi gauge), heating area (ft²),
+simulation boiler dimensions (metres), capacity factor and coal-consumption adjustment. Each field shows its
+origin and has a Restore button. Boiler basis values describe the inherited simulation, not the prototype.
+When editing capacity, spawn water scales to preserve the existing fill fraction. Heating-area edits retain the
+existing injector/firebed approximation. Coal adjustment changes coal required for the simulated firebed; it is
+not a historical burn-rate measurement or an oil-firing model.
+
+The live nominal TE estimate uses the existing 0.85-pressure convention, physical cylinder count, driving radius
+and selected fixed gearing. Factor of adhesion uses **weight on driven wheels**, never total locomotive weight.
+Published TE is an optional comparison; editing it does not retune the engine. The legacy equivalent-bore profile
+shows its separate calibration target. These are simple-expansion estimates, not measured drawbar pull or a
+validated compound-engine model. Bad numbers, non-finite values, and partial boiler dimensions are rejected before
+building. Leave both optional dimensions blank to inherit the basis, or restore their suggested values.
+
+**The app asks for vehicle choices after measuring the source.** In 0.1.3 it fills source facts, suitable tyre
+candidates and labelled defaults, and restores previous choices for an unchanged vehicle/source automatically.
+Confirm or change the fields directly; no JSON file or offline build folder is required. Measured tyre candidates
+are available in the review window. Geared wheel roles use named groups rather than numerical indices. Unknown
+ratios still require input. Advanced JSON import remains optional. After fixing another block, convert again from
 the start. Every run gets a fresh temporary folder and the input mod is never changed. By default the temporary
 inputs, ripped assets, Unity project and build intermediates are permanently deleted when the run stops or finishes.
 Answers and a rebuild recipe survive in `<workRoot>/reports/<run-id>`. Reruns re-extract and re-import.
+Remembered choices also survive in `<workRoot>/reviews`, keyed to vehicle, source, adapter and track catalogue.
+Changing any of these identities requires a fresh review; confirmation is never carried over automatically.
 Only explicit developer setting `"keepWorkFiles": true` enables retained workspaces and shared caches.
 The recipe records source/code/tool hashes and choices; byte-identical Unity rebuilds have not been verified.
 
@@ -152,10 +171,13 @@ The build first completes the draft record from the definitions and the measurem
 in `build/review.json`), then builds the pack with our builder in Unity. It stops with a block when something cannot
 be worked out; `build/blocks.json` lists them all at once.
 
+If the source has no `CylinderCock` (PLW Trojan), the vehicle record adds an estimated drain-jet and sound anchor 1.0 m
+ahead of the leading driver at axle height, 80% of the model's half-width (at most 1.1 m) each side. `build/review.json` lists its position; check the placement in the build renders and in game.
+
 | Code / message | Why | What to do |
 |---|---|---|
-| `needs-wheel-radius` (*the driving wheel tread radius needs your review*) | the first conversion of every loco stops here: the tread radius sets the pull (cylinder bore), and a person must confirm it (board X30). The message gives the probe's candidate | check the candidate (see `WheelRadius` under review items below), then convert again with it: in the app, **Use measured radius** fills it in (or type your own) and **Convert**; on the command line, the output ends with the exact command. The rerun reuses the imported project, so it goes straight to building |
-| `missing-anchor` (*no Chuff (chimney) / Whistle component*) | the builder places the smoke, steam and their sounds from these Railroader components | the mod's definition lacks one; report it on the app board with the loco id. A missing CylinderCock no longer stops: the steam is placed 1.0 m each side, at axle height, 1.0 m ahead of the leading driver, and listed in `review.json` to check in game |
+| `needs-wheel-radius` (*the driving wheel tread radius needs your review*) | no driving tyre radius was confirmed; legacy callers may reach this block directly | normally confirm the populated radius or select a measured candidate in **Vehicle choices** during the same conversion. If the run already stopped, use the candidate shown in the report and convert again. `--wheel-radius` remains available for scripts. Normal reruns use fresh temporary workspaces |
+| `missing-anchor` (*no Chuff (chimney) / Whistle component*) | the builder places chimney and whistle effects and sounds from these Railroader components | the mod's definition lacks one; report it on the app board with the loco id |
 | `drivers-not-found`, `drivers-no-clip`, `no-drivers`, `one-axle` | the driving wheels could not be matched to turning wheels in the model | when the definition gives one driving axle over a long wheelset (the Western Maryland H9 gives 1 over 5.5 m) and the model shows several wheels at axle height there, the model's count is used and listed in `review.json`, so that case no longer stops. Likewise when the model's driving wheels sit as a whole set away from the definition's positions at the definition's spacing (RLW ROF-1: 0.875 m). Otherwise the message says what the wheel clip turns and why each mesh under it was not used; report it with `probe/probe.json` (its `wheels`), kept in the run's reports folder |
 | `no-backhead` | no flat backhead plate was found from the cab, and the definition has no firebox glow to fall back on | report it with `probe/probe.json` (`cabRays`) |
 | `no-room-for-controls` | too little flat backhead plate for the generated controls | report it with `probe/probe.json` (`cabRays`) |

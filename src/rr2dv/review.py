@@ -60,6 +60,12 @@ def request(record, definitions, probe, fingerprint):
             'Oil-fired regime combinations: not validated', 'Diesel mechanical/hydraulic/electric: adapters pending',
             'Articulated geometry and steam calibration: in-game validation required'],
     }
+    from .reviewchoices import suggest
+    questions['prefill'] = suggest(questions, source)
+    from . import enginemetrics
+    questions['engineMetrics'] = enginemetrics.defaults(record, source)
+    questions['prefill']['values']['engineMetrics'] = copy.deepcopy(questions['engineMetrics']['values'])
+    questions['prefill']['metricProvenance'] = copy.deepcopy(questions['engineMetrics']['provenance'])
     return questions
 
 
@@ -68,6 +74,11 @@ def resolve(req, answer):
     for key in ('schema', 'adapterVersion', 'vehicleId', 'fingerprint', 'catalogueHash'):
         if answer.get(key) != req[key]: raise ReviewError(f'Stale or different review: {key}; review this source again')
     v = copy.deepcopy(answer.get('values', {}))
+    from . import enginemetrics
+    v['engineMetrics'] = enginemetrics.resolve(req, v)
+    notes = v.get('engineMetricNotes', '')
+    if not isinstance(notes, str) or len(notes) > 2000: raise ReviewError('Engine specification notes must be text, up to 2000 characters')
+    v['engineMetricNotes'] = notes.strip()
     for key, allowed in (('trainBrake', BRAKES), ('spawnMode', SPAWNING), ('physics', PHYSICS), ('steamHeat', HEAT)):
         if v.get(key) not in allowed: raise ReviewError(f'Choose {key}: {", ".join(allowed)}')
     def number(key, lo, hi):
@@ -112,6 +123,23 @@ def resolve(req, answer):
                   lengthBasis=req['lengthBasis'])
     if v['trainBrake'] == req.get('suggestedBrake'):
         result['provenance']['trainBrake'] = {'basis': 'source', 'evidence': 'Definitions.brakeValveType; confirmed in review'}
+    prefill = req.get('prefill', {})
+    for key, provenance in prefill.get('provenance', {}).items():
+        if key in v and v[key] == prefill.get('values', {}).get(key):
+            result['provenance'][key] = copy.deepcopy(provenance)
+    result['engineMetrics'] = copy.deepcopy(req.get('engineMetrics', {}))
+    result['metricProvenance'] = {}
+    for key, value in v['engineMetrics'].items():
+        baseline = req.get('engineMetrics', {})
+        if value == baseline.get('values', {}).get(key):
+            provenance = baseline.get('provenance', {}).get(key, {})
+        elif value == prefill.get('values', {}).get('engineMetrics', {}).get(key):
+            provenance = prefill.get('metricProvenance', {}).get(key, {'basis': 'DV_choice', 'evidence': 'Previously reviewed value'})
+        else:
+            provenance = {'basis': 'DV_choice', 'evidence': 'Edited and confirmed in engine specifications' + ('; ' + v['engineMetricNotes'] if v['engineMetricNotes'] else '')}
+        result['metricProvenance'][key] = copy.deepcopy(provenance)
+        result['metricProvenance'][key]['unit'] = next(field[2] for field in enginemetrics.FIELDS if field[0] == key)
+    result['engineEstimates'] = enginemetrics.estimates(v, result['engineMetrics'])
     return result
 
 
@@ -122,7 +150,9 @@ def apply(record, reviewed):
     cfg, meta = rec['config'], rec['metadata']
     meta['review'] = reviewed
     meta['sourceSpecs'] = {'basis': 'source', 'evidence': ['Definitions.json', reviewed['fingerprint']], 'values': specs}
-    cfg['WheelRadius'] = env(v['wheelRadius'], 'm', 'DV_choice', 'User reviewed physical wheel tread radius')
+    radius_basis = reviewed.get('provenance', {}).get('wheelRadius', {})
+    cfg['WheelRadius'] = env(v['wheelRadius'], 'm', radius_basis.get('basis', 'DV_choice'),
+                             radius_basis.get('evidence', 'User reviewed physical wheel tread radius'))
     cfg['SpawnTracks'] = env(v['spawnTracks'], 'CCL track enum', 'DV_choice', 'Pre-build spawn review', reviewed['catalogueEvidence'])
     sim = rec['hooks']['SimSpec']['steamEngine']
     sim['numCylinders'] = env(v['cylinders'], 'count', 'DV_choice', 'User reviewed physical cylinder count')
@@ -136,6 +166,9 @@ def apply(record, reviewed):
         bore = old_bore['value'] * math.sqrt(2 / v['cylinders'])
         basis, why = 'derived', 'Existing E03 target rescaled for reviewed cylinder count; approximation'
     sim['cylinderBore'] = env(bore, 'm', basis, why)
+    from . import enginemetrics
+    enginemetrics.apply(rec, reviewed)
+    bore = sim['cylinderBore']['value']
     limitations = list(meta.get('pending', []))
     limitations += ['Steam/fuel consumption and drawbar pull have not been calibrated in game',
                     'Track lengths are CCL 3.1.9 nominal lengths; game settings affect radio availability']
@@ -166,21 +199,36 @@ def _cli_interactive(req):
         raise ReviewError('Pre-build answers required: use the GUI or --review-file. See review-questions.json in the report.')
     print('Review:', req['name'], '\nSource wheelsets:', req['wheelsets'])
     print('Measured candidates:', req['wheelCandidates'])
-    v = {}
+    v = copy.deepcopy(req.get('prefill', {}).get('values', {}))
+    print(req.get('prefill', {}).get('origin', ''))
+    def prompt(key, label):
+        default = v.get(key, '')
+        if isinstance(default, list): default = ','.join(map(str, default))
+        return input(f'{label} [{default}]: ').strip() or str(default)
     for key, options in [('trainBrake', BRAKES), ('spawnMode', SPAWNING), ('physics', PHYSICS), ('steamHeat', HEAT)]:
-        v[key] = input(key + ' [' + ', '.join(options) + ']: ').strip()
-    v['wheelRadius'] = input('Physical driving tyre RADIUS in metres: ')
-    v['cylinders'] = int(input('Physical cylinder count [2, 3, 4]: '))
-    v['spawnTracks'] = []
+        v[key] = prompt(key, key + ' (' + ', '.join(options) + ')')
+    v['wheelRadius'] = prompt('wheelRadius', 'Physical driving tyre RADIUS in metres')
+    v['cylinders'] = int(prompt('cylinders', 'Physical cylinder count: 2, 3 or 4'))
     if v['spawnMode'] == 'manual':
         for t in req['tracks']:
             if t['suitable']: print(t['id'], t['name'], t['length_m'], 'm')
-        v['spawnTracks'] = [int(x.strip()) for x in input('Track IDs, comma separated: ').split(',')]
+        v['spawnTracks'] = [int(x.strip()) for x in prompt('spawnTracks', 'Track IDs, comma separated').split(',') if x.strip()]
+    else:
+        v['spawnTracks'] = []
     if v['physics'] == 'geared':
-        for key in ('gearRatio', 'efficiency', 'gearEvidence'): v[key] = input(key + ': ')
-        v['poweredWheelsets'] = [int(x.strip()) for x in input('Physical powered wheelset indices (exclude shafts): ').split(',')]
+        for key in ('gearRatio', 'efficiency', 'gearEvidence'): v[key] = prompt(key, key)
+        v['poweredWheelsets'] = [int(x.strip()) for x in prompt('poweredWheelsets', 'Physical powered wheelset indices (exclude shafts)').split(',') if x.strip()]
     if v['physics'] == 'geared':
-        v['unpoweredWheelsets'] = [int(x.strip()) for x in input('Unpowered physical wheelset indices, if any: ').split(',') if x.strip()]
+        v['unpoweredWheelsets'] = [int(x.strip()) for x in prompt('unpoweredWheelsets', 'Unpowered physical wheelset indices, if any').split(',') if x.strip()]
+    from . import enginemetrics
+    v.setdefault('engineMetrics', copy.deepcopy(req.get('engineMetrics', {}).get('values', {})))
+    print('Engine estimates:', enginemetrics.estimates(v, req.get('engineMetrics', {})))
+    if input('Edit engine specifications? [no]: ').strip().lower() == 'yes':
+        for key, label, unit, lo, hi, effect in enginemetrics.FIELDS:
+            current = v['engineMetrics'].get(key)
+            raw = input(f'{label} ({unit}) [{current if current is not None else "inherit / unknown"}]; - clears optional value: ').strip()
+            if raw: v['engineMetrics'][key] = None if raw == '-' else raw
+        v['engineMetricNotes'] = input('Source / notes for edited figures (optional): ').strip()
     v['acknowledgeExperimental'] = input('Uncalibrated prototype; in-game validation required. Continue? [yes]: ').strip().lower() == 'yes'
     return {**{k:req[k] for k in ('schema','adapterVersion','vehicleId','fingerprint','catalogueHash')}, 'values':v}
 

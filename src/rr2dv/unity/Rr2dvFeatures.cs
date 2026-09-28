@@ -43,6 +43,15 @@ public static partial class CclLocoBuild
         var basic = settings.GetType().GetField("BasicControls").GetValue(settings);
         var speed = basic.GetType().GetField("Speedometer");
         speed.SetValue(basic, Enum.ToObject(speed.FieldType, 1));
+        var cab = settings.GetType().GetField("Cab").GetValue(settings);
+        var interior = AssetDatabase.LoadAssetAtPath<GameObject>($"{carFolder}/{CarId}_interior.prefab");
+        var reader = interior.GetComponents<Component>().First(c => c.GetType().Name == "LocoControlsReaderProxy");
+        foreach (var binding in new[] { new[] { "CabLightStyle", "cabLight" }, new[] { "Headlights1", "headlightsFront" }, new[] { "Headlights2", "headlightsRear" } })
+        {
+            var field = cab.GetType().GetField(binding[0]);
+            var wired = new SerializedObject(reader).FindProperty(binding[1]);
+            field.SetValue(cab, Enum.ToObject(field.FieldType, wired != null && wired.objectReferenceValue ? 1 : 0));
+        }
         hud.GetType().GetMethod("OnValidate").Invoke(hud, null);
         EditorUtility.SetDirty(hud);
         EditorUtility.SetDirty(type);

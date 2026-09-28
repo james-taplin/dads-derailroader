@@ -145,7 +145,7 @@ def _owner(path: str, rotating: list[str]) -> str | None:
     return max(hits, key=len) if hits else None
 
 
-COCK_HALF_SPAN_M = 1.0  # cylinder-cock jets each side of the centreline when the mod gives no anchor
+COCK_HALF_SPAN_M = 1.1  # at most this far each side of the centreline when the mod gives no cylinder-cock anchor
 
 
 def wheel_evidence(wheel_out: dict | None) -> str:
@@ -605,21 +605,8 @@ class _Builder:
         # ---------------- anchors
         chuff = next((c["name"] for c in comps if c["kind"] == "Chuff"), None)
         whistle = next((c["name"] for c in comps if c["kind"] == "Whistle"), None)
-        cocks = [c for c in comps if c["kind"] == "CylinderCock"]
-        if not cocks:
-            # Some mods fit no cylinder-cock anchor. The drain jets still need a place: ahead of the leading driver at
-            # axle height, one per side (the core mirrors x). An estimate for review, never a measurement.
-            pos = [COCK_HALF_SPAN_M, _r(radius), _r(drivers[0]["z"] + 1.0)]
-            cocks = [{"kind": "CylinderCock", "name": "rr2dv CylinderCock (estimated)", "parentPath": "",
-                      "extra": "{}", "pos": env(pos, "m", "analogue_estimate", f"Definitions {lid}: no CylinderCock component",
-                                                    f"x {COCK_HALF_SPAN_M} m each side (S16 reviewed drain pipes +/-1.0683 m), "
-                                                    "y axle height (wheel radius), z 1.0 m ahead of the leading driver"),
-                      "rot": [0.0, 0.0, 0.0, 1.0], "scale": [1.0, 1.0, 1.0]}]
-            cfg["Components"]["value"].append(cocks[0])
-            comps.append({**cocks[0], "pos": pos})
-            self.choose(f"{lid}: the definition has no CylinderCock component; cylinder-cock steam placed at an estimated "
-                        f"{pos} m (ahead of the leading driver, both sides); check it in game")
-        for what, val in (("Chuff (chimney)", chuff), ("Whistle", whistle), ("CylinderCock", cocks)):
+        cocks, fallback_cock = self._ensure_cylinder_cock(cfg, comps, drivers, bmin, bmax, radius)
+        for what, val in (("Chuff (chimney)", chuff), ("Whistle", whistle)):
             if not val:
                 self.block("missing-anchor", f"{lid}: the definition has no {what} component; the builder places the smoke, "
                                              "steam and their sounds from it")
@@ -629,7 +616,7 @@ class _Builder:
         self._cylinder_cocks(cfg, comps, lid)
         chimney = _anchor(anchors, chuff) or [0, bmax[1], bmax[2] - 1]
         whistle_at = _anchor(anchors, whistle) or chimney
-        cock_at = _anchor(anchors, cocks[0]["name"]) or [0, radius, drivers[0]["z"] + 1.0]
+        cock_at = fallback_cock or _anchor(anchors, cocks[0]["name"]) or [0, radius, drivers[0]["z"] + 1.0]
 
         # ---------------- cab, backhead, fire door
         seats = [c["name"] for c in comps if c["kind"] == "Seat" and _anchor(anchors, c["name"])]
@@ -963,6 +950,30 @@ class _Builder:
             pos = _plain(c["pos"])
             if r and abs(pos[0]) < 0.05:
                 c["pos"] = env([float(r), pos[1], pos[2]], "m", "source", f"Definitions {lid} CylinderCock {c['name']}: RR spawns the jets at +-radius")
+
+    def _ensure_cylinder_cock(self, cfg: dict, comps: list[dict], drivers: list[dict],
+                              bmin: list[float], bmax: list[float], radius: float) -> tuple[list[dict], list[float] | None]:
+        cocks = [c for c in comps if c["kind"] == "CylinderCock"]
+        if cocks:
+            return cocks, None
+        # The shared builder indexes the first CylinderCock for drain jets and sound (it mirrors x for the other side).
+        # With none in the source: cylinders sit ahead of the leading driver at about axle height, inside the model's width.
+        lead_z = max(a["z"] for a in drivers)
+        half_width = min(abs(bmin[0]), abs(bmax[0]))
+        pos = _r([min(COCK_HALF_SPAN_M, max(0.15, half_width * 0.8)), max(0.15, radius),
+                  max(bmin[2] + 0.1, min(bmax[2] - 0.1, lead_z + 1.0))])
+        evidence = ("probe/probe.json bounds and measured driving axles; 1.0 m ahead of the leading driver, "
+                    "80% of the narrower model half-width (at most 1.1 m), axle height (driving wheel radius)")
+        synthetic = {"kind": "CylinderCock", "name": "rr2dv fallback cylinder cock", "parentPath": "",
+                     "extra": "{}", "pos": env(pos, "m", "analogue_estimate", evidence),
+                     "rot": [0, 0, 0, 1], "scale": [1, 1, 1]}
+        cfg["Components"]["value"].append(synthetic)
+        cfg["Components"]["basis"] = "derived"
+        cfg["Components"]["evidence"].append(evidence)
+        comps.append(_plain(synthetic))
+        self.choose(f"no source CylinderCock: generated drain particle and sound anchor at {pos} m "
+                    "ahead of the leading driver; review the exhaust placement in the build renders and in game")
+        return [comps[-1]], pos
 
     def _levers(self, cfg, comps, ov, anims, lid):
         levers, cab_objects, loads, taken = [], [], [], set()
