@@ -366,3 +366,16 @@ class UnusedTextures(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NoClipsInExport(unittest.TestCase):
+    def test_an_export_with_no_animation_clips_resolves_to_nothing(self):
+        import tempfile
+        from rr2dv import unityproject
+        with tempfile.TemporaryDirectory() as tmp:
+            src, dest = Path(tmp) / "src", Path(tmp) / "dest"
+            (src / "Truck").mkdir(parents=True)
+            (src / "Truck" / "truck.prefab").write_text("%YAML 1.1\n")
+            out = unityproject.resolve_clips(src, dest, Path(tmp) / "clips-truck.json")
+            self.assertEqual(out["clips"], 0)
+            self.assertEqual(out["absent_bindings"], [])

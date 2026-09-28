@@ -300,6 +300,11 @@ def _resolve_clips(source_assets: Path, dest_assets: Path, report: Path, full_as
     Anything else stays an error. The evidence is written either way. `full_assets` is the pack's whole export when
     `source_assets` is a selection from it."""
     full_assets = full_assets or source_assets
+    if not any(source_assets.rglob("*.anim")):
+        # a bundle with no animations at all (DM&IR M-3's tender truck, 2026-09-28): nothing to restore. The resolver
+        # itself calls that an error ("No animation clips found").
+        write_json(report, {"clips": [], "errors": [], "applied": True, "note": "no animation clips in this export"})
+        return {"clips": 0, "report": report.name, "bound": 0, "left_out": [], "absent_bindings": []}
     result = _resolve(source_assets, dest_assets, report)
     bound: dict[str, str] = {}
     excluded: list[str] = []
