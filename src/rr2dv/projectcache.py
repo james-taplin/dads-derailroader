@@ -33,7 +33,7 @@ def _scripts() -> dict[str, str]:
     from .unityproject import tooling_root
     here = Path(__file__).resolve().parent
     tools = tooling_root() / "builder" / "tools"
-    files = [here / n for n in ("unityproject.py", "probeinput.py", "assetripper.py", "projectcache.py")]
+    files = [here / n for n in ("unityproject.py", "probeinput.py", "assetripper.py", "projectcache.py", "rrmod.py")]
     files += [here / "unity" / "Rr2dvProbe.cs"]
     files += [tools / "resolve_clip_paths.py", tools / "pilot" / "copy_deps.py"]
     return {f.name: sha256_file(f) for f in files if f.is_file()}

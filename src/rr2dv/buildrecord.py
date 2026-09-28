@@ -583,6 +583,8 @@ class _Builder:
         }
 
         # ---------------- running gear
+        for note in self.definition_of(lid).get("rr2dvWheelsetNotes") or []:
+            self.choose(note)
         wheelsets = pv.get("wheelsets") or []
         wouts = ov.get("wheels") or []
         driver_idx = set(self._driver_indices(cfg))

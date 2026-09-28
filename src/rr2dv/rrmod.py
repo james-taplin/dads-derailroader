@@ -72,7 +72,41 @@ def audio_basis(loco_definition: dict, override: str | None = None) -> dict:
 
 def definition(obj: dict) -> dict:
     d = obj.get("definition")
-    return d if isinstance(d, dict) else {}
+    return _real_main_driver(d) if isinstance(d, dict) else {}
+
+
+def _phantom(ws: dict) -> bool:
+    """A wheelset with no animation clip and no model part: nothing in the model turns or stands for it."""
+    return not (ws.get("animation") or {}).get("clipName") and not (ws.get("transform") or {}).get("path")
+
+
+def _real_main_driver(d: dict) -> dict:
+    """ALCo 3-cylinder Mikado (2026-09-28): mainDriverIndex names a wheelset with no clip and no model part (4 axles over
+    the same 5.2 m as the animated 'Drivers' wheelset). When exactly one animated wheelset has the same axle count over
+    an overlapping span, it is the main driver and the phantom is dropped; the change is noted in rr2dvWheelsetNotes."""
+    sets = d.get("wheelsets")
+    main = d.get("mainDriverIndex", 0)
+    if not isinstance(sets, list) or not isinstance(main, int) or not 0 <= main < len(sets) or not isinstance(sets[main], dict):
+        return d
+    ghost = sets[main]
+    if not _phantom(ghost):
+        return d
+    def overlaps(ws):
+        span = (float(ws.get("length") or 0) + float(ghost.get("length") or 0)) / 2
+        return abs(float(ws.get("offset") or 0) - float(ghost.get("offset") or 0)) < max(span, 0.5)
+    twins = [i for i, ws in enumerate(sets) if i != main and isinstance(ws, dict) and not _phantom(ws)
+             and ws.get("numberOfAxles") == ghost.get("numberOfAxles") and overlaps(ws)]
+    if len(twins) != 1:
+        return d
+    real = twins[0]
+    kept = [ws for i, ws in enumerate(sets) if i != main]
+    twin = sets[real]
+    name = (twin.get("animation") or {}).get("clipName") or "/".join((twin.get("transform") or {}).get("path") or [])
+    note = (f"main driver wheelset {main} (diameter {ghost.get('diameter')} m, {ghost.get('numberOfAxles')} axles) has no "
+            f"animation and no model part; wheelset {real} ({name!r}, diameter {twin.get('diameter')} m, same axles and "
+            "span) is used as the main driver and the empty one is left out")
+    return {**d, "wheelsets": kept, "mainDriverIndex": real - (1 if real > main else 0),
+            "rr2dvWheelsetNotes": list(d.get("rr2dvWheelsetNotes") or []) + [note]}
 
 
 def components(d: dict) -> list[dict]:

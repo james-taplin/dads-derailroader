@@ -234,6 +234,11 @@ is searched, trucks included (tender truck rims). A tender whose model has no co
 runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount. All
 are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
 
+Main driver with nothing behind it: when the definition's `mainDriverIndex` names a wheelset with no animation and no
+model part (ALCo 3-cylinder Mikado), and exactly one animated wheelset has the same axle count over the same span, that
+one is the main driver and the empty one is left out (listed as a choice). This used to stop the build with
+`drivers-not-found` / `drivers-no-clip`.
+
 Cab controls: the walkable/items copies of the mod's own collision meshes let the control-grab ray pass through
 (`rr2dv grab rays pass through` in `build_report.txt`), so a handle you can see is never hidden behind an invisible,
 blockier collision shell. You still stand on and walk into them.

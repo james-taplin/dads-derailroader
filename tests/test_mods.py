@@ -220,3 +220,21 @@ class Audio(Base):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PhantomMainDriver(unittest.TestCase):
+    def test_a_main_driver_with_no_clip_or_part_hands_over_to_its_animated_twin(self):
+        from rr2dv.rrmod import definition
+        sets = [{"offset": 5.75, "length": 1, "diameter": .85, "numberOfAxles": 1, "animation": {"clipName": "Pilot"}},
+                {"offset": .1, "length": 5.2, "diameter": 1.5, "numberOfAxles": 4, "animation": {"clipName": "Drivers"}, "transform": None},
+                {"offset": 0, "length": 5.2, "diameter": .99, "numberOfAxles": 4, "animation": None, "transform": {"path": None}},
+                {"offset": -4.75, "length": 1, "diameter": 1.2, "numberOfAxles": 1, "animation": {"clipName": "Trailing"}}]
+        d = definition({"definition": {"mainDriverIndex": 2, "wheelsets": sets}})
+        self.assertEqual(len(d["wheelsets"]), 3)
+        self.assertEqual(d["wheelsets"][d["mainDriverIndex"]]["animation"]["clipName"], "Drivers")
+        self.assertTrue(d["rr2dvWheelsetNotes"])
+
+    def test_a_normal_main_driver_is_untouched(self):
+        from rr2dv.rrmod import definition
+        raw = {"mainDriverIndex": 0, "wheelsets": [{"numberOfAxles": 3, "animation": {"clipName": "Drivers"}}]}
+        self.assertIs(definition({"definition": raw}), raw)
