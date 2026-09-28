@@ -87,6 +87,7 @@ public static partial class CclLocoBuild
         CreateCar();
         BuildExterior();
         FinishRr2dvMaterialSlots();
+        if (!c.IsTender && Rr2dvNoDynamo) StripRr2dvDynamoHud();
         SeatRr2dvOilCups();
         AlignRr2dvBogieSupports();
         SeatRr2dvPlates();
@@ -109,6 +110,32 @@ public static partial class CclLocoBuild
     // collider and then hits that one instead: a single-mesh model whose own RR collider has no backhead face (Reading
     // B8a camelback, 2026-09-28: all 20 generated controls "no backhead found"). The cab is measured on the visible model
     // only; the walkable colliders were already taken in BuildExterior, and later stages get a fresh source copy.
+    // No dynamo (pre-build review): the lamps, cab light and their backhead controls are not built (record), and the HUD
+    // loses its dynamo and headlight controls here; the dynamo sim stays unpowered at 0, so it makes no steam jet.
+    static bool Rr2dvNoDynamo => Environment.GetEnvironmentVariable("RR2DV_NO_DYNAMO") == "1";
+
+    static void StripRr2dvDynamoHud()
+    {
+        string path = $"{carFolder}/{CarId}_template.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            int removed = 0;
+            foreach (var name in new[] { "dynamoControl", "headlightDecoder" })
+            {
+                var sim = root.transform.Find("[sim]/" + name);
+                if (!sim) continue;
+                foreach (var control in sim.GetComponents<Component>().Where(k => k && k.GetType().Name == "OverridableControlProxy").ToArray())
+                {
+                    Object.DestroyImmediate(control); removed++;
+                }
+            }
+            Line($"rr2dv no dynamo: {removed} HUD control(s) removed (dynamo, headlights); no lamps, cab light or their controls built");
+            SaveRr2dvPrefab(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
     static void StripRr2dvSourceColliders()
     {
         var colliders = RefBody.GetComponentsInChildren<Collider>(true);

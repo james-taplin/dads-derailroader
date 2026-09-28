@@ -141,3 +141,25 @@ class EngineForm(unittest.TestCase):
         self.assertEqual(state['collect']()['values']['engineMetrics']['pressurePsi'],180)
         state['window'].destroy()
         root.update_idletasks()
+
+
+class Dynamo(unittest.TestCase):
+    def test_no_dynamo_component_suggests_none_and_drops_lamps_and_their_controls(self):
+        record, req, values = fixture()
+        self.assertFalse(req['sourceHasDynamo'])
+        self.assertEqual(values['dynamo'], 'no')
+        record['config']['Placed'] = env([{'Name': n} for n in ('Injector', 'Dynamo', 'Cab light', 'Headlights')], 'm', 'DV_choice', 'test')
+        record['config']['LampLenses'] = env([['L1', [0, 1, 2], .28, True]], 'm', 'source', 'test')
+        record['config']['CabLightProbe'] = env([0, 3, 0], 'm', 'DV_choice', 'test')
+        result = review.apply(record, resolve(req, values))
+        self.assertEqual([p['Name'] for p in result['config']['Placed']['value']], ['Injector'])
+        self.assertEqual(result['config']['LampLenses']['value'], [])
+        self.assertNotIn('CabLightProbe', result['config'])
+        self.assertTrue(result['metadata']['noDynamo'])
+
+    def test_a_dynamo_component_suggests_one_and_keeps_everything(self):
+        record, req, values = fixture()
+        record['config']['Components'] = [{'name': 'Dynamo', 'kind': 'Dynamo'}]
+        req = review.request(record, {'example': {'wheelsets': [{'diameter': .9}], 'pistonDiameterInches': 14}}, {}, 'fingerprint')
+        self.assertTrue(req['sourceHasDynamo'])
+        self.assertEqual(req['prefill']['values']['dynamo'], 'yes')

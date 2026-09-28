@@ -21,7 +21,7 @@ public static class Rr2dvBuild
     [Serializable] public class Part { public string name, parentPath, prefab; public float[] position, rotation, scale; }
     [Serializable] public class Composite { public string vehicle, source, target; public Part[] parts; }
     [Serializable] public class TruckWheels { public string prefab, prefix; public string[] nodes; }
-    [Serializable] public class Input { public int schema; public Absent[] absentBindings; public string[] audioStrip; public Composite[] composites; public TruckWheels[] truckWheels; public ReversedClip[] reversedClips; }
+    [Serializable] public class Input { public int schema; public Absent[] absentBindings; public string[] audioStrip; public Composite[] composites; public TruckWheels[] truckWheels; public ReversedClip[] reversedClips; public bool noDynamo; }
     [Serializable] public class ReversedClip { public string from, to; }
 
     [Serializable] public class Removed { public string clip, hash; public int bindings; }
@@ -53,6 +53,7 @@ public static class Rr2dvBuild
             }
             foreach (var truck in input.truckWheels ?? new TruckWheels[0]) RenameTruckWheels(truck);
             foreach (var reversed in input.reversedClips ?? new ReversedClip[0]) ReverseClip(reversed);
+            Environment.SetEnvironmentVariable("RR2DV_NO_DYNAMO", input.noDynamo ? "1" : null);  // read by the builder partials (Rr2dvPlacement)
             var placed = new List<Placed>();
             foreach (var composite in input.composites ?? new Composite[0])
             {

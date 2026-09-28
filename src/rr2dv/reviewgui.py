@@ -65,7 +65,8 @@ def show(parent, req, answer):
                ('spawnMode', 'Spawning', review.SPAWNING, 'radio-only'),
                ('physics', 'Steam profile', review.PHYSICS, 'legacy-equivalent'),
                ('steamHeat', 'Steam thermal regime', review.HEAT, 'basis-approximation'),
-               ('cylinders', 'Physical cylinders', ('2', '3', '4'), '2')]
+               ('cylinders', 'Physical cylinders', ('2', '3', '4'), '2'),
+               ('dynamo', 'Dynamo (lamps and cab light)', review.DYNAMO, 'yes')]
     for row, (key, label, opts, default) in enumerate(choices):
         ttk.Label(setup, text=label).grid(row=row, column=0, sticky='w', pady=4)
         fields[key] = tk.StringVar(value=str(initial.get(key, default)))
@@ -74,7 +75,7 @@ def show(parent, req, answer):
     gear_widgets = []
     for row, (key, label) in enumerate((('wheelRadius', 'Driving tyre radius (m)'),
             ('gearRatio', 'Gear reduction: engine RPM / wheel RPM'), ('efficiency', 'Transmission efficiency (0–1)'),
-            ('gearEvidence', 'Gear ratio source or assumption')), start=5):
+            ('gearEvidence', 'Gear ratio source or assumption')), start=6):
         label_widget = ttk.Label(setup, text=label)
         label_widget.grid(row=row, column=0, sticky='w', pady=4)
         fields[key] = tk.StringVar(value=str(initial.get(key, '1' if key == 'efficiency' else (req.get('initialRadius') or '') if key == 'wheelRadius' else '')))
@@ -84,16 +85,16 @@ def show(parent, req, answer):
         if key != 'wheelRadius': gear_widgets += [label_widget, entry, explanation]
     candidates = [c for c in req.get('wheelCandidates', []) if c.get('tread')]
     if candidates:
-        ttk.Label(setup, text='Measured tyre candidates').grid(row=9, column=0, sticky='w', pady=6)
+        ttk.Label(setup, text='Measured tyre candidates').grid(row=10, column=0, sticky='w', pady=6)
         candidate_names = [f"{c.get('clip') or 'Wheel group'}: {c['tread']:.6f} m ({c.get('confidence', 'unknown')} confidence)" for c in candidates]
         candidate_box = ttk.Combobox(setup, values=candidate_names, state='readonly', width=40)
-        candidate_box.grid(row=9, column=1, columnspan=2, sticky='w')
+        candidate_box.grid(row=10, column=1, columnspan=2, sticky='w')
         def choose_candidate(_):
             candidate = candidates[candidate_box.current()]
             fields['wheelRadius'].set(str(candidate['tread']))
             notes['wheelRadius'].set('Selected measured candidate; confirm it is the driving tyre. ' + '; '.join(candidate.get('notes') or []))
         candidate_box.bind('<<ComboboxSelected>>', choose_candidate)
-    ttk.Label(setup, text='Source facts and suggestions are labelled beside each choice. A suggested cylinder count or simulation profile is not a verified physical specification.\nGeared uses a fixed reduction; Gearbox 1/2 do not change gears. Compound switching and calibration remain pending.', wraplength=900).grid(row=10, column=0, columnspan=3, sticky='w', pady=12)
+    ttk.Label(setup, text='Source facts and suggestions are labelled beside each choice. A suggested cylinder count or simulation profile is not a verified physical specification.\nGeared uses a fixed reduction; Gearbox 1/2 do not change gears. Compound switching and calibration remain pending.', wraplength=900).grid(row=11, column=0, columnspan=3, sticky='w', pady=12)
     ttk.Label(wheels, text='Choose the role of each source wheel group. Powered and unpowered mean actual wheels; leave shafts or placeholder groups excluded. Previous choices are restored automatically.', wraplength=900).pack(anchor='w', pady=8)
     wheel_roles = []
     for i, wheel in enumerate(req['wheelsets']):

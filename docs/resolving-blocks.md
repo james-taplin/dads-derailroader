@@ -232,6 +232,10 @@ glass (`rr2dv_glass.mat`). An empty slot on a part named `…coal…` gets a bum
 glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow inside does not show. All
 are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
 
+Dynamo (Vehicle choices): suggested from the Railroader definition (a `Dynamo` component or not). With "no", the pack
+has no electric lamps, cab light, or Dynamo/Cab light/Headlights backhead controls, and the HUD has no dynamo or
+headlight controls; the dynamo stays off, so no dynamo steam jet.
+
 Whistle closed (0) is always the whistle handle's resting end. When a Railroader whistle handle is modelled at the end of
 its clip rather than the start, the lever uses the clip reversed (`RR control …: its handle rests at the end of …`).
 Generated whistle levers rest at 0 already.

@@ -15,6 +15,10 @@ BRAKES = ('self-lapping', 'manual-lap')
 SPAWNING = ('radio-only', 'manual', 'automatic')
 PHYSICS = ('legacy-equivalent', 'simple', 'geared')
 HEAT = ('basis-approximation', 'saturated', 'superheated')
+DYNAMO = ('yes', 'no')
+# What a loco without a dynamo leaves out: electric lamps and cab light, and the controls that work them (James, 2026-09-28:
+# the RLW RPP-1 has none, but got a dynamo, its steam jet by the chimney, lamps and their controls).
+DYNAMO_CONTROLS = ('Dynamo', 'Cab light', 'Headlights')
 
 
 class ReviewError(ValueError):
@@ -56,6 +60,7 @@ def request(record, definitions, probe, fingerprint):
         'wheelCandidates': record['metadata'].get('wheelCandidates', []),
         'initialRadius': cfg.get('WheelRadius', {}).get('value') if isinstance(cfg.get('WheelRadius'), dict) else None,
         'suggestedBrake': source.get('brakeValveType') if source.get('brakeValveType') in BRAKES else None,
+        'sourceHasDynamo': any(isinstance(c, dict) and c.get('kind') == 'Dynamo' for c in _components(record)),
         'pendingCapabilities': ['Compound/simple switching: prototype not validated',
             'Oil-fired regime combinations: not validated', 'Diesel mechanical/hydraulic/electric: adapters pending',
             'Articulated geometry and steam calibration: in-game validation required'],
@@ -69,6 +74,12 @@ def request(record, definitions, probe, fingerprint):
     return questions
 
 
+def _components(record):
+    comps = record['config'].get('Components') or []
+    if isinstance(comps, dict): comps = comps.get('value') or []
+    return comps
+
+
 def resolve(req, answer):
     if not isinstance(answer, dict): raise ReviewError('Review cancelled; no build started')
     for key in ('schema', 'adapterVersion', 'vehicleId', 'fingerprint', 'catalogueHash'):
@@ -79,7 +90,9 @@ def resolve(req, answer):
     notes = v.get('engineMetricNotes', '')
     if not isinstance(notes, str) or len(notes) > 2000: raise ReviewError('Engine specification notes must be text, up to 2000 characters')
     v['engineMetricNotes'] = notes.strip()
-    for key, allowed in (('trainBrake', BRAKES), ('spawnMode', SPAWNING), ('physics', PHYSICS), ('steamHeat', HEAT)):
+    if 'dynamo' not in v:  # a review saved before this choice existed: the source's own answer
+        v['dynamo'] = 'yes' if req.get('sourceHasDynamo', True) else 'no'
+    for key, allowed in (('trainBrake', BRAKES), ('spawnMode', SPAWNING), ('physics', PHYSICS), ('steamHeat', HEAT), ('dynamo', DYNAMO)):
         if v.get(key) not in allowed: raise ReviewError(f'Choose {key}: {", ".join(allowed)}')
     def number(key, lo, hi):
         try: value = float(v.get(key))
@@ -166,6 +179,8 @@ def apply(record, reviewed):
         bore = old_bore['value'] * math.sqrt(2 / v['cylinders'])
         basis, why = 'derived', 'Existing E03 target rescaled for reviewed cylinder count; approximation'
     sim['cylinderBore'] = env(bore, 'm', basis, why)
+    if v.get('dynamo') == 'no':
+        _without_dynamo(rec)
     from . import enginemetrics
     enginemetrics.apply(rec, reviewed)
     bore = sim['cylinderBore']['value']
@@ -191,6 +206,21 @@ def apply(record, reviewed):
              'doubleActingExhaustEventsPerSecond': round(speed / 3.6 / (2 * math.pi * v['wheelRadius']) * v['gearRatio'] * v['cylinders'] * 2, 2)}
             for speed in (10, 30, 50, 60)]
     return rec
+
+
+def _without_dynamo(rec):
+    """No dynamo: no electric lamps or cab light, no controls for them; the build stage takes them off the HUD."""
+    cfg = rec['config']
+    placed = cfg.get('Placed')
+    if isinstance(placed, dict):
+        placed['value'] = [p for p in placed.get('value') or [] if p.get('Name') not in DYNAMO_CONTROLS]
+    lenses = cfg.get('LampLenses')
+    if isinstance(lenses, dict):
+        lenses['value'] = []
+        lenses['basis'], lenses['evidence'] = 'DV_choice', ['Pre-build review: no dynamo, so no electric lamps']
+    cfg.pop('CabLightProbe', None)
+    cfg.pop('LampShots', None)
+    rec['metadata']['noDynamo'] = True
 
 
 def _cli_interactive(req):
