@@ -99,6 +99,7 @@ public static partial class CclLocoBuild
             BuildInterior(); SeatRr2dvControls(); FinishRr2dvInteriorControls(); BuildInteriorLOD();
             FreshRr2dvSource();
         }
+        Rr2dvReleaseSeat();
         BuildInteractables();
         BuildRr2dvAncillaries();
         var sound = c.IsTender ? null : BuildSound();
@@ -135,6 +136,42 @@ public static partial class CclLocoBuild
             SaveRr2dvPrefab(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    // The core's release fitter searches down to 0.30 m, but its final check needs the valve (position - 0.0806 m) at
+    // 0.30 m or more: a low frame at the hint (Reading B8a camelback: rod at y 0.370, 2026-09-28) passes the fitter and
+    // stops the build. Try the fitter at the hint, then along the frame in 0.4 m steps, and hand the core the first hint
+    // whose seat clears the floor; the core then fits it again, with the same result.
+    const float Rr2dvReleaseFloor = .3f + .080590f;
+
+    static void Rr2dvReleaseSeat()
+    {
+        if (Cfg.BrakeRelease == null || Cfg.BrakeReleaseExact) return;
+        var (hint, euler) = Cfg.BrakeRelease(RefBody);
+        var probe = new GameObject("rr2dv release probe").transform;
+        try
+        {
+            foreach (int step in new[] { 0, 1, -1, 2, -2, 3, -3, 4, -4, 5, -5, 6, -6 })
+            {
+                var candidate = hint + new Vector3(0, 0, step * .4f);
+                int before = warnings;
+                PlaceBrakeRelease(probe, candidate);
+                bool seated = warnings == before;  // the fitter warns when it finds no seat
+                warnings = before;
+                if (seated && probe.localPosition.y >= Rr2dvReleaseFloor)
+                {
+                    if (step != 0)
+                    {
+                        Cfg.BrakeRelease = _ => (candidate, euler);
+                        Line($"rr2dv brake release: hint z {hint.z:F3} seats below the clearance floor; moved {step * .4f:+0.0;-0.0} m to z {candidate.z:F3} " +
+                             $"(rod y {probe.localPosition.y:F3})");
+                    }
+                    return;
+                }
+            }
+            Warn("rr2dv brake release: no seat along the frame clears the 0.30 m floor; the core's own check decides");
+        }
+        finally { Object.DestroyImmediate(probe.gameObject); }
     }
 
     static void StripRr2dvSourceColliders()

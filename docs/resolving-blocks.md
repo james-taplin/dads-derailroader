@@ -234,6 +234,9 @@ is searched, trucks included (tender truck rims). A tender whose model has no co
 runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount. All
 are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
 
+Brake release: when the fitted seat at the hint is below the 0.30 m clearance floor (a low frame, Reading B8a
+camelback), the hint moves along the frame in 0.4 m steps to the first seat that clears it (`rr2dv brake release: … moved`).
+
 Oil cups are seated, per side and axle, on a rod big-end nub (islands of 20+ triangles), else on a flat top of the
 running gear (big ends, crossheads, axlebox tops; a cup on a moving part rides with it), else on the running board. A
 pair with no seat on either side is left out (`rr2dv oil pair … omitted`).
