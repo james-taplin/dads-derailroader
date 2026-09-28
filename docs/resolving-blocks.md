@@ -239,6 +239,8 @@ A door, window or hatch animation (Railroader `ToggleAnimation`) that cannot be 
 target, a clip that does not move its declared target, overlap with another moving assembly) no longer stops the build:
 that one animation is left out, its model stays as modelled, and a `WARN rr2dv ancillary toggle '…' left out` line in
 `build_report.txt` names it and says why (L-27: a second roof-hatch toggle). Driving controls keep their hard checks.
+A rigged opening, whose clip moves the bones inside its declared target (the H9's windows, deflectors and roof hatch),
+is kept: the whole declared assembly, mesh and bones, becomes the opening, and it opens with a click.
 
 ## Stage `audit`
 

@@ -66,6 +66,10 @@ public static partial class CclLocoBuild
             var paths = bindings.Select(b => b.path).Distinct().ToArray();
             if (paths.Any(p => !RefBody.Find(p))) { LeaveOutOpening(component.name, "Unresolved toggle binding: " + key); continue; }
             var ancestors = paths.Where(p => target == p || target.StartsWith(p + "/", StringComparison.Ordinal)).OrderBy(p => p.Length).ToArray();
+            // A rigged opening declares its armature as the target and the clip moves the bones inside it (H9 windows,
+            // deflectors and roof hatch, 2026-09-28): the whole declared assembly moves as one, with its skinned mesh.
+            bool rigged = ancestors.Length == 0 && paths.All(p => p.StartsWith(target + "/", StringComparison.Ordinal));
+            if (rigged) ancestors = paths.OrderBy(p => p.Split('/').Length).ThenBy(p => p, StringComparer.Ordinal).Take(1).ToArray();
             if (ancestors.Length == 0) { LeaveOutOpening(component.name, "Declared toggle target is not moved by its clip: " + key + " / " + target); continue; }
             var existing = RrOpenings.FirstOrDefault(o => o.clip == key);
             if (existing != null)
@@ -73,7 +77,7 @@ public static partial class CclLocoBuild
                 if (existing.target != target) LeaveOutOpening(component.name, "Shared clip has multiple declared grab targets; explicit resolution required: " + key);
                 continue;
             }
-            var roots = paths.Where(p => !paths.Any(a => a != p && p.StartsWith(a + "/", StringComparison.Ordinal))).ToArray();
+            var roots = rigged ? new[] { target } : paths.Where(p => !paths.Any(a => a != p && p.StartsWith(a + "/", StringComparison.Ordinal))).ToArray();
             if (roots.Any(p => removed.Any(a => p == a || p.StartsWith(a + "/") || a.StartsWith(p + "/"))))
                 { LeaveOutOpening(component.name, "Toggle overlaps another converted moving assembly: " + key); continue; }
             string name = "rr2dvOpening" + RrOpenings.Count + "_" + Safe(key);
