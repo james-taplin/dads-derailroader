@@ -39,8 +39,9 @@ public static partial class CclLocoBuild
         var root = PrefabUtility.LoadPrefabContents(path);
         try
         {
-            var model = root.transform.Find("Model");
-            if (!model) return;
+            // The whole car, not only Model: Railroader trucks hang under BogieF/BogieR (L-27 tender rims stayed white,
+            // 2026-09-28, because only Model was searched).
+            var model = root.transform;
             var gunmetal = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvGunmetal);
             var clear = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvGlass);
             var coal = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvCoal);
@@ -54,7 +55,13 @@ public static partial class CclLocoBuild
                 for (int i = 0; i < mats.Length; i++)
                 {
                     string at = TPathOf(r.transform, root.transform);
-                    if (Rr2dvUnresolvedMaterial(mats[i]))
+                    if (at.Contains("[coal load]") && mats[i] != coal)
+                    {
+                        // the core's generated coal heap (a tender with no modelled coal) looks like coal too
+                        Line($"rr2dv coal: {at} slot {i} {(mats[i] ? mats[i].name : "empty")} -> rr2dv_coal");
+                        mats[i] = coal; changed = true;
+                    }
+                    else if (Rr2dvUnresolvedMaterial(mats[i]))
                     {
                         var fill = Rr2dvPathHas(at, "coal") ? coal : gunmetal;
                         Line($"rr2dv material fallback: {at} slot {i} " +

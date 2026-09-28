@@ -1018,6 +1018,17 @@ class _Builder:
         cfg["LoadAnimations"] = self._ordered_loads(loads, ov)
         coal_slot, water_slot = self._slots(td)
         self._resources(cfg, rec, comps, coal_slot, water_slot, tank=False, tender_bounds=(bmin, bmax, front_end))
+        if coal_slot is not None and not any(l[2] == "coal.NORMALIZED" for l in loads) and rec["hooks"].get("CoalPile"):
+            # Railroader draws a tender's coal at runtime when the model has no coal of its own (RLW RPP-1: no coal in
+            # the bunker in game, 2026-09-28). The core's generated coal load fills the shovelling space and rises and
+            # falls with coal.AMOUNT.
+            pile = _plain(rec["hooks"]["CoalPile"])
+            (cx, cy, cz), (sx, sy, sz) = pile["centre"], pile["size"]
+            cfg["CoalLoad"] = env({"Pivot": _r([cx, cy - sy / 2, cz]), "Footprint": _r([sx, sz]), "FullHeight": _r(sy),
+                                   "EmptyFraction": 0.07}, "m", "analogue_estimate",
+                                  "the tender model has no coal load animation: a generated coal load fills the coal space box")
+            self.choose("no modelled coal load on the tender: a generated coal heap fills the coal space and follows the coal "
+                        "amount; check it sits inside the bunker in the renders")
         half = (bmax[0] - bmin[0]) / 2
         rec["hooks"]["HandbrakeWheel"] = env({"pos": _r([-0.9, bmax[1] * 0.65, front_end - 0.25]), "euler": [0, 180, 0]}, "m/deg",
                                              "analogue_estimate", "hint on the tender front, fireman's side; the core fits it (G-29)")

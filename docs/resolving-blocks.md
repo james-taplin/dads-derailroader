@@ -229,7 +229,9 @@ Material slots: a slot the export left empty or filled with Unity's white `Defau
 truck rims, the `…deadbeef…` references) is given rr2dv's own dark matte gunmetal
 (`src/rr2dv/unity/materials/rr2dv_gunmetal.mat`), and a slot whose material is named `…glass…` gets rr2dv's own clear
 glass (`rr2dv_glass.mat`). An empty slot on a part named `…coal…` gets a bump-mapped coal (`rr2dv_coal.mat`), and
-glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow inside does not show. All
+glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow inside does not show. The whole car
+is searched, trucks included (tender truck rims). A tender whose model has no coal of its own (Railroader draws it at
+runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount. All
 are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
 
 Oil cups are seated, per side and axle, on a rod big-end nub (islands of 20+ triangles), else on a flat top of the
