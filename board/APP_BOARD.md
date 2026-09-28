@@ -1490,3 +1490,13 @@ at "No fully supported visible surface for plate [car plate anchor1]" (decal on 
 flat (5.7 deg, 8 mm), then curved side (18 deg, 25 mm), then leaves the plate at the source decal with a WARN. Untested in Unity.
 Open: every failed build repeats the ~10 min Trojan probe; the project cache is off by default (keepWorkFiles) and its key
 includes build-only scripts. Asking James before changing the storage default.
+
+## W43 (cloud Claude, 2026-09-28): measured project kept until the loco builds
+
+Branch `claude/modest-gates-tgqzx7` (James chose "keep only after a failure"): the project cache is now on by default.
+The imported and probed project is saved after the probe and deleted once that loco builds and passes its audit
+(with `keepWorkFiles` it is kept as before). The cache key now covers only what shapes the import and probe
+(unityproject/probeinput/assetripper/projectcache, Rr2dvProbe.cs, resolve_clip_paths, copy_deps); on reuse the current
+core and app editor scripts and app materials are copied in (removed scripts deleted), so a builder fix re-runs only
+the build (Unity recompiles). Export signature is path+size (fresh exports each run must still hit). Tests: suite
+green except the known Rr2dvAudit stub gaps; untested on Windows/Unity.
