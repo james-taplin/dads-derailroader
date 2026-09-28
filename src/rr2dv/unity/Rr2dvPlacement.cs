@@ -232,12 +232,14 @@ public static partial class CclLocoBuild
         VisualHits hits, Transform body, int pair, (Transform rod, Vector3 pos) left, (Transform rod, Vector3 pos) right, float z)
     {
         var a = left.rod && Rr2dvRodSeatAccessible(hits, body, left.pos)
-            ? (true, left.pos, left.rod, "rod big end") : Rr2dvBoardSeat(hits, body, -1, z);
+            ? (true, left.pos, left.rod, "rod big end") : Rr2dvGearTopSeat(hits, body, -1, z);
+        if (!a.Item1) a = Rr2dvBoardSeat(hits, body, -1, z);
         var b = right.rod && Rr2dvRodSeatAccessible(hits, body, right.pos)
-            ? (true, right.pos, right.rod, "rod big end") : Rr2dvBoardSeat(hits, body, 1, z);
+            ? (true, right.pos, right.rod, "rod big end") : Rr2dvGearTopSeat(hits, body, 1, z);
+        if (!b.Item1) b = Rr2dvBoardSeat(hits, body, 1, z);
         if (!a.Item1 || !b.Item1)
         {
-            Line($"rr2dv oil pair {pair} omitted: no accessible {(a.Item1 ? "right" : b.Item1 ? "left" : "left or right")} rod/board seat");
+            Line($"rr2dv oil pair {pair} omitted: no accessible {(a.Item1 ? "right" : b.Item1 ? "left" : "left or right")} rod, running-gear or board seat");
             return;
         }
         placed.Add(($"oil_{pair}L", a.Item2, a.Item3, a.Item4));
@@ -278,6 +280,39 @@ public static partial class CclLocoBuild
         return (false, Vector3.zero, null, null);
     }
 
+    // A big-end nub can be a small island (L-27's were rejected at under 35 triangles; James, 2026-09-28: slightly lower).
+    const int Rr2dvMinNubTriangles = 20;
+
+    // Flat tops on the running gear itself, before falling back to the running boards (James, 2026-09-28: the H9's
+    // big ends, crossheads and axlebox tops look better than the boards). Searched down from above the wheels, in the
+    // rod plane outside the frames, near the axle: a level spot at least 5 cm across, clear above and to the outside, on
+    // any part but a wheel. A cup on a moving part (rod, crosshead) rides with it.
+    static (bool found, Vector3 pos, Transform rod, string seat) Rr2dvGearTopSeat(VisualHits hits, Transform body, float side, float zHint)
+    {
+        float top = 2 * WheelRadius + .1f, low = WheelRadius * .6f;
+        for (int dz = 0; dz < 17; dz++)
+        for (float x = .7f; x <= 1.45f; x += .025f)
+        {
+            float z = zHint + (dz == 0 ? 0 : (dz % 2 == 0 ? -1 : 1) * ((dz + 1) / 2) * .05f);
+            var origin = new Vector3(side * x, top + .5f, z);
+            if (!hits.Ray(origin, Vector3.down, 2f, out var hit, body) || hit.normal.y < .95f ||
+                hit.point.y > top || hit.point.y < low) continue;
+            var part = hit.collider.transform.parent;
+            if (part.name.ToLowerInvariant().Contains("wheel")) continue;
+            bool footprint = true;
+            foreach (var offset in new[] { new Vector3(.025f, 0, 0), new Vector3(-.025f, 0, 0), new Vector3(0, 0, .025f), new Vector3(0, 0, -.025f) })
+                if (!hits.Ray(origin + offset, Vector3.down, 2f, out var edge, body) || edge.normal.y < .95f ||
+                    edge.collider != hit.collider || Mathf.Abs(edge.point.y - hit.point.y) > .006f) footprint = false;
+            if (!footprint) continue;
+            var pos = hit.point + Vector3.up * (CupPivotAboveBase - CupSeatSink);
+            if (hits.Ray(pos + Vector3.up * .08f, Vector3.up, .12f, out var overhead, body)) continue;
+            if (hits.Ray(pos + Vector3.up * .08f, Vector3.right * side, .6f, out var sideHit, body)) continue;
+            bool moving = Rr2dvIsRod(part.name) || part.name.ToLowerInvariant().Contains("crosshead");
+            return (true, pos, moving ? part : null, "running gear top on " + part.name);
+        }
+        return (false, Vector3.zero, null, null);
+    }
+
     static bool Rr2dvIsRod(string name)
     {
         // Spaces and underscores ignored: 'DriverDriveRod' (GN L-27) is a drive rod as much as 'Drive Rod'.
@@ -309,7 +344,7 @@ public static partial class CclLocoBuild
             }
             foreach (var group in groups)
             {
-                if (group.Count < 35) { small++; continue; }
+                if (group.Count < Rr2dvMinNubTriangles) { small++; continue; }
                 var box = new Bounds(world[group[0].a], Vector3.zero);
                 foreach (var t in group) { box.Encapsulate(world[t.a]); box.Encapsulate(world[t.b]); box.Encapsulate(world[t.c]); }
                 var size = box.size;
@@ -336,7 +371,7 @@ public static partial class CclLocoBuild
                 found++;
             }
             // Why a rod gave no nub is otherwise invisible (L-27: 0 candidates on rods with visible big-end bosses).
-            Line($"rr2dv oil rod {mf.name}: {found} nub(s); islands rejected: {small} under 35 triangles, {wrongSize} outside 3.5-30 cm, " +
+            Line($"rr2dv oil rod {mf.name}: {found} nub(s); islands rejected: {small} under {Rr2dvMinNubTriangles} triangles, {wrongSize} outside 3.5-30 cm, " +
                  $"{notEnd} not within 0.35 m of a rod end, {noTop} without an upward face");
         }
         return result.OrderByDescending(p => p.pos.z).ThenBy(p => p.pos.x).ToList();

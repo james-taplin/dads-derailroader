@@ -232,6 +232,10 @@ glass (`rr2dv_glass.mat`). An empty slot on a part named `…coal…` gets a bum
 glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow inside does not show. All
 are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
 
+Oil cups are seated, per side and axle, on a rod big-end nub (islands of 20+ triangles), else on a flat top of the
+running gear (big ends, crossheads, axlebox tops; a cup on a moving part rides with it), else on the running board. A
+pair with no seat on either side is left out (`rr2dv oil pair … omitted`).
+
 Dynamo (Vehicle choices): suggested from the Railroader definition (a `Dynamo` component or not). With "no", the pack
 has no electric lamps, cab light, or Dynamo/Cab light/Headlights backhead controls, and the HUD has no dynamo or
 headlight controls; the dynamo stays off, so no dynamo steam jet.
