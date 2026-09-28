@@ -228,7 +228,8 @@ public static class Rr2dvAudit
                         if (imported.FindProperty("HUDType").intValue != 1000 || Str(hud, "CustomHUDSettings.Powertrain") != "S" ||
                             imported.FindProperty("CustomHUDSettings.BasicControls.Speedometer").intValue != 1 ||
                             imported.FindProperty("CustomHUDSettings.BasicControls.Throttle").intValue == 0 ||
-                            imported.FindProperty("CustomHUDSettings.BasicControls.Reverser").intValue == 0)
+                            imported.FindProperty("CustomHUDSettings.BasicControls.Reverser").intValue == 0 ||
+                            imported.FindProperty("CustomHUDSettings.Cab.HornStyle").intValue != 2)
                             errors.Add("Imported HUD is missing its steam driving layout or numerical speedometer");
                     }
                     if (!hud || new SerializedObject(hud).FindProperty("CustomHUDSettings.Braking.BrakeType").intValue != brake) errors.Add("HUD brake behaviour differs from reviewed valve");

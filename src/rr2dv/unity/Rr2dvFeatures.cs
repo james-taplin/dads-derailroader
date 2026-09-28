@@ -52,6 +52,10 @@ public static partial class CclLocoBuild
             var wired = new SerializedObject(reader).FindProperty(binding[1]);
             field.SetValue(cab, Enum.ToObject(field.FieldType, wired != null && wired.objectReferenceValue ? 1 : 0));
         }
+        // CCL's steam preset (SetToS) leaves the whistle slot at None, so the HUD had no whistle (L-27 game test,
+        // 2026-09-28). Every converted steam loco has a whistle control, RR or generated: show it as Whistle.
+        var horn = cab.GetType().GetField("HornStyle");
+        horn.SetValue(cab, Enum.ToObject(horn.FieldType, 2));
         hud.GetType().GetMethod("OnValidate").Invoke(hud, null);
         EditorUtility.SetDirty(hud);
         EditorUtility.SetDirty(type);
