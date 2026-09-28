@@ -1523,3 +1523,11 @@ Branch `claude/modest-gates-tgqzx7`, untested in Unity/game (C# checked against 
 - a2a9cbf: material fallbacks now cover the whole car (L-27 tender truck rims were under BogieF/R, outside Model);
   a tender with a coal slot but no coal LoadAnimation gets the core's CoalLoad in its CoalPile box (RPP-1), with rr2dv_coal.
 - Trojan built on 6713876+ (plates left at decals with WARN). H9 grab coverage: open, waiting for which controls.
+
+## W46 (cloud Claude, 2026-09-28): camelback release floor
+
+Branch `claude/modest-gates-tgqzx7`: Reading B8a camelback now gets past the cab (6713876 worked: 20 controls seated) and
+stopped at "release is below clearance floor": the core's PlaceBrakeRelease searches down to y 0.30 but
+RRPlacementValidation needs position.y - 0.0806 >= 0.30. Core mismatch noted for a future tooling refresh (not edited).
+App-side Rr2dvReleaseSeat tries the fitter at the hint then +-0.4 m steps and hands the core the first hint that clears.
+Untested in Unity. Note for tooling: the fitter's yLow should be 0.3806.
