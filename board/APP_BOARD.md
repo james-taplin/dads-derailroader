@@ -1648,3 +1648,16 @@ as a backup. Please also say whether the vanilla shovel's feed into `firebox.COA
 stoker's write each tick. Evidence: the ALCo K-66 has a "Stoker" toggle (loco) and an "auger" toggle (tender), which the
 app would then drive from `STOKING_NORMALIZED` via `LoadAnimations`. Oil firing on tender locos needs the tender's
 container handled too.
+
+## W58 (cloud Claude, 2026-09-29): oil cups by motion, lamp glass, M-3 toggles
+
+Branch `claude/modest-gates-tgqzx7`, fde60ad, from James's game test (2026-09-29).
+- Oil cups: the driving groups' clips are sampled over a revolution; travelling parts are rods (cup parented to them),
+  parts turning in place are wheels/axles/cranks (no cup). M-3 parts are all 'Cylinder.nnn', so cups sat on wheel tops
+  (y = wheel diameter) and rod cups stayed on the frame. Also meant for R48 wheel-top cups.
+- Lamp glass: lamp-path glass with source alpha 0 stays invisible (Trojan flare discs looked like pale blobs); glass
+  sharing a window material on one mesh has its triangles near a `LampLenses` anchor split onto rr2dv_lens (K-66 headlight).
+- Toggles: only transforms whose curves change count as an opening's parts (M-3: 11 of 12 cab toggles were left out as
+  overlapping the first door because the clips key every part with flat curves).
+- Tested: Python suite. Untested: all of it in Unity/game (these partials are outside the stub compile).
+- Open: control feel (brakes/lights too coarse, whistles slow except R48) needs evidence; brake cutout HUD route last.
