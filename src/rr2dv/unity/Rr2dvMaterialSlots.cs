@@ -4,6 +4,10 @@
 //  - A slot whose converted material is named '...glass...' gets rr2dv's own clear glass (rr2dv_glass.mat, Standard
 //    transparent). DV's S282 window glass was tried first: its smudge texture showed as a dark circle pattern on other
 //    models' window UVs (L-27 game test, 2026-09-28).
+//  - An unresolved slot on a renderer named '...coal...' gets rr2dv_coal (bump-mapped lumps) instead of gunmetal (H9 tender
+//    coal load, 2026-09-28: gunmetal "looked very meh").
+//  - Glass on a lamp ('lamp', 'light', 'lantern' in its path) gets rr2dv_lens, a pale opaque lens: clear glass let you
+//    look into the lamp's hollow interior (2026-09-28).
 // Every fallback is written to the build report.
 using System;
 using System.Collections.Generic;
@@ -16,6 +20,13 @@ public static partial class CclLocoBuild
 {
     const string Rr2dvGunmetal = "Assets/Rr2dv/Materials/rr2dv_gunmetal.mat";
     const string Rr2dvGlass = "Assets/Rr2dv/Materials/rr2dv_glass.mat";
+    const string Rr2dvCoal = "Assets/Rr2dv/Materials/rr2dv_coal.mat";
+    const string Rr2dvLens = "Assets/Rr2dv/Materials/rr2dv_lens.mat";
+
+    static bool Rr2dvPathHas(string path, params string[] words)
+    {
+        return words.Any(w => path.IndexOf(w, StringComparison.OrdinalIgnoreCase) >= 0);
+    }
 
     static bool Rr2dvUnresolvedMaterial(Material m)
     {
@@ -32,7 +43,9 @@ public static partial class CclLocoBuild
             if (!model) return;
             var gunmetal = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvGunmetal);
             var clear = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvGlass);
-            if (!gunmetal || !clear) throw new InvalidOperationException("rr2dv fallback materials missing under Assets/Rr2dv/Materials");
+            var coal = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvCoal);
+            var lens = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvLens);
+            if (!gunmetal || !clear || !coal || !lens) throw new InvalidOperationException("rr2dv fallback materials missing under Assets/Rr2dv/Materials");
             int filled = 0, glazed = 0;
             foreach (var r in model.GetComponentsInChildren<Renderer>(true))
             {
@@ -40,22 +53,25 @@ public static partial class CclLocoBuild
                 bool changed = false;
                 for (int i = 0; i < mats.Length; i++)
                 {
+                    string at = TPathOf(r.transform, root.transform);
                     if (Rr2dvUnresolvedMaterial(mats[i]))
                     {
-                        Line($"rr2dv material fallback: {TPathOf(r.transform, root.transform)} slot {i} " +
-                             $"{(mats[i] ? "had " + mats[i].name : "was empty")} -> rr2dv_gunmetal");
-                        mats[i] = gunmetal; changed = true; filled++;
+                        var fill = Rr2dvPathHas(at, "coal") ? coal : gunmetal;
+                        Line($"rr2dv material fallback: {at} slot {i} " +
+                             $"{(mats[i] ? "had " + mats[i].name : "was empty")} -> {fill.name}");
+                        mats[i] = fill; changed = true; filled++;
                     }
-                    else if (mats[i].name.IndexOf("glass", StringComparison.OrdinalIgnoreCase) >= 0 && mats[i] != clear)
+                    else if (mats[i].name.IndexOf("glass", StringComparison.OrdinalIgnoreCase) >= 0 && mats[i] != clear && mats[i] != lens)
                     {
-                        Line($"rr2dv glass: {TPathOf(r.transform, root.transform)} slot {i} {mats[i].name} -> rr2dv_glass");
-                        mats[i] = clear; changed = true; glazed++;
+                        var pane = Rr2dvPathHas(at, "lamp", "light", "lantern") ? lens : clear;
+                        Line($"rr2dv glass: {at} slot {i} {mats[i].name} -> {pane.name}");
+                        mats[i] = pane; changed = true; glazed++;
                     }
                 }
                 if (changed) r.sharedMaterials = mats;
             }
-            if (filled > 0) Warn($"rr2dv material fallback: {filled} unresolved material slot(s) given rr2dv_gunmetal (check them in the renders)");
-            if (glazed > 0) Line($"rr2dv glass: {glazed} slot(s) given rr2dv_glass");
+            if (filled > 0) Warn($"rr2dv material fallback: {filled} unresolved material slot(s) given rr2dv_gunmetal or rr2dv_coal (check them in the renders)");
+            if (glazed > 0) Line($"rr2dv glass: {glazed} slot(s) given rr2dv_glass or rr2dv_lens");
             PrefabUtility.SaveAsPrefabAsset(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }

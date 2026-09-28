@@ -228,7 +228,8 @@ and hanging hose end are reachable. Cosmetic overlap with decorative pipework is
 Material slots: a slot the export left empty or filled with Unity's white `Default-Material` (Railroader base-game
 truck rims, the `…deadbeef…` references) is given rr2dv's own dark matte gunmetal
 (`src/rr2dv/unity/materials/rr2dv_gunmetal.mat`), and a slot whose material is named `…glass…` gets rr2dv's own clear
-glass (`rr2dv_glass.mat`). Both
+glass (`rr2dv_glass.mat`). An empty slot on a part named `…coal…` gets a bump-mapped coal (`rr2dv_coal.mat`), and
+glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow inside does not show. All
 are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
 
 A Railroader cab handle that does not swing in its own animation (the GN L-27's throttle slides 50 mm) cannot become a
