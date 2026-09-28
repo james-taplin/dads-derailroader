@@ -464,8 +464,15 @@ public static partial class CclLocoBuild
                 var label = root.transform.Find("Controls/label " + spec.Label.Substring(4));
                 if (!label) throw new InvalidOperationException("Missing generated control label " + spec.Label);
                 var labelOrigin = new Vector3(spec.X, spec.Y - (spec.Wheel ? .075f : .035f), Cfg.BackheadRayStartZ);
-                if (!hits.Ray(labelOrigin, Vector3.forward, 1f, out var labelHit, RefBody) || labelHit.normal.z > -.5f)
-                    throw new InvalidOperationException("No visible surface for generated label " + spec.Label);
+                if (!hits.Ray(labelOrigin, Vector3.forward, 1f, out var labelHit, RefBody) || labelHit.normal.z > -.5f ||
+                    Mathf.Abs(labelHit.point.z - hit.point.z) > .1f)
+                {
+                    // No surface just below the control (the H9's injector sits on a pipe 0.32 m proud of the plate, with
+                    // nothing under it): a name plate is no reason to stop the build. It hangs just in front of its control.
+                    label.localPosition = new Vector3(labelOrigin.x, labelOrigin.y, hit.point.z - .016f);
+                    Warn($"generated label {spec.Label}: no surface below its control; placed at the control's depth");
+                    continue;
+                }
                 label.localPosition = new Vector3(labelOrigin.x, labelOrigin.y, labelHit.point.z - .016f);
             }
             Section("rr2dv control sweep after visible-surface placement");
