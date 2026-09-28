@@ -1541,3 +1541,11 @@ Branch `claude/modest-gates-tgqzx7` (758d737), untested in Unity/game; suite gre
 - Loco brake-release hint moved to 0.5 m inside the rear end, right side, under the cab (was between the rear drivers:
   rod came out through pipes). Rr2dvReleaseSeat now searches forward first. Tender release unchanged (James: fine).
 - James: keep our coal material and generated heap (CCL offers DV's Coal material and S060 bunker meshes only).
+
+## W48 (cloud Claude, 2026-09-28): camelback builds; whistle-closure duplicate IDs fixed
+
+Branch `claude/modest-gates-tgqzx7`: Reading B8a camelback (run on 56bcc3f) built for the first time: backhead controls
+seated, brake release moved +0.4 m to a seat above the floor, cached project reused (no import/probe). Audit stopped on
+"duplicate simulation IDs: whistleZero, whistleDeadzone, whistleClosure": CCL's SimComponentDefinitionProxy.Reset()
+appends a new component to executionOrder on AddComponent, and CloseRr2dvWhistle inserted them again. d95bf9f removes
+them before inserting (as ConfigureRrOpeningMotion does). Every loco built on 68976ca..758d737 would fail this audit.
