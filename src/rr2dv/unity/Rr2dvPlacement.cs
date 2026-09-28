@@ -91,7 +91,12 @@ public static partial class CclLocoBuild
         AlignRr2dvBogieSupports();
         SeatRr2dvPlates();
         AlignRr2dvDefaultPlates();
-        if (!c.IsTender) { BuildInterior(); SeatRr2dvControls(); FinishRr2dvInteriorControls(); BuildInteriorLOD(); }
+        if (!c.IsTender)
+        {
+            StripRr2dvSourceColliders();
+            BuildInterior(); SeatRr2dvControls(); FinishRr2dvInteriorControls(); BuildInteriorLOD();
+            FreshRr2dvSource();
+        }
         BuildInteractables();
         BuildRr2dvAncillaries();
         var sound = c.IsTender ? null : BuildSound();
@@ -99,6 +104,23 @@ public static partial class CclLocoBuild
         builtFolders[c] = carFolder;
     }
 
+
+    // The core finds the backhead with temporary colliders on the visible meshes, but skips a mesh that already has a
+    // collider and then hits that one instead: a single-mesh model whose own RR collider has no backhead face (Reading
+    // B8a camelback, 2026-09-28: all 20 generated controls "no backhead found"). The cab is measured on the visible model
+    // only; the walkable colliders were already taken in BuildExterior, and later stages get a fresh source copy.
+    static void StripRr2dvSourceColliders()
+    {
+        var colliders = RefBody.GetComponentsInChildren<Collider>(true);
+        foreach (var collider in colliders) Object.DestroyImmediate(collider);
+        if (colliders.Length > 0) Line($"rr2dv cab measured on the visible model: {colliders.Length} source collider(s) set aside");
+    }
+
+    static void FreshRr2dvSource()
+    {
+        if (refBody) Object.DestroyImmediate(refBody.gameObject);
+        refBody = null;
+    }
 
     static void SaveRr2dvPrefab(GameObject root, string path)
     {

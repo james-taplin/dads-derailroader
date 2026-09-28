@@ -242,6 +242,9 @@ that one animation is left out, its model stays as modelled, and a `WARN rr2dv a
 A rigged opening, whose clip moves the bones inside its declared target (the H9's windows, deflectors and roof hatch),
 is kept: the whole declared assembly, mesh and bones, becomes the opening, and it opens with a click.
 
+Generated backhead controls are placed against the visible model only: a model whose own collision shape has no
+backhead face (Reading B8a camelback) no longer loses every control with `no backhead found`.
+
 ## Stage `audit`
 
 The audit loads binary bundles, excluding text `.manifest` sidecars, then follows the pack's serialized references
