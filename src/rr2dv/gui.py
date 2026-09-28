@@ -106,7 +106,7 @@ class App:
         self.last_run: Path | None = None
         self._build()
         self._pump_id = self.root.after(100, self._pump)
-        self._beat, self._closing = time.monotonic(), False
+        self._beat, self._closing, self._modal = time.monotonic(), False, False
         threading.Thread(target=self._watchdog, daemon=True).start()
         self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.refresh()
@@ -291,6 +291,15 @@ class App:
         self.candidate: float | None = None
 
     # ---- plumbing -----------------------------------------------------------------------------------------------------
+    def _modal_error(self, *args, **kwargs) -> None:
+        """An error box blocks the window's event loop until it is closed: not a hang for the watchdog."""
+        self._modal = True
+        try:
+            messagebox.showerror(*args, **kwargs)
+        finally:
+            self._modal = False
+            self._beat = time.monotonic()
+
     def _watchdog(self) -> None:
         """Writes every thread's stack to the log folder when the window stops handling events for 30 s, so a hang
         leaves evidence instead of a frozen window and an empty log (2026-09-28)."""
@@ -298,7 +307,7 @@ class App:
         dumped = False
         while not self._closing:
             time.sleep(5)
-            stalled = time.monotonic() - self._beat
+            stalled = 0.0 if self._modal else time.monotonic() - self._beat
             if stalled > 30 and not dumped:
                 path = applog.log_file().with_name(time.strftime("hang-%Y%m%d-%H%M%S.txt"))
                 try:
@@ -346,7 +355,7 @@ class App:
                 if run:
                     self._show_run(run.path)
                     where = f"\n\nRun log: {run.path / 'run.log'}"
-            messagebox.showerror(APP_NAME, f"{name} failed:\n\n{error}{where}\n\nApp log: {applog.log_file()}",
+            self._modal_error(APP_NAME, f"{name} failed:\n\n{error}{where}\n\nApp log: {applog.log_file()}",
                                  parent=self.root)
         elif kind == "progress":
             stage, status, detail = rest
@@ -492,7 +501,7 @@ class App:
             if wheel_radius is not None and not 0.1 <= wheel_radius <= 1.5:
                 raise ValueError
         except ValueError:
-            messagebox.showerror(APP_NAME, "The wheel radius must be a number of metres between 0.1 and 1.5.", parent=self.root)
+            self._modal_error(APP_NAME, "The wheel radius must be a number of metres between 0.1 and 1.5.", parent=self.root)
             return
         audio = {1: "S060", 2: "S282"}.get(self.audio.current())
         geometry_review = Path(self.geometry.get().strip()) if self.geometry.get().strip() else None
@@ -609,7 +618,7 @@ class App:
         if answer is not None:  # the waiting conversion gets "cancelled" and stops cleanly instead of waiting forever
             answer["value"] = None if kind == "review" else False
             answer["event"].set()
-        messagebox.showerror(APP_NAME, f"The {'vehicle choices' if kind == 'review' else kind} window could not open:\n\n"
+        self._modal_error(APP_NAME, f"The {'vehicle choices' if kind == 'review' else kind} window could not open:\n\n"
                                        f"{error}\n\nThe details are in the app log: {applog.log_file()}", parent=self.root)
 
     def _ask(self, pack, sources, answer) -> None:

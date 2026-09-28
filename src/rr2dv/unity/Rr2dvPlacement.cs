@@ -250,7 +250,7 @@ public static partial class CclLocoBuild
             var whole = new Bounds(world[0], Vector3.zero);
             foreach (var v in world) whole.Encapsulate(v);
             if (Mathf.Max(whole.size.y, whole.size.z) < .5f) { Line($"rr2dv oil rod {mf.name}: shorter than 0.5 m, no nub search"); continue; }
-            int small = 0, size = 0, notEnd = 0, noTop = 0, found = 0;
+            int small = 0, wrongSize = 0, notEnd = 0, noTop = 0, found = 0;
             var groups = Islands(mesh);
             for (int sub = 0; sub < mesh.subMeshCount; sub++)
             {
@@ -265,7 +265,7 @@ public static partial class CclLocoBuild
                 foreach (var t in group) { box.Encapsulate(world[t.a]); box.Encapsulate(world[t.b]); box.Encapsulate(world[t.c]); }
                 var size = box.size;
                 if (size.x < .035f || size.z < .035f || size.y < .035f ||
-                    size.x > .3f || size.z > .3f || size.y > .3f) { size++; continue; }
+                    size.x > .3f || size.z > .3f || size.y > .3f) { wrongSize++; continue; }
                 int axis = whole.size.z >= whole.size.y ? 2 : 1;
                 if (Mathf.Min(Mathf.Abs(box.center[axis] - whole.min[axis]),
                     Mathf.Abs(box.center[axis] - whole.max[axis])) > .35f) { notEnd++; continue; }
@@ -287,7 +287,7 @@ public static partial class CclLocoBuild
                 found++;
             }
             // Why a rod gave no nub is otherwise invisible (L-27: 0 candidates on rods with visible big-end bosses).
-            Line($"rr2dv oil rod {mf.name}: {found} nub(s); islands rejected: {small} under 35 triangles, {size} outside 3.5-30 cm, " +
+            Line($"rr2dv oil rod {mf.name}: {found} nub(s); islands rejected: {small} under 35 triangles, {wrongSize} outside 3.5-30 cm, " +
                  $"{notEnd} not within 0.35 m of a rod end, {noTop} without an upward face");
         }
         return result.OrderByDescending(p => p.pos.z).ThenBy(p => p.pos.x).ToList();
