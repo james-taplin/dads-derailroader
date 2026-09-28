@@ -312,22 +312,42 @@ def backhead(rays: list[dict]) -> dict | None:
     return {"z": z, "hits": len(hits), "of": len(rays), "points": [(h["x"], h["y"]) for h in hits]}
 
 
+# Placement rules tried in order until every generated control fits: the usual band 0.2 m below to 1.2 m above the fire
+# door at 0.2 x 0.25 m spacing, then the upper plate too (to 1.7 m above), then 0.15 x 0.2 m spacing. Small backheads
+# (PLW Trojan: 10 of 17 fitted the usual band, 19 with the upper plate) still build; the rule used is reported.
+PLACEMENT_TIERS = ((0.2, 0.25, 1.2, "usual band"), (0.2, 0.25, 1.7, "upper backhead plate included"),
+                   (0.15, 0.2, 1.7, "upper plate and 0.15 x 0.2 m spacing"))
+
+
 def control_positions(points: list[tuple[float, float]], door: tuple[float, float], avoid: list[tuple[float, float]],
-                      count: int) -> list[tuple[float, float]]:
+                      count: int, tier: int = 0) -> list[tuple[float, float]]:
     """Places on the flat backhead plate for generated controls: clear of the fire door and each other, preferring
     the band 0.3-0.9 m above the door, nearest the centreline first; deterministic."""
+    sx, sy, up, _ = PLACEMENT_TIERS[tier]
     dx, dy = door
     free = [(x, y) for x, y in points
-            if math.hypot(x - dx, y - dy) >= DOOR_CLEARANCE_M and dy - 0.2 <= y <= dy + 1.2
+            if math.hypot(x - dx, y - dy) >= DOOR_CLEARANCE_M and dy - 0.2 <= y <= dy + up
             and all(math.hypot(x - ax, y - ay) >= 0.15 for ax, ay in avoid)]
     free.sort(key=lambda p: (0 if dy + 0.3 <= p[1] <= dy + 0.9 else 1, round(abs(p[1] - (dy + 0.5)), 2), round(abs(p[0]), 2), p[0], p[1]))
     chosen: list[tuple[float, float]] = []
     for x, y in free:
-        if all(abs(x - cx) >= CONTROL_SPACING_X - 1e-6 or abs(y - cy) >= CONTROL_SPACING_Y - 1e-6 for cx, cy in chosen):
+        if all(abs(x - cx) >= sx - 1e-6 or abs(y - cy) >= sy - 1e-6 for cx, cy in chosen):
             chosen.append((round(x, 3), round(y, 3)))
             if len(chosen) == count:
                 break
     return chosen
+
+
+def fitted_positions(points, door, avoid, count) -> tuple[list[tuple[float, float]], int]:
+    """The first placement rule that fits every control, else the one fitting the most (then the build stops)."""
+    best, best_tier = [], 0
+    for tier in range(len(PLACEMENT_TIERS)):
+        spots = control_positions(points, door, avoid, count, tier)
+        if len(spots) == count:
+            return spots, tier
+        if len(spots) > len(best):
+            best, best_tier = spots, tier
+    return best, best_tier
 
 
 def _anchor(anchors: dict, name: str) -> list[float] | None:
@@ -688,7 +708,10 @@ class _Builder:
                  [g for g in GENERATED if g[1] not in taken]
         if plate:
             avoid = [tuple(nodes[l["Path"]][:2]) for l in levers if l["Path"] in nodes]
-            spots = control_positions(plate["points"], (door[0], door[1]), avoid, len(wanted))
+            spots, tier = fitted_positions(plate["points"], (door[0], door[1]), avoid, len(wanted))
+            if tier and len(spots) == len(wanted):
+                self.choose(f"generated backhead controls placed with the relaxed rule '{PLACEMENT_TIERS[tier][3]}': "
+                            "the usual band did not fit them all; check reach and grip spacing in the cab renders")
         else:
             spots = []
         if len(spots) < len(wanted):

@@ -173,6 +173,15 @@ class BuildStages(unittest.TestCase):
 
 
 class Rules(unittest.TestCase):
+    def test_a_small_backhead_uses_the_upper_plate_before_stopping(self):
+        # PLW Trojan shape: a flat plate from 1.7 to 2.9 m with the fire door at 1.32 m
+        points = [(round(-0.7 + 0.1 * i, 1), round(1.72 + 0.1 * j, 2)) for i in range(14) for j in range(13)]
+        usual = buildrecord.control_positions(points, (0.0, 1.321), [], 30)
+        spots, tier = buildrecord.fitted_positions(points, (0.0, 1.321), [], len(usual) + 3)
+        self.assertEqual((len(spots), tier), (len(usual) + 3, 1))
+        spots, tier = buildrecord.fitted_positions(points, (0.0, 1.321), [], 500)  # never fits: the most any rule gives
+        self.assertLess(len(spots), 500)
+
     def test_a_handle_that_only_slides_is_not_a_lever(self):
         # GN L-27 (real probe poses): the throttle handle slides 50 mm; the reverser swings 46.2 deg
         v = {"clips": [{"key": "Throttle", "poses": [{"path": "e/Throttle", "startEuler": [0, 0, 0], "endEuler": [0, 0, 0]}]},
