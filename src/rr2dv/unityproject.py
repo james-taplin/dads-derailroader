@@ -86,6 +86,46 @@ def find_prefab(assets: Path, filename: str) -> Path:
                        + ", ".join(p.relative_to(assets).as_posix() for p in hits) + "; never a first match (D03)")
 
 
+TEXTURE_SUFFIXES = {".png", ".jpg", ".jpeg", ".tga", ".tif", ".tiff", ".psd", ".exr", ".bmp", ".dds", ".hdr", ".gif"}
+GUID_REF = re.compile(rb"guid: ([0-9a-f]{32})")
+
+
+def referenced_files(assets: Path, roots: list[Path]) -> set[Path] | None:
+    """Every file the root prefabs reach through Unity GUID references (prefab -> materials -> textures, clips, meshes),
+    followed through the YAML files of the export. None when a root is missing: then nothing may be left out."""
+    by_guid: dict[str, Path] = {}
+    for meta in assets.rglob("*.meta"):
+        try:
+            head = meta.read_bytes()[:400]
+        except OSError:
+            continue
+        m = GUID_REF.search(head)
+        if m:
+            by_guid[m.group(1).decode()] = meta.with_suffix("")
+    if not roots or any(not r.is_file() for r in roots):
+        return None
+    seen: set[Path] = set()
+    todo = list(roots)
+    while todo:
+        f = todo.pop()
+        if f in seen:
+            continue
+        seen.add(f)
+        if f.suffix.casefold() in TEXTURE_SUFFIXES or not f.is_file():
+            continue
+        try:
+            data = f.read_bytes()
+        except OSError:
+            continue
+        if not data.startswith(YAML_HEADER):
+            continue
+        for g in GUID_REF.findall(data):
+            target = by_guid.get(g.decode())
+            if target is not None and target not in seen:
+                todo.append(target)
+    return seen
+
+
 TIED = "Tied prefabs"
 NO_FIT = "No prefab resolves every clip binding"
 UNREACHABLE = ("no prefab's clip map names it and no serialized file in the export references its GUID: "
@@ -462,8 +502,31 @@ def assemble(run_path: Path, inv: dict, exports: dict[str, dict], car_creator: P
     main = export_of(main_pack)
     excluded: list[str] = []
 
+    # Only the textures our prefabs reach are imported: a mod shipping several complete skins (PLW Trojan: a texture set
+    # per livery) otherwise makes Unity import every one, 10 minutes instead of 2. Other assets are copied as before.
+    main_assets = main / "Assets"
+    roots = []
+    wanted = [v["prefab"] for v in inv.get("vehicles", []) if v["pack"] == main_pack] + \
+             [p["filename"] for p in inv.get("parts", []) if p.get("pack_ref") == main_pack]
+    for filename in wanted:
+        try:
+            roots.append(find_prefab(main_assets, filename))
+        except ProjectError:  # the import reports it properly below; prune nothing
+            roots = []
+            break
+    used = referenced_files(main_assets, roots) if roots and len(roots) == len(wanted) else None
+    unused_textures: list[str] = []
+
     def skip(folder, names):
         out = {n for n in names if n in IGNORED_DIRS}
+        if used is not None and Path(folder).is_relative_to(main_assets):
+            for n in names:
+                base = n[:-5] if n.endswith(".meta") else n
+                path = Path(folder, base)
+                if Path(base).suffix.casefold() in TEXTURE_SUFFIXES and path.is_file() and path not in used:
+                    out.add(n)
+                    if not n.endswith(".meta"):
+                        unused_textures.append(path.relative_to(main).as_posix())
         for n in names:
             suffix = Path(n[:-5] if n.endswith(".meta") else n).suffix.casefold()
             if suffix in SOURCE_CODE_SUFFIXES and Path(folder, n).is_file():
@@ -514,6 +577,8 @@ def assemble(run_path: Path, inv: dict, exports: dict[str, dict], car_creator: P
         result["parts"].append({**part, "unity_prefab": bring(part["pack_ref"], part["filename"], vehicle=False)})
 
     result["excluded_source_code"] = sorted(excluded)
+    result["unused_textures"] = {"left_out": sorted(unused_textures), "complete_copy": used is None,
+                                 "rule": "textures no converted prefab references (GUIDs through materials) are not imported"}
     set_project_settings(project)
     result["car_creator"] = {"file": car_creator.name, "sha256": sha256_file(car_creator),
                              "files": import_unitypackage(car_creator, project)}

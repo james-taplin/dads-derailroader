@@ -138,7 +138,7 @@ Not blocking, but worth reading (amber ! in the app):
 | `import` | *duplicate GUID* | two assets in the combined project claim the same identity; report it with the run folder |
 | `probe` | *scripts did not compile* | Unity could not compile our probe; the log path is in the message. Check the Unity version is exactly 2019.4.40f1 |
 | `probe` | *is open in another Unity editor* | close that Unity window, convert again |
-| `probe` | (seems stuck on *Measure the model*) | normal on a fresh project: Unity's splash and import window can appear and importing takes minutes (S-16 about 2, C-21 about 4; texture-heavy mods such as the PLW Trojan have taken 10). It is not hung while `probe/unity-1.log` keeps growing |
+| `probe` | (seems stuck on *Measure the model*) | normal on a fresh project: Unity's splash and import window can appear and importing takes minutes (S-16 about 2, C-21 about 4; texture-heavy mods such as the PLW Trojan took 10 before rr2dv stopped importing textures no converted model uses; `unity/project.json` `unused_textures` lists what was left out). It is not hung while `probe/unity-1.log` keeps growing |
 | `probe` | *did not finish … within … s* / *wrote no result.json* | see `probe/unity-1.log`; a licence prompt or a crash is the usual cause. Open Unity once by hand to settle the licence, then convert again |
 | `record` | *definition lacks maximumBoilerPressure / pistonDiameterInches / …* | the loco's definition is missing figures the simulation needs; report it to the mod's author |
 | `record` | *livery … is not one of …* | choose one of the liveries listed in the message (`--livery`, or the app's Livery box) |

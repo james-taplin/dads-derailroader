@@ -340,5 +340,29 @@ class AbsentBindings(unittest.TestCase):
             self.resolve()
 
 
+class UnusedTextures(unittest.TestCase):
+    def test_only_textures_the_prefabs_reach_are_kept(self):
+        # PLW Trojan shape: a texture set per skin in one export; the converted prefab's material uses one of them
+        from rr2dv.unityproject import referenced_files
+        tmp = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, tmp)
+        guid = lambda n: f"{n:032x}"
+        def asset(rel, n, body=None):
+            path = tmp / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_bytes(body if body is not None else b"\x89PNG")
+            (tmp / (rel + ".meta")).write_text(f"fileFormatVersion: 2\nguid: {guid(n)}\n")
+            return path
+        prefab = asset("PrefabInstance/loco.prefab", 1, f"%YAML 1.1\n  m_Materials:\n  - {{fileID: 2100000, guid: {guid(2)}, type: 2}}\n".encode())
+        asset("Material/red.mat", 2, f"%YAML 1.1\n  m_Texture: {{fileID: 2800000, guid: {guid(3)}, type: 3}}\n".encode())
+        red = asset("Texture2D/3GWR 1340 Red_BumpMap.png", 3)
+        asset("Material/copper.mat", 4, f"%YAML 1.1\n  m_Texture: {{fileID: 2800000, guid: {guid(5)}, type: 3}}\n".encode())
+        copper = asset("Texture2D/4GWR 1340 Copper_Occlusion.png", 5)
+        used = referenced_files(tmp, [prefab])
+        self.assertIn(red, used)
+        self.assertNotIn(copper, used)
+        self.assertIsNone(referenced_files(tmp, [tmp / "missing.prefab"]))  # a missing root prunes nothing
+
+
 if __name__ == "__main__":
     unittest.main()
