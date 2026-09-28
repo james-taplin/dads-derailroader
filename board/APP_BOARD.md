@@ -1579,3 +1579,11 @@ Branch `claude/modest-gates-tgqzx7`: James: the review must pre-fill the source 
 review still prefers a high-confidence tyre measurement for the main driver; when there is none it now pre-fills
 the source main driver diameter / 2 (basis source, confirm in review) instead of leaving the box empty. Not on geared
 locos (main driver can be a shaft). Source vs measured so far: Trojan 0.515/0.495, camelback 0.625/0.622, H9 0.775/0.805.
+
+## W51 (cloud Claude, 2026-09-28): K-66 builds; audit opening count by name + clip
+
+Branch `claude/modest-gates-tgqzx7`: ALCo K-66 built after W49 (phantom main driver) and stopped in audit: "Expected 6
+ancillary controls, exported 8". Two loco toggles are both named 'ToggleAnimation 1' (one left out, one built; tender
+hatches likewise); audit.left_out_openings matched by name only and removed both. Now (name, clip) parsed from the WARN
+("...: CLIP / TARGET"), name-only when the warning names no clip. K-66 expected = 5 loco + 3 tender = 8. Suite green
+except the known Rr2dvAudit stub gaps.
