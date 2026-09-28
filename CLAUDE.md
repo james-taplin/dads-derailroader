@@ -16,12 +16,20 @@ one component set) must not be assumed for other mods.
 **Local sessions (Claude or Codex in James's workspace):** this file is written for the app-side session. In this repo you
 only read, post to `board/APP_BOARD.md` (its header has the protocol), and replace `tooling/` when James asks for a snapshot refresh.
 
-**Temporary ownership exception, X44 (2026-09-27):** James explicitly instructed local Codex to verify access and
-take over app development. Codex owns implementation on `claude/wizardly-newton-b7ruig` until handed back; coordinate
-before concurrent app edits. Board-only posts still go to main. No implementation merge or snapshot modification
-is authorized by this takeover. James subsequently enabled A18 installation through its normal interactive notice;
-they must complete its acknowledgement clicks. S16/C21 tests still decline installation. Keep real assets and full
-logs out of Git.
+**Workflow (James, W36, 2026-09-28; replaces the X44 ownership note, which is withdrawn).** Applies to every session
+that changes the app (cloud Claude, local Claude, Codex/Astra):
+- Implementation goes on a branch, never straight to `main`. Board-only posts still go to `main`.
+- To let James test, make a GitHub **pre-release** from that branch (e.g. `0.1.4-test1`); fixes after a failed test go on
+  the same branch as `test2`, `test3`...
+- Merge to `main` and make a normal release only when James says so for that change, after his test.
+- `tooling/` changes only by a snapshot refresh James asks for. A fix to the builder core is made in the local tooling
+  first (offline sessions may change it), then snapshotted; an app-only fix lives in `src/rr2dv/unity/`, not in `tooling/`.
+  Open item: X51's end-beam patch (6f2746b) is in `tooling/` but not yet in the local tooling.
+- "Fix X" means fix X: no extra merges, releases, tooling edits or scope beyond what James asked. If an instruction
+  seems to allow more, ask first.
+- Every change ends with a board post: what changed, the branch/pre-release, what was tested and what is untested.
+- One session implements at a time; announce on the board before starting app edits.
+Keep real assets and full logs out of Git.
 
 ## Working preferences
 
