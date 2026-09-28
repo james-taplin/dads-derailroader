@@ -35,12 +35,19 @@ def _plain(n):
     return p(n)
 
 
-LEFT_OUT = re.compile(r"rr2dv ancillary toggle '(.+?)' left out")
+LEFT_OUT = re.compile(r"rr2dv ancillary toggle '(.+?)' left out.*?(?:: ([^:]+?) / \S[^:]*)?$")
 
 
-def left_out_openings(build_warnings: list[str]) -> set[str]:
-    """Door/window/hatch toggles the builder disclosed as left out (WARN in the build report): not expected in the pack."""
-    return {m.group(1) for w in build_warnings or [] for m in [LEFT_OUT.search(w)] if m}
+def left_out_openings(build_warnings: list[str]) -> set[tuple[str, str | None]]:
+    """Door/window/hatch toggles the builder disclosed as left out (WARN in the build report): not expected in the pack.
+    (name, clip) when the warning names the clip: two toggles can share a name (ALCo K-66: two 'ToggleAnimation 1',
+    one left out, one built, 2026-09-28), so the name alone would take both out of the expected count."""
+    out = set()
+    for w in build_warnings or []:
+        m = LEFT_OUT.search(w)
+        if m:
+            out.add((m.group(1), m.group(2).strip() if m.group(2) else None))
+    return out
 
 
 def audit_input(rec: dict, pack: Path, left_out: set[str] = frozenset()) -> dict:
@@ -62,9 +69,12 @@ def audit_input(rec: dict, pack: Path, left_out: set[str] = frozenset()) -> dict
         if not car_record:
             continue
         for component in _plain(car_record['config']).get('Components') or []:
-            if component['kind'] != 'ToggleAnimation' or component.get('name') in left_out:
+            if component['kind'] != 'ToggleAnimation':
                 continue
             data = _extra(component)
+            clip = (data.get('animation') or {}).get('clipName')
+            if (component.get('name'), clip) in left_out or (component.get('name'), None) in left_out:
+                continue
             title = str(data.get('title', '')).casefold()
             if data.get('enabled', True) is False or 'firebox' in title or 'cylinder cocks' in title or str(data.get('key', '')).casefold() == 'cylcock':
                 continue
