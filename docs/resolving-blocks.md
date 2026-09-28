@@ -122,7 +122,7 @@ Not blocking, but worth reading (amber ! in the app):
 |---|---|
 | `left-out` | a part the mod references but does not contain (Railroader cannot load it either) is left out; anything attached inside it goes too, and is named |
 | `missing-texture`, `ambiguous-texture` | an image (logo, decal) was not found, or found twice; it is left out |
-| `code-mod-component` | the loco relies on a Railroader code mod (e.g. LegosBetterSteam) for its behaviour; its Derail Valley simulation must be set deliberately |
+| `code-mod-component` | the loco relies on a Railroader code mod (e.g. LegosBetterSteam) for its behaviour; its Derail Valley simulation must be set deliberately. Vehicle choices shows what the mod's settings in the definition mean (never its code): for LegosBetterSteam's articulated engine, "Pull to build to" offers the mod's compound and simple pull (the mod's own mode first) and the published or plain Railroader figure; with the legacy-equivalent profile the equivalent bore is sized to the chosen pull. Other code-mod components have their settings listed, with multipliers, ratios and gearing flagged |
 | `pack-folder-mismatch`, `model-not-in-catalog`, `tender-archetype`, `unreadable-definitions` | the mod is laid out unusually; the conversion continues, check the result |
 
 ## Later stages

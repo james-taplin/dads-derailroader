@@ -83,6 +83,20 @@ def show(parent, req, answer):
         entry.grid(row=row, column=1, sticky='w')
         explanation = note(key, row)
         if key != 'wheelRadius': gear_widgets += [label_widget, entry, explanation]
+    # Railroader code mods (LegosBetterSteam...): Derail Valley never runs them, so their effect is a choice here
+    code = req.get('codeMods') or {}
+    pull_names = {f"{o['label']}: {o['lbf']:,} lbf": o['id'] for o in code.get('options', [])}
+    if pull_names:
+        ttk.Label(setup, text='Pull to build to (code mod)').grid(row=12, column=0, sticky='w', pady=4)
+        chosen = initial.get('pullBasis', code['options'][0]['id'])
+        pull_display = tk.StringVar(value=next((n for n, i in pull_names.items() if i == chosen), next(iter(pull_names))))
+        ttk.Combobox(setup, textvariable=pull_display, values=list(pull_names), state='readonly', width=40).grid(row=12, column=1, sticky='w')
+        note('pullBasis', 12)
+    listed = list(code.get('notes', [])) + [
+        f"{u['provider']} {u['kind']}: not built into Derail Valley; settings {u['settings']}"
+        + (f" (check: {', '.join(u['flagged'])})" if u['flagged'] else '') for u in code.get('unrecognised', [])]
+    if listed:
+        ttk.Label(setup, text='\n'.join(listed), wraplength=900, foreground='#8a4b00').grid(row=13, column=0, columnspan=3, sticky='w', pady=4)
     candidates = [c for c in req.get('wheelCandidates', []) if c.get('tread')]
     if candidates:
         ttk.Label(setup, text='Measured tyre candidates').grid(row=10, column=0, sticky='w', pady=6)
@@ -143,6 +157,7 @@ def show(parent, req, answer):
         v['unpoweredWheelsets'] = [i for i, role in enumerate(wheel_roles) if role.get() == 'Unpowered']
         v['spawnTracks'] = [eligible[i]['id'] for i in listing.curselection()] if v['spawnMode'] == 'manual' else []
         v['acknowledgeExperimental'] = ack.get()
+        if pull_names: v['pullBasis'] = pull_names[pull_display.get()]
         return review.resolve(req, {**{k:req[k] for k in ('schema','adapterVersion','vehicleId','fingerprint','catalogueHash')}, 'values':v})
     def accept():
         try: close(collect())
