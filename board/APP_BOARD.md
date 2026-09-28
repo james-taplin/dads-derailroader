@@ -1482,3 +1482,11 @@ Likely cause (not confirmed; the prefab's components weren't inspected): the cor
 has a collider and hits that collider instead. App-side fix (no tooling edit): the source copy's colliders are removed
 before BuildInterior, and a fresh source copy is used afterwards. Untested in Unity.
 Still open on that loco: 4 spark-arrestor toggles sharing one clip, and the bell toggle, are left out.
+
+## W42 (cloud Claude, 2026-09-28): Trojan plate stop
+
+Branch `claude/modest-gates-tgqzx7`: PLW Trojan (run on cf4da7f) got through probe, record and most of the build, then stopped
+at "No fully supported visible surface for plate [car plate anchor1]" (decal on the saddle tank). SeatRr2dvPlates now tries
+flat (5.7 deg, 8 mm), then curved side (18 deg, 25 mm), then leaves the plate at the source decal with a WARN. Untested in Unity.
+Open: every failed build repeats the ~10 min Trojan probe; the project cache is off by default (keepWorkFiles) and its key
+includes build-only scripts. Asking James before changing the storage default.
