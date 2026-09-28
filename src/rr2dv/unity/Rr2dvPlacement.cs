@@ -88,6 +88,7 @@ public static partial class CclLocoBuild
         BuildExterior();
         FinishRr2dvMaterialSlots();
         if (!c.IsTender && Rr2dvNoDynamo) StripRr2dvDynamoHud();
+        if (!c.IsTender) CloseRr2dvWhistle();
         SeatRr2dvOilCups();
         AlignRr2dvBogieSupports();
         SeatRr2dvPlates();

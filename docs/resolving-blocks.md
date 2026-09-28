@@ -243,6 +243,8 @@ headlight controls; the dynamo stays off, so no dynamo steam jet.
 Whistle closed (0) is always the whistle handle's resting end. When a Railroader whistle handle is modelled at the end of
 its clip rather than the start, the lever uses the clip reversed (`RR control …: its handle rests at the end of …`).
 Generated whistle levers rest at 0 already.
+The steam exhaust reads the whistle through a 5% deadzone (`rr2dv whistle closure` in `build_report.txt`): a lever that
+settles a fraction short of closed after use still commands exactly 0, so there is no constant low chime (CTRL-02).
 
 A Railroader cab handle that does not swing in its own animation (the GN L-27's throttle slides 50 mm) cannot become a
 Derail Valley lever: a generated backhead lever works that function, the modelled handle follows the same setting, and
