@@ -12,6 +12,7 @@ import queue
 import subprocess
 import sys
 import threading
+import time
 import traceback
 from pathlib import Path
 
@@ -105,12 +106,15 @@ class App:
         self.last_run: Path | None = None
         self._build()
         self._pump_id = self.root.after(100, self._pump)
+        self._beat, self._closing = time.monotonic(), False
+        threading.Thread(target=self._watchdog, daemon=True).start()
         self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.refresh()
 
     def close(self) -> None:
         """Stop polling and close the window. A running conversion's worker thread is a daemon and ends with the app;
         its run folder records how far it got."""
+        self._closing = True
         if self._pump_id:
             self.root.after_cancel(self._pump_id)
             self._pump_id = None
@@ -287,7 +291,30 @@ class App:
         self.candidate: float | None = None
 
     # ---- plumbing -----------------------------------------------------------------------------------------------------
+    def _watchdog(self) -> None:
+        """Writes every thread's stack to the log folder when the window stops handling events for 30 s, so a hang
+        leaves evidence instead of a frozen window and an empty log (2026-09-28)."""
+        import faulthandler
+        dumped = False
+        while not self._closing:
+            time.sleep(5)
+            stalled = time.monotonic() - self._beat
+            if stalled > 30 and not dumped:
+                path = applog.log_file().with_name(time.strftime("hang-%Y%m%d-%H%M%S.txt"))
+                try:
+                    with open(path, "w", encoding="utf-8") as f:
+                        f.write(f"derailroader window not responding for {stalled:.0f} s; stacks of every thread:\n")
+                        f.flush()
+                        faulthandler.dump_traceback(file=f, all_threads=True)
+                    applog.get().error("window not responding for %.0f s; thread stacks written to %s", stalled, path)
+                except OSError:
+                    pass
+                dumped = True
+            elif stalled < 5:
+                dumped = False
+
     def _pump(self) -> None:
+        self._beat = time.monotonic()
         try:
             while True:
                 try:
@@ -573,7 +600,7 @@ class App:
             self.root.deiconify()
             self.root.lift()
             self.root.bell()
-        if self.root.state() != "normal" and tries > 0:
+        if self.root.state() not in ("normal", "zoomed") and tries > 0:  # zoomed = maximised on Windows
             self.root.deiconify()
             self.root.after(100, lambda: self._when_shown(kind, answer, open_dialog, tries - 1))
             return

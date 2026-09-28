@@ -23,8 +23,8 @@ def add_tab(tabs, req, choices):
     canvas.configure(yscrollcommand=scroll.set)
     form = ttk.Frame(canvas)
     window = canvas.create_window((0, 0), window=form, anchor='nw')
-    form.bind('<Configure>', lambda _: canvas.configure(scrollregion=canvas.bbox('all')))
-    canvas.bind('<Configure>', lambda e: canvas.itemconfigure(window, width=e.width))
+    from .reviewgui import scroll_with
+    scroll_with(canvas, form, window)
     defaults = req.get('engineMetrics', {})
     initial = req.get('prefill', {}).get('values', {}).get('engineMetrics', defaults.get('values', {}))
     provenance = req.get('prefill', {}).get('metricProvenance', defaults.get('provenance', {}))

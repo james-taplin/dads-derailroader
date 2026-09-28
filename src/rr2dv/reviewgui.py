@@ -5,6 +5,26 @@ import json
 from . import review
 
 
+def scroll_with(canvas, frame, item):
+    """A frame scrolling inside a canvas at the canvas's width. Each handler changes the other's size, so only real
+    changes are applied: unguarded, some Tk builds keep resizing forever with no error (the vehicle choices window
+    never appeared and the app hung, Python 3.14 / Tk 9, 2026-09-28)."""
+    state = {'region': None, 'width': None}
+
+    def region(_):
+        box = canvas.bbox('all')
+        if box != state['region']:
+            state['region'] = box
+            canvas.configure(scrollregion=box)
+
+    def width(event):
+        if event.width != state['width']:
+            state['width'] = event.width
+            canvas.itemconfigure(item, width=event.width)
+    frame.bind('<Configure>', region)
+    canvas.bind('<Configure>', width)
+
+
 def show(parent, req, answer):
     win = tk.Toplevel(parent)
     win.title('Review ' + req['name'])
@@ -32,8 +52,7 @@ def show(parent, req, answer):
     canvas.configure(yscrollcommand=scrollbar.set)
     setup = ttk.Frame(canvas)
     form = canvas.create_window((0, 0), window=setup, anchor='nw')
-    setup.bind('<Configure>', lambda _: canvas.configure(scrollregion=canvas.bbox('all')))
-    canvas.bind('<Configure>', lambda event: canvas.itemconfigure(form, width=event.width))
+    scroll_with(canvas, setup, form)
     fields = {}
     notes = {}
     def note(key, row):
