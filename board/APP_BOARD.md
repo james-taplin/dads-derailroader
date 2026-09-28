@@ -1473,3 +1473,12 @@ Branch `claude/modest-gates-tgqzx7` (no pre-release yet):
   kept: the whole declared assembly (mesh and bones) becomes the opening, hinge = shallowest animated bone; these go
   the click-toggle route. Generic rule, no loco-specific code. Untested in Unity/game; C# stub check and suite
   unchanged (only the known Rr2dvAudit stub gaps fail).
+
+## W41 (cloud Claude, 2026-09-28): camelback backhead controls
+
+Branch `claude/modest-gates-tgqzx7`, commit after cf4da7f: Reading B8a camelback (single `body` mesh) lost all 20 generated
+controls ("no backhead found", then "Missing generated control Throttle") although the probe measured the plate at z -0.17.
+Likely cause (not confirmed; the prefab's components weren't inspected): the core's Raycast skips a mesh that already
+has a collider and hits that collider instead. App-side fix (no tooling edit): the source copy's colliders are removed
+before BuildInterior, and a fresh source copy is used afterwards. Untested in Unity.
+Still open on that loco: 4 spark-arrestor toggles sharing one clip, and the bell toggle, are left out.
