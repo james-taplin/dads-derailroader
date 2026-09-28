@@ -177,7 +177,10 @@ public static class Rr2dvAudit
                     var q = Quaternion.Inverse(go.transform.rotation) * t.rotation;
                     var local = go.transform.InverseTransformPoint(t.position);
                     Vector3 handle = q * Vector3.forward, hanger = q * Vector3.up;
-                    float side = local.x < 0 ? -1f : 1f;
+                    // the side is where the handle end is (the rod runs 1.07 m along +z): on a narrow frame the valve end
+                    // can sit just past the centreline while the handle is outboard (DM&IR M-3: valve x -0.23, handle
+                    // 0.63..0.84, 2026-09-29), and judging by the valve end called a correct fitting reversed
+                    float side = (local + handle * 1.067645f).x < 0 ? -1f : 1f;
                     if (handle.x * side < 0.999f || hanger.y < 0.999f)
                         errors.Add("BR-01: brake release in " + go.name + " is not upright with its handle outward (handle " + handle + ", hanger " + hanger + ")");
                 }
