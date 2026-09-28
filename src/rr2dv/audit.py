@@ -10,6 +10,7 @@ Passing is not acceptance: the pack stays "runtime pending" until it has been ch
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from . import unityrun
@@ -34,7 +35,15 @@ def _plain(n):
     return p(n)
 
 
-def audit_input(rec: dict, pack: Path) -> dict:
+LEFT_OUT = re.compile(r"rr2dv ancillary toggle '(.+?)' left out")
+
+
+def left_out_openings(build_warnings: list[str]) -> set[str]:
+    """Door/window/hatch toggles the builder disclosed as left out (WARN in the build report): not expected in the pack."""
+    return {m.group(1) for w in build_warnings or [] for m in [LEFT_OUT.search(w)] if m}
+
+
+def audit_input(rec: dict, pack: Path, left_out: set[str] = frozenset()) -> dict:
     cfg = _plain(rec["config"])
     cars = [{"id": cfg["CarId"], "mass": cfg["WeightEmptyKg"], "wheelRadius": cfg["WheelRadius"], "locomotive": True}]
     folders = [f"Assets/_CCL_CARS/{cfg['CarName']}", f"Assets/_CCL_CARS/{cfg['CarId']}"]
@@ -53,7 +62,7 @@ def audit_input(rec: dict, pack: Path) -> dict:
         if not car_record:
             continue
         for component in _plain(car_record['config']).get('Components') or []:
-            if component['kind'] != 'ToggleAnimation':
+            if component['kind'] != 'ToggleAnimation' or component.get('name') in left_out:
                 continue
             data = _extra(component)
             title = str(data.get('title', '')).casefold()
@@ -96,7 +105,7 @@ def check_pack(rec: dict, pack: Path, files: dict[str, str]) -> list[str]:
 def run(run_path: Path, unity: Path | None, project: dict, rec: dict, built: dict) -> dict:
     pack = Path(built["pack"])
     errors = check_pack(rec, pack, built["files"])
-    data = audit_input(rec, pack)
+    data = audit_input(rec, pack, left_out_openings(built.get("warnings")))
     write_json(run_path / project["project"] / AUDIT_INPUT, data)
     out = run_path / "audit"
     result = unityrun.run_method(unity, run_path / project["project"], "Rr2dvAudit.Run", out, {"RR2DV_AUDIT_OUT": str(out.resolve())})

@@ -21,6 +21,12 @@ class FollowupTests(unittest.TestCase):
             self.assertEqual(audit_input(record, Path(tmp))['openingCount'], 2)
             del record['vehicleId']
             self.assertEqual(audit_input(record, Path(tmp))['openingCount'], 2)
+            # a toggle the builder disclosed as left out (L-27's duplicate roof hatch) is not expected in the pack
+            record['config']['Components'][-1]['name'] = 'Roof Hatch 1'
+            from rr2dv.audit import left_out_openings
+            gone = left_out_openings(["rr2dv ancillary toggle 'Roof Hatch 1' left out (not interactive; ...): reason"])
+            self.assertEqual(gone, {'Roof Hatch 1'})
+            self.assertEqual(audit_input(record, Path(tmp), gone)['openingCount'], 1)
 
     def test_geared_report_keeps_units_and_does_not_invent_a_speed_limit(self):
         record = {'config': {}, 'metadata': {}, 'hooks': {'SimSpec': {'steamEngine': {}}}}
