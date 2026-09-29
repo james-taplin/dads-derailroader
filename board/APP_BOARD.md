@@ -2166,3 +2166,10 @@ Branch `0.3.X-exp`. GN A-18 exported, audit: "Expected 10 ancillary controls, ex
 (no clip), tender 'Water Hatch' built; left_out_openings matched by name only. The left-out WARN now reads
 "'X' on <CarId> left out" and the audit matches name, clip and car (old reports without the car still match by name).
 Tested: Python suite, extended c70 test. Unity-untested.
+
+## W92 (cloud Claude, 2026-09-29): A-18 and K-66 (stoker) installed; oil-cup axle fallback
+Branch `0.3.X-exp`. Both passed audit and installed (W90/W91 fixes confirmed). A-18 got 0 oil cups: its 3 nub pairs
+were at the crossheads (z 3.27), both driving axles (1.133, -0.986) had none within 0.6 m, and the board fallback only
+ran when a model had no nubs at all. Rr2dvOilBudget now gives every driving axle its nearest nub pair within 0.6 m,
+else a no-rod pair at the axle (Rr2dvAddOilPair: running-gear top, then board); max 5 pairs, nub-matched first.
+Behaviour change: nub pairs far from any axle are no longer used when under budget. Compiled against stubs; Unity-untested.
