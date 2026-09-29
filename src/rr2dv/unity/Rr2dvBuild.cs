@@ -13,6 +13,8 @@ using Object = UnityEngine.Object;
 //     removed through AnimationUtility, never by editing curve YAML; then no placeholder may remain in those clips
 //     (CclLocoBuild.Clip rejects them);
 //  2. AudioSource components come off every prefab the build uses: no Railroader audio reaches a pack (James, W5);
+//     so do 2D physics components (DV has no 2D physics; Unity refuses the core's temporary MeshColliders beside a
+//     Collider2D, C&O T1 2026-09-29);
 //  3. a model with parts: the vehicle prefab with each part prefab placed as Railroader places it (component transform,
 //     under its parent path), each instance named after its component so parent paths into parts resolve.
 public static class Rr2dvBuild
@@ -26,7 +28,7 @@ public static class Rr2dvBuild
 
     [Serializable] public class Removed { public string clip, hash; public int bindings; }
     [Serializable] public class MissingScript { public string path; public int count; }
-    [Serializable] public class Stripped { public string prefab; public int audioSources; public MissingScript[] missingScripts; }
+    [Serializable] public class Stripped { public string prefab; public int audioSources, physics2d; public MissingScript[] missingScripts; }
     [Serializable] public class Placed { public string vehicle, target, part, parent; }
     [Serializable] public class Prep { public int schema = 1; public Removed[] removedBindings; public Stripped[] audioStripped; public Placed[] parts; public string error; }
 
@@ -48,7 +50,7 @@ public static class Rr2dvBuild
             foreach (var path in input.audioStrip ?? new string[0])
             {
                 var entry = StripAudio(path);
-                if (entry.audioSources > 0 || entry.missingScripts.Length > 0) stripped.Add(entry);
+                if (entry.audioSources > 0 || entry.physics2d > 0 || entry.missingScripts.Length > 0) stripped.Add(entry);
                 prep.audioStripped = stripped.ToArray();
             }
             foreach (var truck in input.truckWheels ?? new TruckWheels[0]) RenameTruckWheels(truck);
@@ -131,16 +133,30 @@ public static class Rr2dvBuild
         {
             var sources = root.GetComponentsInChildren<AudioSource>(true);
             foreach (var s in sources) Object.DestroyImmediate(s);
+            int physics2d = StripPhysics2D(root);
             var missing = new List<MissingScript>();
             foreach (var t in root.GetComponentsInChildren<Transform>(true))
             {
                 int count = GameObjectUtility.RemoveMonoBehavioursWithMissingScript(t.gameObject);
                 if (count > 0) missing.Add(new MissingScript { path = AnimationUtility.CalculateTransformPath(t, root.transform), count = count });
             }
-            if (sources.Length > 0 || missing.Count > 0) SaveChecked(root, prefabPath);
-            return new Stripped { prefab = prefabPath, audioSources = sources.Length, missingScripts = missing.ToArray() };
+            if (sources.Length > 0 || physics2d > 0 || missing.Count > 0) SaveChecked(root, prefabPath);
+            return new Stripped { prefab = prefabPath, audioSources = sources.Length, physics2d = physics2d, missingScripts = missing.ToArray() };
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    // A Railroader model can carry 2D physics (C&O T1: a PolygonCollider2D on Cube.048). It does nothing in DV, and Unity
+    // refuses a MeshCollider on a GameObject with a Collider2D, so the core's temporary probe colliders came back null
+    // (NullReferenceException in CclLocoBuild.Probe placing the number plates). Dependents first, the body last.
+    static int StripPhysics2D(GameObject root)
+    {
+        int n = 0;
+        foreach (var c in root.GetComponentsInChildren<Effector2D>(true)) { Object.DestroyImmediate(c); n++; }
+        foreach (var c in root.GetComponentsInChildren<Joint2D>(true)) { Object.DestroyImmediate(c); n++; }
+        foreach (var c in root.GetComponentsInChildren<Collider2D>(true)) { Object.DestroyImmediate(c); n++; }
+        foreach (var c in root.GetComponentsInChildren<Rigidbody2D>(true)) { Object.DestroyImmediate(c); n++; }
+        return n;
     }
 
     static IEnumerable<Placed> MakeComposite(Composite c)
