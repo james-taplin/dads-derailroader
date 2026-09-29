@@ -80,7 +80,12 @@ CONTROL_CLASS = {
     "cylinderCock.EXT_IN": "switch", "sander.CONTROL_EXT_IN": "switch",
     "injector.EXT_IN": "wheel", "blower.EXT_IN": "wheel", "blowdown.EXT_IN": "wheel",
     "whistle.EXT_IN": "spring",
+    "stokerControl.EXT_IN": "wheel",
 }
+# The mechanical stoker's steam valve (pre-build review firing 'mechanical-stoker'; Rr2dvStoker builds its sim): a generated
+# valve wheel on the Gearbox A HUD slot and keys (James, 2026-09-29; ControlControlsWizard GearboxA = 8), as the oil
+# burner's atomizer. No DV label exists for it.
+STOKER_CONTROL = ("Stoker", "stokerControl.EXT_IN", 8, True, False, 18, None, 0)
 
 
 def control_class(port: str) -> str:
@@ -844,6 +849,9 @@ class _Builder:
         missing = [d for d in DRIVING if d[1] not in taken and (d[1] != "bellControl.EXT_IN" or any(c["kind"] == "Bell" for c in comps))]
         wanted = [(n, p, ctl, False, ctl in (22, 15), notches, None, 0) for n, p, ctl, notches in missing] + \
                  [g for g in GENERATED if g[1] not in taken]
+        firing = ((self.answers.get("prebuildReview") or {}).get("values") or {}).get("firing")
+        if firing == "mechanical-stoker":
+            wanted.append(STOKER_CONTROL)
         if plate:
             avoid = [tuple(nodes[l["Path"]][:2]) for l in levers if l["Path"] in nodes]
             spots, tier = fitted_positions(plate["points"], (door[0], door[1]), avoid, len(wanted))

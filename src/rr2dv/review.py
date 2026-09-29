@@ -5,6 +5,7 @@ import copy
 import hashlib
 import json
 import math
+import re
 from pathlib import Path
 
 from .record import env, INCH_M
@@ -67,6 +68,7 @@ def request(record, definitions, probe, fingerprint):
         'suggestedBrake': source.get('brakeValveType') if source.get('brakeValveType') in BRAKES else None,
         'hasTender': bool(record.get('tender')),
         'sourceHasDynamo': any(isinstance(c, dict) and c.get('kind') == 'Dynamo' for c in _components(record)),
+        'stokerEvidence': stoker_evidence(record),
         'pendingCapabilities': ['Compound/simple switching: prototype not validated',
             'Oil-fired regime combinations: not validated', 'Diesel mechanical/hydraulic/electric: adapters pending',
             'Articulated geometry and steam calibration: in-game validation required'],
@@ -85,6 +87,17 @@ def request(record, definitions, probe, fingerprint):
     questions['prefill']['values']['engineMetrics'] = copy.deepcopy(questions['engineMetrics']['values'])
     questions['prefill']['metricProvenance'] = copy.deepcopy(questions['engineMetrics']['provenance'])
     return questions
+
+
+STOKER_NAME = re.compile(r'(^|[^a-z])(auger|stoker)([^a-z]|$)', re.IGNORECASE)
+
+
+def stoker_evidence(record):
+    """Source components named for a mechanical stoker (the ALCo K-66: a 'Stoker' toggle on the loco, an 'auger' toggle
+    on its tender). Railroader definitions have no firing field, so this is the only source hint."""
+    cars = [('loco', record)] + ([('tender', record['tender'])] if record.get('tender') else [])
+    return [f"{car} {c.get('kind')} '{c.get('name')}'" for car, r in cars for c in _components(r)
+            if isinstance(c, dict) and STOKER_NAME.search(str(c.get('name') or ''))]
 
 
 def _components(record):
@@ -119,9 +132,6 @@ def resolve(req, answer):
     if v['firing'] == 'oil-burner' and req.get('hasTender'):
         raise ReviewError('Oil burner firing is built for tank locos only so far: the builder core turns the loco\'s own coal '
                           'container into fuel oil, and a tender\'s coal space would still take coal. Choose hand-fired')
-    if v['firing'] == 'mechanical-stoker':
-        raise ReviewError('Mechanical stoker firing is not built yet: it needs a builder core change (keep coal, stoker steam use). '
-                          'Choose hand-fired or oil-burner')
     def number(key, lo, hi):
         try: value = float(v.get(key))
         except (ValueError, TypeError): raise ReviewError(f'{key} requires a number')
@@ -212,6 +222,8 @@ def apply(record, reviewed):
         _without_dynamo(rec)
     if v.get('firing') == 'oil-burner':
         _oil_burner(rec)
+    if v.get('firing') == 'mechanical-stoker':
+        _stoker(rec)
     from . import enginemetrics
     enginemetrics.apply(rec, reviewed)
     bore = sim['cylinderBore']['value']
@@ -223,6 +235,9 @@ def apply(record, reviewed):
     if v.get('firing') == 'oil-burner':
         limitations.append('Oil burner: feed rate, firebox multiplier and atomizer pressure are our builder core defaults (ALCo 1610 '
                            'pattern), not calibrated for this loco; refuelling from the diesel pump is untested in game')
+    if v.get('firing') == 'mechanical-stoker':
+        limitations.append('Mechanical stoker: feed rate from this firebox (1.5 x capacity / burn time), steam use from its air pump '
+                           '(analogue) and full rate from half the safety-valve pressure; stoker balance and the auger are untested in game')
     if v['steamHeat'] == 'basis-approximation': limitations.append('Steam thermal regime retains DV basis; not source-validated')
     meta['simulationProfile'] = {'id': v['physics'], 'version': ADAPTER_VERSION, 'runtimeValidated': False,
         'physicalCylinders': v['cylinders'], 'simulationBoreM': bore, 'steamHeat': v['steamHeat'],
@@ -230,7 +245,7 @@ def apply(record, reviewed):
         'derivation': 'engine RPM = wheel RPM * ratio; wheel torque = engine torque * ratio * efficiency',
         'calibrationTargets': ['starting pull', 'adhesion', 'sustained pull by speed', 'steam/water use', 'fuel use'],
         'results': [], 'limitations': limitations,
-        'controlAllocation': {'dynamicBrake': 'reserved for oil firing', 'gearboxA': 'reserved for atomizer',
+        'controlAllocation': {'dynamicBrake': 'reserved for oil firing', 'gearboxA': 'reserved for the atomizer or the stoker',
                               'gearboxB': 'reserved for simpling; not implemented'}}
     if v['physics'] == 'geared':
         meta['simulationProfile']['speedDiagnostics'] = [
@@ -301,6 +316,14 @@ def _oil_burner(rec):
     if isinstance(cfg.get('LoadAnimations'), list):
         cfg['LoadAnimations'] = [l for l in cfg['LoadAnimations'] if l[2] != 'coal.NORMALIZED']
     meta['firing'] = 'oil-burner'
+
+
+def _stoker(rec):
+    """Mechanical stoker (Rr2dvStoker builds its sim): the generated backhead 'Stoker' valve wheel is read by the HUD's
+    Gearbox A slot (James, 2026-09-29), as the oil burner's atomizer; coal, shovel and coal pile stay (backup)."""
+    rec['config']['ControlsReaderExtra'] = env({'gearboxA': 'stokerControl.EXT_IN'}, 'port', 'DV_choice',
+                                               'Pre-build review: mechanical stoker valve on the Gearbox A HUD slot')
+    rec['metadata']['firing'] = 'mechanical-stoker'
 
 
 def _without_dynamo(rec):

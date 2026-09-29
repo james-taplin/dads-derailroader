@@ -35,6 +35,8 @@ Keep real assets and full logs out of Git.
 
 - The conversion work is collaborative (James, Claude and Codex sessions). Refer to it with "we" / "our", never "James's scripts" or "my scripts".
 - Use they/them for anyone whose pronouns haven't been stated.
+- Version numbers (James, 2026-09-29): git does not set them; `src/rr2dv/__init__.py` and `pyproject.toml` do. Bump both
+  (to the tag's number) whenever James asks for a release or pre-release, not for every iteration.
 
 ## Layout
 

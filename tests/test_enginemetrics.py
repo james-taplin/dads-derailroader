@@ -186,10 +186,26 @@ class Firing(unittest.TestCase):
         self.assertEqual([l[0] for l in cfg['LoadAnimations']], ['Water'])
         self.assertEqual(result['metadata']['firing'], 'oil-burner')
 
-    def test_oil_burner_with_a_tender_and_the_stoker_are_refused(self):
+    def test_mechanical_stoker_keeps_coal_and_puts_its_wheel_on_gearbox_a(self):
         record, req, values = fixture()
-        with self.assertRaisesRegex(review.ReviewError, 'not built yet'):
-            resolve(req, {**values, 'firing': 'mechanical-stoker'})
+        record['config']['CoalTargetComp'] = 'Bunker'
+        result = review.apply(record, resolve({**req, 'hasTender': True}, {**values, 'firing': 'mechanical-stoker'}))
+        cfg = result['config']
+        self.assertEqual(cfg['ControlsReaderExtra']['value'], {'gearboxA': 'stokerControl.EXT_IN'})  # James: Gearbox A
+        self.assertEqual(cfg['CoalTargetComp'], 'Bunker')  # the shovel stays as a backup
+        self.assertNotIn('OilFiring', cfg)
+        self.assertEqual(result['metadata']['firing'], 'mechanical-stoker')
+
+    def test_a_stoker_or_auger_component_suggests_the_stoker(self):
+        record, req, values = fixture()
+        record['tender'] = {'config': {'Components': [{'name': 'auger', 'kind': 'ToggleAnimation'}]}}
+        req = review.request(record, {'example': {'wheelsets': [{'diameter': .9}], 'pistonDiameterInches': 14}}, {}, 'fingerprint')
+        self.assertEqual(req['stokerEvidence'], ["tender ToggleAnimation 'auger'"])
+        self.assertEqual(req['prefill']['values']['firing'], 'mechanical-stoker')
+        self.assertEqual(req['prefill']['provenance']['firing']['basis'], 'source')
+
+    def test_oil_burner_with_a_tender_is_refused(self):
+        record, req, values = fixture()
         with self.assertRaisesRegex(review.ReviewError, 'tank locos only'):
             resolve({**req, 'hasTender': True}, {**values, 'firing': 'oil-burner'})
 

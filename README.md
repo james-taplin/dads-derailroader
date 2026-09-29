@@ -145,7 +145,7 @@ of the same unchanged source.
 | Physical cylinders | 2, 3 or 4. This sets the physics only: the simulation always runs 2 cylinders of the same total volume, which is what Derail Valley's chuff sounds support |
 | Driving-wheel radius | pre-filled from the source's driver size, with measured candidates to choose from |
 | Dynamo | yes or no. With no dynamo, the pack has no electric lamps, cab light, or controls for them |
-| Firing | hand-fired, or oil burner (tank locomotives for now). A mechanical stoker is listed but not built yet |
+| Firing | hand-fired, oil burner (tank locomotives for now), or mechanical stoker (valve wheel on the backhead and the HUD's Gearbox A; a tender auger turns with it when one can be identified) |
 | Pull to build to | shown when the Railroader mod relies on a code mod, such as LegosBetterSteam's articulated engine, that Derail Valley cannot run. You choose which figure to match |
 
 The **Engine specifications** tab shows bore, stroke, pressure, heating area, boiler dimensions and a coal adjustment,

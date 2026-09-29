@@ -87,6 +87,12 @@ public static partial class CclLocoBuild
                 var field = sec.GetType().GetField(slot);
                 field.SetValue(sec, Enum.ToObject(field.FieldType, show));
             }
+        // Mechanical stoker (Rr2dvStoker): its valve wheel in the Gearbox A slot (James); the shovel stays, as a backup.
+        if (RrChoices.firing == "mechanical-stoker")
+        {
+            var gearbox = basic.GetType().GetField("GearboxA");
+            gearbox.SetValue(basic, Enum.ToObject(gearbox.FieldType, 1));
+        }
         hud.GetType().GetMethod("OnValidate").Invoke(hud, null);
         EditorUtility.SetDirty(hud);
         EditorUtility.SetDirty(type);
@@ -116,6 +122,7 @@ public static partial class CclLocoBuild
             SaveRr2dvPrefab(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+        if (RrChoices.firing == "mechanical-stoker") BuildRr2dvStoker();
         Line($"rr2dv review: actual brake valve + HUD {RrChoices.trainBrake}; {RrChoices.spawnMode}, {tracks.Length} tracks; profile {RrChoices.physics}; thermal regime {RrChoices.steamHeat}; runtime validation pending");
     }
 

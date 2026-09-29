@@ -338,13 +338,20 @@ Dynamo (Vehicle choices): suggested from the Railroader definition (a `Dynamo` c
 has no electric lamps, cab light, or Dynamo/Cab light/Headlights backhead controls, and the HUD has no dynamo or
 headlight controls; the dynamo stays off, so no dynamo steam jet.
 
-Firing (Vehicle choices): Railroader definitions do not say how the fire is fed, so the suggestion is always hand-fired.
+Firing (Vehicle choices): Railroader definitions do not say how the fire is fed, so the suggestion is hand-fired, or
+mechanical-stoker when the loco or tender has a component named stoker or auger (the ALCo K-66's 'Stoker' and 'auger').
 "oil-burner" (tank locos only for now) builds our builder core's oil firing: the loco's coal space holds fuel oil
 (refilled at the diesel pump; untested in game), the oil valve is on the HUD's dynamic-brake slot, the atomizer valve on
 Gearbox 1 (it lights the burner from cold); there is no shovel, coal dump or coal pile. Feed rate and pressures are the
 core's defaults, not calibrated for the loco. "Oil burner firing is built for tank locos only so far": a tender's coal
-space would still take coal; choose hand-fired. "Mechanical stoker firing is not built yet": it needs a builder core
-change (keep coal, give the stoker steam use); choose hand-fired or oil-burner.
+space would still take coal; choose hand-fired.
+"mechanical-stoker" builds Custom Car Loader's steam stoker: a backhead 'Stoker' valve wheel (also on the HUD's Gearbox A
+slot and keys; no dynamic-brake slot) feeds coal from the bunker to the firebox, faster with more boiler pressure (full
+rate from half the safety-valve pressure), up to 1.5 x what this firebox burns at its hottest; it uses as much steam as the
+loco's air pump at full. On a tender loco the tender's coal amount and consumption cross the coupling as its water does.
+The shovel and coal pile stay as a backup. If the tender has exactly one level, long, round mesh named auger, stoker,
+screw, conveyor or worm, it turns with the stoking rate; none, several or another shape: no animation, and the build
+report says why (`rr2dv stoker` in `build_report.txt`). Balance and the auger are untested in game.
 
 Whistle closed (0) is always the whistle handle's resting end. When a Railroader whistle handle is modelled at the end of
 its clip rather than the start, the lever uses the clip reversed (`RR control …: its handle rests at the end of …`).

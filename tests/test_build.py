@@ -106,6 +106,21 @@ class BuildStages(unittest.TestCase):
         self.assertIn('different source', out.message)
         self.assertEqual(out.run.record['stages']['stage']['status'], 'pending')
 
+    def test_a_mechanical_stoker_gets_its_valve_wheel_on_gearbox_a(self):
+        def stoker(questions):
+            return {**{k: questions[k] for k in ('schema', 'adapterVersion', 'vehicleId', 'fingerprint', 'catalogueHash')},
+                    'values': {**questions['prefill']['values'], 'wheelRadius': .598, 'firing': 'mechanical-stoker',
+                               'acknowledgeExperimental': True}}
+        out = self.convert(agree=False, wheel_radius=0.598, prebuild_review=stoker)
+        rec = read_json(out.run.path / "build/vehicle-record.json")
+        cfg = buildrecord._plain(rec["config"])
+        wheel = next(p for p in cfg["Placed"] if p["Port"] == "stokerControl.EXT_IN")
+        self.assertEqual((wheel["Name"], wheel["Ctl"], wheel["Wheel"]), ("Stoker", 8, True))  # GearboxA keys
+        self.assertEqual(cfg["ControlsReaderExtra"], {"gearboxA": "stokerControl.EXT_IN"})
+        inp = read_json(out.run.path / "unity/project/Assets/Rr2dv/BuildInput.json")
+        self.assertEqual(inp["review"]["firing"], "mechanical-stoker")
+        self.assertIn({"control": "C_Stoker", "cls": "wheel"}, inp["controlClasses"])
+
     def test_a_base_game_pack_converts_and_is_credited_as_railroader(self):
         # 0.3 (James): a locomotive pack from Railroader_Data/StreamingAssets/AssetPacks is an input, read only
         packs = self.tmp / "Railroader" / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
