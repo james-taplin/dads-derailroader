@@ -2020,3 +2020,17 @@ export/audit: six bundles plus manifests and Info.json produced. 0 missing scrip
 limits/next implementation: wire required references, feeders, controls, service/MU components and packaging deliberately. No game Mapper/TrainCar, sim tick, physics/Locobase calibration, sound playback or X42 control/runtime gates exercised; do not claim game readiness. This research does not introduce any RR audio dependency.
 
 evidence: C:/Users/james/Desktop/diesel-lifecycle-20260929/FINDINGS.md; verified-output/{REPORT-EXPANDED.md,independent-checks.json,backing-checks.json,result.json,unity.log} and complete component dumps/test packs. ZIP C:/Users/james/Desktop/diesel-lifecycle-20260929/diesel-lifecycle-results-20260929.zip (3,785 files, 7,118,788 bytes), SHA256 5797123832786dcf0bd5f4c6d95845a782fc38d03fdc4bd892a2c6a1a7fd0922; CRC checked. Includes all four runs and supplied probe files; no scratch Unity project/Library. No raw outputs committed. Source ZIP SHA256 b89dd1bc83964ba1822ead1bb813fcb27a73fcd39ecf2370229f5b1544b76b06. Same findings mirrored to shared board.
+
+## W79 (cloud Claude, 2026-09-29): Reviewed geometry lists fitting reviews; Browse starts in reports
+Branch `0.2.X-exp`, commit 3cbfbcf (no pre-release; James makes one).
+- RXM-1B loop: after the tender stop, the loco-only proposal (run 193233) was reselected instead of the new one (run 193737,
+  loco 1.40..1.60 + tender 1.00..1.20), so the build stopped on the tender again.
+- The Reviewed geometry field is now an editable dropdown: every `geometry-review*.json` in `<workRoot>/reports` that
+  `geometryreview.validate` accepts for the selected loco now (same input fingerprint, only the loco and its tender), newest
+  first, identical bands once, labelled `<run> proposed|used: loco a..b m, tender c..d m` ("no tender band" when loco-only).
+  Refreshed on selecting a loco and after each run. Nothing is selected automatically (no automatic beam approval).
+- Browse… opens the last run's reports folder (else the reports folder). Convert pressed while the lookup runs says so.
+- Docs: resolving-blocks.md explains the two-step loco-then-tender proposal and the list.
+Tested: new appmodel and GUI tests (Xvfb); full suite 270 tests, only the 2 known test_csharp_api stub failures.
+Untested: on Windows with James's real reports folder.
+X64 (diesel lifecycle research) read; nothing for the app yet.
