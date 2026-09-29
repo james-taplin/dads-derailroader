@@ -1661,3 +1661,13 @@ Branch `claude/modest-gates-tgqzx7`, fde60ad, from James's game test (2026-09-29
   overlapping the first door because the clips key every part with flat curves).
 - Tested: Python suite. Untested: all of it in Unity/game (these partials are outside the stub compile).
 - Open: control feel (brakes/lights too coarse, whistles slow except R48) needs evidence; brake cutout HUD route last.
+
+## W59 (cloud Claude, 2026-09-29): control response from James's game test
+
+Branch `claude/modest-gates-tgqzx7`, fa187b8. Evidence: R48 (LS_0100_RLW) and M-3 build reports.
+- Train/independent brake, headlights, cab light: `MouseScrollKeyboardInputProxy.onlyScrollOnce` = one notch per key
+  press (a tap ran 11 notches over 60 deg, or 7 over 90 deg, end to end; the 21-notch throttle felt right).
+- Generated whistles (no RR handle; every slow whistle was one) had the core's generic Place physics (spring 85, damper 15,
+  mass 10, drag 15); they now get the G-29 whistle role as RR whistle handles (50/5/5/5, scroll 0.25 of travel), which the
+  R48's RR whistle had and felt good.
+- Tested: Python suite. Untested in Unity/game. Brake cutout HUD route is next.
