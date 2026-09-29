@@ -106,6 +106,21 @@ class BuildStages(unittest.TestCase):
         self.assertIn('different source', out.message)
         self.assertEqual(out.run.record['stages']['stage']['status'], 'pending')
 
+    def test_a_base_game_pack_converts_and_is_credited_as_railroader(self):
+        # 0.3 (James): a locomotive pack from Railroader_Data/StreamingAssets/AssetPacks is an input, read only
+        packs = self.tmp / "Railroader" / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
+        pack = packs / "ts-260-a"
+        shutil.move(str(self.m["mod"] / "ts-260-a"), str(pack))
+        before = tree_state(self.tmp / "Railroader")
+        out = convert(pack, self.machine, search=[self.m["search"]], ask=lambda *a: True, wheel_radius=0.598)
+        self.assertEqual(out.code, EXIT_OK, out.message)
+        sources = read_json(out.run.path / "inventory.json")["sources"]
+        game = [s for s in sources if s["kind"] == "game"]
+        self.assertEqual(len(game), 1)
+        self.assertIn("ts-260-a", game[0]["packs"])
+        self.assertNotIn("ts-260-a", [s["id"] for s in sources if s["kind"] == "mod"])
+        self.assertEqual(tree_state(self.tmp / "Railroader"), before)  # nothing written to the Railroader install
+
     def test_without_the_radius_it_asks_and_offers_the_candidate(self):
         out = self.convert()
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)

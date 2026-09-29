@@ -113,7 +113,9 @@ described above and check again. From the command line, use `rr2dv doctor`.
 
 ## Using the app
 
-1. **Pick a locomotive.** The left side lists the steam locomotives in your Railroader `Mods` folder; type to filter.
+1. **Pick a locomotive.** The left side lists the steam locomotives in two groups: **Base game** (Railroader's own
+   locomotive packs in `Railroader_Data\StreamingAssets\AssetPacks`) and **Mods** (your Railroader `Mods` folder),
+   each showing the folder it comes from; type to filter.
    The coloured chips at the top show whether Railroader, Derail Valley, Custom Car Loader and the tools were found.
 2. **Check what it uses.** You see its tender, trucks, parts, controls and sounds, whose work it contains, and any
    problems. Choose the livery and sounds.
@@ -154,7 +156,7 @@ Inherited boiler values are labelled as simulation defaults, not measurements of
 
 ```
 rr2dv doctor                      # find both games and check Unity, Car Creator, AssetRipper and CCL
-rr2dv list                        # steam locomotive mods in your Railroader Mods folder
+rr2dv list                        # steam locomotives in your Railroader Mods folder and the base game
 rr2dv scan "Some Loco Mod"        # read-only: what the mod contains and what each loco needs
 rr2dv convert "Some Loco Mod"     # convert, with the pre-build review in the terminal
 rr2dv convert "Some Loco Mod" --review-file prebuild-review.json  # replay reviewed choices

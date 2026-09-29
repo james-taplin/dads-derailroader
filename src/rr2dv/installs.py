@@ -33,6 +33,12 @@ class Install:
     def describe(self) -> dict:
         return {"game": self.game, "root": str(self.root), "mods": str(self.mods), "source": self.source}
 
+    @property
+    def asset_packs(self) -> Path:
+        """Railroader's base-game asset packs: each locomotive pack is a folder here with Catalog.json, Definitions.json
+        and its bundle (e.g. ls-282-k28t)."""
+        return self.root / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
+
 
 def steam_roots(machine) -> list[Path]:
     """Steam install folders: settings `steamRoots`, then the registry (Windows), then the default locations."""
@@ -119,17 +125,22 @@ def ccl_installed(dv: Install) -> bool:
 
 
 def mod_in_railroader(rr: Install, given: str | os.PathLike) -> Path:
-    """The input: a folder directly inside the Railroader Mods folder, by name or by path (W25: no zips, nothing
-    from elsewhere). A link or junction placed in the Mods folder counts as being in it."""
+    """The input: a folder directly inside the Railroader Mods folder, or (0.3, James) a base-game asset pack directly in
+    Railroader_Data/StreamingAssets/AssetPacks, by name or by path (W25: no zips, nothing from elsewhere). A bare name is
+    looked up in Mods first. A link or junction placed in either folder counts as being in it. Both are only read."""
     text = str(given)
     candidate = Path(text)
     if not candidate.is_absolute() and len(candidate.parts) == 1:
-        candidate = rr.mods / text
+        candidate = rr.mods / text if (rr.mods / text).is_dir() or not (rr.asset_packs / text).is_dir() else rr.asset_packs / text
     candidate = Path(os.path.abspath(candidate))
-    mods = Path(os.path.realpath(rr.mods))
-    if Path(os.path.realpath(candidate.parent)) != mods:
-        raise InstallError(f"{given} is not a mod folder in the Railroader Mods folder ({rr.mods}); rr2dv converts only "
-                           "mods installed there (give the folder name, e.g. \"Some Loco Mod\")")
+    parents = {Path(os.path.realpath(rr.mods)), Path(os.path.realpath(rr.asset_packs))}
+    if Path(os.path.realpath(candidate.parent)) not in parents:
+        raise InstallError(f"{given} is not a mod folder in the Railroader Mods folder ({rr.mods}) or a base-game asset pack "
+                           f"in {rr.asset_packs}; rr2dv converts only those (give the folder name, e.g. \"Some Loco Mod\")")
     if not candidate.is_dir():
         raise InstallError(f"{candidate} is not a folder; rr2dv converts a mod folder from {rr.mods}, not an archive")
     return candidate
+
+
+def is_base_game(rr: Install, folder: Path) -> bool:
+    return Path(os.path.realpath(Path(folder).parent)) == Path(os.path.realpath(rr.asset_packs))

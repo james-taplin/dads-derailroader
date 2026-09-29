@@ -79,6 +79,18 @@ class Detection(unittest.TestCase):
             with self.assertRaises(installs.InstallError, msg=str(bad)):
                 installs.mod_in_railroader(rr, bad)
 
+    def test_a_base_game_asset_pack_is_an_input_too(self):
+        rr = installs.railroader(Machine(None, game_installs(self.tmp)))
+        pack = rr.asset_packs / "ls-282-k28t"
+        pack.mkdir(parents=True)
+        self.assertEqual(installs.mod_in_railroader(rr, pack), pack)
+        self.assertEqual(installs.mod_in_railroader(rr, "ls-282-k28t"), pack)  # not in Mods: found in AssetPacks
+        self.assertTrue(installs.is_base_game(rr, pack))
+        (rr.mods / "ls-282-k28t").mkdir()
+        self.assertEqual(installs.mod_in_railroader(rr, "ls-282-k28t"), rr.mods / "ls-282-k28t")  # a bare name: Mods first
+        with self.assertRaises(installs.InstallError):
+            installs.mod_in_railroader(rr, rr.asset_packs.parent)
+
     @unittest.skipIf(sys.platform == "win32", "symlink creation needs privileges on Windows")
     def test_a_link_placed_in_the_mods_folder_counts(self):
         rr = installs.railroader(Machine(None, game_installs(self.tmp)))

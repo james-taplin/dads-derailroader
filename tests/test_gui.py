@@ -60,7 +60,6 @@ class Window(unittest.TestCase):
 
     def select(self, folder, ident):
         self.until(lambda: self.app.mods)
-        self.app.tree.item(f"mod::{folder}", open=True)
         self.app.tree.selection_set(f"loco::{folder}::{ident}")
         self.until(lambda: self.app.report and self.app.report["_folder"] == folder and not self.app.worker.busy)
         self.root.update()
@@ -100,7 +99,8 @@ class Window(unittest.TestCase):
         self.until(lambda: self.app.mods)
         self.app.search.set("460")
         self.root.update()
-        self.assertEqual(self.app.tree.get_children(), ("mod::Another Loco Mod",))
+        self.assertEqual(self.app.tree.get_children(), ("group::mods",))
+        self.assertEqual(self.app.tree.get_children("group::mods"), ("loco::Another Loco Mod::ls-460-a",))
 
     def test_settings_check_fills_found_path(self):
         candidate = self.tmp / "Unity 2019.4.40f1" / "Unity.exe"

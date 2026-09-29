@@ -159,7 +159,9 @@ run. No arbitrary config overrides, automatic beam approval or disabled placemen
 
 ## Safety rules for the app
 
-- Input: only a folder directly in the Railroader Mods folder (by name or path; a link placed there counts). No zips.
+- Input: only a folder directly in the Railroader Mods folder, or (0.3, James 2026-09-29) a base-game locomotive pack
+  directly in `Railroader_Data/StreamingAssets/AssetPacks` (by name or path; a bare name looks in Mods first; a link
+  placed there counts). A base-game pack is credited as Railroader's own content, not a mod. No zips.
   Never write to it or anywhere in the Railroader install.
 - Build in a fresh per-run folder under the work root; refuse a work root inside the input or either game install.
 - Output: only `<DV>/Mods/rr2dv_<pack>` (prefix: James, 2026-09-29; our own unprefixed install of the same loco is

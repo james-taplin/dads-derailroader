@@ -48,13 +48,20 @@ def cmd_list(args) -> int:
     machine = machine_mod.load(args.machine)
     rr = installs.railroader(machine)
     found = 0
-    for folder in sorted((p for p in rr.mods.iterdir() if p.is_dir()), key=lambda p: p.name.casefold()):
-        locos = Index(folder).steam_locomotives(input_only=True)
-        if locos:
-            found += 1
-            names = ", ".join(f"{o['identifier']} ({(o.get('metadata') or {}).get('name') or '?'})" for _, o in locos)
-            print(f"{folder.name}: {names}")
-    print(f"\n{found} mod(s) with steam locomotives in {rr.mods}" if found else f"No steam locomotive mods found in {rr.mods}")
+    packs = sorted(p for p in rr.asset_packs.iterdir() if p.is_dir()) if rr.asset_packs.is_dir() else []
+    for heading, folders in (("Mods", sorted((p for p in rr.mods.iterdir() if p.is_dir()), key=lambda p: p.name.casefold())),
+                             ("Base game (Railroader asset packs; give the full path to convert)", packs)):
+        lines = []
+        for folder in folders:
+            locos = Index(folder).steam_locomotives(input_only=True)
+            if locos:
+                names = ", ".join(f"{o['identifier']} ({(o.get('metadata') or {}).get('name') or '?'})" for _, o in locos)
+                lines.append(f"  {folder.name}: {names}")
+        if lines:
+            print(f"{heading}:\n" + "\n".join(lines))
+            found += len(lines)
+    print(f"\n{found} folder(s) with steam locomotives in {rr.mods} and {rr.asset_packs}" if found
+          else f"No steam locomotives found in {rr.mods} or {rr.asset_packs}")
     return 0
 
 
