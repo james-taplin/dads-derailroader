@@ -248,7 +248,10 @@ public static partial class CclLocoBuild
             foreach (var collider in copy.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
             StripRr2dvLights(copy.transform);
             ApplyMaterials(copy, quiet: true);
-            var paths = AnimationUtility.GetCurveBindings(clip).Select(b => b.path).Distinct().ToArray();
+            // Only this opening's own moving parts: the clip may also key other openings' parts with flat curves (M-3),
+            // and those are removed from this copy below.
+            var paths = AnimationUtility.GetCurveBindings(clip).Select(b => b.path).Distinct()
+                .Where(p => opening.roots.Any(r => p == r || p.StartsWith(r + "/"))).ToArray();
             var mapped = paths.ToDictionary(p => p, p => copy.transform.Find(p));
             var liveTarget = copy.transform.Find(opening.target);
             // Preserve the original coordinate hierarchy and curves. Keeping only the

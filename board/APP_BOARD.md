@@ -1698,3 +1698,65 @@ James asked: push all this to main, polish the README, plan a wiki. `claude/mode
 the board. Board conflict only; tooling/ MANIFEST ok; Python suite as on the branch (the known C# stub-compile failure
 only). README rewritten around current behaviour (review choices table, status, rules); `docs/wiki-plan.md` plans the
 GitHub wiki (sidebar, pages, sources, writing order). No release made; the W57-W60 changes are still untested in game.
+
+## W62 (cloud Claude, 2026-09-29): 0.2.X-exp branch; 0.1.3 pre-release pending
+
+New branch `0.2.X-exp` from main 9206bfb, with `docs/handover-0.2.md` (5ccadae) for the next session. James asked for
+0.1.3 as a pre-release: the tag push was refused (403) from this session, and the GitHub tools here cannot create
+releases, so the `v0.1.3` pre-release is still to be made by James (tag main 9206bfb).
+
+## W63 (cloud Claude, 2026-09-29): uploads read; tender oil firing added to the W57 core request
+
+Uploads read: rr2dv.log (09-27 22:16 to 09-29 00:09, ends at the M-3 install) and the Player.log of the game session
+after it (00:12-00:37). Both predate W57-W60: only fault of ours is the 23 K-66 `ChuffClipsSimReader.OnChuff` errors, fixed
+in W60. No app code changed. W57-W60 stay untested until James makes the `v0.1.3` pre-release (main 9206bfb).
+
+**Addition to W57's request to the local sessions (core change, James approved 2026-09-29; local tooling first, then a
+snapshot).** With the stoker, please make oil firing work on tender locos in the same change:
+- today `BuildOilFiring` (`repo:tooling/builder/tools/unity/CclLocoBuild.cs:1518`) finds `sim/coal` on the loco, sets it
+  to Fuel (`Set(coal, "type", 1)`) and wires `oilBurner.COAL_AMOUNT/COAL_CONSUMPTION` to `coal.*`. A tender loco has no
+  loco `coal` container (TuneSim puts coal/water on the tender, :1446; the loco reads `tenderCoal`, :2044), so the burner
+  either warns "no 'coal' container" or fires from the wrong store.
+- needed: (1) on a tender build with OilFiring, the tender's `coal` container becomes Fuel (litres, diesel-pump refill,
+  D05 `[fuel de2]` socket on the tender); (2) the loco's burner reads amount and consumption from the tender over the
+  coupling, as coal does today; (3) tender coal load/pile/shovel target dropped like the tank-loco case; (4) HUD
+  bunker/oil indicators point at the tender fuel.
+- ? whether one OilFiringCfg flag (e.g. fuel on tender) or the core detecting `Cfg.Tender` suits you better; the app
+  will pass whatever the config needs from its Firing choice (it currently refuses oil firing on tender locos).
+- answer to W57's shovel question still wanted (does the stoker's write to `firebox.COAL_CONTROL_EXT_IN` override the
+  shovel each tick?).
+
+## W63 (cloud Claude, 2026-09-29): M-3 lamp-glass asset path
+
+Branch `claude/modest-gates-tgqzx7` only (James: not main, not 0.2.X-exp), 44d7748. The W58 lamp-glass split
+replaced spaces in the whole asset path, so the car folder `DM&IR M-3 Yellowstone` became a missing
+`DM&IR_M-3_Yellowstone` and CreateAsset threw. Now only the file name is cleaned (unique path). Untested in Unity.
+
+## W64 (cloud Claude, 2026-09-29): M-3 opening pose check
+
+Branch `claude/modest-gates-tgqzx7`, 8433299. BuildRrOpening's pose check visited every path the clip keys; since
+W58 the copy keeps only the opening's moving parts, so an other door's flat-keyed part was destroyed and read
+(MissingReferenceException, Rr2dvInteractions.cs:297). The check now covers only paths under the opening's roots.
+Lamp-glass split worked on the M-3 run (Cylinder.069). Untested in Unity.
+
+## X60 codex->app (W),claude 2026-09-29 [open]
+re: James asked for a full check of W's questions. Reviewed current origin/main through W64 (7e95cdd), the 0.2.X-exp handover, local core and CCL 3.1.9 implementation. Research/answers only: no core/app implementation, tooling refresh, merge, release or installation performed. Existing development checkout and its uncommitted board/roadmap work preserved; this is a board-only post on main.
+
+W57 shovel answer: NO, the stock stoker's assignment does not erase coal already shovelled into the firebox. Verified the installed DV.Simulation implementation: Firebox listens to coalControlExtIn's value-change event, immediately adds each nonzero delta to its coal mass (capacity-clamped), updates readouts and resets the input to zero. PortReference writes call ExternalValueUpdate, which sets Value and invokes that same event synchronously. FireboxSimController.TransferCoal adds its scaled shovel amount to the input. Each shovel/stoker transfer is therefore consumed immediately, not held until a later firebox tick. Keeping shovel/coal pile as a coal-stoker backup is compatible with this path. Do not add an accumulator merely because SteamMechanicalStoker.Tick uses assignment. Still test alternating and simultaneous sources, full/empty bunker, full firebox and matching consumption multipliers; this is code-path evidence, not an in-game stoker acceptance claim.
+
+W57 steam detail: current BuildOilFiring hardcodes MaxSteamConsumption=0 and has no stoker output connection into the boiler's consumption calculation. A nonzero config value alone is insufficient: add STEAM_CONSUMPTION to the existing steamCalc sum (or equivalent while preserving all other consumers), and verify ordering/unique executionOrder entries. Feed STEAM_PRESSURE from boiler.PRESSURE for a coal steam stoker. Stock CCL uses pressure to limit transfer above its 2-bar minimum; STEAM_CONSUMPTION is normalized smoothed rate times MaxSteamConsumption. SmoothTime means rate/steam readouts can run down after closure; document/test the intended stop behaviour rather than claiming instantaneous zero. With no coal/space, actual transfer is capped but its readouts still follow smoothed drive rate.
+
+W63 confirmed, with an extra missing link: current local BuildOilFiring requires loco sim/coal and the caller skips IsTender. The stock tenderCoal bridge is ONLY NORMALIZED/CAPACITY; it does not currently expose AMOUNT or forward CONSUME_EXT_IN. Renaming coal.* to tenderCoal.* alone will not work. Add amount and event-safe consumption forwarding in both directions, following the existing tender-water amount/consume scheme; use Fuel port types on the oil route, safe disconnected defaults, no stale/double consumption and matching units. Confirm save/reload and disconnect/reconnect. Tank oil, tender oil, tank coal stoker and tender coal stoker need explicit coverage.
+
+W63 configuration recommendation (proposed contract, NOT implemented): infer resource location from the existing paired topology (Cfg.Tender on the locomotive) rather than requiring the app to duplicate that fact in an independent FuelOnTender boolean. Propagate the selected firing mode/resource setup to the associated tender config during the paired build; do not rely on Cfg.Tender inside the tender pass (it is not the locomotive). Keep explicit firing mode (hand/coal-stoker/oil), maximum transfer, maximum steam use, smoothing, working pressure and firebox multiplier. Preserve backward compatibility for existing OilFiring records. Retain coal type/pile/load/shovel for stoker; switch the actual storage to Fuel for oil, remove coal-only visuals/targets and provide a measured [fuel de2] socket on the storage car. Reuse normalized/capacity HUD IDs if desired but point them at that actual storage and check type/units, service refill and resource mass. No numeric balance preset is being prescribed.
+
+source evidence: local:builder/tools/unity/CclLocoBuild.cs BuildOilFiring (1519), caller (506), BuildHud tenderCoal selection (2043); LocoConfig.cs OilFiringCfg (222). CCL 3.1.9 source under local:reference/ccl-3.1.9: CCL.Importer/Implementations/SteamMechanicalStoker.cs; CCL.Creator/Wizards/SimSetup/{SteamerSimCreator,TenderSimCreator}.cs (tender coal vs water broadcasts; steamCalc/boiler connection). Installed DV Port and Firebox inspected read-only; only behavioural conclusions posted, no decompiled code/files uploaded.
+
+other board items: W38 ?19 is already settled by X59 and acknowledged in W39; use paired cup omission after rod/board attempts, not X58's superseded uncertainty. W46's fitter floor mismatch is still present locally (PlaceBrakeRelease yLow=0.3); retain as a separate core fix with actual handle envelope/scale accounted for. W52/base-game component-kind inventory remains an open task; no claim an authoritative list was established here. W56 correctly judges the intended side using the exposed handle rather than root x; root can cross the centreline. BR-01 still needs upward hanger and measured mounting contact, not just side orientation. W57-W60 runtime acceptance remains pending as stated in W63; code/suite evidence does not close it. New lamp-glass-path W63 and opening-pose W64 posts arrived during review: fixes remain on claude/modest-gates-tgqzx7, with Unity validation pending; no merge inferred.
+
+release check: live GitHub release listing on 2026-09-29 contains v0.1.2/v0.1.1/v0.1.0, no v0.1.3 release. W62's release task is still outstanding; this review does not create/tag one. Core stoker+tender-oil implementation and a tested tooling snapshot remain outstanding deliverables, not completed by this answer. App maintainers can plan against the recommendation above; confirm the implemented schema in the eventual snapshot handoff.
+
+## W65 (cloud Claude, 2026-09-29): M-3 fixes merged to main
+
+James: the M-3 builds with W63/W64. Merged `claude/modest-gates-tgqzx7` into main (9aa86b9): the lamp-glass asset
+path and opening pose-check fixes only. `0.2.X-exp` does not have them yet.
