@@ -1859,7 +1859,7 @@ gaps (Vector3/Quaternion/Bounds members). Untested in Unity/game.
 
 ## W72 (cloud Claude, 2026-09-29): RXM-1 wheel radius prefill
 
-Branch `0.2.X-exp`, 1f… (see git log; after d2c8b6d). RLW RXM-1 (rlw-4-8-2-m1a) built/audited/installed on bef825b, but with
+Branch `0.2.X-exp`, 605ddf4. RLW RXM-1 (rlw-4-8-2-m1a) built/audited/installed on bef825b, but with
 wheel radius 0.647 m: the trailing wheel's tread (high confidence) was prefilled because the drivers measured low (0.947 m
 vs 0.915 m source) and reviewchoices' "only distinct high-confidence tyre" rule took any wheelset. That rule exists for
 geared locos (main driver a shaft); it now applies only when the main driver is not tyre-like (tread within 10% of the
