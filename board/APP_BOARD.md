@@ -1842,3 +1842,17 @@ Branch `0.2.X-exp`, bef825b. From James's T1 and M-3 rebuilds (build reports + s
 - Sander: CCL CustomHUDLayout.SetToS leaves BasicControls.Sander and Cab.SandLevel at None; the app now shows both.
 - Held by James: headlamp lens see-through when off (T1 front/rear, M-3 rear).
 Tested: Python suite (2 known C# check failures unchanged). Untested in Unity/game.
+
+## W71 (cloud Claude, 2026-09-29): whistle and dynamo steam jets
+
+Branch `0.2.X-exp`, 5 commits since 0.1.3 now (latest below). James: every converted loco's whistle and dynamo jets blow
+forward along the boiler (M-3 screenshot); jets fall back to straight up, a dynamo with a measurable angled exhaust tip
+follows it. Cause (CCL 3.1.9 source): ParticleWizards makes 'Whistle'/'DynamoSteam' unrotated; ObjectInstancerProcessor
+instantiates the vanilla system under each with identity local rotation, so it blows along the emitter's +z; the core's
+PlaceParticles sets their position only. App fix AimRr2dvJets (after FinishRr2dvMaterialSlots, locos only): whistle
+straight up; dynamo along the long axis (PCA) of model vertices within 0.25 m of RR's Dynamo anchor when pipe-like
+(l1 >= 2.5 l2), the anchor is at the tip (>= 3 cm past the centroid, <= 8 cm of mesh beyond it) and the axis is not
+downward; else straight up. Rotation = FromTo(current +z, target), so it does not depend on the template's rotation.
+Not changed: SteamSafetyRelease (at the whistle), blowdown (core points it down), cylinder cocks.
+Tested: Python suite (2 known C# check failures unchanged); the new methods compile against the stubs apart from stub
+gaps (Vector3/Quaternion/Bounds members). Untested in Unity/game.
