@@ -1929,3 +1929,12 @@ the reports folder as geometry-review-proposed.json (evidence = survey figures);
 Reviewed geometry; the user converts again. Never applied automatically (CLAUDE.md: no automatic beam approval).
 Tested: new test_beamreview (8), full suite (2 known C# check failures), GUI tests under Xvfb; the survey's C# only against
 stand-ins. Untested in Unity.
+
+## W77 (cloud Claude, 2026-09-29): RXM-1B loco beam reviewed; tender rear next; proposal keeps other bands
+
+Branch `0.2.X-exp`, see git log (after 3debfda). The hand-written RXM-1B review (band 1.50..1.70 m) applied (run
+20260929-164515): loco front end beam z 7.321, 35/65 rays (Cube.027); hook/chain meet Cube.120 up to 332 mm (pilot: in-game
+check). The tender (PRR 110-P-75a) then stopped at its rear: 14/65. Survey: rear sill Cube.224 z -4.582 at 1.00..1.20 m (58 rays,
+24/24, +0.068 m from the source end -4.650), same plane at 1.20..1.40 m; tank wall Cube.202 z -4.299 is +0.351 m (outside 0.35).
+The proposal tool should offer 1.00..1.20 m for the tender. Fix: write_proposal now keeps the run's reviewed bands for the other car
+(else using a tender-only proposal would drop the loco's). Tested: test_beamreview (9) + test_pipeline.
