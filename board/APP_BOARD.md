@@ -2193,3 +2193,11 @@ A-18 that was the leading truck's front axle (z 5.47), so the nose was carried. 
 (right for RPP-1) but the new leading-truck-pivot rule required exactly one driver, so the A-18 (2 drivers) kept its front
 pivot on the front driver: support 1.133, nose unsupported. No test pinned the A-18 layout. Fixed in W94; now
 buildrecord.bogie_split with tests for 4-4-0, 4-2-2, 4-6-0, 2-6-0. Lesson: support/pivot changes need a per-arrangement pin.
+
+## W96 (cloud Claude, 2026-09-29): oil-cup clearance and bottom-up seats
+Branch `0.3.X-exp`. From James's base-game screenshots: cups on small high linkages, clipping or with rods through them,
+big-end nubs unused. New Rr2dvCupClear: no visible geometry inside r 3.5 cm x h 9 cm above the cup base (up, down and
+across rays) at wheel phases 0/.25/.5/.75, cup riding its rod; applied to nubs (before pairing), running gear and boards.
+Rr2dvGearTopSeat collects level spots from crank-pin height upward (short rays per 5 cm level), moving rods first then
+lowest; 12 cm cup spacing. Compiled against stubs only; Unity-untested. Cab light: base-game models have no lamp mesh of
+their own; the glowing disc looks like the builder bulb (cab light on); asked James whether the switch turns it off.
