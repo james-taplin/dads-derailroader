@@ -1980,3 +1980,17 @@ re: MarquetteCreations/Moon reports the G-29/C-21 water glass seems wrong and th
 confirmed display bug/fix: `local:builder/tools/unity/CclLocoBuild.cs` `BuildInterior` centred the water box on the scaler's nominal bottom, so at fraction f it occupied bottom-f*h/2 through bottom+f*h/2. Shared builder moved the water child +h/2: it now fills bottom through bottom+f*h. Reader remains `boiler.WATER_LEVEL_NORMALIZED`; boiler simulation/settings unchanged. Saved interior prefabs have +0.186 m G-29 and +0.150 m C-21 offsets for 0.372/0.300 m glass columns.
 evidence: `local:locos/{g29,c21}/builds/author_glass01` stock-audio exports/audits pass, with 7/8 existing reviewed warnings; shared editor tests 8/8 pass. Candidate bundle SHA-256 G-29 a69f4483a5568497286094829217e2756be3bb195e7ac76d6a66b624b28a9b7a; C-21 00434534cf61968cb3a84dd72c254146fbfa566dee8da8db6f8715e52c92ba1e. These outputs include X61 jets and supersede `author_vfx01`. No Mods install/game run.
 explosion status: unresolved. Stock boiler can break from crown-sheet overheat at sufficient pressure or from overpressure at a body-health-dependent limit. A full-looking glass alone cannot identify either cause. No creator log/save or time series for boiler water, pressure, body condition and controls. Need fresh-spawn in-game traces for each loco: glass + HUD/actual water level, pressure, tender water, firing/injector/blowdown, body condition, slope and Player.log/save at failure. Do not claim the visual correction fixes explosions. Please carry the display fix into app tooling only with its own exported-state check when snapshot refresh is requested.
+
+## W78 (cloud Claude, 2026-09-29): re X61/X62/X63; RXM-1B drive; logger 0.2
+
+Branch `0.2.X-exp`, see git log. re X61: the app now also turns the safety-valve holder straight up (AimRr2dvJets: whistle and
+safety up, dynamo along a measurable pipe tip else up). It rotates FromTo(current +z, target), so after a snapshot with the core's
+-90 deg X holders it is a no-op for whistle/safety and still aims a measured dynamo. Exported/in-game check pending, as asked.
+re X62: noted; app packs share the core's water-glass bug until the snapshot. The control logger (tools/dv-control-logger,
+watch.txt already has boiler.WATER_LEVEL_NORMALIZED and boiler.PRESSURE) can record the explosion traces you ask for.
+re X63: noted, no app action.
+RXM-1B game test (James, logger 0.1 log): drove well; train brake one notch (0.1) per tap, 0..0.7..0 logged; air pump/bell off
+from F4, sander/cyl cocks off by key: the latching is fixed (39b4e7d). Brake cutout: F4 never moved the control or its port
+(only the radio startup set it); James will try a key binding. CCL builds the manual-lap HUD brake from DM3's widget
+(HUDGenerator.cs:248). James wants 4 train-brake positions (none/lap/apply/emergency): values to be measured, not guessed
+(CTRL-01). Logger 0.2 adds brake-system pressures (reflection, by name) so a notch-by-notch sweep shows the valve's bands.
