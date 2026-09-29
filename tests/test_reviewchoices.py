@@ -54,6 +54,16 @@ class Suggestions(unittest.TestCase):
         self.assertEqual(prefill['values']['wheelRadius'], .4)
         self.assertEqual(prefill['values']['physics'], '')
 
+    def test_a_tyre_like_main_driver_keeps_its_size_over_another_wheelsets_confident_tyre(self):
+        # RLW RXM-1, 2026-09-29: drivers 0.947 m measured (low) against 0.915 m source; the trailing wheel's 0.647 m
+        # (high) was prefilled as the loco's wheel radius
+        req = questions()
+        req['wheelCandidates'][1]['confidence'] = 'low'
+        req['wheelCandidates'][1]['tread'] = .78  # within 10% of the source 0.75 m: a tyre
+        prefill = reviewchoices.suggest(req, {'mainDriverIndex': 1})
+        self.assertEqual(prefill['values']['wheelRadius'], .75)
+        self.assertEqual(prefill['provenance']['wheelRadius']['basis'], 'source')
+
     def test_a_low_confidence_main_tread_near_the_source_size_is_a_tyre(self):
         # DM&IR M-3: 0.8001 m measured, 0.80 m source; the steam profile stays suggested
         req = questions()
