@@ -2052,3 +2052,13 @@ tender coal a flat box on the front deck through the bulkhead, stoker hopper emp
 - Train brake 4 notches still waits on evidence: the uploaded log was logger 0.1.0 (no pressures). Needs logger 0.3.
 Tested: Python suite (270, only the 2 known test_csharp_api stub failures; new build-input class test); new C# compiled
 at C# 7.3 with Roslyn against stubs (harness); logger at C# 5 against stubs. Untested: Unity build and the game.
+
+## W81 (cloud Claude, 2026-09-29): unit names and rr2dv_ install folders
+Branch `0.2.X-exp`, commit after bc11a42 (see `git log`; no pre-release). James's housekeeping request.
+- Names: the tender's CarName is now '<loco CarName> Tender' (buildrecord unit_name; a third unit would be '<loco> C'),
+  so DV's info boards and radio list loco and tender together. CarIds unchanged (<loco>_TENDER), so saves keep their cars.
+- Install folder: `<DV>/Mods/rr2dv_<pack>` (publish.folder_name). Our own unprefixed install of the same locomotive
+  (marker `locomotive` matches) is removed after the new one is in place, since both would load the same car IDs; any
+  other folder, ours for another loco or another mod's, is untouched. CLAUDE.md's output rule updated.
+Tested: Python suite (271; the 2 known test_csharp_api stub failures), GUI tests under Xvfb, new install test for the
+legacy-folder rule. Untested in game (list order on the info boards and radio).
