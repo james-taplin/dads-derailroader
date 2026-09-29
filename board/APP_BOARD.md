@@ -1994,3 +1994,29 @@ from F4, sander/cyl cocks off by key: the latching is fixed (39b4e7d). Brake cut
 (only the radio startup set it); James will try a key binding. CCL builds the manual-lap HUD brake from DM3's widget
 (HUDGenerator.cs:248). James wants 4 train-brake positions (none/lap/apply/emergency): values to be measured, not guessed
 (CTRL-01). Logger 0.2 adds brake-system pressures (reflection, by name) so a notch-by-notch sweep shows the valve's bands.
+
+## X64 codex->app (W),claude 2026-09-29 [open]
+re: James supplied diesel-lifecycle-test-package.zip and requested completion, app-board results and a ZIP. All six editor lifecycle cases completed after scratch-harness corrections. No production/core changes, install or game run. Existing dirty app checkout preserved.
+
+result: Unity 2019.4.40f1 / CarCreator 3.1.9. verified-output/result.json passed, cases=6, failedCases=0. Create, sim/save, reload, validator execution, export and import hooks complete. IMPORTANT: validator execution success is not validator acceptance.
+
+| Basis | Saved/reloaded MonoBehaviours | Lost | Imported prefabs | Successful custom hooks | Failed/warning validators |
+|---|---|---|---|---|---|
+| DE2 | 72/72 | 0 | 2 | 25 | 2/4 |
+| DE6 | 79/79 | 0 | 2 | 28 | 2/4 |
+| DH4 | 70/70 | 0 | 2 | 23 | 1/4 |
+| DM3 | 69/69 | 0 | 2 | 21 | 1/4 |
+| DM1U | 59/59 | 0 | 2 | 17 | 1/4 |
+| S060 baseline | 71/71 | 0 | 2 | 10 | 2/3 |
+
+harness findings: supplied unchanged run failed all six imports because it loaded text .manifest files as bundles. Filtering those gave a misleading pass with zero components inspected: LoadAllAssets returned the explicitly addressed pack, not dependent prefabs. Corrected traversal must follow pack.Cars, car.AllPrefabs AND each car.liveries[].AllPrefabs (car.AllPrefabs alone omits livery prefabs). Added nonempty coverage and hook-success guards, attached-script/dependency-audio checks. pack.AfterImport already calls car/livery hooks. Original analyser also needs to unwrap the EditorJsonUtility MonoBehaviour envelope. Original and intermediate runs, corrected scripts/diff and both report versions retained; no supplied input overwritten.
+
+serialization: no dumped components lost. Save/reload changes populate custom backing fields; full changed-key evidence included. All 124 component hooks returned without errors, but editor lists were already populated on bundle load and pre/post dumps are identical. This verifies preservation/idempotence, NOT reconstruction from absent lists in a player. Connection/port-reference counts DE2 2/57, DE6 2/59, DH4 1/43, DM3 3/57, DM1U 2/43, S060 1/53; decoded backing matches lists. Fuses 3/3/2/2/2/1 match. Electric configurations DE2 1, DE6 4 match after CCL enum-name/integer and float normalization. Full hydraulic/gearbox fields included. Empty intentional [] blocker lists are not corruption.
+
+validators (17 per case): all bare wizard shells warn about service collider, delete prevention, icon/customization and incomplete sim wiring. DE2/DE6 ComponentValidator fails for poweredWheelsManager and explosionAnchor, MultipleUnitValidator for slug provider without MU cable. DH4/DM3/DM1U fail component checks for engine/fluid-coupler explosion anchors. S060 fails boiler explosion anchor and SimulationValidator for two unassigned headlightDecoder port IDs. Baseline is not a clean finished vehicle either. Full untruncated messages in summary JSONs.
+
+export/audit: six bundles plus manifests and Info.json produced. 0 missing scripts, 0 dependency AudioClips, 0 attached MonoBehaviours outside CCL.Types across inspected prefabs; no unexpected per-case Unity errors in verified run. This audit covers prefab components/referenced dependencies, not an exhaustive binary dependency certification. Info.json case IDs/names, version 1.0.0, author rr2dv-research, ManagerVersion 0.27.3, Requirements/LoadAfter empty (test metadata, not release guidance). Unity exited and scratch DieselLife_* assets cleaned.
+
+limits/next implementation: wire required references, feeders, controls, service/MU components and packaging deliberately. No game Mapper/TrainCar, sim tick, physics/Locobase calibration, sound playback or X42 control/runtime gates exercised; do not claim game readiness. This research does not introduce any RR audio dependency.
+
+evidence: C:/Users/james/Desktop/diesel-lifecycle-20260929/FINDINGS.md; verified-output/{REPORT-EXPANDED.md,independent-checks.json,backing-checks.json,result.json,unity.log} and complete component dumps/test packs. ZIP C:/Users/james/Desktop/diesel-lifecycle-20260929/diesel-lifecycle-results-20260929.zip (3,785 files, 7,118,788 bytes), SHA256 5797123832786dcf0bd5f4c6d95845a782fc38d03fdc4bd892a2c6a1a7fd0922; CRC checked. Includes all four runs and supplied probe files; no scratch Unity project/Library. No raw outputs committed. Source ZIP SHA256 b89dd1bc83964ba1822ead1bb813fcb27a73fcd39ecf2370229f5b1544b76b06. Same findings mirrored to shared board.
