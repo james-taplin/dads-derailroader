@@ -2173,3 +2173,9 @@ were at the crossheads (z 3.27), both driving axles (1.133, -0.986) had none wit
 ran when a model had no nubs at all. Rr2dvOilBudget now gives every driving axle its nearest nub pair within 0.6 m,
 else a no-rod pair at the axle (Rr2dvAddOilPair: running-gear top, then board); max 5 pairs, nub-matched first.
 Behaviour change: nub pairs far from any axle are no longer used when under budget. Compiled against stubs; Unity-untested.
+
+## W93 (cloud Claude, 2026-09-29): oil cups 12 max; no-manual-oiling failsafe
+Branch `0.3.X-exp` (no pre-release). James: cap 12 cups (Rr2dvOilPairsMax 6) for x-4-4-x articulateds. Failsafe: when no
+driving axle has a nub, running-gear or board seat, oilingPoints keeps OilingPointCount 1 with consumptionPerRev 0 (no
+cup, never drains, lamp off, no wear) instead of 0 points (DV behaviour for an empty set unknown); WARN in the build
+report, Rr2dvAudit accepts it as a note. Docs updated. Tested: Python suite. Unity/game untested.
