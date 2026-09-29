@@ -697,13 +697,6 @@ public static partial class CclLocoBuild
                 pairs = Rr2dvOilBudget(pairs, hints);
                 int pair = 0;
                 foreach (var p in pairs) Rr2dvAddOilPair(placed, hits, body, ++pair, p.l, p.r, p.z);
-                if (nubs.Count == 0)
-                {
-                    for (int i = 0; i < hints.Length; i += 2)
-                        Rr2dvAddOilPair(placed, hits, body, i / 2 + 1,
-                            (null, Vector3.zero), (null, Vector3.zero),
-                            (hints[i].Item2.z + hints[i + 1].Item2.z) / 2);
-                }
             }
             var old = body.Find("[oiling points]");
             if (old) Object.DestroyImmediate(old.gameObject);
@@ -735,33 +728,35 @@ public static partial class CclLocoBuild
 
     // Oil-cup budget (James, 2026-09-29): one left/right pair per driving axle, 10 cups at most on a large loco. Every
     // rod nub became a pair before, so a model rich in nubs got cups on every surface (C&O T1: 28 cups, 8 pairs bunched
-    // around the cylinders and crossheads). Over budget, each driving axle (the provisional axle hints) keeps the nub
-    // pair nearest its z within 0.6 m (a crank throw and margin); the rest are dropped and listed.
+    // around the cylinders and crossheads). Each driving axle (the provisional axle hints) takes the nub pair nearest its z
+    // within 0.6 m (a crank throw and margin), else the running gear's tops or the running board at the axle; at most 5
+    // pairs, nub-matched axles first; unused nubs are dropped and listed.
     const int Rr2dvOilPairsMax = 5;
 
     static System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)> Rr2dvOilBudget(
         System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)> pairs,
         (string, Vector3)[] hints)
     {
-        int budget = Mathf.Min(hints.Length / 2, Rr2dvOilPairsMax);
-        if (pairs.Count <= budget) return pairs;
+        var none = ((Transform)null, Vector3.zero);
         var axles = Enumerable.Range(0, hints.Length / 2).Select(i => (hints[2 * i].Item2.z + hints[2 * i + 1].Item2.z) / 2).ToArray();
         var free = pairs.ToList();
-        var chosen = new System.Collections.Generic.List<(((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z) pair, float dz)>();
-        foreach (float az in axles)
+        var chosen = new System.Collections.Generic.List<(int axle, ((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z) pair, float dz)>();
+        for (int i = 0; i < axles.Length; i++)
         {
-            if (free.Count == 0) break;
-            var best = free.OrderBy(p => Mathf.Abs(p.z - az)).First();
-            if (Mathf.Abs(best.z - az) > .6f) { Line($"rr2dv oil budget: driving axle z {az:F3} has no rod nub pair within 0.6 m; no cup there"); continue; }
-            free.Remove(best);
-            chosen.Add((best, Mathf.Abs(best.z - az)));
+            float az = axles[i];
+            var near = free.Where(p => Mathf.Abs(p.z - az) <= .6f).OrderBy(p => Mathf.Abs(p.z - az)).ToList();
+            if (near.Count > 0) { free.Remove(near[0]); chosen.Add((i, near[0], Mathf.Abs(near[0].z - az))); continue; }
+            // no rod nub near this axle (GN A-18: its only nubs were at the crossheads, 2026-09-29): the running gear's
+            // flat tops, then the running board, at the axle (Rr2dvAddOilPair with no rod)
+            Line($"rr2dv oil budget: driving axle z {az:F3} has no rod nub pair within 0.6 m; running gear top or board there instead");
+            chosen.Add((i, (none, none, az), float.MaxValue));
         }
-        var keep = chosen.OrderBy(c => c.dz).Take(budget).Select(c => c.pair).ToList();
-        var kept = pairs.Where(p => keep.Contains(p)).ToList();  // source order kept (O01: stable tags and indices)
-        foreach (var p in pairs.Where(p => !kept.Contains(p)))
+        var keep = chosen.OrderBy(c => c.dz).Take(Rr2dvOilPairsMax).OrderBy(c => c.axle).Select(c => c.pair).ToList();
+        foreach (var p in pairs.Where(p => !keep.Contains(p)))
             Line($"rr2dv oil budget: nub pair at z {p.z:F3} dropped (one pair per driving axle, at most {Rr2dvOilPairsMax * 2} cups)");
-        Line($"rr2dv oil budget: {pairs.Count} nub pairs -> {kept.Count} ({axles.Length} driving axle(s), at most {Rr2dvOilPairsMax * 2} cups)");
-        return kept;
+        Line($"rr2dv oil budget: {pairs.Count} nub pairs -> {keep.Count(p => p.l.rod || p.r.rod)} kept, {keep.Count(p => !p.l.rod && !p.r.rod)} " +
+             $"axle(s) on running gear or boards ({axles.Length} driving axle(s), at most {Rr2dvOilPairsMax * 2} cups)");
+        return keep;
     }
 
     static void Rr2dvAddOilPair(System.Collections.Generic.List<(string tag, Vector3 pos, Transform rod, string seat)> placed,
