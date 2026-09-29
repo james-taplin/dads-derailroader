@@ -123,7 +123,8 @@ public static partial class CclLocoBuild
     // 2026-09-28). Never silent: the warning reaches build/review.json. Driving controls keep their hard checks.
     static void LeaveOutOpening(string component, string reason)
     {
-        Warn($"rr2dv ancillary toggle '{component}' left out (not interactive; its model stays as modelled): {reason}");
+        // the car is named: a loco and its tender can each have a toggle of the same name (GN A-18 'Water Hatch')
+        Warn($"rr2dv ancillary toggle '{component}' on {Cfg.CarId} left out (not interactive; its model stays as modelled): {reason}");
     }
 
     static void FinishRr2dvInteriorControls()

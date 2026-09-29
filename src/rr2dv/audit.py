@@ -35,18 +35,19 @@ def _plain(n):
     return p(n)
 
 
-LEFT_OUT = re.compile(r"rr2dv ancillary toggle '(.+?)' left out.*?(?:: ([^:]+?) / \S[^:]*)?$")
+LEFT_OUT = re.compile(r"rr2dv ancillary toggle '(.+?)'(?: on (\S+))? left out.*?(?:: ([^:]+?) / \S[^:]*)?$")
 
 
-def left_out_openings(build_warnings: list[str]) -> set[tuple[str, str | None]]:
+def left_out_openings(build_warnings: list[str]) -> set[tuple[str, str | None, str | None]]:
     """Door/window/hatch toggles the builder disclosed as left out (WARN in the build report): not expected in the pack.
     (name, clip) when the warning names the clip: two toggles can share a name (ALCo K-66: two 'ToggleAnimation 1',
-    one left out, one built, 2026-09-28), so the name alone would take both out of the expected count."""
+    one left out, one built, 2026-09-28), so the name alone would take both out of the expected count. With the car when
+    the warning names it (GN A-18: 'Water Hatch' left out on the loco, built on the tender, 2026-09-29): (name, clip, car)."""
     out = set()
     for w in build_warnings or []:
         m = LEFT_OUT.search(w)
         if m:
-            out.add((m.group(1), m.group(2).strip() if m.group(2) else None))
+            out.add((m.group(1), m.group(3).strip() if m.group(3) else None, m.group(2)))
     return out
 
 
@@ -75,7 +76,8 @@ def audit_input(rec: dict, pack: Path, left_out: set[str] = frozenset()) -> dict
                 continue
             data = _extra(component)
             clip = (data.get('animation') or {}).get('clipName')
-            if (component.get('name'), clip) in left_out or (component.get('name'), None) in left_out:
+            car_id = _plain(car_record['config'])['CarId']
+            if any(name == component.get('name') and c in (None, clip) and car in (None, car_id) for name, c, car in left_out):
                 continue
             title = str(data.get('title', '')).casefold()
             if stoker and re.search('auger|stoker', f"{component.get('name')} {clip} {title}", re.IGNORECASE):
