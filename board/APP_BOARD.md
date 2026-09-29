@@ -2201,3 +2201,14 @@ across rays) at wheel phases 0/.25/.5/.75, cup riding its rod; applied to nubs (
 Rr2dvGearTopSeat collects level spots from crank-pin height upward (short rays per 5 cm level), moving rods first then
 lowest; 12 cm cup spacing. Compiled against stubs only; Unity-untested. Cab light: base-game models have no lamp mesh of
 their own; the glowing disc looks like the builder bulb (cab light on); asked James whether the switch turns it off.
+
+## W97 (cloud Claude, 2026-09-29): 0.3.X-exp merged into main; new branch vanilla-flavoured
+James asked: 0.3.X-exp merged into `main` (no release or tag; version stays 0.3.0.dev0). Contents W84-W96: base-game
+AssetPacks input and Base game/Mods list; mechanical stoker (Gearbox A wheel, tender coal bridge, declared stoker/auger
+parts turn with it); K-28T hidden-mesh handbrake check; T-17 uneven drivers; audit fixes (stoker toggles, same-name
+toggles per car); oil cups (per-axle fallback, 12 max, no-manual-oiling failsafe, clearance through the wheel turn,
+bottom-up seats, 12 cm spacing); A-18 support base (leading-truck front bogie, bogie_split tests). Python suite on main:
+283, only the 2 known stub failures; tooling manifest ok. In game: T-17, K-28T, G-16, K-66 (stoker), A-18 built and
+installed; stoker, oil-cup rework and A-18 support untested in game.
+New branch `vanilla-flavoured` from this main (James). App work continues on `0.3.X-exp` in this session.
+Open: G-16 ceiling glow (teleport glow vs cab bulb; cab floor measured 0.97 m below the ceiling).
