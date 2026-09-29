@@ -248,8 +248,12 @@ Cylinders: the reviewed physical cylinder count is physics only. The simulation 
 scaled to the same swept volume (bore x sqrt(n/2)): Derail Valley's chuff sound handles 2 (a 3-cylinder K-66 threw
 `ChuffClipsSimReader.OnChuff ... IndexOutOfRange` in Player.log). The physical count stays in the build's simulation profile.
 
-Brake cutout and cab light: generated as handwheels like the dynamo and air pump, whose F4 HUD buttons work; built as
-2-position levers, the HUD buttons did nothing.
+Cab light: generated as a handwheel like the dynamo and air pump, whose F4 HUD buttons work; built as a 2-position
+lever, the HUD button did nothing.
+
+Brake cutout: a 2-position lever, as in vanilla Derail Valley. CCL gives it an absolute axis input besides its toggle
+key, which let F4 treat it as a range that never flipped; the build removes that axis (`rr2dv brake cutout ... absolute
+axis input removed` in `build_report.txt`). The cab light, air pump, dynamo and lubricator have no such axis.
 
 Railroader lights: every Unity light in the source model is removed (`rr2dv source lights` in `build_report.txt`).
 Railroader switches them from its own scripts, which are not converted, so they stayed on for good. The car keeps the

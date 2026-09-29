@@ -146,6 +146,18 @@ public static partial class CclLocoBuild
     // whose seat clears the floor; the core then fits it again, with the same result.
     const float Rr2dvReleaseFloor = .3f + .080590f;
 
+    // The fitter also accepts a valve body 0.08 m behind the face (its pMax), but the final check needs 0.10 m from the
+    // outermost skin along the rod line (RRPlacementValidation.CheckReleaseClearance): a seat at the fitter's limit stops
+    // the build (C&O T1 tender, 2026-09-29: 0.080 m). Such a seat moves inward along the rod to 0.105 m and goes to the core
+    // as an exact pose; the core's final checks (handle exposed, bracket, floor) still judge it.
+    const float Rr2dvReleaseDepth = .105f;
+
+    static float Rr2dvReleaseSkinDepth(Vector3 pos, Vector3 dir)
+    {
+        using (var vh = new VisualHits(RefBody))
+            return vh.Ray(pos + dir * 1.5f, -dir, 3f, out var hit) ? Vector3.Dot(hit.point - pos, dir) : float.NaN;
+    }
+
     static void Rr2dvReleaseSeat()
     {
         if (Cfg.BrakeRelease == null || Cfg.BrakeReleaseExact) return;
@@ -162,6 +174,18 @@ public static partial class CclLocoBuild
                 warnings = before;
                 if (seated && probe.localPosition.y >= Rr2dvReleaseFloor)
                 {
+                    var dir = probe.localRotation * Vector3.forward;
+                    float depth = Rr2dvReleaseSkinDepth(probe.localPosition, dir);
+                    if (!float.IsNaN(depth) && depth < Rr2dvReleaseDepth)
+                    {
+                        var pos = probe.localPosition - dir * (Rr2dvReleaseDepth - depth);
+                        var rot = probe.localEulerAngles;
+                        Cfg.BrakeRelease = _ => (pos, rot);
+                        Cfg.BrakeReleaseExact = true;
+                        Line($"rr2dv brake release: valve body {depth:F3} m behind the skin at z {candidate.z:F3} (the core's check needs 0.10 m); " +
+                             $"moved {Rr2dvReleaseDepth - depth:F3} m inward along the rod to {V(pos)}, handed to the core as an exact pose");
+                        return;
+                    }
                     if (step != 0)
                     {
                         Cfg.BrakeRelease = _ => (candidate, euler);

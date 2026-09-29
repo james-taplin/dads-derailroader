@@ -124,9 +124,25 @@ public static partial class CclLocoBuild
                 if (renderers.Length > 0) RrHighlight(control.gameObject, renderers);
                 RrControlResponse(control);
             }
+            StripRr2dvCutoutAxis(root);
             SaveRr2dvPrefab(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    // The brake cutout is a two-position valve, but CCL's control wizard gives it an absolute axis (BrakeCutoutAbsolute:
+    // AnalogSetValueJoystickInputProxy) besides its toggle key, and the F4/keyboard route then drives it as a range
+    // (James's game test, 2026-09-29). The two-position controls that switch correctly there (cab light, air pump,
+    // dynamo, lubricator) have no absolute action in CCL's key map, so the cutout keeps only its toggle and scroll inputs.
+    static void StripRr2dvCutoutAxis(GameObject root)
+    {
+        foreach (var feeder in root.GetComponentsInChildren<Component>(true)
+                     .Where(c => c && c.GetType().Name == "InteractablePortFeederProxy" && Get<string>(c, "portId") == "brakeCutout.EXT_IN").ToList())
+            foreach (var axis in feeder.GetComponents<Component>().Where(c => c && c.GetType().Name == "AnalogSetValueJoystickInputProxy").ToList())
+            {
+                Object.DestroyImmediate(axis);
+                Line($"rr2dv brake cutout {feeder.name}: absolute axis input removed; toggle key and scroll stay (two positions, as the cab light)");
+            }
     }
 
     static void ConfigureRrOpeningMotion()
