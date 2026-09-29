@@ -52,6 +52,32 @@ class ControllerTests(unittest.TestCase):
                          ["locate", "link", "stage", "extract", "import", "probe", "record", "build"])
         self.assertEqual(events[-1][:2], (None, "incomplete"))
 
+    def test_geometry_reviews_lists_only_what_the_build_would_accept(self):
+        # RLW RXM-1B, 2026-09-29: the box should offer the runs' reviews that fit, newest first, not only Browse
+        from rr2dv import installs
+        from rr2dv.pipeline import fingerprint, search_roots
+        from rr2dv.rrmod import Index, inventory
+        rr = installs.railroader(self.c.machine)
+        index = Index(installs.mod_in_railroader(rr, "Test Loco Mod"), search_roots(rr, self.c.machine.search_roots()))
+        fp = fingerprint(inventory(index, "ts-260-a"))
+
+        def review(run, name, band, fprint=fp, vid="ts-260-a"):
+            path = self.c.reports() / run / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(json.dumps({"schema": 1, "inputFingerprint": fprint, "vehicles": {vid: {"EndBeamProbeHeight": {
+                "value": band, "unit": "m", "basis": "measured", "evidence": ["survey"]}}}}))
+            return str(path)
+        self.assertEqual(self.c.geometry_reviews("Test Loco Mod", "ts-260-a"), [])
+        old = review("20260929-190000-ts", "geometry-review-proposed.json", [1.4, 1.6])
+        review("20260929-191000-ts", "geometry-review.json", [1.4, 1.6])  # the same band used again: listed once
+        new = review("20260929-192000-ts", "geometry-review-proposed.json", [1.0, 1.2])
+        review("20260929-193000-ts", "geometry-review-proposed.json", [1.0, 1.2], fprint="other source")
+        review("20260929-194000-ts", "geometry-review-proposed.json", [1.0, 1.2], vid="another-loco")
+        found = self.c.geometry_reviews("Test Loco Mod", "ts-260-a")
+        self.assertEqual([r["path"] for r in found], [new, review("20260929-191000-ts", "geometry-review.json", [1.4, 1.6])])
+        self.assertIn("loco 1.00..1.20 m", found[0]["label"])
+        self.assertNotIn(old, [r["path"] for r in found])  # older copy of the same band
+
     def test_saving_settings_merges_and_empty_removes(self):
         self.c.save_settings({"workRoot": str(self.tmp / "w2"), "railroader": ""})
         values = json.loads(self.settings.read_text())

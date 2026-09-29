@@ -73,6 +73,24 @@ class Window(unittest.TestCase):
         self.assertEqual(self.app.facts["tender"].cget("text"), "tt-260-a")
         self.assertEqual(str(self.app.convert_button.cget("state")), "normal")
 
+    def test_geometry_box_lists_fitting_reviews_and_browse_starts_in_reports(self):
+        from rr2dv import installs
+        from rr2dv.pipeline import fingerprint, search_roots
+        from rr2dv.rrmod import Index, inventory
+        c = self.app.c
+        rr = installs.railroader(c.machine)
+        fp = fingerprint(inventory(Index(installs.mod_in_railroader(rr, "Test Loco Mod"), search_roots(rr, c.machine.search_roots())), "ts-260-a"))
+        path = c.reports() / "20260929-192000-ts" / "geometry-review-proposed.json"
+        path.parent.mkdir(parents=True)
+        path.write_text(json.dumps({"schema": 1, "inputFingerprint": fp, "vehicles": {"ts-260-a": {"EndBeamProbeHeight": {
+            "value": [1.0, 1.2], "unit": "m", "basis": "measured", "evidence": ["survey"]}}}}))
+        self.select("Test Loco Mod", "ts-260-a")
+        labels = list(self.app.geometry_box.cget("values"))
+        self.assertEqual(len(labels), 1)
+        self.assertEqual(self.app.geometry_choices[labels[0]], str(path))
+        self.assertEqual(self.app.geometry.get(), "")  # listed, never chosen for the user
+        self.assertEqual(self.app._reports_folder(), c.reports())
+
     def test_blocked_locomotive_cannot_be_converted(self):
         self.select("Another Loco Mod", "ls-460-a")
         self.assertEqual(str(self.app.convert_button.cget("state")), "disabled")

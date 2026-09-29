@@ -7,9 +7,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Sequence
 
-from . import consent, installs, machine as machine_mod
+from . import consent, geometryreview, installs, machine as machine_mod
 from .jsonio import read_json, write_json
-from .pipeline import Outcome, convert, search_roots
+from .pipeline import Outcome, convert, fingerprint, search_roots
 from .record import liveries
 from .rrmod import Index, blocking, definition, inventory
 
@@ -136,11 +136,49 @@ class Controller:
         mod = installs.mod_in_railroader(rr, folder)
         return scan_report(mod, search_roots(rr, self.machine.search_roots()))
 
+    def reports(self) -> Path:
+        """Where finished and failed runs keep their compact reports (workspace.finish)."""
+        return self.machine.work_root / "reports"
+
+    def geometry_reviews(self, folder: str, loco: str) -> list[dict]:
+        """Geometry reviews in the reports folder that this locomotive's current source files would accept."""
+        rr = installs.railroader(self.machine)
+        mod = installs.mod_in_railroader(rr, folder)
+        return compatible_reviews(self.reports(), Index(mod, search_roots(rr, self.machine.search_roots())), loco)
+
     def convert(self, folder: str, loco: str, livery: str | None = None, audio: str | None = None,
                 wheel_radius: float | None = None, on_progress=None, ask: Callable = consent.ask,
                 geometry_review: Path | None = None, prebuild_review=None) -> Outcome:
         return convert(folder, self.machine, loco, self.machine.search_roots(), audio, livery, wheel_radius,
                        ask=ask, on_progress=on_progress, geometry_review=geometry_review, prebuild_review=prebuild_review)
+
+
+def compatible_reviews(reports: Path, index: Index, loco: str) -> list[dict]:
+    """Every geometry review (proposed or used) under `reports` that the build would accept for `loco` now: same input
+    fingerprint and only this loco and its tender, newest run first, identical contents once. The user still chooses
+    one; nothing is applied automatically (no automatic beam approval)."""
+    inv = inventory(index, loco)
+    if any(i["severity"] == "error" for i in inv["issues"]) or not reports.is_dir():
+        return []
+    tender = (inv.get("tender") or {}).get("id")
+    cars = {loco} | ({tender} if tender else set())
+    found, seen = [], set()
+    for path in sorted(reports.glob("*/geometry-review*.json"), key=lambda p: (p.parent.name, "proposed" in p.name), reverse=True):
+        try:
+            data = geometryreview.validate(read_json(path), fingerprint(inv), cars)
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+        key = repr(sorted((vid, tuple(f["EndBeamProbeHeight"]["value"])) for vid, f in data["vehicles"].items()))
+        if key in seen:
+            continue
+        seen.add(key)
+        bands = ", ".join(f"{'loco' if vid == loco else 'tender'} {f['EndBeamProbeHeight']['value'][0]:.2f}..{f['EndBeamProbeHeight']['value'][1]:.2f} m"
+                          for vid, f in sorted(data["vehicles"].items(), key=lambda v: v[0] != loco))
+        missing = " (no tender band)" if tender and tender not in data["vehicles"] else ""
+        kind = "proposed" if "proposed" in path.name else "used"
+        found.append({"path": str(path), "label": f"{path.parent.name[:15]} {kind}: {bands}{missing}",
+                      "cars": sorted(data["vehicles"])})
+    return found
 
 
 def blocking_issues(report: dict, loco: str) -> list[dict]:

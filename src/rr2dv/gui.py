@@ -236,16 +236,20 @@ class App:
         geometry.pack(side="top", fill="x", pady=(6, 0))
         ttk.Label(geometry, text="Reviewed geometry (optional)").pack(side="left")
         self.geometry = tk.StringVar()
-        entry = ttk.Entry(geometry, textvariable=self.geometry)
+        self.geometry_choices: dict[str, str] = {}  # label shown in the list -> review file
+        entry = ttk.Combobox(geometry, textvariable=self.geometry, values=[])
         entry.pack(side="left", fill="x", expand=True, padx=6)
+        self.geometry_box = entry
         def browse_geometry():
             path = filedialog.askopenfilename(parent=self.root, title="Choose reviewed geometry",
+                                              initialdir=str(self._reports_folder()),
                                               filetypes=[("Geometry review", "*.json")])
             if path:
                 self.geometry.set(path)
         ttk.Button(geometry, text="Browse…", command=browse_geometry).pack(side="left")
-        Tooltip(entry, "A measured end-beam correction file for this locomotive. Leave empty unless its geometry "
-                       "has been reviewed. A review for different source files is refused.")
+        Tooltip(entry, "A measured end-beam correction file for this locomotive. The list shows the reviews in your runs' "
+                       "reports that fit this locomotive's current files, newest first; you can also type or browse to a "
+                       "file. Leave empty unless its geometry has been reviewed. A review for different source files is refused.")
 
         ttk.Label(right, text="Checks", style="H2.TLabel").pack(side="top", anchor="w", pady=(10, 2))
         self.issues = ttk.Treeview(right, columns=("message",), show="tree", height=3, selectmode="none")
@@ -445,6 +449,9 @@ class App:
         if not item.startswith("loco::"):
             return
         _, folder, ident = item.split("::", 2)
+        if self.selected != (folder, ident):  # another loco's review would be refused
+            self.geometry.set("")
+            self._set_geometry_choices([])
         self.selected = (folder, ident)
         self.loco_title.configure(text=self.tree.item(item, "text").split("  (")[0])
         self.loco_sub.configure(text=f"{ident} in {folder} — checking…")
@@ -479,6 +486,33 @@ class App:
         self.livery.current(0)
         self.loco_sub.configure(text=f"{ident} in {folder}")
         self._update_convert_button()
+        self._find_geometry_reviews()
+
+    def _reports_folder(self) -> Path:
+        """Browse starts in the last run's reports (where its proposed review is), else in all the reports."""
+        try:
+            reports = self.c.reports()
+        except Exception:
+            return Path.home()
+        last = reports / self.last_run.name if self.last_run else None
+        return next((p for p in (last, reports, reports.parent) if p and p.is_dir()), Path.home())
+
+    def _find_geometry_reviews(self) -> None:
+        if not self.selected:
+            return
+        wanted = self.selected
+        folder, ident = wanted
+
+        def show(found):
+            if self.selected == wanted:
+                self._set_geometry_choices(found)
+        self.worker.run("Finding geometry reviews", lambda: self.c.geometry_reviews(folder, ident), show)
+
+    def _set_geometry_choices(self, found: list[dict]) -> None:
+        self.geometry_choices = {r["label"]: r["path"] for r in found}
+        self.geometry_box.configure(values=list(self.geometry_choices))
+        if found:
+            self._log(f"{len(found)} geometry review(s) fit this locomotive: choose one under Reviewed geometry if it needs one.")
 
     def _update_convert_button(self, busy: bool = False) -> None:
         reasons = []
@@ -509,7 +543,9 @@ class App:
             self._modal_error(APP_NAME, "The wheel radius must be a number of metres between 0.1 and 1.5.", parent=self.root)
             return
         audio = {1: "S060", 2: "S282"}.get(self.audio.current())
-        geometry_review = Path(self.geometry.get().strip()) if self.geometry.get().strip() else None
+        chosen = self.geometry.get().strip()
+        chosen = self.geometry_choices.get(chosen, chosen)
+        geometry_review = Path(chosen) if chosen else None
         livery = self.livery.get() if self.livery.get() != "(default)" else None
         for mark in self.stage_rows.values():
             mark.configure(text="\u25cb", fg=COLOURS["muted"])
@@ -543,6 +579,8 @@ class App:
                                   self._converted)
         if started:
             self._set_busy(True)
+        else:
+            self.summary.configure(text="Still busy with another task: press Convert again in a moment.", foreground="")
 
     def _stage(self, stage, status, detail) -> None:
         if stage is None:
@@ -576,7 +614,8 @@ class App:
     def _use_proposal(self) -> None:
         """Fills in the geometry review measured from the last run's end-beam survey; the user still starts the conversion."""
         if self.proposal:
-            self.geometry.set(str(self.proposal))
+            label = next((l for l, p in self.geometry_choices.items() if Path(p) == self.proposal), None)
+            self.geometry.set(label or str(self.proposal))
             self._log(f"Reviewed geometry set to the proposal {self.proposal}; check its evidence, then press Convert.")
 
     def _converted(self, outcome) -> None:
@@ -599,6 +638,7 @@ class App:
             paths.append(outcome.run.path / Path(proposal).name)
         self.proposal = next((p for p in paths if p.is_file()), None)
         self.use_geometry.configure(state="normal" if self.proposal else "disabled")
+        self._find_geometry_reviews()
         installed = "Installed into your Derail Valley Mods folder. Check it in the game before calling it done: every control, " \
                     "closed throttle and whistle, brakes, lamps and the coupling (the conversion report lists what was chosen automatically)."
         if outcome.code == EXIT_OK:

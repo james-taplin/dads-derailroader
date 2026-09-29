@@ -203,6 +203,11 @@ chooses it, then convert again. A band is proposed only when, at every end rigge
 in it (20 rays on one face), the face has 3 or more of those rays either side of x +-0.3 m, it lies within 0.35 m of the
 source car end, and the same plane (within 3 cm) shows at another height; the band nearest coupler height wins. Otherwise
 the message says why none was proposed and a manual review is needed.
+When a loco and its tender both need a band, the first stop proposes the loco's; the next stop proposes a file holding
+both (it keeps the band already used). Choose that newest file, not the first one again, or the build stops on the same car.
+The **Reviewed geometry** list shows every review in your runs' reports that fits the selected locomotive's current
+files (newest first, with each car's band; "no tender band" when it covers only the loco); nothing is chosen for you.
+**Browse…** starts in the last run's reports folder.
 Do not choose a band merely because it passes. The height band changes where the existing rays sample; it does
 not change coupler height, the minimum ray count, clearance checks or any acceptance requirement.
 
