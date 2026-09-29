@@ -227,8 +227,9 @@ and hanging hose end are reachable. Cosmetic overlap with decorative pipework is
 
 Material slots: a slot the export left empty or filled with Unity's white `Default-Material` (Railroader base-game
 truck rims, the `…deadbeef…` references) is given rr2dv's own dark matte gunmetal
-(`src/rr2dv/unity/materials/rr2dv_gunmetal.mat`), and a slot whose material is named `…glass…` gets rr2dv's own clear
-glass (`rr2dv_glass.mat`). An empty slot on a part named `…coal…` gets a bump-mapped coal (`rr2dv_coal.mat`), and
+(`src/rr2dv/unity/materials/rr2dv_gunmetal.mat`), and a slot whose material is named `…glass…`, or just `Window`/`Windows`
+(not `WindowColorable` or a frame), gets rr2dv's own clear glass (`rr2dv_glass.mat`), on the fixed body and on every
+opening door or window that moves, so both kinds of pane look the same. An empty slot on a part named `…coal…` gets a bump-mapped coal (`rr2dv_coal.mat`), and
 glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow inside does not show. Lamp glass that Railroader
 draws fully transparent (alpha 0: a flare disc) stays invisible. When lamp glass shares the window material on one mesh,
 its triangles within a lamp lens of a lamp (`LampLenses`) are split onto the lens (`rr2dv glass: … split off`). The whole car
@@ -243,7 +244,11 @@ scaled to 80 %`); if nothing holds even that, it stays at the source decal with 
 
 Oil cups: the driving groups' own clips are played through a revolution; a part whose middle travels is a rod (a cup
 on it rides with it), a part that turns in place is a wheel, axle or crank (no cup on it), whatever the parts are called
-(`rr2dv oil running gear by motion` in `build_report.txt`).
+(`rr2dv oil running gear by motion` in `build_report.txt`). At most one left/right pair per driving axle and 10 cups in
+all: when the rods offer more seats, each driving axle keeps the pair nearest it (within 0.6 m) and the rest are dropped
+(`rr2dv oil budget` in `build_report.txt`).
+
+HUD: besides CCL's steam layout, the HUD shows the whistle, tender coal, the sander and the sand level.
 
 Control response: the train and independent brakes, headlights and cab light move one notch per key press (a tap ran
 their few coarse notches end to end); a generated whistle (no Railroader handle) gets the same whistle physics as a

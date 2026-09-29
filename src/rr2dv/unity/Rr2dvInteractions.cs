@@ -286,6 +286,8 @@ public static partial class CclLocoBuild
                     foreach (var m in t.GetComponents<MeshFilter>()) Object.DestroyImmediate(m);
                 }
             }
+            // the same slot rules as the fixed body: an opening window's glass matches the fixed panes (M-3, 2026-09-29)
+            Rr2dvFinishSlots(copy.transform, copy.transform, opening.name + " copy: ");
             Folder($"{Work}/Animators");
             var controller = AnimatorController.CreateAnimatorControllerAtPath($"{Work}/Animators/{opening.name}.controller");
             var state = controller.layers[0].stateMachine.AddState(opening.name);

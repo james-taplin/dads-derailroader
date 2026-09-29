@@ -56,6 +56,12 @@ public static partial class CclLocoBuild
         // 2026-09-28). Every converted steam loco has a whistle control, RR or generated: show it as Whistle.
         var horn = cab.GetType().GetField("HornStyle");
         horn.SetValue(cab, Enum.ToObject(horn.FieldType, 2));
+        // SetToS leaves the sander slot and the sand level at None (CCL CustomHUDLayout.SetToS), so the HUD had neither though
+        // B sanded (C&O T1 game test, 2026-09-29). Every converted loco has a sander control and the core's sand indicator.
+        var sander = basic.GetType().GetField("Sander");
+        sander.SetValue(basic, Enum.ToObject(sander.FieldType, 1));
+        var sand = cab.GetType().GetField("SandLevel");
+        sand.SetValue(cab, Enum.ToObject(sand.FieldType, 1));
         // SetToS shows tender water but not tender coal (RPP-1 game test: no coal amount on the HUD).
         if (Loco.Tender != null)
         {

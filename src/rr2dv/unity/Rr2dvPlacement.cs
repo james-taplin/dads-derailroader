@@ -328,22 +328,18 @@ public static partial class CclLocoBuild
             using (var hits = new VisualHits(body))
             {
                 var remaining = nubs.Where(n => n.pos.x > 0).ToList();
-                int pair = 0;
+                var pairs = new System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)>();
                 foreach (var left in nubs.Where(n => n.pos.x < 0))
                 {
                     var right = remaining.OrderBy(n => Mathf.Abs(n.pos.z - left.pos.z)).FirstOrDefault();
                     if (right.rod && Mathf.Abs(right.pos.z - left.pos.z) <= .45f) remaining.Remove(right);
                     else right = (null, Vector3.zero);
-                    pair++;
-                    Rr2dvAddOilPair(placed, hits, body, pair,
-                        (left.rod, left.pos), (right.rod, right.pos), (left.pos.z + (right.rod ? right.pos.z : left.pos.z)) / 2);
+                    pairs.Add(((left.rod, left.pos), (right.rod, right.pos), (left.pos.z + (right.rod ? right.pos.z : left.pos.z)) / 2));
                 }
-                foreach (var right in remaining)
-                {
-                    pair++;
-                    Rr2dvAddOilPair(placed, hits, body, pair, (null, Vector3.zero),
-                        (right.rod, right.pos), right.pos.z);
-                }
+                foreach (var right in remaining) pairs.Add(((null, Vector3.zero), (right.rod, right.pos), right.pos.z));
+                pairs = Rr2dvOilBudget(pairs, hints);
+                int pair = 0;
+                foreach (var p in pairs) Rr2dvAddOilPair(placed, hits, body, ++pair, p.l, p.r, p.z);
                 if (nubs.Count == 0)
                 {
                     for (int i = 0; i < hints.Length; i += 2)
@@ -378,6 +374,37 @@ public static partial class CclLocoBuild
             SaveRr2dvPrefab(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    // Oil-cup budget (James, 2026-09-29): one left/right pair per driving axle, 10 cups at most on a large loco. Every
+    // rod nub became a pair before, so a model rich in nubs got cups on every surface (C&O T1: 28 cups, 8 pairs bunched
+    // around the cylinders and crossheads). Over budget, each driving axle (the provisional axle hints) keeps the nub
+    // pair nearest its z within 0.6 m (a crank throw and margin); the rest are dropped and listed.
+    const int Rr2dvOilPairsMax = 5;
+
+    static System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)> Rr2dvOilBudget(
+        System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)> pairs,
+        (string, Vector3)[] hints)
+    {
+        int budget = Mathf.Min(hints.Length / 2, Rr2dvOilPairsMax);
+        if (pairs.Count <= budget) return pairs;
+        var axles = Enumerable.Range(0, hints.Length / 2).Select(i => (hints[2 * i].Item2.z + hints[2 * i + 1].Item2.z) / 2).ToArray();
+        var free = pairs.ToList();
+        var chosen = new System.Collections.Generic.List<(((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z) pair, float dz)>();
+        foreach (float az in axles)
+        {
+            if (free.Count == 0) break;
+            var best = free.OrderBy(p => Mathf.Abs(p.z - az)).First();
+            if (Mathf.Abs(best.z - az) > .6f) { Line($"rr2dv oil budget: driving axle z {az:F3} has no rod nub pair within 0.6 m; no cup there"); continue; }
+            free.Remove(best);
+            chosen.Add((best, Mathf.Abs(best.z - az)));
+        }
+        var keep = chosen.OrderBy(c => c.dz).Take(budget).Select(c => c.pair).ToList();
+        var kept = pairs.Where(p => keep.Contains(p)).ToList();  // source order kept (O01: stable tags and indices)
+        foreach (var p in pairs.Where(p => !kept.Contains(p)))
+            Line($"rr2dv oil budget: nub pair at z {p.z:F3} dropped (one pair per driving axle, at most {Rr2dvOilPairsMax * 2} cups)");
+        Line($"rr2dv oil budget: {pairs.Count} nub pairs -> {kept.Count} ({axles.Length} driving axle(s), at most {Rr2dvOilPairsMax * 2} cups)");
+        return kept;
     }
 
     static void Rr2dvAddOilPair(System.Collections.Generic.List<(string tag, Vector3 pos, Transform rod, string seat)> placed,
