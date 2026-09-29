@@ -2179,3 +2179,10 @@ Branch `0.3.X-exp` (no pre-release). James: cap 12 cups (Rr2dvOilPairsMax 6) for
 driving axle has a nub, running-gear or board seat, oilingPoints keeps OilingPointCount 1 with consumptionPerRev 0 (no
 cup, never drains, lamp off, no wear) instead of 0 points (DV behaviour for an empty set unknown); WARN in the build
 report, Rr2dvAudit accepts it as a note. Docs updated. Tested: Python suite. Unity/game untested.
+
+## W94 (cloud Claude, 2026-09-29): A-18 nose on the rails (support base)
+Branch `0.3.X-exp`. In game the A-18 pilot rested on the rails: bogies pivoted on the two drivers (1.133, -0.986; 2.12 m
+base) with the 2-axle leading truck 3.42 m ahead. The W-era RPP-1 rule (front bogie = leading truck) required exactly
+one driver; it now applies when the leading truck centre is further ahead of the front driver than the driver wheelbase
+(rear bogie pivots on the rear driver). A-18 -> supports 4.555 / -0.986; T-17 (2.42 < 4.36) and 4-6-2/4-8-4 unchanged.
+Tested: Python suite. Untested: rebuild/in game.
