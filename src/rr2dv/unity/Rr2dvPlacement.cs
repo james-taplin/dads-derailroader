@@ -88,6 +88,7 @@ public static partial class CclLocoBuild
         CreateCar();
         BuildExterior();
         FinishRr2dvMaterialSlots();
+        if (!c.IsTender) AimRr2dvJets();
         StripRr2dvModelLights();
         PassRr2dvGrabRays();
         if (!c.IsTender && Rr2dvNoDynamo) StripRr2dvDynamoHud();
@@ -194,6 +195,75 @@ public static partial class CclLocoBuild
         cl.Footprint = new Vector2(cl.Footprint.x, edge - rear);
         Line($"rr2dv coal load: front {front:F3} -> {edge:F3} (the tender sides end there at coal height); box {rear:F3}..{edge:F3}, " +
              $"length {edge - rear:F3} m");
+    }
+
+    // Whistle and dynamo steam jets. CCL's steam template makes 'Whistle' and 'DynamoSteam' unrotated, and its importer
+    // puts the vanilla steam system under each with identity rotation (ObjectInstancerProcessor), so it blows along the
+    // emitter's +z: forward along the boiler on every converted loco (James's game test, 2026-09-29). The whistle jet goes
+    // straight up. The dynamo jet follows its exhaust pipe where the tip can be measured (swept back, to the side or
+    // otherwise angled), else straight up (James: always up as the fallback).
+    static void AimRr2dvJets()
+    {
+        string path = $"{carFolder}/{CarId}_template.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            var particles = root.transform.Find("[particles]");
+            if (!particles) return;
+            foreach (Transform t in particles)
+            {
+                bool whistle = t.name == "Whistle", dynamo = t.name.Contains("Dynamo");
+                if (!whistle && !dynamo) continue;
+                var tip = dynamo ? Rr2dvExhaustTip(t.position) : null;
+                var dir = tip ?? Vector3.up;
+                var now = t.rotation * Vector3.forward;
+                t.rotation = Quaternion.FromToRotation(now, dir) * t.rotation;
+                Line($"rr2dv steam jet {t.name}: {V(now)} -> {V(dir)} " +
+                     (tip.HasValue ? "(along the measured exhaust pipe tip)" : dynamo ? "(straight up: no measurable exhaust pipe tip)" : "(straight up)"));
+            }
+            SaveRr2dvPrefab(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    // The exhaust pipe's direction at a jet point: the long axis of the model's vertices within 0.25 m. It counts only when
+    // the cloud is pipe-like (long axis variance >= 2.5x the next), the point sits at its end (the tip: at least 3 cm along
+    // the axis from the cloud's centre, nothing more than 8 cm beyond it) and the axis does not point down.
+    static Vector3? Rr2dvExhaustTip(Vector3 p)
+    {
+        const float r = .25f;
+        var pts = new System.Collections.Generic.List<Vector3>();
+        foreach (var mf in RefBody.GetComponentsInChildren<MeshFilter>(false))
+        {
+            var mr = mf.GetComponent<MeshRenderer>();
+            if (!mf.sharedMesh || !mr || !mr.enabled) continue;
+            var b = mr.bounds; b.Expand(2 * r);
+            if (!b.Contains(p)) continue;
+            foreach (var v in mf.sharedMesh.vertices)
+            {
+                var w = mf.transform.TransformPoint(v);
+                if ((w - p).sqrMagnitude <= r * r) pts.Add(w);
+            }
+        }
+        if (pts.Count < 12) return null;
+        var c = pts.Aggregate(Vector3.zero, (s, v) => s + v) / pts.Count;
+        float xx = 0, xy = 0, xz = 0, yy = 0, yz = 0, zz = 0;
+        foreach (var v in pts) { var d = v - c; xx += d.x * d.x; xy += d.x * d.y; xz += d.x * d.z; yy += d.y * d.y; yz += d.y * d.z; zz += d.z * d.z; }
+        Vector3 Mul(Vector3 v) => new Vector3(xx * v.x + xy * v.y + xz * v.z, xy * v.x + yy * v.y + yz * v.z, xz * v.x + yz * v.y + zz * v.z);
+        Vector3 Power(Vector3 v, Vector3 skip)
+        {
+            for (int i = 0; i < 50; i++) { v = Mul(v); v -= Vector3.Dot(v, skip) * skip; if (v.sqrMagnitude < 1e-12f) return Vector3.zero; v.Normalize(); }
+            return v;
+        }
+        var a = Power(new Vector3(.3f, .9f, .3f).normalized, Vector3.zero);
+        if (a == Vector3.zero) return null;
+        var seed = Mathf.Abs(a.y) < .9f ? Vector3.up : Vector3.right;
+        var a2 = Power((seed - Vector3.Dot(seed, a) * a).normalized, a);
+        float l1 = Vector3.Dot(a, Mul(a)), l2 = a2 == Vector3.zero ? 0f : Vector3.Dot(a2, Mul(a2));
+        if (l1 < 2.5f * l2) return null;
+        if (Vector3.Dot(p - c, a) < 0) a = -a;
+        if (Vector3.Dot(p - c, a) < .03f || pts.Max(v => Vector3.Dot(v - p, a)) > .08f || a.y <= 0f) return null;
+        return a;
     }
 
     static void Rr2dvReleaseSeat()
