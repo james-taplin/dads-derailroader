@@ -194,6 +194,9 @@ If the default sampling heights miss the actual frame, the builder now automatic
 for a broad, upright end face supported on both sides of the drawgear. The build report records its measured
 height band and depth. If that also fails, an *ambiguous end beam* or *insufficient end-beam rays* error still
 requires review. Measure the current model first, including the broad beam face and nearby coupler/lift hardware.
+The failed build's `build_report.txt` now carries that measurement: `rr2dv end-beam survey` lists, for both ends and each
+0.2 m height band, the upright faces seen along the car axis (depth, ray count, support either side, distance from the
+source car end, part names). Send it; a reviewed band is written from it, never from what merely passes.
 Do not choose a band merely because it passes. The height band changes where the existing rays sample; it does
 not change coupler height, the minimum ray count, clearance checks or any acceptance requirement.
 

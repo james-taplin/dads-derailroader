@@ -86,7 +86,12 @@ public static partial class CclLocoBuild
         PrepareRr2dvGrips();
         FitRr2dvCoalLoad();
         CreateCar();
-        BuildExterior();
+        try { BuildExterior(); }
+        catch (InvalidOperationException e)
+        {
+            if (e.Message.Contains("end beam")) SurveyRr2dvEndBeams();
+            throw;
+        }
         if (c.IsTender) ShapeRr2dvCoalLoad();
         FinishRr2dvMaterialSlots();
         if (!c.IsTender) AimRr2dvJets();
@@ -344,6 +349,46 @@ public static partial class CclLocoBuild
         if (Vector3.Dot(p - c, a) < 0) a = -a;
         if (Vector3.Dot(p - c, a) < .03f || pts.Max(v => Vector3.Dot(v - p, a)) > .08f || a.y <= 0f) return null;
         return a;
+    }
+
+    // When the core stops on an end beam (ambiguous / insufficient rays / no broad face), the reviewed EndBeamProbeHeight
+    // band must come from a measurement, never from what merely passes (resolving-blocks.md; RLW RXM-1B front,
+    // 2026-09-29). This survey is that measurement, written to the build report before the error: every upright transverse
+    // face seen along the car axis across x -1.0..1.0 m and y 0.20..2.00 m, per 0.2 m band, outermost first, with its depth,
+    // ray count, support either side of +-0.3 m (the core wants both), distance from the source car end (the core allows
+    // 0.35 m) and part names. It changes nothing; the build still stops.
+    static void SurveyRr2dvEndBeams()
+    {
+        foreach (int dir in new[] { 1, -1 })
+        {
+            float? end = dir > 0 ? Cfg.RrEndFront : Cfg.RrEndRear;
+            var hits = new System.Collections.Generic.List<(Vector3 p, string part)>();
+            using (var vh = new VisualHits(RefBody))
+                for (int ix = -10; ix <= 10; ix++)
+                    for (int iy = 0; iy <= 36; iy++)
+                        if (vh.Ray(new Vector3(ix * .1f, .2f + iy * .05f, dir * 30f), new Vector3(0, 0, -dir), 30f, out var h) &&
+                            dir * h.normal.z >= .95f && dir * h.point.z > .5f)
+                            hits.Add((h.point, h.collider.transform.parent.name));
+            Line($"rr2dv end-beam survey {(dir > 0 ? "front" : "rear")}: source car end {(end.HasValue ? end.Value.ToString("F3") : "unknown")}, " +
+                 $"{hits.Count} upright transverse hits (x -1.0..1.0 m, y 0.20..2.00 m)");
+            for (float low = .2f; low <= 1.801f; low += .1f)
+            {
+                var band = hits.Where(h => h.p.y >= low - .001f && h.p.y <= low + .201f).OrderByDescending(h => dir * h.p.z).ToList();
+                var faces = new System.Collections.Generic.List<string>();
+                for (int i = 0; i < band.Count && faces.Count < 3;)
+                {
+                    float z0 = band[i].p.z;
+                    var face = band.Skip(i).TakeWhile(h => Mathf.Abs(h.p.z - z0) <= .015f).ToList();
+                    i += face.Count;
+                    if (face.Count < 6) continue;
+                    float z = face.Average(h => h.p.z);
+                    faces.Add($"z {z:F3} ({face.Count} rays, {face.Count(h => h.p.x <= -.299f)} left / {face.Count(h => h.p.x >= .299f)} right of 0.3 m" +
+                              (end.HasValue ? $", {z - end.Value:+0.000;-0.000} m from the source end" : "") +
+                              $"; {string.Join(", ", face.Select(h => h.part).Distinct().Take(3))})");
+                }
+                if (faces.Count > 0) Line($"  band {low:F2}..{low + .2f:F2} m: {string.Join(" | ", faces)}");
+            }
+        }
     }
 
     static void Rr2dvReleaseSeat()
