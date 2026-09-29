@@ -1916,3 +1916,16 @@ No automatic fallback (CLAUDE.md: no automatic beam approval); a reviewed EndBea
 now catches that error in BuildRr2dvCar, writes `rr2dv end-beam survey` for both ends (faces per 0.2 m band, x -1..1 m,
 y 0.2..2 m: depth, rays, support either side of 0.3 m, distance from the source end, parts) and rethrows. Next: James
 reruns the 1B, the survey gives the evidence for a geometry-review file. Tested: harness compile only. Untested in Unity.
+
+## W76 (cloud Claude, 2026-09-29): proposed geometry review in the app
+
+Branch `0.2.X-exp`, 3debfda. RXM-1B survey (4ed82b0) measured the front plane at z 7.31..7.33 across 0.4..1.9 m (1.50..1.70 m:
+47 rays, 16/16 either side; source end 7.500; sibling RXM-1 beam 7.355). James: users must not need to hand a build report to
+an LLM for a geometry review. New: on an end-beam stop the survey also runs the core's own default EndBeam check per 0.2 m band
+and writes build/out/endbeam-survey.json; `beamreview.propose` makes a geometryreview file only when, at every end rigged on a
+beam, that check passes (20-ray bin), the face is broad (>=3 rays either side of 0.3 m, the automatic-search rule), within
+0.35 m of the source car end, and the same plane (3 cm) shows at a non-overlapping height; nearest coupler height wins. Saved to
+the reports folder as geometry-review-proposed.json (evidence = survey figures); window button 'Use proposed geometry' fills
+Reviewed geometry; the user converts again. Never applied automatically (CLAUDE.md: no automatic beam approval).
+Tested: new test_beamreview (8), full suite (2 known C# check failures), GUI tests under Xvfb; the survey's C# only against
+stand-ins. Untested in Unity.
