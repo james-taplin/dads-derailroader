@@ -2069,3 +2069,17 @@ Branch `0.2.X-exp`, commit 6437eea (no pre-release). RMWF-2 'Great Jarl' stopped
 twice; the core keys colours by id, ignoring case). App fix in buildrecord._liveries: each id's first colour is kept,
 the repeat listed as an automatic choice. Core note for the local sessions: BuildMaterials' ToDictionary could keep the
 first instead of throwing. Tested: Python suite (272; the 2 known stub failures), new unit test. Untested: Unity build.
+
+## W83 (cloud Claude, 2026-09-29): 0.2.X-exp merged into main (James asked)
+Merge commit on `main` (branch head fad6488). No release or tag made (James makes those). Contents since the 0.1.3 main:
+W69-W82 app work: 2D physics stripped, tender brake release depth, latching toggles and one notch per tap, HUD bell/sander/
+sand/whistle, coal load (now measured coal space + heap), plate 90/80 % sizing, window glass rules, oil budget (one pair
+per driving axle, max 10), steam jets (whistle/safety up, dynamo along a measured pipe), wheel-radius prefill for tyre-like
+treads, end-beam survey + proposed geometry review + 'Use proposed geometry' + fitting-review dropdown, four generated
+control classes (switch/wheel/spring/lever), tender named '<loco> Tender', `rr2dv_` install folders, repeated livery
+colour ids, control logger 0.3 (tools/dv-control-logger). Docs: README (install folder, tender names, proposed geometry,
+logger) and resolving-blocks (livery repeats) updated.
+Tested: Python suite on the merged main (272; the 2 known test_csharp_api stub failures). In game so far: RXM-1B built and
+driven (controls, whistle, brakes; F4 cutout pending), RMWF-2 built. Untested in game: control classes, measured coal heap,
+names/folders; train brake 4 notches still waits on logger 0.3 evidence. `tooling/` unchanged, manifest verified.
+0.2.X-exp stays open for further 0.2 work.
