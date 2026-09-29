@@ -178,7 +178,7 @@ ahead of the leading driver at axle height, 80% of the model's half-width (at mo
 |---|---|---|
 | `needs-wheel-radius` (*the driving wheel tread radius needs your review*) | no driving tyre radius was confirmed; legacy callers may reach this block directly | normally confirm the populated radius or select a measured candidate in **Vehicle choices** during the same conversion. If the run already stopped, use the candidate shown in the report and convert again. `--wheel-radius` remains available for scripts. Normal reruns use fresh temporary workspaces |
 | `missing-anchor` (*no Chuff (chimney) / Whistle component*) | the builder places chimney and whistle effects and sounds from these Railroader components | the mod's definition lacks one; report it on the app board with the loco id |
-| `drivers-not-found`, `drivers-no-clip`, `no-drivers`, `one-axle` | the driving wheels could not be matched to turning wheels in the model | when the definition gives one driving axle over a long wheelset (the Western Maryland H9 gives 1 over 5.5 m) and the model shows several wheels at axle height there, the model's count is used and listed in `review.json`, so that case no longer stops. Likewise when the model's driving wheels sit as a whole set away from the definition's positions at the definition's spacing (RLW ROF-1: 0.875 m), or a single driving wheel within 1 m of the definition's axle (RLW RPP-1: 0.5 m). A wheel's pivot must be within 2 m of the centreline. Otherwise the message says what the wheel clip turns and why each mesh under it was not used; report it with `probe/probe.json` (its `wheels`), kept in the run's reports folder |
+| `drivers-not-found`, `drivers-no-clip`, `no-drivers`, `one-axle` | the driving wheels could not be matched to turning wheels in the model | when the definition gives one driving axle over a long wheelset (the Western Maryland H9 gives 1 over 5.5 m) and the model shows several wheels at axle height there, the model's count is used and listed in `review.json`, so that case no longer stops. Likewise when the model's driving wheels sit as a whole set away from the definition's positions at the definition's spacing (RLW ROF-1: 0.875 m), or a single driving wheel within 1 m of the definition's axle (RLW RPP-1: 0.5 m), or unevenly spaced drivers: exactly one wheel per axle, the end axles where the definition puts them (the base-game T-17 ten-wheeler's middle driver is 0.58 m from the definition's even spacing). A wheel's pivot must be within 2 m of the centreline. Otherwise the message says what the wheel clip turns and why each mesh under it was not used; report it with `probe/probe.json` (its `wheels`), kept in the run's reports folder |
 | `no-backhead` | no flat backhead plate was found from the cab, and the definition has no firebox glow to fall back on | report it with `probe/probe.json` (`cabRays`) |
 | `no-room-for-controls` | too little flat backhead plate for the generated controls, (a leaning backhead counts as one plate: hits within 3 cm of a fitted sloped plane), even after trying the upper plate (to 1.7 m above the fire door) and then 0.15 x 0.2 m spacing | report it with `probe/probe.json` (`cabRays`) |
 | `tender-trucks`, `truck-wheels`, `tender-data`, `tender-empty` | the tender's trucks, their wheels, or its weight and load slots could not be found | report it with the tender and truck ids; the message says which. A truck whose wheels are modelled into its frame (no separate wheel objects) is built as a fixed truck on Derail Valley's default layout (axles ±1.0 m, radius 0.459 m; the wheels do not turn) and listed in `review.json`. Truck wheels are found by name: objects whose name contains `wheel` or starts with `whl`; each axle's own node is then renamed `rr2dvWheel_N` in the run's truck copy, so a container holding both axles is never turned as one |
@@ -263,9 +263,15 @@ scaled to 80 %`); if nothing holds even that, it stays at the source decal with 
 
 Oil cups: the driving groups' own clips are played through a revolution; a part whose middle travels is a rod (a cup
 on it rides with it), a part that turns in place is a wheel, axle or crank (no cup on it), whatever the parts are called
-(`rr2dv oil running gear by motion` in `build_report.txt`). At most one left/right pair per driving axle and 10 cups in
-all: when the rods offer more seats, each driving axle keeps the pair nearest it (within 0.6 m) and the rest are dropped
-(`rr2dv oil budget` in `build_report.txt`).
+(`rr2dv oil running gear by motion` in `build_report.txt`). At most one left/right pair per driving axle and 12 cups in
+all: each driving axle takes the rod nub pair nearest it (within 0.6 m); an axle with none near it gets its cups on the
+running gear's flat tops or the running board beside it instead (the GN A-18's only nubs were at the crossheads); spare
+nubs are dropped (`rr2dv oil budget` in `build_report.txt`). Every cup needs its own space: nothing visible may be inside
+a 3.5 cm radius, 9 cm tall cylinder above its base (except what it stands on) at four points of the wheels' turn, and
+cups stay 12 cm apart (`rr2dv oil nub … rejected`, `rr2dv oil clearance`). Running-gear seats are searched from
+crank-pin height upward, rods first, so big ends win over high linkages. If no driving axle has any usable seat, the loco needs no
+manual oiling: its oiling system keeps one internal point that never drains (no cup, no oil lamp, no wear), reported as
+`rr2dv oil: … no manual oiling` in `build_report.txt` and as an audit note.
 
 HUD: besides CCL's steam layout, the HUD shows the whistle, tender coal, the sander and the sand level.
 
@@ -299,6 +305,11 @@ removes that axis (`rr2dv brake cutout ... absolute axis input removed` in `buil
 Livery colours: a livery that lists the same colour name twice (RLW RMWF-2's 'RLW Grey' lists 'roof' twice) keeps the
 first and lists the repeat among the automatic choices; the builder stopped on it before ("An item with the same key has
 already been added").
+
+Supports (Derail Valley's two bogies): normally the front and rear driving axles. When a leading truck sits further
+ahead of the front driver than the drivers' own wheelbase (a 4-2-2, a 4-4-0), the front support is the leading truck's
+centre and the rear one the rear driver, so the long nose is carried; on drivers alone it tipped onto the rails (RLW
+RPP-1, GN A-18). Listed among the automatic choices.
 
 Names: each unit is named after its locomotive so Derail Valley's info boards and radio list them together: the loco
 as itself, its tender as "<loco> Tender" (a third unit would be "<loco> C"). Packs install as `rr2dv_<loco>` in the Derail
@@ -338,13 +349,22 @@ Dynamo (Vehicle choices): suggested from the Railroader definition (a `Dynamo` c
 has no electric lamps, cab light, or Dynamo/Cab light/Headlights backhead controls, and the HUD has no dynamo or
 headlight controls; the dynamo stays off, so no dynamo steam jet.
 
-Firing (Vehicle choices): Railroader definitions do not say how the fire is fed, so the suggestion is always hand-fired.
+Firing (Vehicle choices): Railroader definitions do not say how the fire is fed, so the suggestion is hand-fired, or
+mechanical-stoker when the loco or tender has a component named stoker or auger (the ALCo K-66's 'Stoker' and 'auger').
 "oil-burner" (tank locos only for now) builds our builder core's oil firing: the loco's coal space holds fuel oil
 (refilled at the diesel pump; untested in game), the oil valve is on the HUD's dynamic-brake slot, the atomizer valve on
 Gearbox 1 (it lights the burner from cold); there is no shovel, coal dump or coal pile. Feed rate and pressures are the
 core's defaults, not calibrated for the loco. "Oil burner firing is built for tank locos only so far": a tender's coal
-space would still take coal; choose hand-fired. "Mechanical stoker firing is not built yet": it needs a builder core
-change (keep coal, give the stoker steam use); choose hand-fired or oil-burner.
+space would still take coal; choose hand-fired.
+"mechanical-stoker" builds Custom Car Loader's steam stoker: a backhead 'Stoker' valve wheel (also on the HUD's Gearbox A
+slot and keys; no dynamic-brake slot) feeds coal from the bunker to the firebox, faster with more boiler pressure (full
+rate from half the safety-valve pressure), up to 1.5 x what this firebox burns at its hottest; it uses as much steam as the
+loco's air pump at full. On a tender loco the tender's coal amount and consumption cross the coupling as its water does.
+The shovel and coal pile stay as a backup. The source's own stoker or auger toggles (the K-66: 'Stoker' turns the loco's
+drive shaft, 'Auger' the tender's screw) are then not click toggles: their animated parts turn with the stoking rate,
+about the axis their own clips turn them. Without such a toggle, a tender with exactly one level, long, round mesh named
+auger, stoker, screw, conveyor or worm gets that turning; none, several or another shape: no animation, and the build
+report says why (`rr2dv stoker` in `build_report.txt`). Balance and the auger are untested in game.
 
 Whistle closed (0) is always the whistle handle's resting end. When a Railroader whistle handle is modelled at the end of
 its clip rather than the start, the lever uses the clip reversed (`RR control …: its handle rests at the end of …`).
@@ -358,7 +378,7 @@ Derail Valley lever: a generated backhead lever works that function, the modelle
 
 A door, window or hatch animation (Railroader `ToggleAnimation`) that cannot be resolved (no clip, no or ambiguous
 target, a clip that does not move its declared target, overlap with another moving assembly) no longer stops the build:
-that one animation is left out, its model stays as modelled, and a `WARN rr2dv ancillary toggle '…' left out` line in
+that one animation is left out, its model stays as modelled, and a `WARN rr2dv ancillary toggle '…' on <car> left out` line in
 `build_report.txt` names it and says why (L-27: a second roof-hatch toggle). Driving controls keep their hard checks.
 A rigged opening, whose clip moves the bones inside its declared target (the H9's windows, deflectors and roof hatch),
 is kept: the whole declared assembly, mesh and bones, becomes the opening, and it opens with a click.

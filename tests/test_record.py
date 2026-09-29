@@ -169,5 +169,52 @@ class LiveryColours(unittest.TestCase):
 
 
 
+class UnevenAxles(unittest.TestCase):
+    def test_unevenly_spaced_drivers_use_the_measured_positions(self):
+        # base-game T-17 ten-wheeler: drivers at 2.179, 0.579 and -2.179 m; the definition's 3 axles over 4.362 m
+        # put the middle one at 0, 0.58 m from the model's wheel
+        from rr2dv import buildrecord
+        nodes = {f"engine/Drivers/W{i}": [0, .711, z] for i, z in enumerate((2.179, .579, -2.179))}
+        wheel_out = {"sourceRadius": .71, "rotatingPaths": list(nodes),
+                     "meshes": [{"path": p + "/Cylinder", "used": True, "maxRadius": .72} for p in nodes]}
+        ws = {"offset": 0.0, "length": 4.362, "diameter": 1.42, "axles": 3, "clip": "Drivers"}
+        axles = buildrecord.measured_axles(ws, wheel_out, nodes)
+        self.assertEqual([round(a["z"], 3) for a in axles], [2.179, .579, -2.179])
+        self.assertTrue(all(a["part"] and a["uneven"] for a in axles))
+        # a wheel missing is still missing: no spacing rule invents it
+        wheel_out["meshes"].pop(1)
+        self.assertIn(None, [a["part"] for a in buildrecord.measured_axles(ws, wheel_out, nodes)])
+
+
+class BogieSupports(unittest.TestCase):
+    """Where the body is carried (the two bogie pivots) for each wheel arrangement met so far: a regression pin after
+    the GN A-18 lost its nose support (2026-09-29)."""
+
+    @staticmethod
+    def split(leading, drivers, trailing=()):
+        from rr2dv import buildrecord
+        ax = [{"z": z, "driver": False} for z in leading] + [{"z": z, "driver": True} for z in drivers] + \
+             [{"z": z, "driver": False} for z in trailing]
+        allax = sorted(ax, key=lambda a: -a["z"])
+        f_ax, r_ax, f_pivot, r_pivot, note = buildrecord.bogie_split(allax, [a for a in allax if a["driver"]])
+        pivot = lambda axes, i: sum(a["z"] for a in axes) / len(axes) if i == -1 else axes[i]["z"]
+        return round(pivot(f_ax, f_pivot), 3), round(pivot(r_ax, r_pivot), 3), note
+
+    def test_4_4_0_is_carried_on_its_leading_truck(self):  # GN A-18
+        front, rear, note = self.split([5.47, 3.64], [1.133, -0.986])
+        self.assertEqual((front, rear), (4.555, -0.986))
+        self.assertIn("leading truck", note)
+
+    def test_4_2_2_is_carried_on_its_leading_truck(self):  # RLW RPP-1
+        front, rear, _ = self.split([4.0, 2.4], [0.0], [-2.0])
+        self.assertEqual((front, rear), (3.2, 0.0))
+
+    def test_4_6_0_keeps_its_driver_pivots(self):  # base-game T-17: truck 2.42 m ahead, drivers 4.36 m apart
+        self.assertEqual(self.split([5.515, 3.675], [2.179, 0.579, -2.179])[:2], (2.179, -2.179))
+
+    def test_2_6_0_keeps_its_driver_pivots(self):
+        self.assertEqual(self.split([3.0], [1.2, 0.0, -1.2])[:2], (1.2, -1.2))
+
+
 if __name__ == "__main__":
     unittest.main()

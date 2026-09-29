@@ -43,8 +43,13 @@ def scan_report(root: Path, search: Sequence[Path], hash_files: bool = False) ->
 
 @dataclass
 class ModEntry:
-    folder: str
+    folder: str  # a Mods folder's name, or a base-game asset pack's full path (what `convert` and `scan` take)
     locos: list[tuple[str, str]] = field(default_factory=list)  # (identifier, display name)
+    base: bool = False  # a Railroader base-game asset pack
+    label: str = ""  # the folder's own name, for display
+
+    def __post_init__(self):
+        self.label = self.label or Path(self.folder).name
 
 
 @dataclass
@@ -118,17 +123,25 @@ class Controller:
                 and not ((p := self.machine.path(key)) and (p.is_file() if kind == "file" else p.is_dir()))]
 
     def list_mods(self, progress: Callable[[int, int], None] | None = None) -> list[ModEntry]:
-        """Folders in the Railroader Mods folder that contain steam locomotives."""
+        """Folders in the Railroader Mods folder that contain steam locomotives, then Railroader's own base-game asset
+        packs that do (0.3: every locomotive pack there has its Definitions.json, catalogue and bundle)."""
         rr = installs.railroader(self.machine)
-        folders = sorted((p for p in rr.mods.iterdir() if p.is_dir()), key=lambda p: p.name.casefold())
+        mods = sorted((p for p in rr.mods.iterdir() if p.is_dir()), key=lambda p: p.name.casefold())
+        packs = sorted((p for p in rr.asset_packs.iterdir() if p.is_dir()), key=lambda p: p.name.casefold()) \
+            if rr.asset_packs.is_dir() else []
         out = []
-        for i, folder in enumerate(folders):
+        for i, folder in enumerate(mods + packs):
             if progress:
-                progress(i, len(folders))
-            locos = Index(folder).steam_locomotives(input_only=True)
+                progress(i, len(mods) + len(packs))
+            base = i >= len(mods)
+            try:
+                locos = Index(folder).steam_locomotives(input_only=True)
+            except Exception:  # one unreadable pack never hides the rest
+                continue
             if locos:
-                out.append(ModEntry(folder.name, [(o["identifier"], (o.get("metadata") or {}).get("name") or o["identifier"])
-                                                  for _, o in locos]))
+                out.append(ModEntry(str(folder) if base else folder.name,
+                                    [(o["identifier"], (o.get("metadata") or {}).get("name") or o["identifier"]) for _, o in locos],
+                                    base=base, label=folder.name))
         return out
 
     def scan(self, folder: str) -> dict:

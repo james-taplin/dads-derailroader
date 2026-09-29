@@ -106,6 +106,44 @@ class BuildStages(unittest.TestCase):
         self.assertIn('different source', out.message)
         self.assertEqual(out.run.record['stages']['stage']['status'], 'pending')
 
+    def test_a_mechanical_stoker_gets_its_valve_wheel_on_gearbox_a(self):
+        def stoker(questions):
+            return {**{k: questions[k] for k in ('schema', 'adapterVersion', 'vehicleId', 'fingerprint', 'catalogueHash')},
+                    'values': {**questions['prefill']['values'], 'wheelRadius': .598, 'firing': 'mechanical-stoker',
+                               'acknowledgeExperimental': True}}
+        out = self.convert(agree=False, wheel_radius=0.598, prebuild_review=stoker)
+        rec = read_json(out.run.path / "build/vehicle-record.json")
+        cfg = buildrecord._plain(rec["config"])
+        wheel = next(p for p in cfg["Placed"] if p["Port"] == "stokerControl.EXT_IN")
+        self.assertEqual((wheel["Name"], wheel["Ctl"], wheel["Wheel"]), ("Stoker", 8, True))  # GearboxA keys
+        self.assertEqual(cfg["ControlsReaderExtra"], {"gearboxA": "stokerControl.EXT_IN"})
+        inp = read_json(out.run.path / "unity/project/Assets/Rr2dv/BuildInput.json")
+        self.assertEqual(inp["review"]["firing"], "mechanical-stoker")
+        self.assertIn({"control": "C_Stoker", "cls": "wheel"}, inp["controlClasses"])
+        # the source's stoker/auger toggles turn with the stoker: the audit does not expect click controls for them
+        from rr2dv import audit
+        comps = buildrecord._plain(rec["config"])["Components"]
+        comps.append({"kind": "ToggleAnimation", "name": "Stoker", "extra": json.dumps({"animation": {"clipName": "Shaft"}})})
+        rec["config"]["Components"] = comps
+        with_stoker = audit.audit_input(rec, out.run.path / "build")["openingCount"]
+        rec["metadata"]["firing"] = "hand-fired"
+        self.assertEqual(audit.audit_input(rec, out.run.path / "build")["openingCount"], with_stoker + 1)
+
+    def test_a_base_game_pack_converts_and_is_credited_as_railroader(self):
+        # 0.3 (James): a locomotive pack from Railroader_Data/StreamingAssets/AssetPacks is an input, read only
+        packs = self.tmp / "Railroader" / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
+        pack = packs / "ts-260-a"
+        shutil.move(str(self.m["mod"] / "ts-260-a"), str(pack))
+        before = tree_state(self.tmp / "Railroader")
+        out = convert(pack, self.machine, search=[self.m["search"]], ask=lambda *a: True, wheel_radius=0.598)
+        self.assertEqual(out.code, EXIT_OK, out.message)
+        sources = read_json(out.run.path / "inventory.json")["sources"]
+        game = [s for s in sources if s["kind"] == "game"]
+        self.assertEqual(len(game), 1)
+        self.assertIn("ts-260-a", game[0]["packs"])
+        self.assertNotIn("ts-260-a", [s["id"] for s in sources if s["kind"] == "mod"])
+        self.assertEqual(tree_state(self.tmp / "Railroader"), before)  # nothing written to the Railroader install
+
     def test_without_the_radius_it_asks_and_offers_the_candidate(self):
         out = self.convert()
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)

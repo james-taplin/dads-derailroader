@@ -80,7 +80,12 @@ CONTROL_CLASS = {
     "cylinderCock.EXT_IN": "switch", "sander.CONTROL_EXT_IN": "switch",
     "injector.EXT_IN": "wheel", "blower.EXT_IN": "wheel", "blowdown.EXT_IN": "wheel",
     "whistle.EXT_IN": "spring",
+    "stokerControl.EXT_IN": "wheel",
 }
+# The mechanical stoker's steam valve (pre-build review firing 'mechanical-stoker'; Rr2dvStoker builds its sim): a generated
+# valve wheel on the Gearbox A HUD slot and keys (James, 2026-09-29; ControlControlsWizard GearboxA = 8), as the oil
+# burner's atomizer. No DV label exists for it.
+STOKER_CONTROL = ("Stoker", "stokerControl.EXT_IN", 8, True, False, 18, None, 0)
 
 
 def control_class(port: str) -> str:
@@ -334,6 +339,15 @@ def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[fl
     shifted = _shifted_axles(expected, groups, wheel_out, nodes)
     if shifted:
         return shifted
+    # Unevenly spaced axles (the base-game T-17 ten-wheeler: drivers at 2.179, 0.579, -2.179 m, the definition's even
+    # spacing puts the middle one at 0): exactly one measured wheel per axle, the end axles where the definition puts
+    # them and every wheel within its span. The model's positions are then the axles, each still paired with its source.
+    ordered = sorted(groups, key=lambda g: -g["z"])
+    if (len(expected) >= 3 and len(ordered) == len(expected)
+            and abs(ordered[0]["z"] - max(expected)) <= AXLE_MATCH_M and abs(ordered[-1]["z"] - min(expected)) <= AXLE_MATCH_M
+            and any(abs(g["z"] - z) > AXLE_MATCH_M for g, z in zip(ordered, sorted(expected, reverse=True)))):
+        return [{"z": g["z"], "part": sorted(g["paths"])[0], "basis": "measured", "rr": z, "uneven": True}
+                for g, z in zip(ordered, sorted(expected, reverse=True))]
     out = []
     for z in expected:
         near = sorted((g for g in groups if abs(g["z"] - z) <= AXLE_MATCH_M), key=lambda g: (abs(g["z"] - z), g["z"]))
@@ -343,6 +357,36 @@ def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[fl
         else:
             out.append({"z": z, "part": None, "basis": "source", "rr": z})
     return out
+
+
+def bogie_split(allax: list[dict], drivers: list[dict]):
+    """Derail Valley's two bogies from the axles (front to back): (front axles, rear axles, front pivot index, rear pivot
+    index, choice note or None); None when there is only one axle. The body is supported at the two pivots (Rr2dvPlacement
+    AlignRr2dvBogieSupports puts each support at its bogie's pivot), so the pivots must span the loco's weight.
+    Normally the front and rear drivers (G-29: a rigid wheelbase). But a leading bogie further ahead of the front driver
+    than the drivers' own wheelbase carries the nose: on the drivers alone it sank to the rails, RLW RPP-1 4-2-2 (one
+    driver, 2026-09-28) and GN A-18 4-4-0 (2.12 m between its drivers, leading truck 3.42 m ahead, 2026-09-29; it built
+    right until supports moved from the outermost axle to the pivot on 2026-09-28, while this rule covered one driver
+    only). Then the front bogie is the leading truck, pivoting at its centre, and the rear bogie pivots on the rear
+    driver. A 4-6-0/4-6-2 whose driver wheelbase exceeds that distance keeps its driver pivots."""
+    n_front = max(1, len(drivers) // 2)
+    front_drivers = drivers[:n_front]
+    split = allax.index(front_drivers[-1]) + 1
+    f_ax, r_ax = allax[:split], allax[split:]
+    if not r_ax:
+        return None
+    f_pivot = f_ax.index(front_drivers[0])
+    r_pivot = r_ax.index(drivers[-1]) if drivers[-1] in r_ax else len(r_ax) - 1
+    leading = [a for a in allax if a["z"] > drivers[0]["z"] + 1e-6]
+    centre = sum(a["z"] for a in leading) / len(leading) if leading else 0.0
+    span = drivers[0]["z"] - drivers[-1]["z"]
+    if len(leading) >= 2 and centre - drivers[0]["z"] > span:
+        rear = [a for a in allax if a not in leading]
+        return (leading, rear, -1, rear.index(drivers[-1]),  # -1: the core's "average of the bogie's axles"
+                f"{len(drivers)} driving axle(s) ({span:.2f} m wheelbase) behind a {len(leading)}-axle leading truck "
+                f"{centre - drivers[0]['z']:.2f} m ahead: the front bogie is the leading truck (pivot at its centre, "
+                f"z {centre:.3f}), the rear bogie pivots on the rear driver (z {drivers[-1]['z']:.3f})")
+    return f_ax, r_ax, f_pivot, r_pivot, None
 
 
 def common_parent(paths: list[str]) -> str:
@@ -666,6 +710,10 @@ class _Builder:
                 ws = {**ws, "axles": inferred}
                 self._inferred_axles[i] = inferred
             ax = measured_axles(ws, wout, nodes)
+            if ax and ax[0].get("uneven"):
+                where = ", ".join(f"{a['z']:.3f}" for a in ax)
+                self.choose(f"wheelset {i} ({ws.get('clip')}): the model's {len(ax)} wheels are unevenly spaced ({where} m; the "
+                            "definition spaces them evenly): the running gear uses the model's positions (review)")
             if ax and "shift" in ax[0]:
                 self.choose(f"wheelset {i} ({ws.get('clip')}): the model's {len(ax)} wheels are {ax[0]['shift']:+.3f} m from the "
                             "definition's axle positions at the definition's spacing; the running gear uses the model's positions (review)")
@@ -708,26 +756,13 @@ class _Builder:
         if geared and any(a['part'] and abs(a['z'] - a['rr']) > .05 for a in allax):
             self.choose('Explicit source truck transforms identify measured axles whose model positions differ from source simulation offsets; '
                         'using measured model geometry, see metadata.physicalAxles (z and rr); in-game wheelbase validation pending')
-        n_front = max(1, len(drivers) // 2)
-        front_drivers = drivers[:n_front]
-        split = allax.index(front_drivers[-1]) + 1
-        f_ax, r_ax = allax[:split], allax[split:]
-        if not r_ax:
+        split = bogie_split(allax, drivers)
+        if split is None:
             self.block("one-axle", f"{lid}: only one axle found; Derail Valley needs two bogies")
             return rec
-        f_pivot = f_ax.index(front_drivers[0])
-        r_pivot = r_ax.index(drivers[-1]) if drivers[-1] in r_ax else len(r_ax) - 1
-        leading = [a for a in allax if a["z"] > drivers[0]["z"] + 1e-6]
-        if len(drivers) == 1 and len(leading) >= 2:
-            # One driving axle behind a leading bogie (RLW RPP-1 4-2-2): the body rides on that bogie. Pivoting the front
-            # bogie on the driver left a 2.7 m base under a 4.4 m front overhang and the body sagged through the leading
-            # truck (game test 2026-09-28). Front bogie = the leading truck; the driver heads the rear bogie.
-            f_ax, r_ax = leading, [a for a in allax if a not in leading]
-            f_pivot = -1  # the core's "average of the bogie's axles": the leading truck's centre
-            r_pivot = r_ax.index(drivers[0])
-            centre = sum(a["z"] for a in leading) / len(leading)
-            self.choose(f"single driving axle behind a {len(leading)}-axle leading truck: the front bogie is the leading "
-                        f"truck (pivot at its centre, z {centre:.3f}), the rear bogie pivots on the driver")
+        f_ax, r_ax, f_pivot, r_pivot, note = split
+        if note:
+            self.choose(note)
         evidence = [f"probe/probe.json wheels (nodes turned by the wheelset clips)", "Definitions wheelsets (RR axle positions)",
                     "guide A04; G-29 profile: bogies pivot on the end drivers (rigid wheelbase)"]
         cfg["Bogies"] = env([{"Bogie": "BogieF", "BogieCollider": "front", "Axles": [_r(a["z"]) for a in f_ax], "PivotAxle": f_pivot},
@@ -844,6 +879,9 @@ class _Builder:
         missing = [d for d in DRIVING if d[1] not in taken and (d[1] != "bellControl.EXT_IN" or any(c["kind"] == "Bell" for c in comps))]
         wanted = [(n, p, ctl, False, ctl in (22, 15), notches, None, 0) for n, p, ctl, notches in missing] + \
                  [g for g in GENERATED if g[1] not in taken]
+        firing = ((self.answers.get("prebuildReview") or {}).get("values") or {}).get("firing")
+        if firing == "mechanical-stoker":
+            wanted.append(STOKER_CONTROL)
         if plate:
             avoid = [tuple(nodes[l["Path"]][:2]) for l in levers if l["Path"] in nodes]
             spots, tier = fitted_positions(plate["points"], (door[0], door[1]), avoid, len(wanted))

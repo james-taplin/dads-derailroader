@@ -431,18 +431,23 @@ class App:
         applog.get().info("mods: %d with steam locomotives", len(mods))
         self._fill_mods()
         count = sum(len(m.locos) for m in mods)
-        self.mods_status.configure(text=f"{len(mods)} mods, {count} steam locomotives")
+        base = sum(1 for m in mods if m.base)
+        self.mods_status.configure(text=f"{len(mods) - base} mods" + (f" and {base} base-game packs" if base else "") +
+                                        f", {count} steam locomotives")
 
     def _fill_mods(self) -> None:
+        """Locomotives one level down, under 'Base game' (Railroader's own asset packs) and 'Mods'; each shows the
+        folder it comes from."""
         self.tree.delete(*self.tree.get_children())
         needle = self.search.get().strip().casefold()
-        for mod in self.mods:
-            locos = [(i, n) for i, n in mod.locos if not needle or needle in f"{mod.folder} {i} {n}".casefold()]
-            if not locos:
+        for group, title in (("base", "Base game"), ("mods", "Mods")):
+            rows = [(mod, i, n) for mod in self.mods if mod.base == (group == "base") for i, n in mod.locos
+                    if not needle or needle in f"{mod.label} {i} {n}".casefold()]
+            if not rows:
                 continue
-            node = self.tree.insert("", "end", iid=f"mod::{mod.folder}", text=mod.folder, open=bool(needle) or len(self.mods) < 8)
-            for ident, name in locos:
-                self.tree.insert(node, "end", iid=f"loco::{mod.folder}::{ident}", text=f"{name}  ({ident})")
+            node = self.tree.insert("", "end", iid=f"group::{group}", text=f"{title} ({len(rows)})", open=True)
+            for mod, ident, name in sorted(rows, key=lambda r: (r[2].casefold(), r[1])):
+                self.tree.insert(node, "end", iid=f"loco::{mod.folder}::{ident}", text=f"{name}  ({ident})  ·  {mod.label}")
 
     def _on_select(self, _event=None) -> None:
         item = (self.tree.selection() or [""])[0]
@@ -454,11 +459,11 @@ class App:
             self._set_geometry_choices([])
         self.selected = (folder, ident)
         self.loco_title.configure(text=self.tree.item(item, "text").split("  (")[0])
-        self.loco_sub.configure(text=f"{ident} in {folder} — checking…")
+        self.loco_sub.configure(text=f"{ident} in {Path(folder).name} — checking…")
         if self.report and self.report.get("_folder") == folder:
             self._show_loco()
         elif not self.worker.run("Checking the mod", lambda: {**self.c.scan(folder), "_folder": folder}, self._got_report):
-            self.loco_sub.configure(text=f"{ident} in {folder} — busy, select again when the current task ends")
+            self.loco_sub.configure(text=f"{ident} in {Path(folder).name} — busy, select again when the current task ends")
 
     def _got_report(self, report) -> None:
         self.report = report
@@ -484,7 +489,7 @@ class App:
             self.issues.insert("", "end", text=mark, values=(issue["message"],), tags=(issue["severity"],))
         self.livery.configure(values=loco.get("liveries") or ["(default)"])
         self.livery.current(0)
-        self.loco_sub.configure(text=f"{ident} in {folder}")
+        self.loco_sub.configure(text=f"{ident} in {Path(folder).name}" + (" (Railroader base game)" if Path(folder).is_absolute() else ""))
         self._update_convert_button()
         self._find_geometry_reviews()
 

@@ -37,7 +37,7 @@ public static partial class CclLocoBuild
     {
         int exitCode = 0;
         Loco = Cfg = cfg;
-        Report.Clear(); warnings = 0; ownMats.Clear(); refBody = null; builtFolders.Clear(); meshIslandSources.Clear();
+        Rr2dvStokerParts.Clear(); Report.Clear(); warnings = 0; ownMats.Clear(); refBody = null; builtFolders.Clear(); meshIslandSources.Clear();
         Line($"CclLocoBuild: {CarName} ({CarId}) v{Cfg.Version}{(cfg.Tender != null ? $" + tender {cfg.Tender.CarName} ({cfg.Tender.CarId})" : "")}");
         outDir = Environment.GetEnvironmentVariable("CCL_BUILD_OUT") ?? Environment.GetEnvironmentVariable("RLW_BUILD_OUT") ?? Path.GetFullPath("BuildOut");
         Directory.CreateDirectory(outDir);
@@ -110,7 +110,9 @@ public static partial class CclLocoBuild
             FreshRr2dvSource();
         }
         Rr2dvReleaseSeat();
+        StripRr2dvHiddenMeshes();
         BuildInteractables();
+        FreshRr2dvSource();
         BuildRr2dvAncillaries();
         var sound = c.IsTender ? null : BuildSound();
         ConfigureAssets(sound);
@@ -634,6 +636,21 @@ public static partial class CclLocoBuild
         if (colliders.Length > 0) Line($"rr2dv cab measured on the visible model: {colliders.Length} source collider(s) set aside");
     }
 
+    // The core seats the handbrake wheel on the visible model (VisualHits: active meshes with an enabled renderer), then its
+    // final check (RRPlacementValidation.CheckHandbrake) casts against every MeshFilter, hidden ones too, and can find a
+    // surface nobody sees in front of the wheel: the base-game K-28T stopped with "handbrake mount misfit: stand-off
+    // -0.092 m" (2026-09-29). On the measuring copy only, meshes that are never drawn (inactive, no renderer or a disabled
+    // one) are removed for that step, so both see the same surfaces; a fresh source copy follows for everything after.
+    static void StripRr2dvHiddenMeshes()
+    {
+        var hidden = RefBody.GetComponentsInChildren<MeshFilter>(true)
+            .Where(f => { var r = f.GetComponent<MeshRenderer>(); return !f.gameObject.activeInHierarchy || !r || !r.enabled; }).ToList();
+        var names = hidden.Select(f => f.name).ToList();
+        foreach (var f in hidden) { var r = f.GetComponent<MeshRenderer>(); if (r) Object.DestroyImmediate(r); Object.DestroyImmediate(f); }
+        if (names.Count > 0)
+            Line($"rr2dv fittings measured on the visible model: {names.Count} hidden mesh(es) set aside ({string.Join(", ", names.Take(6))}{(names.Count > 6 ? ", ..." : "")})");
+    }
+
     static void FreshRr2dvSource()
     {
         if (refBody) Object.DestroyImmediate(refBody.gameObject);
@@ -667,6 +684,10 @@ public static partial class CclLocoBuild
             var nubs = Rr2dvRodNubs(body);
             using (var hits = new VisualHits(body))
             {
+                Rr2dvCupSpacing.Clear();
+                int before = nubs.Count;
+                nubs = nubs.Where(n => Rr2dvCupClear(hits, body, n.pos, n.rod, out var why) || Rr2dvNubRejected(n, why)).ToList();
+                if (nubs.Count < before) Line($"rr2dv oil clearance: {before - nubs.Count} of {before} rod nub(s) rejected (something visible inside the cup's space at some wheel phase)");
                 var remaining = nubs.Where(n => n.pos.x > 0).ToList();
                 var pairs = new System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)>();
                 foreach (var left in nubs.Where(n => n.pos.x < 0))
@@ -680,13 +701,6 @@ public static partial class CclLocoBuild
                 pairs = Rr2dvOilBudget(pairs, hints);
                 int pair = 0;
                 foreach (var p in pairs) Rr2dvAddOilPair(placed, hits, body, ++pair, p.l, p.r, p.z);
-                if (nubs.Count == 0)
-                {
-                    for (int i = 0; i < hints.Length; i += 2)
-                        Rr2dvAddOilPair(placed, hits, body, i / 2 + 1,
-                            (null, Vector3.zero), (null, Vector3.zero),
-                            (hints[i].Item2.z + hints[i + 1].Item2.z) / 2);
-                }
             }
             var old = body.Find("[oiling points]");
             if (old) Object.DestroyImmediate(old.gameObject);
@@ -707,7 +721,16 @@ public static partial class CclLocoBuild
             var oilDefinition = root.transform.Find("[sim]/oilingPoints")?.GetComponents<Component>()
                 .FirstOrDefault(c => c.GetType().Name == "ManualOilingPointsDefinitionProxy");
             if (!oilDefinition) throw new InvalidOperationException("Missing simulation oiling-point definition");
-            Set(oilDefinition, "OilingPointCount", points.Length);
+            if (points.Length > 0) Set(oilDefinition, "OilingPointCount", points.Length);
+            else
+            {
+                // No manual oiling (James, 2026-09-29): with no seat at any driving axle, the oiling system keeps one internal
+                // point that never drains (no cup, the oil lamp never lights, no running-gear wear), rather than zero points,
+                // whose "lowest oil level" Derail Valley may read as empty. Deliberate and reported; the audit accepts it.
+                Set(oilDefinition, "OilingPointCount", 1);
+                Set(oilDefinition, "consumptionPerRev", 0f);
+                Warn("rr2dv oil: no accessible seat at any driving axle: no manual oiling (one internal oiling point that never drains, no cup)");
+            }
             oilDefinition.GetType().GetMethod("OnValidate", BF)?.Invoke(oilDefinition, null);
             Line($"rr2dv oil layout: {placed.Count} cups ({nubs.Count} rod-nub candidates, {hints.Length} provisional axle hints)");
             Line($"rr2dv oil simulation count: {points.Length}");
@@ -718,44 +741,48 @@ public static partial class CclLocoBuild
 
     // Oil-cup budget (James, 2026-09-29): one left/right pair per driving axle, 10 cups at most on a large loco. Every
     // rod nub became a pair before, so a model rich in nubs got cups on every surface (C&O T1: 28 cups, 8 pairs bunched
-    // around the cylinders and crossheads). Over budget, each driving axle (the provisional axle hints) keeps the nub
-    // pair nearest its z within 0.6 m (a crank throw and margin); the rest are dropped and listed.
-    const int Rr2dvOilPairsMax = 5;
+    // around the cylinders and crossheads; James raised the cap from 10 to 12 cups for x-4-4-x articulateds). Each driving axle (the provisional axle hints) takes the nub pair nearest its z
+    // within 0.6 m (a crank throw and margin), else the running gear's tops or the running board at the axle; at most 6
+    // pairs, nub-matched axles first; unused nubs are dropped and listed.
+    const int Rr2dvOilPairsMax = 6;  // 12 cups: an x-4-4-x articulated (James, 2026-09-29)
 
     static System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)> Rr2dvOilBudget(
         System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)> pairs,
         (string, Vector3)[] hints)
     {
-        int budget = Mathf.Min(hints.Length / 2, Rr2dvOilPairsMax);
-        if (pairs.Count <= budget) return pairs;
+        var none = ((Transform)null, Vector3.zero);
         var axles = Enumerable.Range(0, hints.Length / 2).Select(i => (hints[2 * i].Item2.z + hints[2 * i + 1].Item2.z) / 2).ToArray();
         var free = pairs.ToList();
-        var chosen = new System.Collections.Generic.List<(((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z) pair, float dz)>();
-        foreach (float az in axles)
+        var chosen = new System.Collections.Generic.List<(int axle, ((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z) pair, float dz)>();
+        for (int i = 0; i < axles.Length; i++)
         {
-            if (free.Count == 0) break;
-            var best = free.OrderBy(p => Mathf.Abs(p.z - az)).First();
-            if (Mathf.Abs(best.z - az) > .6f) { Line($"rr2dv oil budget: driving axle z {az:F3} has no rod nub pair within 0.6 m; no cup there"); continue; }
-            free.Remove(best);
-            chosen.Add((best, Mathf.Abs(best.z - az)));
+            float az = axles[i];
+            var near = free.Where(p => Mathf.Abs(p.z - az) <= .6f).OrderBy(p => Mathf.Abs(p.z - az)).ToList();
+            if (near.Count > 0) { free.Remove(near[0]); chosen.Add((i, near[0], Mathf.Abs(near[0].z - az))); continue; }
+            // no rod nub near this axle (GN A-18: its only nubs were at the crossheads, 2026-09-29): the running gear's
+            // flat tops, then the running board, at the axle (Rr2dvAddOilPair with no rod)
+            Line($"rr2dv oil budget: driving axle z {az:F3} has no rod nub pair within 0.6 m; running gear top or board there instead");
+            chosen.Add((i, (none, none, az), float.MaxValue));
         }
-        var keep = chosen.OrderBy(c => c.dz).Take(budget).Select(c => c.pair).ToList();
-        var kept = pairs.Where(p => keep.Contains(p)).ToList();  // source order kept (O01: stable tags and indices)
-        foreach (var p in pairs.Where(p => !kept.Contains(p)))
+        var keep = chosen.OrderBy(c => c.dz).Take(Rr2dvOilPairsMax).OrderBy(c => c.axle).Select(c => c.pair).ToList();
+        foreach (var p in pairs.Where(p => !keep.Contains(p)))
             Line($"rr2dv oil budget: nub pair at z {p.z:F3} dropped (one pair per driving axle, at most {Rr2dvOilPairsMax * 2} cups)");
-        Line($"rr2dv oil budget: {pairs.Count} nub pairs -> {kept.Count} ({axles.Length} driving axle(s), at most {Rr2dvOilPairsMax * 2} cups)");
-        return kept;
+        Line($"rr2dv oil budget: {pairs.Count} nub pairs -> {keep.Count(p => p.l.rod || p.r.rod)} kept, {keep.Count(p => !p.l.rod && !p.r.rod)} " +
+             $"axle(s) on running gear or boards ({axles.Length} driving axle(s), at most {Rr2dvOilPairsMax * 2} cups)");
+        return keep;
     }
 
     static void Rr2dvAddOilPair(System.Collections.Generic.List<(string tag, Vector3 pos, Transform rod, string seat)> placed,
         VisualHits hits, Transform body, int pair, (Transform rod, Vector3 pos) left, (Transform rod, Vector3 pos) right, float z)
     {
-        var a = left.rod && Rr2dvRodSeatAccessible(hits, body, left.pos)
+        var a = left.rod && Rr2dvRodSeatAccessible(hits, body, left.pos) && Rr2dvCupSpaced(left.pos)
             ? (true, left.pos, left.rod, "rod big end") : Rr2dvGearTopSeat(hits, body, -1, z);
         if (!a.Item1) a = Rr2dvBoardSeat(hits, body, -1, z);
-        var b = right.rod && Rr2dvRodSeatAccessible(hits, body, right.pos)
+        if (a.Item1) Rr2dvCupSpacing.Add(a.Item2);
+        var b = right.rod && Rr2dvRodSeatAccessible(hits, body, right.pos) && Rr2dvCupSpaced(right.pos)
             ? (true, right.pos, right.rod, "rod big end") : Rr2dvGearTopSeat(hits, body, 1, z);
         if (!b.Item1) b = Rr2dvBoardSeat(hits, body, 1, z);
+        if (b.Item1) Rr2dvCupSpacing.Add(b.Item2);
         if (!a.Item1 || !b.Item1)
         {
             Line($"rr2dv oil pair {pair} omitted: no accessible {(a.Item1 ? "right" : b.Item1 ? "left" : "left or right")} rod, running-gear or board seat");
@@ -794,6 +821,7 @@ public static partial class CclLocoBuild
             var pos = hit.point + Vector3.up * (CupPivotAboveBase - CupSeatSink);
             if (hits.Ray(pos + Vector3.up * .08f, Vector3.up, .12f, out var overhead, body)) continue;
             if (hits.Ray(pos + Vector3.up * .08f, Vector3.right * side, .6f, out var sideHit, body)) continue;
+            if (!Rr2dvCupSpaced(pos) || !Rr2dvCupClear(hits, body, pos, null, out _)) continue;
             return (true, pos, null, "running board on " + hit.collider.transform.parent.name);
         }
         return (false, Vector3.zero, null, null);
@@ -803,33 +831,103 @@ public static partial class CclLocoBuild
     const int Rr2dvMinNubTriangles = 20;
 
     // Flat tops on the running gear itself, before falling back to the running boards (James, 2026-09-28: the H9's
-    // big ends, crossheads and axlebox tops look better than the boards). Searched down from above the wheels, in the
-    // rod plane outside the frames, near the axle: a level spot at least 5 cm across, clear above and to the outside, on
-    // any part but a wheel. A cup on a moving part (rod, crosshead) rides with it.
+    // big ends, crossheads and axlebox tops look better than the boards). Bottom up (James, 2026-09-29: searched from the
+    // top down, cups landed on small high linkages and in visible geometry): in the rod plane outside the frames, near the
+    // axle, level spots at least 5 cm across are collected from crank-pin height upward, and the lowest on a travelling
+    // rod wins, else the lowest on any other part but a wheel; each must pass the cup clearance (Rr2dvCupClear) and
+    // spacing. A cup on a moving part rides with it.
     static (bool found, Vector3 pos, Transform rod, string seat) Rr2dvGearTopSeat(VisualHits hits, Transform body, float side, float zHint)
     {
         float top = 2 * WheelRadius + .1f, low = WheelRadius * .6f;
+        var found = new System.Collections.Generic.List<(Vector3 pos, Transform part, bool moving, float dz)>();
         for (int dz = 0; dz < 17; dz++)
         for (float x = .7f; x <= 1.45f; x += .025f)
+        for (float h = low + .1f; h <= top + .1f; h += .05f)   // a short ray from each height: every level, not only the top one
         {
             float z = zHint + (dz == 0 ? 0 : (dz % 2 == 0 ? -1 : 1) * ((dz + 1) / 2) * .05f);
-            var origin = new Vector3(side * x, top + .5f, z);
-            if (!hits.Ray(origin, Vector3.down, 2f, out var hit, body) || hit.normal.y < .95f ||
-                hit.point.y > top || hit.point.y < low) continue;
+            var origin = new Vector3(side * x, h, z);
+            if (!hits.Ray(origin, Vector3.down, .05f, out var hit, body) || hit.normal.y < .95f || hit.point.y < low) continue;
             var part = hit.collider.transform.parent;
             if (part.name.ToLowerInvariant().Contains("wheel") || Rr2dvSpins(part)) continue;
             bool footprint = true;
             foreach (var offset in new[] { new Vector3(.025f, 0, 0), new Vector3(-.025f, 0, 0), new Vector3(0, 0, .025f), new Vector3(0, 0, -.025f) })
-                if (!hits.Ray(origin + offset, Vector3.down, 2f, out var edge, body) || edge.normal.y < .95f ||
+                if (!hits.Ray(origin + offset, Vector3.down, .06f, out var edge, body) || edge.normal.y < .95f ||
                     edge.collider != hit.collider || Mathf.Abs(edge.point.y - hit.point.y) > .006f) footprint = false;
             if (!footprint) continue;
             var pos = hit.point + Vector3.up * (CupPivotAboveBase - CupSeatSink);
-            if (hits.Ray(pos + Vector3.up * .08f, Vector3.up, .12f, out var overhead, body)) continue;
-            if (hits.Ray(pos + Vector3.up * .08f, Vector3.right * side, .6f, out var sideHit, body)) continue;
+            if (found.Any(f => Vector3.Distance(f.pos, pos) < .02f)) continue;
             bool moving = Rr2dvIsRod(part.name) || part.name.ToLowerInvariant().Contains("crosshead") || Rr2dvTravels(part);
-            return (true, pos, moving ? part : null, "running gear top on " + part.name);
+            found.Add((pos, part, moving, Mathf.Abs(z - zHint)));
+        }
+        foreach (var f in found.OrderByDescending(f => f.moving).ThenBy(f => f.pos.y).ThenBy(f => f.dz))
+        {
+            if (!Rr2dvCupSpaced(f.pos)) continue;
+            if (hits.Ray(f.pos + Vector3.up * .08f, Vector3.right * side, .6f, out var sideHit, body)) continue;   // reachable from outside
+            if (!Rr2dvCupClear(hits, body, f.pos, f.moving ? f.part : null, out _)) continue;
+            return (true, f.pos, f.moving ? f.part : null, "running gear " + (f.moving ? "rod" : "part") + " top on " + f.part.name);
         }
         return (false, Vector3.zero, null, null);
+    }
+
+    // The oil cup's own space, which nothing visible may enter except the surface it stands on (James, 2026-09-29: cups
+    // clipped into rods and linkages, or had rods through them): a 3.5 cm radius, 9 cm tall above its base. Checked with
+    // short rays across and up through that space, at four phases of the driving wheels' turn (a rod swinging through it
+    // later counts); a cup riding a moving part moves with it.
+    const float CupClearRadius = .035f, CupClearHeight = .09f, CupSpacing = .12f;
+    static readonly System.Collections.Generic.List<Vector3> Rr2dvCupSpacing = new System.Collections.Generic.List<Vector3>();
+    static bool Rr2dvCupSpaced(Vector3 pos) => Rr2dvCupSpacing.All(p => Vector3.Distance(p, pos) >= CupSpacing);
+
+    static bool Rr2dvNubRejected((Transform rod, Vector3 pos) nub, string why)
+    {
+        Line($"rr2dv oil nub on {nub.rod.name} at {V(nub.pos)} rejected: {why}");
+        return false;
+    }
+
+    static bool Rr2dvCupClear(VisualHits hits, Transform body, Vector3 pos, Transform rider, out string why)
+    {
+        why = null;
+        var local = rider ? rider.InverseTransformPoint(pos) : pos;
+        var animators = Cfg.EngineUnits.SelectMany(u => body.GetComponentsInChildren<Animator>(true)
+            .Where(a => a.name == $"[anim] {u.GroupName}" || a.name.StartsWith($"[anim] {u.GroupName} "))).Distinct().ToList();
+        try
+        {
+            foreach (var phase in new[] { 0f, .25f, .5f, .75f })
+            {
+                foreach (var a in animators)
+                {
+                    var clip = a.runtimeAnimatorController ? a.runtimeAnimatorController.animationClips.FirstOrDefault() : null;
+                    if (clip) clip.SampleAnimation(a.gameObject, phase * clip.length);
+                }
+                Physics.SyncTransforms();
+                var p = rider ? rider.TransformPoint(local) : pos;
+                var baseY = p.y - CupPivotAboveBase + CupSeatSink;
+                var centre = new Vector3(p.x, baseY, p.z);
+                // up through the cup from just above its base, at the centre and around the rim
+                foreach (var o in new[] { Vector3.zero, new Vector3(CupClearRadius, 0, 0), new Vector3(-CupClearRadius, 0, 0), new Vector3(0, 0, CupClearRadius), new Vector3(0, 0, -CupClearRadius) })
+                    if (hits.Ray(centre + o + Vector3.up * .006f, Vector3.up, CupClearHeight, out var h, body))
+                    { why = $"{h.collider.transform.parent.name} above it at phase {phase:F2}"; return false; }
+                // down onto it from above its top (a ray that starts inside a part does not see that part)
+                foreach (var o in new[] { Vector3.zero, new Vector3(CupClearRadius, 0, 0), new Vector3(-CupClearRadius, 0, 0), new Vector3(0, 0, CupClearRadius), new Vector3(0, 0, -CupClearRadius) })
+                    if (hits.Ray(centre + o + Vector3.up * (CupClearHeight + .04f), Vector3.down, CupClearHeight + .04f - .006f, out var h, body))
+                    { why = $"{h.collider.transform.parent.name} over it at phase {phase:F2}"; return false; }
+                // across the cup at three heights, from well outside its rim inward, both ways
+                foreach (float y in new[] { .02f, .045f, .075f })
+                    foreach (var d in new[] { Vector3.right, Vector3.left, Vector3.forward, Vector3.back })
+                        if (hits.Ray(centre + Vector3.up * y + d * 3 * CupClearRadius, -d, 4 * CupClearRadius, out var h, body) &&
+                            Vector3.Distance(new Vector3(h.point.x, 0, h.point.z), new Vector3(centre.x, 0, centre.z)) <= CupClearRadius)
+                        { why = $"{h.collider.transform.parent.name} inside it at phase {phase:F2}"; return false; }
+            }
+            return true;
+        }
+        finally
+        {
+            foreach (var a in animators)
+            {
+                var clip = a.runtimeAnimatorController ? a.runtimeAnimatorController.animationClips.FirstOrDefault() : null;
+                if (clip) clip.SampleAnimation(a.gameObject, 0);
+            }
+            Physics.SyncTransforms();
+        }
     }
 
     // Running gear by what it does, not what it is called (DM&IR M-3: wheels and rods are all 'Cylinder.nnn', so cups

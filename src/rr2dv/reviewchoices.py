@@ -29,8 +29,12 @@ def suggest(req, source):
     put('dynamo', 'yes' if req.get('sourceHasDynamo', True) else 'no', 'source',
         'The source has a Dynamo component' if req.get('sourceHasDynamo', True)
         else 'The source has no Dynamo component: no dynamo, lamps or cab light')
-    put('firing', 'hand-fired', 'DV_choice', 'Railroader definitions do not say how the fire is fed: hand-fired unless you know '
-        'otherwise (oil burner: tank locos only; mechanical stoker: not built yet)')
+    if req.get('stokerEvidence'):
+        put('firing', 'mechanical-stoker', 'source', 'The source has a stoker/auger component (' +
+            ', '.join(req['stokerEvidence'][:3]) + '): a mechanical stoker; the shovel stays as a backup')
+    else:
+        put('firing', 'hand-fired', 'DV_choice', 'Railroader definitions do not say how the fire is fed: hand-fired unless you '
+            'know otherwise (oil burner: tank locos only; mechanical stoker: coal fed by a steam stoker, shovel kept)')
     components = [c for c in source.get('components') or [] if isinstance(c, dict) and c.get('enabled', True)]
     heat = [c['isSuperheated'] for c in [source, *components] if type(c.get('isSuperheated')) is bool]
     if heat and len(set(heat)) == 1:

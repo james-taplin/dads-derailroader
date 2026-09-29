@@ -35,7 +35,7 @@ class Outcome:
 
 def search_roots(rr: installs.Install, extra: Sequence[Path] = ()) -> list[Path]:
     """Extra folders first, then the Railroader Mods folder and the base-game asset packs."""
-    roots = [Path(p) for p in extra] + [rr.mods, rr.root / "Railroader_Data" / "StreamingAssets" / "AssetPacks"]
+    roots = [Path(p) for p in extra] + [rr.mods, rr.asset_packs]
     return [r for i, r in enumerate(roots) if r not in roots[:i]]
 
 

@@ -280,8 +280,10 @@ class Index:
                     continue
                 seen.add(resolved)
                 lowered = {f.casefold() for f in files}
-                # The input folder counts as a mod even without info.json; a search root (e.g. Mods) never does.
-                if INFO in lowered or (folder == root.path and root.rank == 0):
+                # The input folder counts as a mod even without info.json; a search root (e.g. Mods) never does, nor a
+                # base-game asset pack given as the input (0.3): its content is Railroader's own, listed as such.
+                base_game = GAME_DATA in (x.casefold() for x in root.path.parts)
+                if INFO in lowered or (folder == root.path and root.rank == 0 and not base_game):
                     mods_here[folder] = self._load_mod(root, folder, files)
                 if is_pack:
                     self._load_pack(root, folder, files, mods_here)
@@ -649,7 +651,8 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
             credited[vpack.mod.path].add(name)
     sources = [{"id": mod.ident, "kind": "mod", "root": mod.root.label, "path": mod.rel, "credits": sorted(credited[mod.path])}
                for mod in sorted(involved.values(), key=lambda m: (m.root.rank, m.rel))]
-    game_packs = sorted(p.rel for p in ordered if p.mod is None and GAME_DATA in (x.casefold() for x in p.path.parts))
+    game_packs = sorted(p.rel or p.path.name for p in ordered  # a base-game pack given as the input is its own root
+                        if p.mod is None and GAME_DATA in (x.casefold() for x in p.path.parts))
     if game_packs:
         sources.append({"id": "Railroader (base game asset packs)", "kind": "game", "root": "", "path": "", "credits": [],
                         "packs": game_packs})

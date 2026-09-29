@@ -38,6 +38,19 @@ class ControllerTests(unittest.TestCase):
                          [("Another Loco Mod", [("ls-460-a", "Test ls-460-a")]), ("Test Loco Mod", [("ts-260-a", "Test ts-260-a")])])
         self.assertEqual(seen[-1][1], 3)  # TruckMod was read too, and has no locomotive
 
+    def test_lists_base_game_locomotive_packs_after_the_mods(self):
+        # 0.3 (James): Railroader's own locomotive packs (AssetPacks/<pack>: Bundle, Catalog.json, Definitions.json)
+        packs = self.tmp / "Railroader" / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
+        write_pack(packs / "ls-282-k28t", objects=[loco("ls-282-k28t")], assets={"ls-282-k28t": {"filename": "k28t.prefab"}})
+        write_pack(packs / "truck.archbar.diamond", assets={"t": {"filename": "t.prefab"}})
+        mods = self.c.list_mods()
+        base = [m for m in mods if m.base]
+        self.assertEqual([(m.label, m.locos) for m in base], [("ls-282-k28t", [("ls-282-k28t", "Test ls-282-k28t")])])
+        self.assertEqual(Path(base[0].folder), packs / "ls-282-k28t")
+        self.assertFalse(any(m.base for m in mods[:-1]))
+        report = self.c.scan(base[0].folder)  # the full path is what the window hands on
+        self.assertEqual([l["id"] for l in report["steam_locomotives"]], ["ls-282-k28t"])
+
     def test_scan_gives_liveries_and_blockers(self):
         report = self.c.scan("Test Loco Mod")
         self.assertEqual(report["steam_locomotives"][0]["liveries"], [])

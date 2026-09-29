@@ -80,6 +80,20 @@ public static partial class CclLocoBuild
             bool rigged = ancestors.Length == 0 && paths.All(p => p.StartsWith(target + "/", StringComparison.Ordinal));
             if (rigged) ancestors = paths.OrderBy(p => p.Split('/').Length).ThenBy(p => p, StringComparer.Ordinal).Take(1).ToArray();
             if (ancestors.Length == 0) { LeaveOutOpening(component.name, "Declared toggle target is not moved by its clip: " + key + " / " + target); continue; }
+            // With a mechanical stoker, the source's own stoker/auger toggle (the K-66: 'Stoker' on the loco turns its drive
+            // shaft, 'Auger' on the tender its screw) is not a click toggle: its animated part turns with the stoking rate
+            // (Rr2dvStoker), about the axis its own clip turns it.
+            if (RrChoices?.firing == "mechanical-stoker" && Rr2dvStokerToggle.IsMatch(component.name + " " + key + " " + data.title))
+            {
+                var axis = Rr2dvClipAxis(clip, ancestors[0]);
+                if (axis.HasValue)
+                {
+                    Rr2dvStokerParts.Add((Cfg.CarId, component.name, ancestors[0], axis.Value));
+                    Line($"rr2dv stoker part {component.name}: '{ancestors[0]}' turns with the stoking rate about its clip's axis {V(axis.Value)} (not a click toggle)");
+                }
+                else Warn($"rr2dv stoker part {component.name}: clip {key} does not turn '{ancestors[0]}' about one axis; left as modelled, not animated");
+                continue;
+            }
             var existing = RrOpenings.FirstOrDefault(o => o.clip == key);
             if (existing != null)
             {
@@ -109,7 +123,8 @@ public static partial class CclLocoBuild
     // 2026-09-28). Never silent: the warning reaches build/review.json. Driving controls keep their hard checks.
     static void LeaveOutOpening(string component, string reason)
     {
-        Warn($"rr2dv ancillary toggle '{component}' left out (not interactive; its model stays as modelled): {reason}");
+        // the car is named: a loco and its tender can each have a toggle of the same name (GN A-18 'Water Hatch')
+        Warn($"rr2dv ancillary toggle '{component}' on {Cfg.CarId} left out (not interactive; its model stays as modelled): {reason}");
     }
 
     static void FinishRr2dvInteriorControls()
