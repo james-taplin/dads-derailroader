@@ -2155,3 +2155,8 @@ Branch `0.3.X-exp` (no pre-release). K-66 with mechanical-stoker exported: loco 
 axis -y), stoker 1.739 kg/s max, 1.0 kg/s steam, full at 7.7 bar, coal via tenderCoal. Tender 'Auger.002' was not found
 by path (the core regrouped TenderMain under an [anim] node); the name/shape fallback took AugerScrew (2.51 m, axis z).
 Declared parts are now matched by their path segments in order when the direct path fails. Unity/game untested.
+
+## W90 (cloud Claude, 2026-09-29): stoker audit count
+Branch `0.3.X-exp`. The K-66 stoker build exported but the audit refused it: openingCount still counted the source's
+Stoker/Auger toggles that Rr2dvStoker drives instead of building click controls. audit_input now skips toggles matching
+auger|stoker when metadata.firing is mechanical-stoker (same rule as the build). Tested: Python suite, new assertion.
