@@ -189,6 +189,23 @@ public static partial class CclLocoBuild
         foreach (var p in Rr2dvStokerParts.Where(p => p.car == car.CarId))
         {
             var part = body ? body.Find(p.path) : null;
+            if (!part && body)
+            {
+                // the builder may have regrouped animated objects (e.g. under '[anim] water'): match the path's segments in order
+                var segs = p.path.Split('/');
+                var hits = body.GetComponentsInChildren<Transform>(true).Where(t =>
+                {
+                    var cur = t;
+                    for (int k = segs.Length - 1; k >= 0; k--)
+                    {
+                        while (cur && cur != body && cur.name != segs[k]) { if (k == segs.Length - 1) return false; cur = cur.parent; }
+                        if (!cur || cur == body) return false;
+                        cur = cur.parent;
+                    }
+                    return true;
+                }).ToList();
+                if (hits.Count == 1) part = hits[0];
+            }
             if (part) found.Add((p.name, part, p.axis));
             else Warn($"rr2dv stoker part {p.name}: '{p.path}' not found in the built model; not animated");
         }
