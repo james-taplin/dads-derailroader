@@ -266,7 +266,10 @@ on it rides with it), a part that turns in place is a wheel, axle or crank (no c
 (`rr2dv oil running gear by motion` in `build_report.txt`). At most one left/right pair per driving axle and 12 cups in
 all: each driving axle takes the rod nub pair nearest it (within 0.6 m); an axle with none near it gets its cups on the
 running gear's flat tops or the running board beside it instead (the GN A-18's only nubs were at the crossheads); spare
-nubs are dropped (`rr2dv oil budget` in `build_report.txt`). If no driving axle has any usable seat, the loco needs no
+nubs are dropped (`rr2dv oil budget` in `build_report.txt`). Every cup needs its own space: nothing visible may be inside
+a 3.5 cm radius, 9 cm tall cylinder above its base (except what it stands on) at four points of the wheels' turn, and
+cups stay 12 cm apart (`rr2dv oil nub … rejected`, `rr2dv oil clearance`). Running-gear seats are searched from
+crank-pin height upward, rods first, so big ends win over high linkages. If no driving axle has any usable seat, the loco needs no
 manual oiling: its oiling system keeps one internal point that never drains (no cup, no oil lamp, no wear), reported as
 `rr2dv oil: … no manual oiling` in `build_report.txt` and as an audit note.
 
