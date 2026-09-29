@@ -297,7 +297,9 @@ public static partial class CclLocoBuild
             if (!particles) return;
             foreach (Transform t in particles)
             {
-                bool whistle = t.name == "Whistle", dynamo = t.name.Contains("Dynamo");
+                // the safety valves too (board X61: MarquetteCreations/Moon asked for upward safety, dynamo and whistle steam;
+                // the local core now turns all three holders -90 deg X, as the stock S282)
+                bool whistle = t.name == "Whistle" || t.name.Contains("Safety"), dynamo = t.name.Contains("Dynamo");
                 if (!whistle && !dynamo) continue;
                 var tip = dynamo ? Rr2dvExhaustTip(t.position) : null;
                 var dir = tip ?? Vector3.up;

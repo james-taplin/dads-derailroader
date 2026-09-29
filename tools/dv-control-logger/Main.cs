@@ -12,8 +12,8 @@ using LocoSim.Implementations;
 using UnityEngine;
 using UnityModManagerNet;
 
-[assembly: AssemblyVersion("0.1.0.0")]
-[assembly: AssemblyFileVersion("0.1.0.0")]
+[assembly: AssemblyVersion("0.2.0.0")]
+[assembly: AssemblyFileVersion("0.2.0.0")]
 
 namespace RR2DVControlLogger
 {
@@ -69,7 +69,7 @@ namespace RR2DVControlLogger
             string root = Path.GetDirectoryName(Application.dataPath);
             _w = new StreamWriter(Path.Combine(root, "rr2dv-controls.log"), true, Encoding.UTF8);
             _w.WriteLine();
-            _w.WriteLine("==== rr2dv control logger 0.1.0, session " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            _w.WriteLine("==== rr2dv control logger 0.2.0, session " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             _w.WriteLine("columns: time | car | control | port | source | control value old -> new (delta) | port value");
             string watch = Path.Combine(modPath, "watch.txt");
             if (!File.Exists(watch)) File.WriteAllText(watch, DefaultWatch);
@@ -149,6 +149,65 @@ namespace RR2DVControlLogger
         }
     }
 
+    // The car's air-brake pressures (brake pipe, main reservoir, cylinder...), which the HUD reads from the car's brake system
+    // rather than a sim port. Found by reflection by name (a 'brakeSystem' member, then its float members named '*pressure*'),
+    // so the logger needs no compile-time reference to them and simply logs nothing if DV names them differently.
+    internal static class Brakes
+    {
+        private const BindingFlags Any = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic;
+        private static readonly Dictionary<Type, MemberInfo> SystemMember = new Dictionary<Type, MemberInfo>();
+        private static readonly Dictionary<Type, List<MemberInfo>> PressureMembers = new Dictionary<Type, List<MemberInfo>>();
+
+        internal static void Append(TrainCar car, StringBuilder sb)
+        {
+            try
+            {
+                object system = Value(Find(car.GetType()), car);
+                if (system == null) return;
+                foreach (var m in Pressures(system.GetType()))
+                {
+                    object v = Value(m, system);
+                    if (v is float) sb.Append(sb.Length > 0 ? ", " : "").Append("brakes.").Append(m.Name).Append('=').Append(((float)v).ToString("0.000"));
+                }
+            }
+            catch (Exception) { }
+        }
+
+        private static MemberInfo Find(Type t)
+        {
+            MemberInfo m;
+            if (SystemMember.TryGetValue(t, out m)) return m;
+            m = null;
+            foreach (var f in t.GetFields(Any)) if (string.Equals(f.Name, "brakeSystem", StringComparison.OrdinalIgnoreCase)) { m = f; break; }
+            if (m == null)
+                foreach (var p in t.GetProperties(Any)) if (string.Equals(p.Name, "brakeSystem", StringComparison.OrdinalIgnoreCase)) { m = p; break; }
+            SystemMember[t] = m;
+            return m;
+        }
+
+        private static List<MemberInfo> Pressures(Type t)
+        {
+            List<MemberInfo> list;
+            if (PressureMembers.TryGetValue(t, out list)) return list;
+            list = new List<MemberInfo>();
+            foreach (var f in t.GetFields(Any))
+                if (f.FieldType == typeof(float) && f.Name.IndexOf("pressure", StringComparison.OrdinalIgnoreCase) >= 0) list.Add(f);
+            foreach (var p in t.GetProperties(Any))
+                if (p.PropertyType == typeof(float) && p.CanRead && p.GetIndexParameters().Length == 0 &&
+                    p.Name.IndexOf("pressure", StringComparison.OrdinalIgnoreCase) >= 0) list.Add(p);
+            PressureMembers[t] = list;
+            return list;
+        }
+
+        private static object Value(MemberInfo m, object o)
+        {
+            var f = m as FieldInfo;
+            if (f != null) return f.GetValue(o);
+            var p = m as PropertyInfo;
+            return p != null ? p.GetValue(o, null) : null;
+        }
+    }
+
     internal class Watcher : MonoBehaviour
     {
         private class Entry
@@ -200,6 +259,10 @@ namespace RR2DVControlLogger
                 Log.Write(Id(car) + " | cab loaded: " + _entries.Count + " controls");
                 Snapshot(car, flow, "cab loaded");
             }
+            // several controls jumping in one poll is the comms-radio startup, a HUD preset or another mod, not a hand
+            int moving = 0;
+            foreach (var e in _entries)
+                if (e.Feeder != null && e.Control != null && !float.IsNaN(e.LastValue) && !Same(e.Control.Value, e.LastValue)) moving++;
             foreach (var e in _entries)
             {
                 if (e.Feeder == null) continue;
@@ -209,7 +272,8 @@ namespace RR2DVControlLogger
                 bool portMoved = !float.IsNaN(port) && !Same(port, e.LastPort);
                 if (controlMoved && !float.IsNaN(e.LastValue))
                 {
-                    Log.Write(Id(car) + " | " + e.Feeder.name + " | " + e.Feeder.portId + " | " + Source(e, now) + " | " +
+                    string source = moving >= 3 && !KeyboardFlag(e, now) ? moving + " controls at once (radio startup, HUD preset or another mod)" : Source(e, now);
+                    Log.Write(Id(car) + " | " + e.Feeder.name + " | " + e.Feeder.portId + " | " + source + " | " +
                               F(e.LastValue) + " -> " + F(value) + " (" + (value - e.LastValue).ToString("+0.000;-0.000") + ") | port " + F(port));
                     string tag = e.Feeder.name;
                     Snapshot(car, flow, "at " + tag);
@@ -228,10 +292,15 @@ namespace RR2DVControlLogger
                 if (_followUps[i].Key <= now) { Snapshot(car, flow, _followUps[i].Value); _followUps.RemoveAt(i); }
         }
 
-        private string Source(Entry e, float now)
+        private static bool KeyboardFlag(Entry e, float now)
         {
             float key;
-            if (e.Control != null && KeyboardTicks.LastKeyChange.TryGetValue(e.Control.GetInstanceID(), out key) && now - key < 1f) return "keyboard";
+            return e.Control != null && KeyboardTicks.LastKeyChange.TryGetValue(e.Control.GetInstanceID(), out key) && now - key < 1f;
+        }
+
+        private string Source(Entry e, float now)
+        {
+            if (KeyboardFlag(e, now)) return "keyboard";
             float best = Math.Max(Math.Max(_lastKey, _lastScroll), Math.Max(_lastGrab, _lastHud));
             if (now - best > 1f) return "no player input (sim or another mod)";
             if (best == _lastHud) return "F4 HUD (mouse, cursor shown)";
@@ -248,6 +317,7 @@ namespace RR2DVControlLogger
                 float v = PortValue(flow, id);
                 if (!float.IsNaN(v)) sb.Append(sb.Length > 0 ? ", " : "").Append(id).Append('=').Append(F(v));
             }
+            Brakes.Append(car, sb);
             if (sb.Length > 0) Log.Write(Id(car) + " |   sim " + why + ": " + sb);
         }
 

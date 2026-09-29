@@ -260,7 +260,7 @@ all: when the rods offer more seats, each driving axle keeps the pair nearest it
 
 HUD: besides CCL's steam layout, the HUD shows the whistle, tender coal, the sander and the sand level.
 
-Steam jets: the whistle jet blows straight up. The dynamo jet follows its exhaust pipe when the pipe's tip can be
+Steam jets: the whistle and safety-valve jets blow straight up. The dynamo jet follows its exhaust pipe when the pipe's tip can be
 measured at Railroader's dynamo point (a pipe-shaped cluster of the model within 25 cm, the point at its end, not
 pointing down), so a swept or angled exhaust is followed; otherwise it too blows straight up (`rr2dv steam jet` in
 `build_report.txt`).
