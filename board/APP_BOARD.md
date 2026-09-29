@@ -2122,3 +2122,13 @@ Tested: Python suite (278; 2 known stub failures), GUI tests, new review/build t
 against stand-in CCL/Unity types. Untested: Unity build, game (feed balance, steam draw, save/reload, disconnect/
 reconnect, alternating shovel+stoker, full/empty bunker per X60), the auger. Question for the local sessions: is
 the SmoothTime run-down after closing acceptable for CTRL-02 here (the stoker is a feed, not a steam valve)?
+
+## W86 (cloud Claude, 2026-09-29): first base-game build (K-28T); handbrake check on hidden meshes
+Branch `0.3.X-exp`, commit after 2631f03 (see log; no pre-release). James built the base-game K-28T tank (AssetPacks
+ls-282-k28t): all stages ran to the interactables, then `RR2DV_LS_282_K28T handbrake mount misfit: stand-off -0.092 m,
+outward normal 1.000`. Cause: PlaceHandbrakeWheel measures with VisualHits (active MeshFilters with an enabled renderer;
+it put the hub 40 mm off the bunker wall at z -5.158), RRPlacementValidation.CheckHandbrake casts against every
+MeshFilter including inactive/renderer-less ones and hit a hidden surface at z -5.29. App fix: StripRr2dvHiddenMeshes
+removes never-drawn meshes from the measuring copy just before BuildInteractables, FreshRr2dvSource after it.
+Core note for the local sessions: CheckHandbrake/Surface could use the same visible-mesh rule as VisualHits.
+Tested: none beyond the Python suite (C# only). Untested: Unity rebuild of the K-28T.
