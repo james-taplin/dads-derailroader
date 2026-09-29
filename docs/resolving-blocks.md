@@ -296,6 +296,11 @@ Railroader's own cab handles stay as they are modelled.
 Brake cutout: CCL gives it an absolute axis input besides its toggle key, which let F4 treat it as a range; the build
 removes that axis (`rr2dv brake cutout ... absolute axis input removed` in `build_report.txt`).
 
+Names: each unit is named after its locomotive so Derail Valley's info boards and radio list them together: the loco
+as itself, its tender as "<loco> Tender" (a third unit would be "<loco> C"). Packs install as `rr2dv_<loco>` in the Derail
+Valley Mods folder, so all conversions sit together; an earlier rr2dv install of the same loco under its old unprefixed
+name is removed once the new one is in place (both would load the same cars). Any other mod's folder is never touched.
+
 Railroader lights: every Unity light in the source model is removed (`rr2dv source lights` in `build_report.txt`).
 Railroader switches them from its own scripts, which are not converted, so they stayed on for good. The car keeps the
 builder's own switchable cab light under the roof centre and its lamps.

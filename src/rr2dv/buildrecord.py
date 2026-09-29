@@ -140,6 +140,16 @@ def safe_name(text: str, fallback: str) -> str:
     return name[:60] or fallback
 
 
+UNIT_SUFFIXES = ["", " Tender"]  # further units: " C", " D", ... (James, 2026-09-29)
+
+
+def unit_name(loco_name: str, index: int) -> str:
+    """Each unit of a conversion named after its locomotive, so DV's info boards and radio list them together: the loco
+    (A unit) as itself, its tender as '<loco> Tender', a third unit as '<loco> C' and so on."""
+    suffix = UNIT_SUFFIXES[index] if index < len(UNIT_SUFFIXES) else " " + chr(ord("A") + index)
+    return loco_name[:60 - len(suffix)].rstrip(" .") + suffix
+
+
 def rr_axles(ws: dict) -> list[float]:
     """Axle z positions of a Railroader wheelset: evenly spaced over its length, centred at its offset."""
     n = int(ws.get("axles") or ws.get("numberOfAxles") or 0)
@@ -986,7 +996,8 @@ class _Builder:
             return rec
         comps = _plain(cfg["Components"])
         anchors = self.anchors(ov)
-        cfg["CarName"] = safe_name(cfg.get("CarName"), cfg["CarId"])
+        # named after the loco (it is this loco's tender copy: CarId <loco>_TENDER), not the tender definition's own name
+        cfg["CarName"] = unit_name(safe_name(loco_cfg.get("CarName"), loco_cfg["CarId"]), 1)
         cfg["Version"] = loco_cfg.get("Version", "0.1.0")
         cfg["Author"] = loco_cfg.get("Author")
         cfg["BodyName"] = f"{tid}_body"

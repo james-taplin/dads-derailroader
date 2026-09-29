@@ -166,7 +166,7 @@ class Window(unittest.TestCase):
         self.assertEqual(asked, ["Test ts-260-a"])
         self.assertIn("Installed into your Derail Valley Mods folder", self.app.summary.cget("text"))
         self.assertEqual(str(self.app.open_build.cget("state")), "normal")
-        self.assertTrue((self.m["dv_mods"] / "Test ts-260-a" / "rr2dv.json").is_file())
+        self.assertTrue((self.m["dv_mods"] / "rr2dv_Test ts-260-a" / "rr2dv.json").is_file())
 
     def test_stopped_conversion_keeps_its_run_folder(self):
         # X39: after a failure inside a run, Open run folder works and the error names run.log

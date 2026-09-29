@@ -70,7 +70,8 @@ class BuildStages(unittest.TestCase):
         self.assertIn("injector", audit_in["controls"])
         # installed after the notice, with the audited files, NOTICE, provenance and marker
         self.assertEqual(len(self.asked), 1)
-        dest = self.m["dv_mods"] / cfg["CarName"]
+        dest = self.m["dv_mods"] / ("rr2dv_" + cfg["CarName"])
+        self.assertEqual(t["CarName"], cfg["CarName"] + " Tender")  # listed next to its loco in game
         self.assertEqual(sorted(p.name for p in dest.iterdir()),
                          ["Info.json", "NOTICE.txt", "SOURCE_PROVENANCE.txt", "ccl_bundle", "rr2dv.json"])
         self.assertIn("candidate", out.message)
