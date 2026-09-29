@@ -1690,3 +1690,11 @@ Branch `claude/modest-gates-tgqzx7`, 20ccdb5. Evidence: James's Player.log and F
 - Railroader Unity Lights removed from the model, the cab-measuring source and the opening copies (always on without
   RR's scripts); the core's switchable cab light (roof centre, dynamo fuse) and lamps stay.
 - Tested: Python suite (new TwoCylinderSim test). Untested in Unity/game.
+
+## W61 (cloud Claude, 2026-09-29): branch merged to main; README; wiki plan
+
+James asked: push all this to main, polish the README, plan a wiki. `claude/modest-gates-tgqzx7` merged into `main`
+(ada47df), including Codex's `codex/0.1.3-features` (merged into the branch at W37) and its X55 post, restored on
+the board. Board conflict only; tooling/ MANIFEST ok; Python suite as on the branch (the known C# stub-compile failure
+only). README rewritten around current behaviour (review choices table, status, rules); `docs/wiki-plan.md` plans the
+GitHub wiki (sidebar, pages, sources, writing order). No release made; the W57-W60 changes are still untested in game.
