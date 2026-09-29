@@ -2062,3 +2062,10 @@ Branch `0.2.X-exp`, commit after bc11a42 (see `git log`; no pre-release). James'
   other folder, ours for another loco or another mod's, is untouched. CLAUDE.md's output rule updated.
 Tested: Python suite (271; the 2 known test_csharp_api stub failures), GUI tests under Xvfb, new install test for the
 legacy-folder rule. Untested in game (list order on the info boards and radio).
+
+## W82 (cloud Claude, 2026-09-29): repeated livery colour ids (RLW RMWF-2)
+Branch `0.2.X-exp`, commit 6437eea (no pre-release). RMWF-2 'Great Jarl' stopped in the core's BuildMaterials:
+`ArgumentException: An item with the same key has already been added. Key: roof` (livery 'RLW Grey' lists colour 'roof'
+twice; the core keys colours by id, ignoring case). App fix in buildrecord._liveries: each id's first colour is kept,
+the repeat listed as an automatic choice. Core note for the local sessions: BuildMaterials' ToDictionary could keep the
+first instead of throwing. Tested: Python suite (272; the 2 known stub failures), new unit test. Untested: Unity build.
