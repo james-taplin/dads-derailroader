@@ -225,9 +225,14 @@ public static class Rr2dvAudit
                         if (string.IsNullOrEmpty(Str(hud, "_json"))) errors.Add("Custom HUD has no serialized runtime layout");
                         hud.GetType().GetMethod("AfterImport")?.Invoke(hud, null);
                         var imported = new SerializedObject(hud);
-                        foreach (var binding in new[] { new[] { "CabLightStyle", "cabLight" }, new[] { "Headlights1", "headlightsFront" }, new[] { "Headlights2", "headlightsRear" } })
+                        foreach (var binding in new[] { new[] { "CabLightStyle", "cabLight" }, new[] { "Headlights1", "headlightsFront" } })
                             if (controls && (imported.FindProperty("CustomHUDSettings.Cab." + binding[0]).intValue != 0) != (bool)Ref(controls, binding[1]))
                                 errors.Add("HUD lighting slot differs from its control wiring: " + binding[0]);
+                        // slot 22 lower half: rear headlights when wired, else the bell slider (Slot24B 3) when a bell is wired
+                        int rearSlot = imported.FindProperty("CustomHUDSettings.Cab.Headlights2").intValue;
+                        if (controls && (rearSlot == 3 ? !(bool)Ref(controls, "bell") || (bool)Ref(controls, "headlightsRear")
+                                                       : (rearSlot != 0) != (bool)Ref(controls, "headlightsRear")))
+                            errors.Add("HUD lighting slot differs from its control wiring: Headlights2");
                         if (imported.FindProperty("HUDType").intValue != 1000 || Str(hud, "CustomHUDSettings.Powertrain") != "S" ||
                             imported.FindProperty("CustomHUDSettings.BasicControls.Speedometer").intValue != 1 ||
                             imported.FindProperty("CustomHUDSettings.BasicControls.Throttle").intValue == 0 ||

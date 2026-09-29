@@ -56,6 +56,16 @@ public static partial class CclLocoBuild
         // 2026-09-28). Every converted steam loco has a whistle control, RR or generated: show it as Whistle.
         var horn = cab.GetType().GetField("HornStyle");
         horn.SetValue(cab, Enum.ToObject(horn.FieldType, 2));
+        // No bell on the HUD though the cab bell control works (RLW RXM-1 game test, 2026-09-29): SetToS has no bell slot.
+        // Slot 22's lower half (Headlights2) can show a bell slider (CCL CustomHUDLayout Slot24B.BellSlider); use it when
+        // there are no rear headlights to show there, keeping tender water in the upper half.
+        var bellWired = new SerializedObject(reader).FindProperty("bell");
+        var rearWired = new SerializedObject(reader).FindProperty("headlightsRear");
+        if (bellWired != null && bellWired.objectReferenceValue && !(rearWired != null && rearWired.objectReferenceValue))
+        {
+            var slot = cab.GetType().GetField("Headlights2");
+            slot.SetValue(cab, Enum.Parse(slot.FieldType, "BellSlider"));
+        }
         // SetToS leaves the sander slot and the sand level at None (CCL CustomHUDLayout.SetToS), so the HUD had neither though
         // B sanded (C&O T1 game test, 2026-09-29). Every converted loco has a sander control and the core's sand indicator.
         var sander = basic.GetType().GetField("Sander");

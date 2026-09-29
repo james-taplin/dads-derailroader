@@ -203,12 +203,17 @@ public static partial class CclLocoBuild
             Line($"rr2dv control response {control.name}: generated whistle given the RR whistle role physics (spring 50, damper 5, mass 5, drag 5)");
         }
         // Keep mass, spring and damping together; 0.1.2 changed mass alone and removed drag.
+        // DV LeverBase moves SingleNotchAngle x scrollWheelHoverScroll per tap or scroll, so 1 = one notch, as every stepped
+        // lever in G-29's accepted profile (G29Config.cs). Degrees per notch had been written here: the train brake took 8
+        // of its 10 notches per tap, the headlights 15 (top to bottom) and two-position toggles 170 (RLW RXM-1, 2026-09-29).
         if (Get<bool>(control, "useSteppedJoint"))
         {
             int notches = Get<int>(control, "notches");
             float range = Get<float>(control, "jointLimitMax") - Get<float>(control, "jointLimitMin");
             if (notches < 2 || range <= 0) throw new InvalidOperationException("Invalid stepped control: " + control.name);
-            Set(control, "scrollWheelHoverScroll", range / (notches - 1));
+            Set(control, "scrollWheelHoverScroll", 1f);
+            Line($"rr2dv control response {control.name}: one notch per tap or scroll ({notches} notches over {range:F1} deg)");
+            return;
         }
         else if (Get<bool>(control, "useSpring"))
         {
