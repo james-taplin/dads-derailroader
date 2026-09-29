@@ -339,6 +339,15 @@ def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[fl
     shifted = _shifted_axles(expected, groups, wheel_out, nodes)
     if shifted:
         return shifted
+    # Unevenly spaced axles (the base-game T-17 ten-wheeler: drivers at 2.179, 0.579, -2.179 m, the definition's even
+    # spacing puts the middle one at 0): exactly one measured wheel per axle, the end axles where the definition puts
+    # them and every wheel within its span. The model's positions are then the axles, each still paired with its source.
+    ordered = sorted(groups, key=lambda g: -g["z"])
+    if (len(expected) >= 3 and len(ordered) == len(expected)
+            and abs(ordered[0]["z"] - max(expected)) <= AXLE_MATCH_M and abs(ordered[-1]["z"] - min(expected)) <= AXLE_MATCH_M
+            and any(abs(g["z"] - z) > AXLE_MATCH_M for g, z in zip(ordered, sorted(expected, reverse=True)))):
+        return [{"z": g["z"], "part": sorted(g["paths"])[0], "basis": "measured", "rr": z, "uneven": True}
+                for g, z in zip(ordered, sorted(expected, reverse=True))]
     out = []
     for z in expected:
         near = sorted((g for g in groups if abs(g["z"] - z) <= AXLE_MATCH_M), key=lambda g: (abs(g["z"] - z), g["z"]))
@@ -671,6 +680,10 @@ class _Builder:
                 ws = {**ws, "axles": inferred}
                 self._inferred_axles[i] = inferred
             ax = measured_axles(ws, wout, nodes)
+            if ax and ax[0].get("uneven"):
+                where = ", ".join(f"{a['z']:.3f}" for a in ax)
+                self.choose(f"wheelset {i} ({ws.get('clip')}): the model's {len(ax)} wheels are unevenly spaced ({where} m; the "
+                            "definition spaces them evenly): the running gear uses the model's positions (review)")
             if ax and "shift" in ax[0]:
                 self.choose(f"wheelset {i} ({ws.get('clip')}): the model's {len(ax)} wheels are {ax[0]['shift']:+.3f} m from the "
                             "definition's axle positions at the definition's spacing; the running gear uses the model's positions (review)")

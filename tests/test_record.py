@@ -169,5 +169,22 @@ class LiveryColours(unittest.TestCase):
 
 
 
+class UnevenAxles(unittest.TestCase):
+    def test_unevenly_spaced_drivers_use_the_measured_positions(self):
+        # base-game T-17 ten-wheeler: drivers at 2.179, 0.579 and -2.179 m; the definition's 3 axles over 4.362 m
+        # put the middle one at 0, 0.58 m from the model's wheel
+        from rr2dv import buildrecord
+        nodes = {f"engine/Drivers/W{i}": [0, .711, z] for i, z in enumerate((2.179, .579, -2.179))}
+        wheel_out = {"sourceRadius": .71, "rotatingPaths": list(nodes),
+                     "meshes": [{"path": p + "/Cylinder", "used": True, "maxRadius": .72} for p in nodes]}
+        ws = {"offset": 0.0, "length": 4.362, "diameter": 1.42, "axles": 3, "clip": "Drivers"}
+        axles = buildrecord.measured_axles(ws, wheel_out, nodes)
+        self.assertEqual([round(a["z"], 3) for a in axles], [2.179, .579, -2.179])
+        self.assertTrue(all(a["part"] and a["uneven"] for a in axles))
+        # a wheel missing is still missing: no spacing rule invents it
+        wheel_out["meshes"].pop(1)
+        self.assertIn(None, [a["part"] for a in buildrecord.measured_axles(ws, wheel_out, nodes)])
+
+
 if __name__ == "__main__":
     unittest.main()
