@@ -2186,3 +2186,10 @@ base) with the 2-axle leading truck 3.42 m ahead. The W-era RPP-1 rule (front bo
 one driver; it now applies when the leading truck centre is further ahead of the front driver than the driver wheelbase
 (rear bogie pivots on the rear driver). A-18 -> supports 4.555 / -0.986; T-17 (2.42 < 4.36) and 4-6-2/4-8-4 unchanged.
 Tested: Python suite. Untested: rebuild/in game.
+
+## W95 (cloud Claude, 2026-09-29): why the A-18 regressed
+Before 45d600a (2026-09-28, RPP-1 fix porting Codex X52), the front support capsule sat at BogieF's outermost axle; for the
+A-18 that was the leading truck's front axle (z 5.47), so the nose was carried. 45d600a moved supports to the bogie pivot
+(right for RPP-1) but the new leading-truck-pivot rule required exactly one driver, so the A-18 (2 drivers) kept its front
+pivot on the front driver: support 1.133, nose unsupported. No test pinned the A-18 layout. Fixed in W94; now
+buildrecord.bogie_split with tests for 4-4-0, 4-2-2, 4-6-0, 2-6-0. Lesson: support/pivot changes need a per-arrangement pin.
