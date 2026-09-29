@@ -1671,3 +1671,15 @@ Branch `claude/modest-gates-tgqzx7`, fa187b8. Evidence: R48 (LS_0100_RLW) and M-
   mass 10, drag 15); they now get the G-29 whistle role as RR whistle handles (50/5/5/5, scroll 0.25 of travel), which the
   R48's RR whistle had and felt good.
 - Tested: Python suite. Untested in Unity/game. Brake cutout HUD route is next.
+
+## W60 (cloud Claude, 2026-09-29): cylinders, brake cutout HUD, source lights
+
+Branch `claude/modest-gates-tgqzx7`, 20ccdb5. Evidence: James's Player.log and F4 tests.
+- Cylinders: the reviewed count is physics only; the sim runs `numCylinders` 2 with bore x sqrt(n/2) (same swept volume).
+  Player.log had 23 `ChuffClipsSimReader.OnChuff` IndexOutOfRange while driving the 3-cylinder K-66 (James: never build
+  what DV's sound engine can't handle).
+- Brake cutout / cab light: F4 dynamo and air pump work (generated handwheels); cutout and cab light did nothing (generated
+  2-position levers), no exception. Both are now generated as handwheels. Runtime-pending.
+- Railroader Unity Lights removed from the model, the cab-measuring source and the opening copies (always on without
+  RR's scripts); the core's switchable cab light (roof centre, dynamo fuse) and lamps stay.
+- Tested: Python suite (new TwoCylinderSim test). Untested in Unity/game.
