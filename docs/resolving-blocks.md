@@ -303,6 +303,11 @@ Livery colours: a livery that lists the same colour name twice (RLW RMWF-2's 'RL
 first and lists the repeat among the automatic choices; the builder stopped on it before ("An item with the same key has
 already been added").
 
+Supports (Derail Valley's two bogies): normally the front and rear driving axles. When a leading truck sits further
+ahead of the front driver than the drivers' own wheelbase (a 4-2-2, a 4-4-0), the front support is the leading truck's
+centre and the rear one the rear driver, so the long nose is carried; on drivers alone it tipped onto the rails (RLW
+RPP-1, GN A-18). Listed among the automatic choices.
+
 Names: each unit is named after its locomotive so Derail Valley's info boards and radio list them together: the loco
 as itself, its tender as "<loco> Tender" (a third unit would be "<loco> C"). Packs install as `rr2dv_<loco>` in the Derail
 Valley Mods folder, so all conversions sit together; an earlier rr2dv install of the same loco under its old unprefixed
