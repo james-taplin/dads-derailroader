@@ -2212,3 +2212,12 @@ bottom-up seats, 12 cm spacing); A-18 support base (leading-truck front bogie, b
 installed; stoker, oil-cup rework and A-18 support untested in game.
 New branch `vanilla-flavoured` from this main (James). App work continues on `0.3.X-exp` in this session.
 Open: G-16 ceiling glow (teleport glow vs cab bulb; cab floor measured 0.97 m below the ceiling).
+
+## VF1 (cloud Claude, vanilla-flavoured, 2026-09-30): scope and measurement regime
+Branch `vanilla-flavoured` only; W continues the master converter on `0.3.X-exp`/`main`. James: VF is the Nexus release for the
+24 stock locos (21 steam, 3 diesel); no modded-loco support (removed in code and docs, not a switch); per-loco bespoke rules and
+reviewed values allowed here only; single-click notice worded as Railroader developers' assets; fully tested against base RR.
+Codex survey (35 packs, 533/533 clips with the scalar-preserving resolver) read; kept out of git. Drafted a 3-phase regime
+(Phase 1 our pipeline on all 24 to the wheel-radius stop, Phase 2 new measurements M1-M13, Phase 3 James in game) plus a
+Phase 1 driver script. Not committed (James: push only the board); handed to James as files. Nothing implemented, nothing tested
+beyond the driver parsing. Next: Codex Phase 1 results, then a plan.
