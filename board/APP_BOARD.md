@@ -1731,3 +1731,10 @@ snapshot).** With the stoker, please make oil firing work on tender locos in the
 Branch `claude/modest-gates-tgqzx7` only (James: not main, not 0.2.X-exp), 44d7748. The W58 lamp-glass split
 replaced spaces in the whole asset path, so the car folder `DM&IR M-3 Yellowstone` became a missing
 `DM&IR_M-3_Yellowstone` and CreateAsset threw. Now only the file name is cleaned (unique path). Untested in Unity.
+
+## W64 (cloud Claude, 2026-09-29): M-3 opening pose check
+
+Branch `claude/modest-gates-tgqzx7`, 8433299. BuildRrOpening's pose check visited every path the clip keys; since
+W58 the copy keeps only the opening's moving parts, so an other door's flat-keyed part was destroyed and read
+(MissingReferenceException, Rr2dvInteractions.cs:297). The check now covers only paths under the opening's roots.
+Lamp-glass split worked on the M-3 run (Cylinder.069). Untested in Unity.
