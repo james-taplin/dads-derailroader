@@ -296,6 +296,10 @@ Railroader's own cab handles stay as they are modelled.
 Brake cutout: CCL gives it an absolute axis input besides its toggle key, which let F4 treat it as a range; the build
 removes that axis (`rr2dv brake cutout ... absolute axis input removed` in `build_report.txt`).
 
+Livery colours: a livery that lists the same colour name twice (RLW RMWF-2's 'RLW Grey' lists 'roof' twice) keeps the
+first and lists the repeat among the automatic choices; the builder stopped on it before ("An item with the same key has
+already been added").
+
 Names: each unit is named after its locomotive so Derail Valley's info boards and radio list them together: the loco
 as itself, its tender as "<loco> Tender" (a third unit would be "<loco> C"). Packs install as `rr2dv_<loco>` in the Derail
 Valley Mods folder, so all conversions sit together; an earlier rr2dv install of the same loco under its old unprefixed
