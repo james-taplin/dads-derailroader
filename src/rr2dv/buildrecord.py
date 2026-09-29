@@ -359,6 +359,36 @@ def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[fl
     return out
 
 
+def bogie_split(allax: list[dict], drivers: list[dict]):
+    """Derail Valley's two bogies from the axles (front to back): (front axles, rear axles, front pivot index, rear pivot
+    index, choice note or None); None when there is only one axle. The body is supported at the two pivots (Rr2dvPlacement
+    AlignRr2dvBogieSupports puts each support at its bogie's pivot), so the pivots must span the loco's weight.
+    Normally the front and rear drivers (G-29: a rigid wheelbase). But a leading bogie further ahead of the front driver
+    than the drivers' own wheelbase carries the nose: on the drivers alone it sank to the rails, RLW RPP-1 4-2-2 (one
+    driver, 2026-09-28) and GN A-18 4-4-0 (2.12 m between its drivers, leading truck 3.42 m ahead, 2026-09-29; it built
+    right until supports moved from the outermost axle to the pivot on 2026-09-28, while this rule covered one driver
+    only). Then the front bogie is the leading truck, pivoting at its centre, and the rear bogie pivots on the rear
+    driver. A 4-6-0/4-6-2 whose driver wheelbase exceeds that distance keeps its driver pivots."""
+    n_front = max(1, len(drivers) // 2)
+    front_drivers = drivers[:n_front]
+    split = allax.index(front_drivers[-1]) + 1
+    f_ax, r_ax = allax[:split], allax[split:]
+    if not r_ax:
+        return None
+    f_pivot = f_ax.index(front_drivers[0])
+    r_pivot = r_ax.index(drivers[-1]) if drivers[-1] in r_ax else len(r_ax) - 1
+    leading = [a for a in allax if a["z"] > drivers[0]["z"] + 1e-6]
+    centre = sum(a["z"] for a in leading) / len(leading) if leading else 0.0
+    span = drivers[0]["z"] - drivers[-1]["z"]
+    if len(leading) >= 2 and centre - drivers[0]["z"] > span:
+        rear = [a for a in allax if a not in leading]
+        return (leading, rear, -1, rear.index(drivers[-1]),  # -1: the core's "average of the bogie's axles"
+                f"{len(drivers)} driving axle(s) ({span:.2f} m wheelbase) behind a {len(leading)}-axle leading truck "
+                f"{centre - drivers[0]['z']:.2f} m ahead: the front bogie is the leading truck (pivot at its centre, "
+                f"z {centre:.3f}), the rear bogie pivots on the rear driver (z {drivers[-1]['z']:.3f})")
+    return f_ax, r_ax, f_pivot, r_pivot, None
+
+
 def common_parent(paths: list[str]) -> str:
     parents = [p.rsplit("/", 1)[0] if "/" in p else "" for p in paths]
     if not parents:
@@ -726,31 +756,13 @@ class _Builder:
         if geared and any(a['part'] and abs(a['z'] - a['rr']) > .05 for a in allax):
             self.choose('Explicit source truck transforms identify measured axles whose model positions differ from source simulation offsets; '
                         'using measured model geometry, see metadata.physicalAxles (z and rr); in-game wheelbase validation pending')
-        n_front = max(1, len(drivers) // 2)
-        front_drivers = drivers[:n_front]
-        split = allax.index(front_drivers[-1]) + 1
-        f_ax, r_ax = allax[:split], allax[split:]
-        if not r_ax:
+        split = bogie_split(allax, drivers)
+        if split is None:
             self.block("one-axle", f"{lid}: only one axle found; Derail Valley needs two bogies")
             return rec
-        f_pivot = f_ax.index(front_drivers[0])
-        r_pivot = r_ax.index(drivers[-1]) if drivers[-1] in r_ax else len(r_ax) - 1
-        leading = [a for a in allax if a["z"] > drivers[0]["z"] + 1e-6]
-        centre = sum(a["z"] for a in leading) / len(leading) if leading else 0.0
-        span = drivers[0]["z"] - drivers[-1]["z"]
-        if len(leading) >= 2 and centre - drivers[0]["z"] > span:
-            # A leading bogie further ahead of the front driver than the drivers' own wheelbase: the body rides on that
-            # bogie. Pivoting both supports on the drivers left too short a base under the front overhang and the nose
-            # sank to the rails: RLW RPP-1 4-2-2 (one driver, 2.7 m base, 4.4 m overhang, 2026-09-28) and GN A-18 4-4-0
-            # (2.1 m between its drivers, leading truck 3.4 m ahead, pilot on the ground, 2026-09-29). Front bogie = the
-            # leading truck, pivoting at its centre; the rear bogie pivots on the rear driver. A 4-6-0/4-6-2 whose driver
-            # wheelbase exceeds that distance keeps its driver pivots.
-            f_ax, r_ax = leading, [a for a in allax if a not in leading]
-            f_pivot = -1  # the core's "average of the bogie's axles": the leading truck's centre
-            r_pivot = r_ax.index(drivers[-1])
-            self.choose(f"{len(drivers)} driving axle(s) ({span:.2f} m wheelbase) behind a {len(leading)}-axle leading truck "
-                        f"{centre - drivers[0]['z']:.2f} m ahead: the front bogie is the leading truck (pivot at its centre, "
-                        f"z {centre:.3f}), the rear bogie pivots on the rear driver (z {drivers[-1]['z']:.3f})")
+        f_ax, r_ax, f_pivot, r_pivot, note = split
+        if note:
+            self.choose(note)
         evidence = [f"probe/probe.json wheels (nodes turned by the wheelset clips)", "Definitions wheelsets (RR axle positions)",
                     "guide A04; G-29 profile: bogies pivot on the end drivers (rigid wheelbase)"]
         cfg["Bogies"] = env([{"Bogie": "BogieF", "BogieCollider": "front", "Axles": [_r(a["z"]) for a in f_ax], "PivotAxle": f_pivot},
