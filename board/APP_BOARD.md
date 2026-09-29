@@ -2083,3 +2083,16 @@ Tested: Python suite on the merged main (272; the 2 known test_csharp_api stub f
 driven (controls, whistle, brakes; F4 cutout pending), RMWF-2 built. Untested in game: control classes, measured coal heap,
 names/folders; train brake 4 notches still waits on logger 0.3 evidence. `tooling/` unchanged, manifest verified.
 0.2.X-exp stays open for further 0.2 work.
+
+## W84 (cloud Claude, 2026-09-29): 0.3 starts: base-game locomotive packs as input
+New branch `0.3.X-exp` from main, commit 7eb503c (no pre-release; James makes them). Version now 0.3.0.dev0
+(`src/rr2dv/__init__.py`, `pyproject.toml`; git does not set it: we bump it, and James's release tag should match).
+- Input rule widened (James): a folder directly in `Railroader_Data/StreamingAssets/AssetPacks` (each base-game loco
+  pack has bundle, Catalog.json, Definitions.json, e.g. ls-060-s23 with S-23 + tender, ls-282-k28t tank). Read only;
+  a bare name looks in Mods first. The input pack is not treated as a mod: the notice/provenance credit it under
+  "Railroader (base game asset packs)". CLAUDE.md's input rule updated.
+- Window: locomotives listed one level down under 'Base game' and 'Mods' (count in each, source folder after the name);
+  `rr2dv list` prints both groups.
+Tested: Python suite (275; the 2 known stub failures), GUI tests under Xvfb, new tests (listing, input rule, a full fake
+conversion from an AssetPacks pack writing nothing to the Railroader install). Untested: a real base-game export/build
+(suggested first: K-28 tank, one prefab in its catalogue).
