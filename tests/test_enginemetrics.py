@@ -192,3 +192,14 @@ class Firing(unittest.TestCase):
             resolve(req, {**values, 'firing': 'mechanical-stoker'})
         with self.assertRaisesRegex(review.ReviewError, 'tank locos only'):
             resolve({**req, 'hasTender': True}, {**values, 'firing': 'oil-burner'})
+
+
+class TwoCylinderSim(unittest.TestCase):
+    def test_three_physical_cylinders_run_as_two_of_equal_swept_volume(self):
+        record, req, values = fixture()
+        two = review.apply(copy.deepcopy(record), resolve(req, {**values, 'cylinders': 2}))
+        three = review.apply(record, resolve(req, {**values, 'cylinders': 3}))
+        sim2, sim3 = two['hooks']['SimSpec']['steamEngine'], three['hooks']['SimSpec']['steamEngine']
+        self.assertEqual(sim3['numCylinders']['value'], 2)
+        self.assertAlmostEqual(sim3['cylinderBore']['value'], sim2['cylinderBore']['value'], places=6)
+        self.assertEqual(three['metadata']['simulationProfile']['physicalCylinders'], 3)

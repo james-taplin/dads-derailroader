@@ -240,7 +240,24 @@ def apply(record, reviewed):
              'doubleActingExhaustEventsPerSecond': round(speed / 3.6 / (2 * math.pi * v['wheelRadius']) * v['gearRatio'] * v['cylinders'] * 2, 2)}
             for speed in (10, 30, 50, 60)]
     _pull_basis(rec, reviewed, v)
+    _two_cylinder_sim(rec)
     return rec
+
+
+def _two_cylinder_sim(rec):
+    """The physical cylinder count is physics only (James, 2026-09-29): Derail Valley's chuff sound indexes its clips by
+    cylinder and threw on the 3-cylinder K-66. The simulation always runs 2 cylinders with the bore scaled so the swept
+    volume, and so the pull and steam use, are unchanged (bore x sqrt(n / 2))."""
+    sim = rec['hooks']['SimSpec']['steamEngine']
+    count = sim['numCylinders']['value'] if isinstance(sim.get('numCylinders'), dict) else sim.get('numCylinders')
+    if count in (None, 2) or not sim.get('cylinderBore'):
+        return
+    bore = sim['cylinderBore']['value'] * math.sqrt(count / 2)
+    sim['cylinderBore'] = env(bore, 'm', 'derived', f'Same swept volume as {count} cylinders on the 2 the DV sound engine handles '
+                              f'({sim["cylinderBore"]["value"]:.4f} m x sqrt({count}/2))')
+    sim['numCylinders'] = env(2, 'count', 'DV_choice', f'{count} physical cylinders simulated as 2 of equal swept volume: '
+                              'DV chuff audio handles 2')
+    rec['metadata']['simulationProfile']['simulationBoreM'] = bore
 
 
 def _pull_basis(rec, reviewed, v):

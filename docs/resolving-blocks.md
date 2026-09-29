@@ -244,6 +244,17 @@ Control response: the train and independent brakes, headlights and cab light mov
 their few coarse notches end to end); a generated whistle (no Railroader handle) gets the same whistle physics as a
 Railroader whistle handle. Both are listed as `rr2dv control response` and still need the in-game check.
 
+Cylinders: the reviewed physical cylinder count is physics only. The simulation always runs 2 cylinders with the bore
+scaled to the same swept volume (bore x sqrt(n/2)): Derail Valley's chuff sound handles 2 (a 3-cylinder K-66 threw
+`ChuffClipsSimReader.OnChuff ... IndexOutOfRange` in Player.log). The physical count stays in the build's simulation profile.
+
+Brake cutout and cab light: generated as handwheels like the dynamo and air pump, whose F4 HUD buttons work; built as
+2-position levers, the HUD buttons did nothing.
+
+Railroader lights: every Unity light in the source model is removed (`rr2dv source lights` in `build_report.txt`).
+Railroader switches them from its own scripts, which are not converted, so they stayed on for good. The car keeps the
+builder's own switchable cab light under the roof centre and its lamps.
+
 Door, window and hatch toggles: only the parts a clip actually moves count. A clip that also keys other parts with
 flat curves no longer claims them, so later toggles are not left out as "Toggle overlaps another converted moving
 assembly"; a clip that moves nothing is left out as "Toggle clip moves nothing".

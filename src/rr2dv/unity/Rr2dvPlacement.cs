@@ -87,6 +87,7 @@ public static partial class CclLocoBuild
         CreateCar();
         BuildExterior();
         FinishRr2dvMaterialSlots();
+        StripRr2dvModelLights();
         PassRr2dvGrabRays();
         if (!c.IsTender && Rr2dvNoDynamo) StripRr2dvDynamoHud();
         if (!c.IsTender) CloseRr2dvWhistle();
@@ -200,8 +201,32 @@ public static partial class CclLocoBuild
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
+    // Railroader switches its cab and lamp lights from its own scripts, which are not converted, so a Unity Light left in
+    // the model is on for good: a bright roof light, sometimes with no bulb (James's game test, 2026-09-29). Every source
+    // light goes; the car keeps the builder's own switchable cab light (under the roof centre, on the dynamo fuse) and lamps.
+    static int StripRr2dvLights(Transform t)
+    {
+        var lights = t.GetComponentsInChildren<Light>(true);
+        foreach (var light in lights) Object.DestroyImmediate(light);
+        return lights.Length;
+    }
+
+    static void StripRr2dvModelLights()
+    {
+        string path = $"{carFolder}/{CarId}_template.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            var model = root.transform.Find("Model");
+            int n = model ? StripRr2dvLights(model) : 0;
+            if (n > 0) { Line($"rr2dv source lights: {n} Railroader light(s) removed from the model (always on without RR's scripts)"); SaveRr2dvPrefab(root, path); }
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
     static void StripRr2dvSourceColliders()
     {
+        StripRr2dvLights(RefBody);
         var colliders = RefBody.GetComponentsInChildren<Collider>(true);
         foreach (var collider in colliders) Object.DestroyImmediate(collider);
         if (colliders.Length > 0) Line($"rr2dv cab measured on the visible model: {colliders.Length} source collider(s) set aside");

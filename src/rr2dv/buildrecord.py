@@ -59,11 +59,14 @@ GENERATED = [
     ("Dynamo", "dynamoControl.EXT_IN", 24, True, True, 2, "car/dynamo", 0),
     ("Sander", "sander.CONTROL_EXT_IN", 13, True, True, 2, "car/sander", 0),
     ("Coal dump", "coalDumpControl.EXT_IN", -1, False, False, 3, "car/ash_pan", 0),
-    ("Cab light", "cabLight.EXT_IN", 12, False, True, 2, "car/cab_lights", 45),
+    ("Cab light", "cabLight.EXT_IN", 12, True, True, 2, "car/cab_lights", 0),
     ("Headlights", "headlightDecoder.HEADLIGHTS_EXT_IN", 10, False, False, 7, "car/headlights", 90),
     ("Lubricator", "lubricatorControl.EXT_IN", 25, False, False, 2, "car/lubricator", 35),
-    ("Brake cutout", "brakeCutout.EXT_IN", 5, False, True, 2, "car/brake_cutout", 0),
+    ("Brake cutout", "brakeCutout.EXT_IN", 5, True, True, 2, "car/brake_cutout", 0),
 ]
+# Brake cutout and cab light are handwheels like the dynamo and air pump: the F4 HUD switches those, but did nothing to
+# the same 2-position toggles built as levers (James's game test, 2026-09-29: no error in Player.log, the cab lever
+# worked, the HUD button never changed it).
 # Driving controls a loco needs even when Railroader models no handle for them: a generated backhead lever instead.
 DRIVING = [("Throttle", "throttle.EXT_IN", 0, 21), ("Reverser", "reverser.CONTROL_EXT_IN", 1, 41),
            ("Train brake", "brake.EXT_IN", 2, 11), ("Independent brake", "indBrake.EXT_IN", 3, 11),

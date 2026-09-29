@@ -246,6 +246,7 @@ public static partial class CclLocoBuild
         {
             StripScripts(copy);
             foreach (var collider in copy.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
+            StripRr2dvLights(copy.transform);
             ApplyMaterials(copy, quiet: true);
             var paths = AnimationUtility.GetCurveBindings(clip).Select(b => b.path).Distinct().ToArray();
             var mapped = paths.ToDictionary(p => p, p => copy.transform.Find(p));
