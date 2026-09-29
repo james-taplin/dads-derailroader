@@ -117,7 +117,9 @@ public static partial class CclLocoBuild
         copy.subMeshCount = mesh.subMeshCount + 1;
         copy.SetTriangles(keep.ToArray(), slot);
         copy.SetTriangles(lamp.ToArray(), mesh.subMeshCount);
-        AssetDatabase.CreateAsset(copy, $"{carFolder}/{CarId}_{mf.name}_{slot}_lamps.asset".Replace(" ", "_"));
+        // only the file name is cleaned: the car folder keeps its own name (M-3: 'DM&IR M-3 Yellowstone' has spaces)
+        string file = System.Text.RegularExpressions.Regex.Replace($"{CarId}_{mf.name}_{slot}_lamps", "[^A-Za-z0-9_.-]", "_");
+        AssetDatabase.CreateAsset(copy, AssetDatabase.GenerateUniqueAssetPath($"{carFolder}/{file}.asset"));
         mf.sharedMesh = copy;
         mats = mats.Concat(new[] { lens }).ToArray();
         return true;
