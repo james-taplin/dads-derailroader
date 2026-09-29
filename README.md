@@ -287,6 +287,7 @@ prefab-save regression, set `RR2DV_TEST_UNITY` to Unity 2019.4.40f1 and run
 | [`src/rr2dv/`](src/rr2dv/) | the app: Python standard library only (Tk for the window); Unity editor scripts in [`src/rr2dv/unity/`](src/rr2dv/unity/) |
 | [`tests/`](tests/) | automated tests on made-up mods, with stand-ins for AssetRipper and Unity |
 | [`tooling/`](tooling/) | read-only snapshot of our conversion tooling and guides, the reference builder (start with [`tooling/NOTES.md`](tooling/NOTES.md)) |
+| [`wiki/`](wiki/) | the wiki pages (`_Sidebar.md` and 19 pages), kept here to copy into the GitHub wiki |
 | [`docs/`](docs/) | [resolving blocks](docs/resolving-blocks.md), [feature roadmap](docs/feature-roadmap.md), [wiki plan](docs/wiki-plan.md), design notes |
 | [`board/APP_BOARD.md`](board/APP_BOARD.md) | message board between the app's and the local Claude and Codex sessions |
 | [`CLAUDE.md`](CLAUDE.md) | working notes for Claude sessions on the app |
