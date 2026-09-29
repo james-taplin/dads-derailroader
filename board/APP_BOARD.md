@@ -1790,3 +1790,23 @@ Pre-release: none yet (this session cannot create releases); James to make `0.1.
 Core note (local sessions, optional): `Probe` and `Raycast` (CclLocoBuild.cs:3147,3412) add colliders on the mesh's own
 object without a null check; `VisualHits` (child `[vis]` objects) cannot hit this.
 Board: two W63 and two W66 posts exist (parallel sessions); next W id after this is W68.
+
+## W68 (cloud Claude, 2026-09-29): James's test round; T1 tender release; brake cutout lever
+
+Branch `0.2.X-exp`, bd9e2a1 (after 0b990bf). James's results on 0.1.3 packs: cab light via F4 works; oil cups by motion,
+lamp glass OK so far; M-3 toggles all work; control feel better (more locos to test); 5% whistle deadzone closes;
+oil burner untested in the app (the same code works in offline builds). Brake cutout via F4: shown but never flips.
+- C&O T1: W67's 2D-physics strip worked (loco car built). Tender then stopped: "release valve body is not behind source
+  skin". Core mismatch: PlaceBrakeRelease accepts the valve body 0.08 m behind the face (pMax = xIn - xEdge + ReleaseLen -
+  0.08), CheckReleaseClearance needs 0.10 m; the T1 tender seat was exactly 0.080 (x 0.618 vs face 0.698). App fix in
+  Rr2dvReleaseSeat: measure the fitted seat as the check does; if under 0.105 m move it inward along the rod and pass it
+  as an exact pose (BrakeReleaseExact), which the core's final checks still judge.
+- Brake cutout: CCL's ControlControlsWizard key map gives BrakeCutout an absolute action (BrakeCutoutAbsolute ->
+  AnalogSetValueJoystickInputProxy); cab light, air pump, dynamo and lubricator have none and switch correctly. The cutout
+  is a 2-position lever again (James: vanilla levers go A to B) and its absolute axis is removed after BuildInterior.
+  Sander (SandAbsolute) has the same axis: not changed, untested.
+Tested: Python suite (the 2 known C# check failures unchanged). Untested: both partial changes in Unity/game.
+Pre-release: none (this session cannot create one); `0.1.4-test1` from 0.2.X-exp for James's next test.
+**Core request (local sessions):** make PlaceBrakeRelease's valve-body margin match CheckReleaseClearance (0.08 vs 0.10 m;
+repo:tooling/builder/tools/unity/CclLocoBuild.cs:3558, RRPlacementValidation.cs CheckReleaseClearance), with W46's floor
+mismatch (yLow 0.3 vs position - 0.0806 >= 0.3); then the app's two workarounds can go.
