@@ -1885,3 +1885,25 @@ Player.log, DVStateProbe.log, HUD/backhead/tender screenshots, DVCCLControlFix s
 Open for James: front windows (RXM-1 toggles are RCW/LCW side windows and RCV/LCV roof vents, no front-window toggle in the
 definition); train brake set points; generated control classes; cutout lever location (bottom row, x -0.5).
 Tested: Python suite; stub compile (only stub gaps). Untested in Unity/game.
+
+## W74 (cloud Claude, 2026-09-29): control logger; request: generated control classes (core)
+
+Branch `0.2.X-exp`, see git log (after c78eaff). `tools/dv-control-logger/`: James asked for a low-impact logger in the DV
+root relaying every control input (grab, keyboard, F4), how far each control moves and what the sim does. UMM/Harmony helper
+in C# 5 (as DVCCLControlFix; APIs only those its sources show: BaseControlsOverrider.Init(TrainCar, SimulationFlow),
+InteractablePortFeeder.portId, ControlImplBase.Value, SimulationFlow.TryGetPort, AKeyboardInput.Tick). 10 Hz poll of the
+loaded cab; logs control changes with source (keyboard certain via Tick, else mouse/cursor/scroll heuristics), ports changing
+without their control, watched ports (watch.txt) at the change, +1 s, +3 s. Writes nothing to the game. Compiled here only
+against stand-ins; first Windows build (Build.ps1) is its compile check.
+
+**Request to the local sessions (core change; James approved 2026-09-29; local tooling first, then a snapshot).** Generated
+controls are all LeverProxy (Place: a lever, or a 'wheel' that is a lever turning 170 deg), so they look alike and 2-position
+ones feel wrong. Please add control classes to Place/PlaceCfg (e.g. a `Kind`), each a CCL proxy:
+- lever (LeverProxy, notched): throttle, reverser, train/ind brake, damper, fire door, cylinder cocks, brake cutout (2 positions A/B);
+- valve wheel (WheelProxy, multi-turn, graded): injector, blower, blowdown;
+- spring return (lever, notches 0, spring to 0): whistle;
+- switch (ToggleSwitchProxy for 2 positions, RotaryProxy with notches for multi-position): dynamo, air pump, lubricator,
+  cab light, bell (James: bell is a toggle), headlights (rotary -3..+3).
+Keep one notch per tap (scrollWheelHoverScroll 1, G29Config.cs:249) and ControlControlsWizard.AddInput per class. The app then
+picks the class per generated control (buildrecord GENERATED). ? whether ToggleSwitch/Rotary keep the F4/keyboard routes
+DVCCLControlFix reports for levers.
