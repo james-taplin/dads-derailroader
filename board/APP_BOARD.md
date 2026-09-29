@@ -1826,3 +1826,19 @@ Glare slots given gunmetal, fixed tender trucks (wheels modelled into the frame)
   CCL only strips the placeholder plate (InfoPlateProcessor); DV spawns the plate at the anchor, assumed parented so the
   scale applies: unverified until seen in game.
 Tested: Python suite (2 known C# check failures unchanged). Untested in Unity/game.
+
+## W70 (cloud Claude, 2026-09-29): T1/M-3 rebuild notes: glass, oil budget, sander HUD
+
+Branch `0.2.X-exp`, bef825b. From James's T1 and M-3 rebuilds (build reports + screenshots; not driven yet).
+- T1 white cab glass: its pane material is 'Windows' (core: URP Lit -> opaque white); our clear-glass rule matched only
+  '...glass...'. Now also a material named just Window/Windows (regex, so WindowColorable/frames are untouched).
+- M-3 mixed glass: all 15 'rr2dv glass' lines were template panes; opening copies (BuildRrOpening) get the core's
+  ApplyMaterials only. The slot rules (glass, lens, gunmetal, coal) are now one helper run on the template and on each
+  opening copy. M-3 front windows: the clip moves only Empty.130/.131 (3 keyed transforms unmoved), so that subtree opens;
+  ? James: does Railroader open only that middle section too.
+- T1 oil cups: 28 (every rod nub was a pair; 8 pairs at z 4.5-5.3 round the cylinders). Budget (James): one pair per
+  driving axle, 10 cups max. Over budget each axle (provisional axle hints) keeps the nub pair nearest its z within 0.6 m;
+  source order/tags kept (O01). Locos within budget unchanged.
+- Sander: CCL CustomHUDLayout.SetToS leaves BasicControls.Sander and Cab.SandLevel at None; the app now shows both.
+- Held by James: headlamp lens see-through when off (T1 front/rear, M-3 rear).
+Tested: Python suite (2 known C# check failures unchanged). Untested in Unity/game.
