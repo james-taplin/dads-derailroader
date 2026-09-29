@@ -233,8 +233,13 @@ glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow 
 draws fully transparent (alpha 0: a flare disc) stays invisible. When lamp glass shares the window material on one mesh,
 its triangles within a lamp lens of a lamp (`LampLenses`) are split onto the lens (`rr2dv glass: … split off`). The whole car
 is searched, trucks included (tender truck rims). A tender whose model has no coal of its own (Railroader draws it at
-runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount. All
+runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount; its front is cut back
+to where the tender's sides end at coal height, so it never reaches across the gap into the cab (`rr2dv coal load`). All
 are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
+
+Number plates: Derail Valley's info plate goes on the nearest flat (or gently curved) part of the side that holds its
+whole footprint. Where the full size would overhang, it may shrink to 90 % or at most 80 % (`rr2dv visible plate …
+scaled to 80 %`); if nothing holds even that, it stays at the source decal with a warning.
 
 Oil cups: the driving groups' own clips are played through a revolution; a part whose middle travels is a rod (a cup
 on it rides with it), a part that turns in place is a wheel, axle or crank (no cup on it), whatever the parts are called

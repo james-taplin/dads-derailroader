@@ -84,6 +84,7 @@ public static partial class CclLocoBuild
         matMap = BuildMaterials(Livery);
         FinishRr2dvMaterials();
         PrepareRr2dvGrips();
+        FitRr2dvCoalLoad();
         CreateCar();
         BuildExterior();
         FinishRr2dvMaterialSlots();
@@ -156,6 +157,43 @@ public static partial class CclLocoBuild
     {
         using (var vh = new VisualHits(RefBody))
             return vh.Ray(pos + dir * 1.5f, -dir, 3f, out var hit) ? Vector3.Dot(hit.point - pos, dir) : float.NaN;
+    }
+
+    // A generated tender coal load comes from a layout rule ending 0.25 m behind Railroader's car end, but the car end can
+    // sit well ahead of the tender's front sheet: the R48's coal showed as a block across the gap into the cab (James's
+    // game test, 2026-09-29). Coal reaches forward only as far as the tender's sides enclose it at coal height: from the
+    // front, the first 0.15 m run of slices with a side sheet within 0.6 m of the box on both sides (a lone handrail is
+    // thinner). The box is only ever shortened, never below 0.5 m.
+    static void FitRr2dvCoalLoad()
+    {
+        var cl = Cfg.CoalLoad;
+        if (cl == null || !cl.Pivot.HasValue) return;
+        var p = cl.Pivot.Value;
+        float half = cl.Footprint.x / 2, rear = p.z - cl.Footprint.y / 2, front = p.z + cl.Footprint.y / 2;
+        float reach = half + .6f, start = half + 2f;
+        float edge = float.NaN;
+        using (var vh = new VisualHits(RefBody))
+        {
+            bool Side(float s, float y, float z) =>
+                vh.Ray(new Vector3(s * start, y, z), new Vector3(-s, 0, 0), start, out var h) && Mathf.Abs(h.point.x) <= reach;
+            bool Enclosed(float z) => new[] { .3f, .6f }.Any(f => Side(1, p.y + cl.FullHeight * f, z) && Side(-1, p.y + cl.FullHeight * f, z));
+            int run = 0;
+            for (float z = front; z >= rear + .5f; z -= .05f)
+            {
+                run = Enclosed(z) ? run + 1 : 0;
+                if (run == 3) { edge = z + .1f; break; }
+            }
+        }
+        if (float.IsNaN(edge))
+        {
+            Warn("rr2dv coal load: the tender sides enclose no 0.15 m of the coal box at coal height; left as placed (check it in game)");
+            return;
+        }
+        if (edge >= front - .02f) return;
+        cl.Pivot = new Vector3(p.x, p.y, (rear + edge) / 2);
+        cl.Footprint = new Vector2(cl.Footprint.x, edge - rear);
+        Line($"rr2dv coal load: front {front:F3} -> {edge:F3} (the tender sides end there at coal height); box {rear:F3}..{edge:F3}, " +
+             $"length {edge - rear:F3} m");
     }
 
     static void Rr2dvReleaseSeat()
@@ -650,15 +688,22 @@ public static partial class CclLocoBuild
                 if (bodyBounds.Length == 0) throw new InvalidOperationException("No visible body for plates");
                 var extent = bodyBounds[0]; foreach (var b in bodyBounds) extent.Encapsulate(b);
                 float outside = Mathf.Max(Mathf.Abs(extent.min.x), Mathf.Abs(extent.max.x)) + 1;
-                // Search nearest to the source label, then verify the entire native plate footprint.
+                bool found = false; RaycastHit hit = new RaycastHit();
+                string fit = null; float scale = 1f;
+                // Full size first; where it would overhang, the plate may shrink to 90 then 80 % (James, 2026-09-29: no smaller,
+                // so it stays readable). Derail Valley spawns its plate at the anchor, so the anchor's scale sizes it.
+                foreach (var s in new[] { 1f, .9f, .8f })
+                {
+                if (found) break;
+                scale = s;
+                var fe = footprint.extents * s; var fs = footprint.size * s;
+                // Search nearest to the source label, then verify the entire plate footprint.
                 var candidates = new System.Collections.Generic.List<Vector3>();
-                for (float z = extent.min.z + footprint.extents.z; z <= extent.max.z - footprint.extents.z; z += .05f)
+                for (float z = extent.min.z + fe.z; z <= extent.max.z - fe.z; z += .05f)
                 for (int y = -10; y <= 10; y++) candidates.Add(new Vector3(side * outside, source.pos.y + y * .05f, z));
                 candidates.Insert(0, new Vector3(side * outside, source.pos.y, source.pos.z));
-                bool found = false; RaycastHit hit = new RaycastHit();
                 // Flat to 5.7 degrees within 8 mm first; then a curved or panelled side (PLW Trojan saddle tank, 2026-09-28)
                 // to 18 degrees within 25 mm; then the plate stays at the source decal with a WARN rather than stopping.
-                string fit = null;
                 foreach (var (flat, relief, rule) in new[] { (.995f, .008f, "flat"), (.95f, .025f, "curved side") })
                 {
                 if (found) break;
@@ -666,15 +711,16 @@ public static partial class CclLocoBuild
                 {
                     if (!hits.Ray(origin, Vector3.left * side, outside, out hit, body) || hit.normal.x * side < flat) continue;
                     bool supported = true;
-                    int ny = Mathf.CeilToInt(footprint.size.y / .1f), nz = Mathf.CeilToInt(footprint.size.z / .1f);
+                    int ny = Mathf.CeilToInt(fs.y / .1f), nz = Mathf.CeilToInt(fs.z / .1f);
                     for (int iy = 0; iy <= ny && supported; iy++)
                     for (int iz = 0; iz <= nz; iz++)
                     {
-                        var sample = origin + new Vector3(0, Mathf.Lerp(-footprint.extents.y, footprint.extents.y, (float)iy/ny), Mathf.Lerp(-footprint.extents.z, footprint.extents.z, (float)iz/nz));
+                        var sample = origin + new Vector3(0, Mathf.Lerp(-fe.y, fe.y, (float)iy/ny), Mathf.Lerp(-fe.z, fe.z, (float)iz/nz));
                         if (!hits.Ray(sample, Vector3.left * side, outside, out var edge, body) || edge.collider != hit.collider ||
                             edge.normal.x * side < flat || Mathf.Abs(edge.point.x-hit.point.x) > relief) { supported = false; break; }
                     }
                     if (supported) { found = true; fit = rule; break; }
+                }
                 }
                 }
                 if (!found)
@@ -685,7 +731,10 @@ public static partial class CclLocoBuild
                 var old = anchor.localPosition;
                 anchor.position = hit.point + Vector3.right * side * .01f;
                 anchor.localRotation = Quaternion.Euler(0, side > 0 ? 0 : 180, 0);
-                Line($"rr2dv visible plate {pair.Item1}: {V(old)} -> {V(anchor.localPosition)} on {hit.collider.transform.parent.name}; full {footprint.size.y:F3} x {footprint.size.z:F3} m footprint supported ({fit})");
+                if (scale < 1f) anchor.localScale = Vector3.one * scale;
+                Line($"rr2dv visible plate {pair.Item1}: {V(old)} -> {V(anchor.localPosition)} on {hit.collider.transform.parent.name}; " +
+                     (scale < 1f ? $"scaled to {scale * 100:F0} %: {footprint.size.y * scale:F3} x {footprint.size.z * scale:F3} m footprint supported ({fit}; the full size overhangs)"
+                                 : $"full {footprint.size.y:F3} x {footprint.size.z:F3} m footprint supported ({fit})"));
             }
             SaveRr2dvPrefab(root, path);
         }
