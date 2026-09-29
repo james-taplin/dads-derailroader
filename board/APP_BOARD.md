@@ -2132,3 +2132,12 @@ MeshFilter including inactive/renderer-less ones and hit a hidden surface at z -
 removes never-drawn meshes from the measuring copy just before BuildInteractables, FreshRr2dvSource after it.
 Core note for the local sessions: CheckHandbrake/Surface could use the same visible-mesh rule as VisualHits.
 Tested: none beyond the Python suite (C# only). Untested: Unity rebuild of the K-28T.
+
+## W87 (cloud Claude, 2026-09-29): K-66 evidence; stoker drives the source's own stoker/auger toggles
+Branch `0.3.X-exp`, commit 1f3b085 (no pre-release). James's K-66 build (hand-fired, pre-stoker code) exported; it shows
+the source's stoker parts as ToggleAnimations: loco 'Stoker' (Main/DriveShaft.001) and tender 'Auger'
+(TenderMain/Auger.002/AugerScrew), both built as click buttons. With firing 'mechanical-stoker' now: such toggles
+(name/key/title matching stoker|auger) are not openings; their animated ancestor turns via CCL RotatorPortReader about
+the local axis its own clip turns it (quarter-point sample relative to t=0), at 0.5 rev/s x STOKING_NORMALIZED: loco
+parts read stoker.STOKING_NORMALIZED directly, tender parts stokerDrive.NORMALIZED over the coupling. The W85
+name/shape heuristic is only the fallback (regex now matches camel-case AugerScrew). Unity-untested.
