@@ -27,15 +27,23 @@ class TemporaryConversions(unittest.TestCase):
     def run_conversion(self, **kwargs):
         return convert(self.mod['mod'], self.machine, search=[self.mod['search']], **kwargs)
 
-    def assert_clean(self, outcome):
+    def assert_clean(self, outcome, rerun_project=False):
         run = outcome.run
         self.assertEqual(run.path.parent.name, 'reports')
         self.assertEqual(run.record['cleanup']['status'], 'done')
         self.assertFalse(Path(run.record['cleanup']['temporary_path']).exists())
-        self.assertFalse((self.machine.work_root / '_cache').exists())
+        cache = self.machine.work_root / '_cache'
+        if rerun_project:  # stopped before a built and audited pack: only the measured project for the rerun is kept
+            self.assertEqual([p.name for p in cache.iterdir()], ['projects'])
+            self.assertEqual(len(list((cache / 'projects').iterdir())), 1)
+        else:
+            self.assertFalse(cache.exists())
         for name in ('inputs', 'unity', 'extracted', 'build'):
             self.assertFalse((run.path / name).exists(), name)
         self.assertEqual(read_json(run.file)['cleanup']['status'], 'done')
+        if run.record['stages']['probe']['status'] == 'done':  # blocks point the user at these measurements
+            for name in ('probe/probe.json', 'probe/result.json', 'probe/probe-input.json'):
+                self.assertTrue((run.path / name).is_file(), name)
 
     def test_installed_output_survives_cleanup_without_a_duplicate(self):
         source = tree_state(Path(self.machine.values['railroader']))
@@ -68,7 +76,7 @@ class TemporaryConversions(unittest.TestCase):
     def test_answer_stop_keeps_candidate_but_no_ripped_assets(self):
         out = self.run_conversion()
         self.assertEqual(out.code, 3)
-        self.assert_clean(out)
+        self.assert_clean(out, rerun_project=True)
         self.assertTrue(out.run.record['blocks'])
         self.assertNotIn('output', out.run.record)
 

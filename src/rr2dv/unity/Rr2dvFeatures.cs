@@ -12,7 +12,7 @@ public static partial class CclLocoBuild
 {
     [Serializable] public class RrReview
     {
-        public string trainBrake, spawnMode, physics, steamHeat;
+        public string trainBrake, spawnMode, physics, steamHeat, firing;
         public float gearRatio, efficiency;
         public int[] spawnTracks;
         public int[] poweredWheelsets;
@@ -43,6 +43,34 @@ public static partial class CclLocoBuild
         var basic = settings.GetType().GetField("BasicControls").GetValue(settings);
         var speed = basic.GetType().GetField("Speedometer");
         speed.SetValue(basic, Enum.ToObject(speed.FieldType, 1));
+        var cab = settings.GetType().GetField("Cab").GetValue(settings);
+        var interior = AssetDatabase.LoadAssetAtPath<GameObject>($"{carFolder}/{CarId}_interior.prefab");
+        var reader = interior.GetComponents<Component>().First(c => c.GetType().Name == "LocoControlsReaderProxy");
+        foreach (var binding in new[] { new[] { "CabLightStyle", "cabLight" }, new[] { "Headlights1", "headlightsFront" }, new[] { "Headlights2", "headlightsRear" } })
+        {
+            var field = cab.GetType().GetField(binding[0]);
+            var wired = new SerializedObject(reader).FindProperty(binding[1]);
+            field.SetValue(cab, Enum.ToObject(field.FieldType, wired != null && wired.objectReferenceValue ? 1 : 0));
+        }
+        // CCL's steam preset (SetToS) leaves the whistle slot at None, so the HUD had no whistle (L-27 game test,
+        // 2026-09-28). Every converted steam loco has a whistle control, RR or generated: show it as Whistle.
+        var horn = cab.GetType().GetField("HornStyle");
+        horn.SetValue(cab, Enum.ToObject(horn.FieldType, 2));
+        // SetToS shows tender water but not tender coal (RPP-1 game test: no coal amount on the HUD).
+        if (Loco.Tender != null)
+        {
+            var coal = cab.GetType().GetField("TenderCoal");
+            coal.SetValue(cab, Enum.ToObject(coal.FieldType, 1));
+        }
+        // Oil burner (review choice): oil valve in the dynamic-brake slot, atomizer in gearbox 1; no shovel or coal dump.
+        if (RrChoices.firing == "oil-burner")
+            foreach (var (section, slot, show) in new[] { ("Braking", "DynamicBrake", 1), ("BasicControls", "GearboxA", 1),
+                                                          ("Steam", "Shovel", 0), ("Steam", "FuelDump", 0) })
+            {
+                var sec = settings.GetType().GetField(section).GetValue(settings);
+                var field = sec.GetType().GetField(slot);
+                field.SetValue(sec, Enum.ToObject(field.FieldType, show));
+            }
         hud.GetType().GetMethod("OnValidate").Invoke(hud, null);
         EditorUtility.SetDirty(hud);
         EditorUtility.SetDirty(type);

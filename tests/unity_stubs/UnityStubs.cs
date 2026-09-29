@@ -71,7 +71,7 @@ namespace UnityEngine
     public class MeshCollider : Collider { public Mesh sharedMesh; }
     public class AudioSource : Behaviour { public AudioClip clip; }
     public class AudioClip : Object { }
-    public class AnimationClip : Object { public float length; public void SampleAnimation(GameObject go, float t) { } }
+    public class AnimationClip : Object { public float length; public float frameRate; public void SampleAnimation(GameObject go, float t) { } }
     public class AssetBundle : Object
     {
         public static AssetBundle LoadFromFile(string path) => null;
@@ -95,13 +95,15 @@ namespace UnityEditor
 {
     using UnityEngine;
     public struct EditorCurveBinding { public string path, propertyName; public Type type; }
-    public class AnimationCurve { }
+    public class AnimationCurve { public AnimationCurve(params Keyframe[] k) { } public Keyframe[] keys; }
+    public struct Keyframe { public Keyframe(float t, float v, float i, float o) { time = t; value = v; inTangent = i; outTangent = o; } public float time, value, inTangent, outTangent; }
     public class ObjectReferenceKeyframe { }
     public static class AnimationUtility
     {
         public static EditorCurveBinding[] GetCurveBindings(AnimationClip c) => null;
         public static EditorCurveBinding[] GetObjectReferenceCurveBindings(AnimationClip c) => null;
         public static void SetEditorCurve(AnimationClip c, EditorCurveBinding b, AnimationCurve curve) { }
+        public static AnimationCurve GetEditorCurve(AnimationClip c, EditorCurveBinding b) => null;
         public static void SetObjectReferenceCurve(AnimationClip c, EditorCurveBinding b, ObjectReferenceKeyframe[] k) { }
         public static string CalculateTransformPath(Transform t, Transform root) => "";
     }
@@ -109,6 +111,7 @@ namespace UnityEditor
     {
         public static T LoadAssetAtPath<T>(string p) where T : Object => null;
         public static void SaveAssets() { } public static void Refresh() { }
+        public static void CreateAsset(Object o, string p) { }
         public static bool IsValidFolder(string p) => false;
         public static string CreateFolder(string parent, string name) => "";
         public static string[] FindAssets(string filter, string[] folders) => null;

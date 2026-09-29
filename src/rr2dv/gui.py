@@ -12,6 +12,7 @@ import queue
 import subprocess
 import sys
 import threading
+import time
 import traceback
 from pathlib import Path
 
@@ -105,12 +106,15 @@ class App:
         self.last_run: Path | None = None
         self._build()
         self._pump_id = self.root.after(100, self._pump)
+        self._beat, self._closing, self._modal = time.monotonic(), False, False
+        threading.Thread(target=self._watchdog, daemon=True).start()
         self.root.protocol("WM_DELETE_WINDOW", self.close)
         self.refresh()
 
     def close(self) -> None:
         """Stop polling and close the window. A running conversion's worker thread is a daemon and ends with the app;
         its run folder records how far it got."""
+        self._closing = True
         if self._pump_id:
             self.root.after_cancel(self._pump_id)
             self._pump_id = None
@@ -287,45 +291,88 @@ class App:
         self.candidate: float | None = None
 
     # ---- plumbing -----------------------------------------------------------------------------------------------------
+    def _modal_error(self, *args, **kwargs) -> None:
+        """An error box blocks the window's event loop until it is closed: not a hang for the watchdog."""
+        self._modal = True
+        try:
+            messagebox.showerror(*args, **kwargs)
+        finally:
+            self._modal = False
+            self._beat = time.monotonic()
+
+    def _watchdog(self) -> None:
+        """Writes every thread's stack to the log folder when the window stops handling events for 30 s, so a hang
+        leaves evidence instead of a frozen window and an empty log (2026-09-28)."""
+        import faulthandler
+        dumped = False
+        while not self._closing:
+            time.sleep(5)
+            stalled = 0.0 if self._modal else time.monotonic() - self._beat
+            if stalled > 30 and not dumped:
+                path = applog.log_file().with_name(time.strftime("hang-%Y%m%d-%H%M%S.txt"))
+                try:
+                    with open(path, "w", encoding="utf-8") as f:
+                        f.write(f"derailroader window not responding for {stalled:.0f} s; stacks of every thread:\n")
+                        f.flush()
+                        faulthandler.dump_traceback(file=f, all_threads=True)
+                    applog.get().error("window not responding for %.0f s; thread stacks written to %s", stalled, path)
+                except OSError:
+                    pass
+                dumped = True
+            elif stalled < 5:
+                dumped = False
+
     def _pump(self) -> None:
+        self._beat = time.monotonic()
         try:
             while True:
-                kind, *rest = self.worker.inbox.get_nowait()
-                if kind == "done":
-                    name, result, done = rest
-                    self.worker.busy = False
-                    if done:
-                        done(result)
-                elif kind == "error":
-                    name, (error, trace), done = rest
-                    self.worker.busy = False
-                    self._log(f"{name} failed: {error}")
-                    self._set_busy(False)
-                    where = ""
-                    if name == "Conversion":
-                        self.summary.configure(text=f"Stopped: {error}", foreground=COLOURS["fail"])
-                        run = getattr(error, "rr2dv_run", None)  # the run that stopped, if it got that far (X39)
-                        if run:
-                            self._show_run(run.path)
-                            where = f"\n\nRun log: {run.path / 'run.log'}"
-                    messagebox.showerror(APP_NAME, f"{name} failed:\n\n{error}{where}\n\nApp log: {applog.log_file()}",
-                                         parent=self.root)
-                elif kind == "progress":
-                    stage, status, detail = rest
-                    self._stage(stage, status, detail)
-                elif kind == "mods-progress":
-                    i, total = rest
-                    self.mods_status.configure(text=f"Reading mods… {i} of {total}")
-                elif kind == "review":
-                    questions, answer = rest
-                    from .reviewgui import show
-                    show(self.root, questions, answer)
-                elif kind == "ask":
-                    pack, sources, answer = rest
-                    self._ask(pack, sources, answer)
-        except queue.Empty:
-            pass
-        self._pump_id = self.root.after(100, self._pump)
+                try:
+                    message = self.worker.inbox.get_nowait()
+                except queue.Empty:
+                    break
+                try:
+                    self._handle(*message)
+                except Exception as e:  # a failing dialog must never stop the pump: that froze the window (2026-09-28)
+                    self._dialog_failed(message[0], message[-1] if message[0] in ("review", "ask") else None, e)
+        finally:
+            self._pump_id = self.root.after(100, self._pump)
+
+    def _handle(self, kind, *rest) -> None:
+        if kind == "done":
+            name, result, done = rest
+            self.worker.busy = False
+            if done:
+                done(result)
+        elif kind == "error":
+            name, (error, trace), done = rest
+            self.worker.busy = False
+            self._log(f"{name} failed: {error}")
+            self._set_busy(False)
+            where = ""
+            if name == "Conversion":
+                self.summary.configure(text=f"Stopped: {error}", foreground=COLOURS["fail"])
+                run = getattr(error, "rr2dv_run", None)  # the run that stopped, if it got that far (X39)
+                if run:
+                    self._show_run(run.path)
+                    where = f"\n\nRun log: {run.path / 'run.log'}"
+            self._modal_error(APP_NAME, f"{name} failed:\n\n{error}{where}\n\nApp log: {applog.log_file()}",
+                                 parent=self.root)
+        elif kind == "progress":
+            stage, status, detail = rest
+            self._stage(stage, status, detail)
+        elif kind == "mods-progress":
+            i, total = rest
+            self.mods_status.configure(text=f"Reading mods… {i} of {total}")
+        elif kind == "review":
+            questions, answer = rest
+
+            def open_review():
+                from .reviewgui import show
+                show(self.root, questions, answer)
+            self._when_shown(kind, answer, open_review)
+        elif kind == "ask":
+            pack, sources, answer = rest
+            self._when_shown(kind, answer, lambda: self._ask(pack, sources, answer))
 
     def _log(self, line: str) -> None:
         self.log.configure(state="normal")
@@ -454,7 +501,7 @@ class App:
             if wheel_radius is not None and not 0.1 <= wheel_radius <= 1.5:
                 raise ValueError
         except ValueError:
-            messagebox.showerror(APP_NAME, "The wheel radius must be a number of metres between 0.1 and 1.5.", parent=self.root)
+            self._modal_error(APP_NAME, "The wheel radius must be a number of metres between 0.1 and 1.5.", parent=self.root)
             return
         audio = {1: "S060", 2: "S282"}.get(self.audio.current())
         geometry_review = Path(self.geometry.get().strip()) if self.geometry.get().strip() else None
@@ -551,6 +598,28 @@ class App:
         self.summary.configure(text=text, foreground=COLOURS[colour])
         if outcome.code == EXIT_OK:
             messagebox.showinfo(APP_NAME, installed, parent=self.root)
+
+    def _when_shown(self, kind: str, answer: dict, open_dialog, tries: int = 50) -> None:
+        """A question needs the user: if the main window is minimised, restore it and wait until Windows has, then open
+        the dialog. A dialog made on a minimised parent is hidden with it and its grab blocks the app (Trojan,
+        2026-09-28). Nothing else is forced: forcing the dialog to the front (topmost) coincided with it never showing (L-27, 2026-09-28)."""
+        if self.root.state() == "iconic" and tries > 0:
+            self.root.deiconify()
+            self.root.after(100, lambda: self._when_shown(kind, answer, open_dialog, tries - 1))
+            return
+        try:
+            open_dialog()
+        except Exception as e:
+            self._dialog_failed(kind, answer, e)
+
+    def _dialog_failed(self, kind: str, answer: dict | None, error: Exception) -> None:
+        applog.get().error("window message %s failed:\n%s", kind, traceback.format_exc())
+        self._log(f"{kind} failed: {error}")
+        if answer is not None:  # the waiting conversion gets "cancelled" and stops cleanly instead of waiting forever
+            answer["value"] = None if kind == "review" else False
+            answer["event"].set()
+        self._modal_error(APP_NAME, f"The {'vehicle choices' if kind == 'review' else kind} window could not open:\n\n"
+                                       f"{error}\n\nThe details are in the app log: {applog.log_file()}", parent=self.root)
 
     def _ask(self, pack, sources, answer) -> None:
         top = tk.Toplevel(self.root)

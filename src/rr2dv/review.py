@@ -15,6 +15,15 @@ BRAKES = ('self-lapping', 'manual-lap')
 SPAWNING = ('radio-only', 'manual', 'automatic')
 PHYSICS = ('legacy-equivalent', 'simple', 'geared')
 HEAT = ('basis-approximation', 'saturated', 'superheated')
+DYNAMO = ('yes', 'no')
+# What a loco without a dynamo leaves out: electric lamps and cab light, and the controls that work them (James, 2026-09-28:
+# the RLW RPP-1 has none, but got a dynamo, its steam jet by the chimney, lamps and their controls).
+DYNAMO_CONTROLS = ('Dynamo', 'Cab light', 'Headlights')
+# How the fire is fed (James, 2026-09-28). Oil burner: our builder core's OilFiring (the 'coal' container holds fuel oil, a
+# CCL stoker fires it; oil valve in the HUD dynamic-brake slot, atomizer valve in gearbox 1). Mechanical stoker: shown so it
+# can be chosen, but not buildable until the builder core keeps coal and gives the stoker steam use (board W57).
+FIRING = ('hand-fired', 'oil-burner', 'mechanical-stoker')
+OIL_VALVE, ATOMIZER_VALVE = 'oilValve', 'atomizerValve'
 
 
 class ReviewError(ValueError):
@@ -56,11 +65,32 @@ def request(record, definitions, probe, fingerprint):
         'wheelCandidates': record['metadata'].get('wheelCandidates', []),
         'initialRadius': cfg.get('WheelRadius', {}).get('value') if isinstance(cfg.get('WheelRadius'), dict) else None,
         'suggestedBrake': source.get('brakeValveType') if source.get('brakeValveType') in BRAKES else None,
+        'hasTender': bool(record.get('tender')),
+        'sourceHasDynamo': any(isinstance(c, dict) and c.get('kind') == 'Dynamo' for c in _components(record)),
         'pendingCapabilities': ['Compound/simple switching: prototype not validated',
             'Oil-fired regime combinations: not validated', 'Diesel mechanical/hydraulic/electric: adapters pending',
             'Articulated geometry and steam calibration: in-game validation required'],
     }
+    from . import codemods
+    questions['codeMods'] = codemods.review(source)
+    from .reviewchoices import suggest
+    questions['prefill'] = suggest(questions, source)
+    if questions['codeMods']['options']:
+        first = questions['codeMods']['options'][0]
+        questions['prefill']['values']['pullBasis'] = first['id']
+        questions['prefill']['provenance']['pullBasis'] = {'basis': 'source', 'evidence':
+            f"{first['label']} ({first['lbf']} lbf): {first['evidence']}; Railroader runs this when the mod is installed"}
+    from . import enginemetrics
+    questions['engineMetrics'] = enginemetrics.defaults(record, source)
+    questions['prefill']['values']['engineMetrics'] = copy.deepcopy(questions['engineMetrics']['values'])
+    questions['prefill']['metricProvenance'] = copy.deepcopy(questions['engineMetrics']['provenance'])
     return questions
+
+
+def _components(record):
+    comps = record['config'].get('Components') or []
+    if isinstance(comps, dict): comps = comps.get('value') or []
+    return comps
 
 
 def resolve(req, answer):
@@ -68,8 +98,30 @@ def resolve(req, answer):
     for key in ('schema', 'adapterVersion', 'vehicleId', 'fingerprint', 'catalogueHash'):
         if answer.get(key) != req[key]: raise ReviewError(f'Stale or different review: {key}; review this source again')
     v = copy.deepcopy(answer.get('values', {}))
-    for key, allowed in (('trainBrake', BRAKES), ('spawnMode', SPAWNING), ('physics', PHYSICS), ('steamHeat', HEAT)):
+    from . import enginemetrics
+    v['engineMetrics'] = enginemetrics.resolve(req, v)
+    notes = v.get('engineMetricNotes', '')
+    if not isinstance(notes, str) or len(notes) > 2000: raise ReviewError('Engine specification notes must be text, up to 2000 characters')
+    v['engineMetricNotes'] = notes.strip()
+    pull_ids = [o['id'] for o in (req.get('codeMods') or {}).get('options', [])]
+    if pull_ids:
+        v.setdefault('pullBasis', pull_ids[0])  # a review saved before the choice existed: the suggestion
+        if v['pullBasis'] not in pull_ids:
+            raise ReviewError('Choose the pull to build to: ' + ', '.join(pull_ids))
+    else:
+        v.pop('pullBasis', None)
+    if 'dynamo' not in v:  # a review saved before this choice existed: the source's own answer
+        v['dynamo'] = 'yes' if req.get('sourceHasDynamo', True) else 'no'
+    v.setdefault('firing', 'hand-fired')  # a review saved before this choice existed
+    for key, allowed in (('trainBrake', BRAKES), ('spawnMode', SPAWNING), ('physics', PHYSICS), ('steamHeat', HEAT), ('dynamo', DYNAMO),
+                         ('firing', FIRING)):
         if v.get(key) not in allowed: raise ReviewError(f'Choose {key}: {", ".join(allowed)}')
+    if v['firing'] == 'oil-burner' and req.get('hasTender'):
+        raise ReviewError('Oil burner firing is built for tank locos only so far: the builder core turns the loco\'s own coal '
+                          'container into fuel oil, and a tender\'s coal space would still take coal. Choose hand-fired')
+    if v['firing'] == 'mechanical-stoker':
+        raise ReviewError('Mechanical stoker firing is not built yet: it needs a builder core change (keep coal, stoker steam use). '
+                          'Choose hand-fired or oil-burner')
     def number(key, lo, hi):
         try: value = float(v.get(key))
         except (ValueError, TypeError): raise ReviewError(f'{key} requires a number')
@@ -112,6 +164,24 @@ def resolve(req, answer):
                   lengthBasis=req['lengthBasis'])
     if v['trainBrake'] == req.get('suggestedBrake'):
         result['provenance']['trainBrake'] = {'basis': 'source', 'evidence': 'Definitions.brakeValveType; confirmed in review'}
+    prefill = req.get('prefill', {})
+    for key, provenance in prefill.get('provenance', {}).items():
+        if key in v and v[key] == prefill.get('values', {}).get(key):
+            result['provenance'][key] = copy.deepcopy(provenance)
+    result['codeMods'] = copy.deepcopy(req.get('codeMods') or {'options': [], 'notes': [], 'unrecognised': []})
+    result['engineMetrics'] = copy.deepcopy(req.get('engineMetrics', {}))
+    result['metricProvenance'] = {}
+    for key, value in v['engineMetrics'].items():
+        baseline = req.get('engineMetrics', {})
+        if value == baseline.get('values', {}).get(key):
+            provenance = baseline.get('provenance', {}).get(key, {})
+        elif value == prefill.get('values', {}).get('engineMetrics', {}).get(key):
+            provenance = prefill.get('metricProvenance', {}).get(key, {'basis': 'DV_choice', 'evidence': 'Previously reviewed value'})
+        else:
+            provenance = {'basis': 'DV_choice', 'evidence': 'Edited and confirmed in engine specifications' + ('; ' + v['engineMetricNotes'] if v['engineMetricNotes'] else '')}
+        result['metricProvenance'][key] = copy.deepcopy(provenance)
+        result['metricProvenance'][key]['unit'] = next(field[2] for field in enginemetrics.FIELDS if field[0] == key)
+    result['engineEstimates'] = enginemetrics.estimates(v, result['engineMetrics'])
     return result
 
 
@@ -122,7 +192,9 @@ def apply(record, reviewed):
     cfg, meta = rec['config'], rec['metadata']
     meta['review'] = reviewed
     meta['sourceSpecs'] = {'basis': 'source', 'evidence': ['Definitions.json', reviewed['fingerprint']], 'values': specs}
-    cfg['WheelRadius'] = env(v['wheelRadius'], 'm', 'DV_choice', 'User reviewed physical wheel tread radius')
+    radius_basis = reviewed.get('provenance', {}).get('wheelRadius', {})
+    cfg['WheelRadius'] = env(v['wheelRadius'], 'm', radius_basis.get('basis', 'DV_choice'),
+                             radius_basis.get('evidence', 'User reviewed physical wheel tread radius'))
     cfg['SpawnTracks'] = env(v['spawnTracks'], 'CCL track enum', 'DV_choice', 'Pre-build spawn review', reviewed['catalogueEvidence'])
     sim = rec['hooks']['SimSpec']['steamEngine']
     sim['numCylinders'] = env(v['cylinders'], 'count', 'DV_choice', 'User reviewed physical cylinder count')
@@ -136,11 +208,21 @@ def apply(record, reviewed):
         bore = old_bore['value'] * math.sqrt(2 / v['cylinders'])
         basis, why = 'derived', 'Existing E03 target rescaled for reviewed cylinder count; approximation'
     sim['cylinderBore'] = env(bore, 'm', basis, why)
+    if v.get('dynamo') == 'no':
+        _without_dynamo(rec)
+    if v.get('firing') == 'oil-burner':
+        _oil_burner(rec)
+    from . import enginemetrics
+    enginemetrics.apply(rec, reviewed)
+    bore = sim['cylinderBore']['value']
     limitations = list(meta.get('pending', []))
     limitations += ['Steam/fuel consumption and drawbar pull have not been calibrated in game',
                     'Track lengths are CCL 3.1.9 nominal lengths; game settings affect radio availability']
     if v['physics'] == 'geared':
         limitations.append('Fixed reduction, not a selectable gearbox: Gearbox 1/2 cannot change ratio; source animation phase, adhesion and RPM need in-game checks')
+    if v.get('firing') == 'oil-burner':
+        limitations.append('Oil burner: feed rate, firebox multiplier and atomizer pressure are our builder core defaults (ALCo 1610 '
+                           'pattern), not calibrated for this loco; refuelling from the diesel pump is untested in game')
     if v['steamHeat'] == 'basis-approximation': limitations.append('Steam thermal regime retains DV basis; not source-validated')
     meta['simulationProfile'] = {'id': v['physics'], 'version': ADAPTER_VERSION, 'runtimeValidated': False,
         'physicalCylinders': v['cylinders'], 'simulationBoreM': bore, 'steamHeat': v['steamHeat'],
@@ -157,7 +239,83 @@ def apply(record, reviewed):
              'engineRpm': round(speed / 3.6 / (2 * math.pi * v['wheelRadius']) * 60 * v['gearRatio'], 2),
              'doubleActingExhaustEventsPerSecond': round(speed / 3.6 / (2 * math.pi * v['wheelRadius']) * v['gearRatio'] * v['cylinders'] * 2, 2)}
             for speed in (10, 30, 50, 60)]
+    _pull_basis(rec, reviewed, v)
+    _two_cylinder_sim(rec)
     return rec
+
+
+def _two_cylinder_sim(rec):
+    """The physical cylinder count is physics only (James, 2026-09-29): Derail Valley's chuff sound indexes its clips by
+    cylinder and threw on the 3-cylinder K-66. The simulation always runs 2 cylinders with the bore scaled so the swept
+    volume, and so the pull and steam use, are unchanged (bore x sqrt(n / 2))."""
+    sim = rec['hooks']['SimSpec']['steamEngine']
+    count = sim['numCylinders']['value'] if isinstance(sim.get('numCylinders'), dict) else sim.get('numCylinders')
+    if count in (None, 2) or not sim.get('cylinderBore'):
+        return
+    bore = sim['cylinderBore']['value'] * math.sqrt(count / 2)
+    sim['cylinderBore'] = env(bore, 'm', 'derived', f'Same swept volume as {count} cylinders on the 2 the DV sound engine handles '
+                              f'({sim["cylinderBore"]["value"]:.4f} m x sqrt({count}/2))')
+    sim['numCylinders'] = env(2, 'count', 'DV_choice', f'{count} physical cylinders simulated as 2 of equal swept volume: '
+                              'DV chuff audio handles 2')
+    rec['metadata']['simulationProfile']['simulationBoreM'] = bore
+
+
+def _pull_basis(rec, reviewed, v):
+    """A code mod's pull (LegosBetterSteam...) built into Derail Valley: with the legacy-equivalent profile the
+    equivalent bore is resized so DV's formula gives the chosen figure (pull scales with bore squared). Other profiles
+    use the physical bore, which cannot carry a second engine: listed as a limitation."""
+    option = next((o for o in reviewed.get('codeMods', {}).get('options', []) if o['id'] == v.get('pullBasis')), None)
+    if not option:
+        return
+    meta = rec['metadata']
+    meta['pullBasis'] = option
+    sim = rec['hooks']['SimSpec']['steamEngine']
+    current = (meta.get('tractiveEffort') or {}).get('lbf')
+    if v['physics'] == 'legacy-equivalent' and current and sim.get('cylinderBore') and option['lbf'] != current:
+        bore = sim['cylinderBore']['value'] * math.sqrt(option['lbf'] / current)
+        sim['cylinderBore'] = env(bore, 'm', 'derived', f"Equivalent bore resized for {option['label']} "
+                                  f"({option['lbf']} lbf instead of {round(current)} lbf): {option['evidence']}")
+        meta['tractiveEffort'] = {**(meta.get('tractiveEffort') or {}), 'lbf': option['lbf'], 'basis': option['label']}
+    elif v['physics'] != 'legacy-equivalent':
+        meta['simulationProfile'].setdefault('limitations', []).append(
+            f"{option['label']} ({option['lbf']} lbf) cannot be matched with a physical-bore profile; choose legacy-equivalent to build to it")
+
+
+def _oil_burner(rec):
+    """Oil firing through our builder core (guide D05): fuel oil in the 'coal' container, oil valve on the HUD's
+    dynamic-brake slot, atomizer valve on gearbox 1 (lights the burner from cold), no coal pile to shovel from."""
+    cfg, hooks, meta = rec['config'], rec['hooks'], rec['metadata']
+    firing = {'ValveId': OIL_VALVE, 'AtomizerValveId': ATOMIZER_VALVE}
+    # CCL's stoker multiplier "MUST match the multiplier in the firebox controller" (SteamMechanicalStokerDefinition)
+    multiplier = ((hooks.get('SimSpec') or {}).get('firebox') or {}).get('coalConsumptionMultiplier')
+    if isinstance(multiplier, dict): multiplier = multiplier.get('value')
+    if isinstance(multiplier, (int, float)): firing['FireboxMultiplier'] = multiplier
+    cfg['OilFiring'] = env(firing, 'config', 'DV_choice',
+                           'Pre-build review: oil burner; feed rate and pressures are the builder core defaults, the firebox '
+                           'multiplier matches the firebox')
+    cfg['ControlsReaderExtra'] = env({'gearboxA': ATOMIZER_VALVE + '.EXT_IN'}, 'port', 'DV_choice',
+                                     'Pre-build review: oil burner atomizer on the gearbox 1 HUD slot')
+    cfg.pop('CoalTargetComp', None)  # no coal to shovel
+    cfg.pop('CoalLoad', None)
+    hooks.pop('CoalPile', None)
+    if isinstance(cfg.get('LoadAnimations'), list):
+        cfg['LoadAnimations'] = [l for l in cfg['LoadAnimations'] if l[2] != 'coal.NORMALIZED']
+    meta['firing'] = 'oil-burner'
+
+
+def _without_dynamo(rec):
+    """No dynamo: no electric lamps or cab light, no controls for them; the build stage takes them off the HUD."""
+    cfg = rec['config']
+    placed = cfg.get('Placed')
+    if isinstance(placed, dict):
+        placed['value'] = [p for p in placed.get('value') or [] if p.get('Name') not in DYNAMO_CONTROLS]
+    lenses = cfg.get('LampLenses')
+    if isinstance(lenses, dict):
+        lenses['value'] = []
+        lenses['basis'], lenses['evidence'] = 'DV_choice', ['Pre-build review: no dynamo, so no electric lamps']
+    cfg.pop('CabLightProbe', None)
+    cfg.pop('LampShots', None)
+    rec['metadata']['noDynamo'] = True
 
 
 def _cli_interactive(req):
@@ -166,21 +324,36 @@ def _cli_interactive(req):
         raise ReviewError('Pre-build answers required: use the GUI or --review-file. See review-questions.json in the report.')
     print('Review:', req['name'], '\nSource wheelsets:', req['wheelsets'])
     print('Measured candidates:', req['wheelCandidates'])
-    v = {}
+    v = copy.deepcopy(req.get('prefill', {}).get('values', {}))
+    print(req.get('prefill', {}).get('origin', ''))
+    def prompt(key, label):
+        default = v.get(key, '')
+        if isinstance(default, list): default = ','.join(map(str, default))
+        return input(f'{label} [{default}]: ').strip() or str(default)
     for key, options in [('trainBrake', BRAKES), ('spawnMode', SPAWNING), ('physics', PHYSICS), ('steamHeat', HEAT)]:
-        v[key] = input(key + ' [' + ', '.join(options) + ']: ').strip()
-    v['wheelRadius'] = input('Physical driving tyre RADIUS in metres: ')
-    v['cylinders'] = int(input('Physical cylinder count [2, 3, 4]: '))
-    v['spawnTracks'] = []
+        v[key] = prompt(key, key + ' (' + ', '.join(options) + ')')
+    v['wheelRadius'] = prompt('wheelRadius', 'Physical driving tyre RADIUS in metres')
+    v['cylinders'] = int(prompt('cylinders', 'Physical cylinder count: 2, 3 or 4'))
     if v['spawnMode'] == 'manual':
         for t in req['tracks']:
             if t['suitable']: print(t['id'], t['name'], t['length_m'], 'm')
-        v['spawnTracks'] = [int(x.strip()) for x in input('Track IDs, comma separated: ').split(',')]
+        v['spawnTracks'] = [int(x.strip()) for x in prompt('spawnTracks', 'Track IDs, comma separated').split(',') if x.strip()]
+    else:
+        v['spawnTracks'] = []
     if v['physics'] == 'geared':
-        for key in ('gearRatio', 'efficiency', 'gearEvidence'): v[key] = input(key + ': ')
-        v['poweredWheelsets'] = [int(x.strip()) for x in input('Physical powered wheelset indices (exclude shafts): ').split(',')]
+        for key in ('gearRatio', 'efficiency', 'gearEvidence'): v[key] = prompt(key, key)
+        v['poweredWheelsets'] = [int(x.strip()) for x in prompt('poweredWheelsets', 'Physical powered wheelset indices (exclude shafts)').split(',') if x.strip()]
     if v['physics'] == 'geared':
-        v['unpoweredWheelsets'] = [int(x.strip()) for x in input('Unpowered physical wheelset indices, if any: ').split(',') if x.strip()]
+        v['unpoweredWheelsets'] = [int(x.strip()) for x in prompt('unpoweredWheelsets', 'Unpowered physical wheelset indices, if any').split(',') if x.strip()]
+    from . import enginemetrics
+    v.setdefault('engineMetrics', copy.deepcopy(req.get('engineMetrics', {}).get('values', {})))
+    print('Engine estimates:', enginemetrics.estimates(v, req.get('engineMetrics', {})))
+    if input('Edit engine specifications? [no]: ').strip().lower() == 'yes':
+        for key, label, unit, lo, hi, effect in enginemetrics.FIELDS:
+            current = v['engineMetrics'].get(key)
+            raw = input(f'{label} ({unit}) [{current if current is not None else "inherit / unknown"}]; - clears optional value: ').strip()
+            if raw: v['engineMetrics'][key] = None if raw == '-' else raw
+        v['engineMetricNotes'] = input('Source / notes for edited figures (optional): ').strip()
     v['acknowledgeExperimental'] = input('Uncalibrated prototype; in-game validation required. Continue? [yes]: ').strip().lower() == 'yes'
     return {**{k:req[k] for k in ('schema','adapterVersion','vehicleId','fingerprint','catalogueHash')}, 'values':v}
 

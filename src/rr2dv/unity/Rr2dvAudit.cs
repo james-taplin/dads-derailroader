@@ -18,7 +18,8 @@ public static class Rr2dvAudit
 {
     [Serializable] public class Car { public string id; public float mass, wheelRadius; public bool locomotive; }
     [Serializable] public class Review { public string trainBrake, physics; public int[] spawnTracks; }
-    [Serializable] public class Input { public int schema, openingCount; public string[] bundles; public string[] carFolders; public Car[] cars; public string[] controls, ports, indicators; public Review review; }
+    [Serializable] public class EngineMetric { public string component, field; public float value; }
+    [Serializable] public class Input { public int schema, openingCount; public string[] bundles; public string[] carFolders; public Car[] cars; public string[] controls, ports, indicators; public Review review; public EngineMetric[] engineMetrics; }
     [Serializable] public class Output
     {
         public int schema = 1; public string status; public string[] errors, warnings, bundleAssets, scriptAssemblies, dependencies;
@@ -101,6 +102,20 @@ public static class Rr2dvAudit
                 return hits[0];
             };
             var controls = One("LocoControlsReaderProxy", "HUD and keyboard controls");
+            foreach (var metric in input.engineMetrics ?? new EngineMetric[0])
+            {
+                var targets = all.Where(o => Str(o, "ID") == metric.component).ToArray();
+                // ApplySpec can set a controller beside the definition on the same sim object
+                // (e.g. firebox.coalConsumptionMultiplier lives on FireboxSimControllerProxy).
+                var owner = targets.Length == 1 ? targets[0] as Component : null;
+                var fields = owner ? owner.GetComponents<Component>().Where(c => c is MonoBehaviour)
+                    .Select(c => new SerializedObject(c).FindProperty(metric.field)).Where(p => p != null).ToArray() : new SerializedProperty[0];
+                var field = fields.Length == 1 ? fields[0] : null;
+                if (field == null) { errors.Add("Reviewed engine field missing: " + metric.component + "." + metric.field); continue; }
+                float actual = field.propertyType == SerializedPropertyType.Integer ? field.intValue : field.floatValue;
+                if (float.IsNaN(actual) || float.IsInfinity(actual) || Mathf.Abs(actual - metric.value) > Mathf.Max(.0001f, Mathf.Abs(metric.value) * .00001f))
+                    errors.Add("Reviewed engine field differs in bundle: " + metric.component + "." + metric.field + " expected " + metric.value + ", got " + actual);
+            }
             if (controls) foreach (var f in input.controls ?? new string[0]) if (!Ref(controls, f)) errors.Add("no control for the HUD's " + f);
             var indicators = One("LocoIndicatorReaderProxy", "HUD readings");
             if (indicators && !Ref(indicators, "speed")) errors.Add("Numerical speed HUD has no speed indicator");
@@ -162,7 +177,10 @@ public static class Rr2dvAudit
                     var q = Quaternion.Inverse(go.transform.rotation) * t.rotation;
                     var local = go.transform.InverseTransformPoint(t.position);
                     Vector3 handle = q * Vector3.forward, hanger = q * Vector3.up;
-                    float side = local.x < 0 ? -1f : 1f;
+                    // the side is where the handle end is (the rod runs 1.07 m along +z): on a narrow frame the valve end
+                    // can sit just past the centreline while the handle is outboard (DM&IR M-3: valve x -0.23, handle
+                    // 0.63..0.84, 2026-09-29), and judging by the valve end called a correct fitting reversed
+                    float side = (local + handle * 1.067645f).x < 0 ? -1f : 1f;
                     if (handle.x * side < 0.999f || hanger.y < 0.999f)
                         errors.Add("BR-01: brake release in " + go.name + " is not upright with its handle outward (handle " + handle + ", hanger " + hanger + ")");
                 }
@@ -207,10 +225,14 @@ public static class Rr2dvAudit
                         if (string.IsNullOrEmpty(Str(hud, "_json"))) errors.Add("Custom HUD has no serialized runtime layout");
                         hud.GetType().GetMethod("AfterImport")?.Invoke(hud, null);
                         var imported = new SerializedObject(hud);
+                        foreach (var binding in new[] { new[] { "CabLightStyle", "cabLight" }, new[] { "Headlights1", "headlightsFront" }, new[] { "Headlights2", "headlightsRear" } })
+                            if (controls && (imported.FindProperty("CustomHUDSettings.Cab." + binding[0]).intValue != 0) != (bool)Ref(controls, binding[1]))
+                                errors.Add("HUD lighting slot differs from its control wiring: " + binding[0]);
                         if (imported.FindProperty("HUDType").intValue != 1000 || Str(hud, "CustomHUDSettings.Powertrain") != "S" ||
                             imported.FindProperty("CustomHUDSettings.BasicControls.Speedometer").intValue != 1 ||
                             imported.FindProperty("CustomHUDSettings.BasicControls.Throttle").intValue == 0 ||
-                            imported.FindProperty("CustomHUDSettings.BasicControls.Reverser").intValue == 0)
+                            imported.FindProperty("CustomHUDSettings.BasicControls.Reverser").intValue == 0 ||
+                            imported.FindProperty("CustomHUDSettings.Cab.HornStyle").intValue != 2)
                             errors.Add("Imported HUD is missing its steam driving layout or numerical speedometer");
                     }
                     if (!hud || new SerializedObject(hud).FindProperty("CustomHUDSettings.Braking.BrakeType").intValue != brake) errors.Add("HUD brake behaviour differs from reviewed valve");

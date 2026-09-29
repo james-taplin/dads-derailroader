@@ -27,8 +27,11 @@ public static partial class CclLocoBuild
         public string[] roots;
         public float transitionTime;
         public bool clickToggle;
+        public AnimationClip motion;
     }
     static readonly List<RrOpening> RrOpenings = new List<RrOpening>();
+
+    static string[] paths0(EditorCurveBinding[] bindings) => bindings.Select(b => b.path).Distinct().ToArray();
 
     static void PrepareRr2dvInteractions()
     {
@@ -44,35 +47,48 @@ public static partial class CclLocoBuild
                 (data.title ?? "").IndexOf("cylinder cocks", StringComparison.OrdinalIgnoreCase) >= 0) continue;
             var key = data.animation?.clipName;
             if (string.IsNullOrEmpty(key) || !Cfg.AnimationMap.ContainsKey(key))
-                throw new InvalidOperationException("Toggle has no resolved source clip: " + component.name);
+                { LeaveOutOpening(component.name, "Toggle has no resolved source clip: " + component.name); continue; }
             string target = string.Join("/", data.targetColliderObject?.path ?? new string[0]);
             if (string.IsNullOrEmpty(target) || !RefBody.Find(target))
-                throw new InvalidOperationException("Toggle has no resolved declared target: " + component.name + " / " + target);
+                { LeaveOutOpening(component.name, "Toggle has no resolved declared target: " + component.name + " / " + target); continue; }
             var targetNode = RefBody;
+            bool ambiguous = false;
             foreach (var segment in target.Split('/'))
             {
                 var matches = targetNode.Cast<Transform>().Where(t => t.name == segment).ToArray();
-                if (matches.Length != 1) throw new InvalidOperationException("Ambiguous declared toggle target: " + target);
+                if (matches.Length != 1) { ambiguous = true; break; }
                 targetNode = matches[0];
             }
+            if (ambiguous) { LeaveOutOpening(component.name, "Ambiguous declared toggle target: " + target); continue; }
             var clip = Clip(key);
             var bindings = AnimationUtility.GetCurveBindings(clip);
             if (clip.length <= 0 || bindings.Length == 0 || bindings.Any(b => b.type != typeof(Transform) || string.IsNullOrEmpty(b.path)) ||
                 AnimationUtility.GetObjectReferenceCurveBindings(clip).Length != 0 || AnimationUtility.GetAnimationEvents(clip).Length != 0)
-                throw new InvalidOperationException("Toggle requires a nonempty Transform-only clip without events: " + key);
-            var paths = bindings.Select(b => b.path).Distinct().ToArray();
-            if (paths.Any(p => !RefBody.Find(p))) throw new InvalidOperationException("Unresolved toggle binding: " + key);
+                { LeaveOutOpening(component.name, "Toggle requires a nonempty Transform-only clip without events: " + key); continue; }
+            if (paths0(bindings).Any(p => !RefBody.Find(p))) { LeaveOutOpening(component.name, "Unresolved toggle binding: " + key); continue; }
+            // Only parts the clip moves belong to the opening. A Blender export can key every animated part in every
+            // clip with flat curves (DM&IR M-3: 11 of 12 cab toggles left out as overlapping the first door, 2026-09-29).
+            var paths = bindings.GroupBy(b => b.path)
+                .Where(g => g.Any(b => { var keys = AnimationUtility.GetEditorCurve(clip, b).keys; return keys.Length > 0 && keys.Any(k => Mathf.Abs(k.value - keys[0].value) > 1e-4f); }))
+                .Select(g => g.Key).ToArray();
+            if (paths.Length == 0) { LeaveOutOpening(component.name, "Toggle clip moves nothing: " + key); continue; }
+            if (paths.Length < paths0(bindings).Length)
+                Line($"rr2dv opening source {key}: {paths0(bindings).Length - paths.Length} keyed but unmoved transform(s) ignored");
             var ancestors = paths.Where(p => target == p || target.StartsWith(p + "/", StringComparison.Ordinal)).OrderBy(p => p.Length).ToArray();
-            if (ancestors.Length == 0) throw new InvalidOperationException("Declared toggle target is not moved by its clip: " + key + " / " + target);
+            // A rigged opening declares its armature as the target and the clip moves the bones inside it (H9 windows,
+            // deflectors and roof hatch, 2026-09-28): the whole declared assembly moves as one, with its skinned mesh.
+            bool rigged = ancestors.Length == 0 && paths.All(p => p.StartsWith(target + "/", StringComparison.Ordinal));
+            if (rigged) ancestors = paths.OrderBy(p => p.Split('/').Length).ThenBy(p => p, StringComparer.Ordinal).Take(1).ToArray();
+            if (ancestors.Length == 0) { LeaveOutOpening(component.name, "Declared toggle target is not moved by its clip: " + key + " / " + target); continue; }
             var existing = RrOpenings.FirstOrDefault(o => o.clip == key);
             if (existing != null)
             {
-                if (existing.target != target) throw new InvalidOperationException("Shared clip has multiple declared grab targets; explicit resolution required: " + key);
+                if (existing.target != target) LeaveOutOpening(component.name, "Shared clip has multiple declared grab targets; explicit resolution required: " + key);
                 continue;
             }
-            var roots = paths.Where(p => !paths.Any(a => a != p && p.StartsWith(a + "/", StringComparison.Ordinal))).ToArray();
+            var roots = rigged ? new[] { target } : paths.Where(p => !paths.Any(a => a != p && p.StartsWith(a + "/", StringComparison.Ordinal))).ToArray();
             if (roots.Any(p => removed.Any(a => p == a || p.StartsWith(a + "/") || a.StartsWith(p + "/"))))
-                throw new InvalidOperationException("Toggle overlaps another converted moving assembly: " + key);
+                { LeaveOutOpening(component.name, "Toggle overlaps another converted moving assembly: " + key); continue; }
             string name = "rr2dvOpening" + RrOpenings.Count + "_" + Safe(key);
             string port = name + ".EXT_IN";
             ports.Add(name);
@@ -86,6 +102,14 @@ public static partial class CclLocoBuild
         Cfg.SimControls = ports.ToArray();
         // These complete assemblies are now animated in the external interactables prefab.
         Cfg.LoadAnimations = Cfg.LoadAnimations.Where(a => !RrOpenings.Any(o => o.clip == a.Item1)).ToArray();
+    }
+
+    // A door, window or hatch animation that cannot be resolved is left out with a WARN naming it and why, so the rest
+    // of the loco still builds (L-27: a second roof-hatch toggle whose clip does not move its declared target,
+    // 2026-09-28). Never silent: the warning reaches build/review.json. Driving controls keep their hard checks.
+    static void LeaveOutOpening(string component, string reason)
+    {
+        Warn($"rr2dv ancillary toggle '{component}' left out (not interactive; its model stays as modelled): {reason}");
     }
 
     static void FinishRr2dvInteriorControls()
@@ -139,27 +163,58 @@ public static partial class CclLocoBuild
         Line($"rr2dv highlight {control.name}: {renderers.Length} explicit same-prefab renderers");
     }
 
+    // Coarse stepped controls where one key tap ran the whole range (James, 2026-09-29: train/independent brake 11 notches
+    // over 60 deg, headlights 7 over 90 deg; the throttle's 21 felt right): the key moves one notch per press.
+    static readonly string[] Rr2dvOneNotchPerPress = { "brake.EXT_IN", "indBrake.EXT_IN", "headlightDecoder.HEADLIGHTS_EXT_IN", "cabLight.EXT_IN" };
+
     static void RrControlResponse(Component control)
     {
-        // Normalize the inertial load using the actual physical grip radius. Retain the
-        // role's detents, limits, spring-return behaviour and keyboard/scroll increments.
-        var colliders = control.GetComponentsInChildren<BoxCollider>(true).Where(c => !c.isTrigger && c.gameObject.activeSelf).ToArray();
-        if (colliders.Length == 0) return;
-        Vector3 axis = Get<Vector3>(control, "jointAxis").normalized;
-        float radius2 = 0;
-        foreach (var box in colliders)
+        var feeder = control.GetComponents<Component>().FirstOrDefault(c => c.GetType().Name == "InteractablePortFeederProxy");
+        string port = feeder ? Get<string>(feeder, "portId") : null;
+        if (Rr2dvOneNotchPerPress.Contains(port))
+            foreach (var keys in control.GetComponents<Component>().Where(c => c.GetType().Name == "MouseScrollKeyboardInputProxy"))
+            {
+                Set(keys, "onlyScrollOnce", true);
+                Line($"rr2dv control response {control.name}: keyboard moves one notch per press");
+            }
+        // A generated whistle (Railroader has no handle) had the core's generic lever physics, heavy and slow next to an RR
+        // whistle handle (James, 2026-09-29: most whistles slow, the R48's RR handle good): the same G-29 whistle role as
+        // RR whistle handles (buildrecord LEVER_PHYSICS 'whistle'), then the short-lever spring rule below.
+        if (port == "whistle.EXT_IN" && Cfg.Placed.Any(p => "C_" + p.Name == control.name && p.Port == port))
         {
-            Vector3 arm = control.transform.InverseTransformPoint(box.transform.TransformPoint(box.center));
-            arm -= axis * Vector3.Dot(arm, axis);
-            radius2 = Mathf.Max(radius2, arm.sqrMagnitude + box.size.sqrMagnitude / 12f);
+            float travel = Get<float>(control, "jointLimitMax") - Get<float>(control, "jointLimitMin");
+            Phys(control, 0, travel, 0, 50, 5, 5, 5, 0, travel * .25f, 100);
+            Line($"rr2dv control response {control.name}: generated whistle given the RR whistle role physics (spring 50, damper 5, mass 5, drag 5)");
         }
-        float previous = Get<float>(control, "rigidbodyMass");
-        // 0.04 kg m² is a response target, not a model dimension or accepted runtime claim.
-        float mass = Mathf.Clamp(.04f / Mathf.Max(radius2, .0001f), .15f, 2f);
-        Set(control, "rigidbodyMass", mass);
-        Set(control, "rigidbodyDrag", 0f);
-        Line($"rr2dv control response {control.name}: grip radius {Mathf.Sqrt(radius2):F4} m, mass {previous:F3} -> {mass:F3} kg, translational drag 0; detents and endpoints retained; gameplay acceptance pending");
+        // Keep mass, spring and damping together; 0.1.2 changed mass alone and removed drag.
+        if (Get<bool>(control, "useSteppedJoint"))
+        {
+            int notches = Get<int>(control, "notches");
+            float range = Get<float>(control, "jointLimitMax") - Get<float>(control, "jointLimitMin");
+            if (notches < 2 || range <= 0) throw new InvalidOperationException("Invalid stepped control: " + control.name);
+            Set(control, "scrollWheelHoverScroll", range / (notches - 1));
+        }
+        else if (Get<bool>(control, "useSpring"))
+        {
+            // A spring-return control (whistle): the joint spring pulls in proportion to the angle, so a short lever keeps
+            // almost no pull near closed and stops short of zero, still passing steam (RLW RPP-1 whistle, 12.9 deg, game
+            // test 2026-09-28; CTRL-02). Keep the pull per fraction of travel of a ~45 deg lever at the role's spring.
+            // 45 deg is an estimate of the G-29 reference travel, not a measurement: runtime-pending.
+            float range = Get<float>(control, "jointLimitMax") - Get<float>(control, "jointLimitMin");
+            float spring = Get<float>(control, "jointSpring");
+            if (range > 0 && range < SpringReferenceTravelDeg)
+            {
+                float scaled = spring * SpringReferenceTravelDeg / range;
+                Set(control, "jointSpring", scaled);
+                Line($"rr2dv control response {control.name}: spring return over {range:F1} deg, spring {spring:F0} -> {scaled:F0} " +
+                     $"(pull per fraction of travel of a {SpringReferenceTravelDeg:F0} deg lever; closed = 0 still needs the in-game check)");
+                return;
+            }
+        }
+        Line($"rr2dv control response {control.name}: role mass/damping retained; scroll follows one measured detent");
     }
+
+    const float SpringReferenceTravelDeg = 45f;
 
     static void BuildRr2dvAncillaries()
     {
@@ -177,7 +232,7 @@ public static partial class CclLocoBuild
 
     static void BuildRrOpening(Transform parent, RrOpening opening)
     {
-        var clip = Clip(opening.clip);
+        var clip = opening.motion = RrDirectOpeningClip(opening);
         clip.SampleAnimation(RefBody.gameObject, 0);
         var source = RefBody.Find(opening.target);
         var rs = source.GetComponentsInChildren<Renderer>(true).Where(r => r.enabled).ToArray();
@@ -191,6 +246,7 @@ public static partial class CclLocoBuild
         {
             StripScripts(copy);
             foreach (var collider in copy.GetComponentsInChildren<Collider>(true)) Object.DestroyImmediate(collider);
+            StripRr2dvLights(copy.transform);
             ApplyMaterials(copy, quiet: true);
             var paths = AnimationUtility.GetCurveBindings(clip).Select(b => b.path).Distinct().ToArray();
             var mapped = paths.ToDictionary(p => p, p => copy.transform.Find(p));
@@ -271,7 +327,7 @@ public static partial class CclLocoBuild
 
     static GameObject RrOpeningGrip(Transform parent, RrOpening opening, Vector3 grip, Transform liveTarget)
     {
-        var clip = Clip(opening.clip);
+        var clip = opening.motion ?? Clip(opening.clip);
         var hinge = RefBody.Find(opening.hinge);
         var target = RefBody.Find(opening.target);
         clip.SampleAnimation(RefBody.gameObject, 0);
@@ -304,8 +360,14 @@ public static partial class CclLocoBuild
             RrControlResponse(result.GetComponent(T("CCL.Types.Proxies.Controls.LeverProxy")));
         }
         else if (slides)
+        {
             result = RrPuller(parent, new PullerCfg { Path = opening.hinge, AnimKey = opening.clip, Port = opening.port,
                 Name = opening.name, Grip = grip, GripSize = Vector3.one * .08f });
+            var spec = result.GetComponent(T("CCL.Types.Proxies.Controls.PullerProxy"));
+            // Native puller notches count intervals (unlike lever notches), and scroll is normalized.
+            Set(spec, "useSteppedPuller", true); Set(spec, "notches", 10);
+            Set(spec, "scrollWheelHoverScroll", .1f);
+        }
         else
         {
             opening.clickToggle = true;

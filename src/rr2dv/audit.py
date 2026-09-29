@@ -10,6 +10,7 @@ Passing is not acceptance: the pack stays "runtime pending" until it has been ch
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 from . import unityrun
@@ -34,7 +35,22 @@ def _plain(n):
     return p(n)
 
 
-def audit_input(rec: dict, pack: Path) -> dict:
+LEFT_OUT = re.compile(r"rr2dv ancillary toggle '(.+?)' left out.*?(?:: ([^:]+?) / \S[^:]*)?$")
+
+
+def left_out_openings(build_warnings: list[str]) -> set[tuple[str, str | None]]:
+    """Door/window/hatch toggles the builder disclosed as left out (WARN in the build report): not expected in the pack.
+    (name, clip) when the warning names the clip: two toggles can share a name (ALCo K-66: two 'ToggleAnimation 1',
+    one left out, one built, 2026-09-28), so the name alone would take both out of the expected count."""
+    out = set()
+    for w in build_warnings or []:
+        m = LEFT_OUT.search(w)
+        if m:
+            out.add((m.group(1), m.group(2).strip() if m.group(2) else None))
+    return out
+
+
+def audit_input(rec: dict, pack: Path, left_out: set[str] = frozenset()) -> dict:
     cfg = _plain(rec["config"])
     cars = [{"id": cfg["CarId"], "mass": cfg["WeightEmptyKg"], "wheelRadius": cfg["WheelRadius"], "locomotive": True}]
     folders = [f"Assets/_CCL_CARS/{cfg['CarName']}", f"Assets/_CCL_CARS/{cfg['CarId']}"]
@@ -56,12 +72,25 @@ def audit_input(rec: dict, pack: Path) -> dict:
             if component['kind'] != 'ToggleAnimation':
                 continue
             data = _extra(component)
+            clip = (data.get('animation') or {}).get('clipName')
+            if (component.get('name'), clip) in left_out or (component.get('name'), None) in left_out:
+                continue
             title = str(data.get('title', '')).casefold()
             if data.get('enabled', True) is False or 'firebox' in title or 'cylinder cocks' in title or str(data.get('key', '')).casefold() == 'cylcock':
                 continue
             opening_clips.add((car_record.get('vehicleId', _plain(car_record['config'])['CarId']),
                                (data.get('animation') or {}).get('clipName')))
+    expected = []
+    if rec.get('metadata', {}).get('engineSpecifications'):
+        fields = {'steamEngine': ('numCylinders', 'cylinderBore', 'pistonStroke'),
+                  'boiler': ('diameter', 'length', 'capacityMultiplier', 'spawnWaterLevel',
+                             'safetyValveOpeningPressure', 'safetyValveClosingPressure', 'maxInjectorRate'),
+                  'firebox': ('maxCoalCapacity', 'burnTime', 'coalConsumptionMultiplier')}
+        sim = _plain(rec['hooks']['SimSpec'])
+        expected = [{'component': component, 'field': field, 'value': sim[component][field]}
+                    for component, names in fields.items() for field in names if field in sim.get(component, {})]
     return {"schema": 1, "bundles": bundles, "carFolders": folders, "cars": cars, "controls": controls, "ports": required,
+            "engineMetrics": expected,
             "openingCount": len(opening_clips),
             "indicators": INDICATORS, "review": rec.get("metadata", {}).get("review", {}).get("values")}
 
@@ -86,7 +115,7 @@ def check_pack(rec: dict, pack: Path, files: dict[str, str]) -> list[str]:
 def run(run_path: Path, unity: Path | None, project: dict, rec: dict, built: dict) -> dict:
     pack = Path(built["pack"])
     errors = check_pack(rec, pack, built["files"])
-    data = audit_input(rec, pack)
+    data = audit_input(rec, pack, left_out_openings(built.get("warnings")))
     write_json(run_path / project["project"] / AUDIT_INPUT, data)
     out = run_path / "audit"
     result = unityrun.run_method(unity, run_path / project["project"], "Rr2dvAudit.Run", out, {"RR2DV_AUDIT_OUT": str(out.resolve())})

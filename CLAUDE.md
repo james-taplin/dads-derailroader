@@ -60,7 +60,9 @@ Both installs are found before a run starts, again before the build and again be
 Determinism: output = f(input file hashes, recorded user answers, tool versions). User choices go in the run record
 (`answers`) so a rerun needs no input.
 Temporary storage (James, following X46): default conversions permanently delete their input copies, ripped assets,
-Unity project/Library and build intermediates on completion or failure. `workspace.py` retains compact reports and
+Unity project/Library and build intermediates on completion or failure. Exception (James, 2026-09-28): the imported and
+probed project (`_cache/projects`, keyed by probe-shaping inputs only; build scripts are refreshed on reuse) is kept until
+that loco builds and passes its audit, so a failed build does not repeat a long import and probe. `workspace.py` retains compact reports and
 only the finished audited output, guards deletion boundaries/links, leases active runs and retries marked abandoned
 workspaces. Never delete shared editors/rippers or sweep unmarked historical evidence. Explicit diagnostic setting
 `keepWorkFiles: true` retains the old caches/workspaces; tests inspecting intermediate stages opt in deliberately.

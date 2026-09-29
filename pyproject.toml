@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rr2dv"
-version = "0.1.2"
+version = "0.1.3"
 description = "Convert Railroader steam locomotive mods into Derail Valley (CCL) packs"
 requires-python = ">=3.11"
 # The app core uses the standard library only. Unity-side stages call the tooling's own Python environment.
@@ -20,4 +20,4 @@ derailroader = "rr2dv.gui:main"  # the desktop app, without a console window on 
 where = ["src"]
 
 [tool.setuptools.package-data]
-rr2dv = ["unity/*.cs", "spawn_tracks.json"]
+rr2dv = ["unity/*.cs", "unity/materials/*", "spawn_tracks.json"]

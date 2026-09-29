@@ -100,7 +100,11 @@ def prepare(run_path: Path, inv: dict, probe_in: dict, probe_out: dict | None, p
     for a in absent:
         asset = f"Assets/{a['clip']}" if a["export"] == "main" else f"Assets/{a['export']}/{a['clip']}"
         clips.append({"clip": asset, "hashes": a["absent"]})
-    data = {"schema": 1, "absentBindings": clips, "audioStrip": prefabs, "composites": specs, "review": answers.get("prebuildReview", {}).get("values")}
+    wheel_nodes = (rec.get("tender") or {}).get("metadata", {}).get("truckWheelNodes")
+    data = {"schema": 1, "absentBindings": clips, "audioStrip": prefabs, "composites": specs, "review": answers.get("prebuildReview", {}).get("values"),
+            "truckWheels": [wheel_nodes] if wheel_nodes else [],
+            "reversedClips": rec["metadata"].get("reversedClips") or [],
+            "noDynamo": bool(rec["metadata"].get("noDynamo"))}
     write_json(run_path / project["project"] / BUILD_INPUT, data)
     return {"record": rec, "choices": choices, "input": data}
 

@@ -15,7 +15,7 @@ class RealPlacement(unittest.TestCase):
         repo = Path(__file__).resolve().parents[1]
         project = Path(os.environ['RR2DV_TEST_BUILDER_PROJECT']).resolve()
         editor = project / 'Assets/Editor'
-        for name in ('Rr2dvPlacement.cs', 'Rr2dvFeatures.cs', 'Rr2dvInteractions.cs', 'Rr2dvAudit.cs'):
+        for name in ('Rr2dvPlacement.cs', 'Rr2dvFeatures.cs', 'Rr2dvInteractions.cs', 'Rr2dvOpeningMotion.cs', 'Rr2dvSourceFinishing.cs', 'Rr2dvAudit.cs'):
             shutil.copyfile(repo / 'src/rr2dv/unity' / name, editor / name)
         shutil.copyfile(repo / 'tests/unity_runtime/InteractionRegression.cs', editor / 'InteractionRegression.cs')
         receipt = project / 'interaction-regression.txt'
@@ -47,7 +47,7 @@ class RealPlacement(unittest.TestCase):
         editor = project / 'Assets/Editor'
         self.assertTrue((editor / 'CclLocoBuild.cs').is_file(), 'assembled builder project required')
         # Explicitly supplied disposable project; never a source game project.
-        for name in ('Rr2dvPlacement.cs', 'Rr2dvFeatures.cs', 'Rr2dvInteractions.cs'):
+        for name in ('Rr2dvPlacement.cs', 'Rr2dvFeatures.cs', 'Rr2dvInteractions.cs', 'Rr2dvOpeningMotion.cs', 'Rr2dvSourceFinishing.cs'):
             shutil.copyfile(repo / 'src/rr2dv/unity' / name, editor / name)
         shutil.copyfile(repo / 'tests/unity_runtime/PlacementRegression.cs', editor / 'PlacementRegression.cs')
         receipt = project / 'placement-regression-passed.json'
@@ -57,7 +57,8 @@ class RealPlacement(unittest.TestCase):
                        log, dict(os.environ), 180)
         self.assertEqual(code, 0, log.read_text(errors='replace')[-10000:])
         self.assertEqual(json.loads(receipt.read_text()),
-                         {'hiddenMeshIgnored': True, 'collisionIgnored': True, 'reloadVerified': True})
+                         {'hiddenMeshIgnored': True, 'collisionIgnored': True, 'reloadVerified': True,
+                          'rodNubsFirst': True, 'boardFallback': True, 'pairOmission': True})
 
 
 @unittest.skipUnless(os.environ.get('RR2DV_TEST_UNITY'), 'set RR2DV_TEST_UNITY for real Unity prefab tests')

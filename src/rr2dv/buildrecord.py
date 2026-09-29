@@ -59,11 +59,14 @@ GENERATED = [
     ("Dynamo", "dynamoControl.EXT_IN", 24, True, True, 2, "car/dynamo", 0),
     ("Sander", "sander.CONTROL_EXT_IN", 13, True, True, 2, "car/sander", 0),
     ("Coal dump", "coalDumpControl.EXT_IN", -1, False, False, 3, "car/ash_pan", 0),
-    ("Cab light", "cabLight.EXT_IN", 12, False, True, 2, "car/cab_lights", 45),
+    ("Cab light", "cabLight.EXT_IN", 12, True, True, 2, "car/cab_lights", 0),
     ("Headlights", "headlightDecoder.HEADLIGHTS_EXT_IN", 10, False, False, 7, "car/headlights", 90),
     ("Lubricator", "lubricatorControl.EXT_IN", 25, False, False, 2, "car/lubricator", 35),
-    ("Brake cutout", "brakeCutout.EXT_IN", 5, False, True, 2, "car/brake_cutout", 0),
+    ("Brake cutout", "brakeCutout.EXT_IN", 5, True, True, 2, "car/brake_cutout", 0),
 ]
+# Brake cutout and cab light are handwheels like the dynamo and air pump: the F4 HUD switches those, but did nothing to
+# the same 2-position toggles built as levers (James's game test, 2026-09-29: no error in Player.log, the cab lever
+# worked, the HUD button never changed it).
 # Driving controls a loco needs even when Railroader models no handle for them: a generated backhead lever instead.
 DRIVING = [("Throttle", "throttle.EXT_IN", 0, 21), ("Reverser", "reverser.CONTROL_EXT_IN", 1, 41),
            ("Train brake", "brake.EXT_IN", 2, 11), ("Independent brake", "indBrake.EXT_IN", 3, 11),
@@ -75,6 +78,8 @@ AXLE_GROUP_M = 0.05        # wheel nodes this close in z are one axle (left and 
 BACKHEAD_BIN_M = 0.02
 BACKHEAD_MIN_HITS = 12
 BACKHEAD_HALF_WIDTH = 0.7
+LOOSE_BACKHEAD_PLANES_M = (0.05, 0.08)  # a crowded leaning backhead: wider plane bands, tightest that fits
+BACKHEAD_PLANE_M = 0.03    # hits within this of the fitted (possibly leaning) backhead plane are plate
 CONTROL_SPACING_X, CONTROL_SPACING_Y = 0.2, 0.25
 DOOR_CLEARANCE_M = 0.3
 RENDER = "rr2dv render views from the model bounds"
@@ -145,18 +150,98 @@ def _owner(path: str, rotating: list[str]) -> str | None:
     return max(hits, key=len) if hits else None
 
 
-def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[float]]) -> list[dict]:
-    """Each RR axle of a wheelset, with the probe's rotating wheel node at that position when there is one."""
-    expected = rr_axles(ws_in)
+COCK_HALF_SPAN_M = 1.1  # at most this far each side of the centreline when the mod gives no cylinder-cock anchor
+
+
+MIN_LEVER_SWEEP_DEG = 1.0  # a source handle turning less than this in its clip cannot be a Derail Valley lever
+
+
+def _quat(euler_deg: list[float]) -> tuple[float, float, float, float]:
+    """Unity Euler angles (applied Z, then X, then Y) as a quaternion (x, y, z, w)."""
+    x, y, z = (math.radians(a) / 2 for a in euler_deg)
+    cx, sx, cy, sy, cz, sz = math.cos(x), math.sin(x), math.cos(y), math.sin(y), math.cos(z), math.sin(z)
+    return (cy * sx * cz + sy * cx * sz, sy * cx * cz - cy * sx * sz, cy * cx * sz - sy * sx * cz, cy * cx * cz + sy * sx * sz)
+
+
+def pose_turn_deg(probe_vehicle: dict, clip: str, path: str) -> float | None:
+    """How far a transform turns between the first and last frame of a clip (probe poses), in degrees."""
+    c = next((c for c in probe_vehicle.get("clips") or [] if c.get("key") == clip), None)
+    pose = next((p for p in (c or {}).get("poses") or [] if p.get("path") == path), None)
+    if not pose or pose.get("startEuler") is None or pose.get("endEuler") is None:
+        return None
+    a, b = _quat(pose["startEuler"]), _quat(pose["endEuler"])
+    dot = min(1.0, abs(sum(i * j for i, j in zip(a, b))))
+    return math.degrees(2 * math.acos(dot))
+
+
+REST_END_MARGIN_DEG = 1.0  # the modelled pose must be this much nearer the clip's end than its start to count as resting there
+
+
+def rest_at_clip_end(probe_vehicle: dict, clip: str, path: str) -> bool:
+    """Whether a handle as modelled (the prefab's pose, probed before any clip is sampled) sits at the END of its clip:
+    then the clip's last frame is the resting end, and 0 (whistle closed) must be that end (James, 2026-09-28)."""
+    c = next((c for c in probe_vehicle.get("clips") or [] if c.get("key") == clip), None)
+    pose = next((p for p in (c or {}).get("poses") or [] if p.get("path") == path), None)
+    node = next((n for n in probe_vehicle.get("nodes") or [] if n.get("path") == path), None)
+    if not pose or not node or pose.get("startEuler") is None or pose.get("endEuler") is None or not node.get("rotation"):
+        return False
+    rest = tuple(node["rotation"])
+
+    def apart(q):
+        return math.degrees(2 * math.acos(min(1.0, abs(sum(i * j for i, j in zip(q, rest))))))
+    return apart(_quat(pose["endEuler"])) + REST_END_MARGIN_DEG < apart(_quat(pose["startEuler"]))
+
+
+REVERSED_CLIP_SUFFIX = " (rr2dv reversed)"
+REVERSED_CLIP_FOLDER = "Assets/Rr2dv/Reversed"
+
+
+def wheel_evidence(wheel_out: dict | None) -> str:
+    """Why the probe did not find a wheel, in its own words: what the clip turns and why each mesh was not used."""
+    out = wheel_out or {}
+    turned = out.get("rotatingPaths") or []
+    if not turned:
+        return "the wheelset clip rotates no transform in the model"
+    reasons: dict[str, int] = {}
+    for m in out.get("meshes") or []:
+        key = "used" if m.get("used") else (m.get("reason") or "not used")
+        reasons[key] = reasons.get(key, 0) + 1
+    meshes = ", ".join(f"{n} {r}" for r, n in sorted(reasons.items())) or "no meshes under them"
+    shown = ", ".join(turned[:4]) + (f" (+{len(turned) - 4} more)" if len(turned) > 4 else "")
+    return f"the clip rotates {len(turned)} transform(s) ({shown}); meshes under them: {meshes}"
+
+
+WHEEL_MAX_SIDE_M = 2.0     # a wheel's pivot lies within this of the centreline (x); wider nodes are not wheels
+SINGLE_AXLE_SHIFT_M = 1.0  # a lone driving wheel may sit this far from the definition's axle position
+AXLE_HEIGHT_SHARE = 0.15     # a wheel node sits at axle height: its y within 15% of the source radius of it
+WHEEL_SIZE_SHARE = 0.15      # an off-centre mesh still counts as the wheel if its outer radius is within 15% of the source
+
+
+def _wheel_node_at_axle(mesh: dict, owner: str | None, nodes: dict, radius: float) -> bool:
+    """An off-centre wheel mesh (a counterweight or crank boss pulls its centre off the axle) still marks the axle when
+    its rotating node sits at axle height and its outer radius is the wheel's. Rods and cranks sit higher or are
+    larger, so they stay out (H9: rods at y 1.5 m, wheels at 0.78 m on a 0.775 m radius)."""
+    if not radius or owner is None or owner not in nodes or mesh.get("reason") != "not centred on the axle":
+        return False
+    return (abs(nodes[owner][1] - radius) <= AXLE_HEIGHT_SHARE * radius
+            and abs(nodes[owner][0]) <= WHEEL_MAX_SIDE_M  # RLW RPP-1: crank pivots 6-9 m to the side are no wheels
+            and abs((mesh.get("maxRadius") or 0) - radius) <= WHEEL_SIZE_SHARE * radius)
+
+
+def axle_evidence(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[float]]) -> list[dict]:
+    """Rotating wheel nodes grouped by z, from meshes the probe used and off-centre wheels at axle height."""
     groups: list[dict] = []
     rotating = (wheel_out or {}).get("rotatingPaths") or []
+    radius = float((wheel_out or {}).get("sourceRadius") or 0)
     for mesh in (wheel_out or {}).get("meshes") or []:
-        if not mesh.get("used"):
+        owner = _owner(mesh["path"], rotating)
+        if not mesh.get("used") and not _wheel_node_at_axle(mesh, owner, nodes, radius):
             continue
+        if radius and (mesh.get("maxRadius") or 0) > (1 + WHEEL_SIZE_SHARE) * radius:
+            continue  # centred but far larger than the wheel: a rod swinging about the crank pin (ROF-1 connecting rods)
         declared = ws_in.get('transformPath')
         if declared and not (mesh['path'] == declared or mesh['path'].startswith(declared + '/')):
             continue
-        owner = _owner(mesh["path"], rotating)
         if owner is None or owner not in nodes:
             continue
         z = nodes[owner][2]
@@ -165,11 +250,60 @@ def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[fl
             groups.append({"z": z, "paths": [owner]})
         elif owner not in g["paths"]:
             g["paths"].append(owner)
+    return groups
+
+
+def inferred_axle_count(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[float]]) -> int | None:
+    """The definition gives one axle (or none) over a wheelset length that holds several (H9: 1 axle over 5.51 m, four
+    wheels in the model): count the wheel nodes at axle height inside that length instead. None when the definition is
+    consistent or the model does not show more than one axle there."""
+    n = int(ws_in.get("axles") or ws_in.get("numberOfAxles") or 0)
+    off, length = float(ws_in.get("offset") or 0), float(ws_in.get("length") or 0)
+    radius = float((wheel_out or {}).get("sourceRadius") or 0)
+    if n > 1 or length <= 0 or not radius:
+        return None
+    inside = [g for g in axle_evidence(ws_in, wheel_out, nodes)
+              if abs(g["z"] - off) <= length / 2 + AXLE_MATCH_M
+              and all(abs(nodes[p][1] - radius) <= AXLE_HEIGHT_SHARE * radius for p in g["paths"])]
+    return len(inside) if len(inside) > 1 else None
+
+
+def _shifted_axles(expected: list[float], groups: list[dict], wheel_out: dict | None, nodes: dict) -> list[dict] | None:
+    """The model's wheels sit as a whole set away from the definition's positions (ROF-1: five drivers at the
+    definition's spacing, all 0.875 m further forward). Accepted only when no definition axle has a wheel near it, the
+    model shows exactly as many wheels at axle height and every gap between them matches the definition's gap."""
+    radius = float((wheel_out or {}).get("sourceRadius") or 0)
+    if not expected or not radius:
+        return None
+    if any(abs(g["z"] - z) <= AXLE_MATCH_M for g in groups for z in expected):
+        return None
+    wheels = sorted((g for g in groups if all(abs(nodes[p][1] - radius) <= AXLE_HEIGHT_SHARE * radius for p in g["paths"])),
+                    key=lambda g: -g["z"])
+    if len(wheels) != len(expected):
+        return None
+    if len(expected) == 1 and abs(wheels[0]["z"] - expected[0]) > SINGLE_AXLE_SHIFT_M:
+        return None  # one axle has no spacing to confirm it: only a nearby unique wheel is accepted (RLW RPP-1: 0.5 m)
+    want = sorted(expected, reverse=True)
+    gaps = [(a["z"] - b["z"]) - (x - y) for a, b, x, y in zip(wheels, wheels[1:], want, want[1:])]
+    if any(abs(d) > AXLE_MATCH_M for d in gaps):
+        return None
+    shift = sum(g["z"] for g in wheels) / len(wheels) - sum(want) / len(want)
+    return [{"z": g["z"], "part": sorted(g["paths"])[0], "basis": "measured", "rr": z, "shift": round(shift, 4)}
+            for g, z in zip(wheels, want)]
+
+
+def measured_axles(ws_in: dict, wheel_out: dict | None, nodes: dict[str, list[float]]) -> list[dict]:
+    """Each RR axle of a wheelset, with the probe's rotating wheel node at that position when there is one."""
+    expected = rr_axles(ws_in)
+    groups = axle_evidence(ws_in, wheel_out, nodes)
     if ws_in.get('transformPath') and len(groups) == len(expected) and groups:
         # An explicit source transform identifies the physical truck even when its mesh positions
         # differ from the source simulation offsets. Keep the measured geometry and report both.
         return [{'z': g['z'], 'part': sorted(g['paths'])[0], 'basis': 'measured', 'rr': z}
                 for g, z in zip(sorted(groups, key=lambda g: -g['z']), expected)]
+    shifted = _shifted_axles(expected, groups, wheel_out, nodes)
+    if shifted:
+        return shifted
     out = []
     for z in expected:
         near = sorted((g for g in groups if abs(g["z"] - z) <= AXLE_MATCH_M), key=lambda g: (abs(g["z"] - z), g["z"]))
@@ -194,7 +328,7 @@ def common_parent(paths: list[str]) -> str:
     return "/".join(prefix)
 
 
-def backhead(rays: list[dict]) -> dict | None:
+def backhead(rays: list[dict], plane: float = BACKHEAD_PLANE_M) -> dict | None:
     """The backhead plate: the most common z (2 cm bins) of rays that meet a surface facing the cab."""
     # within +-0.7 m of the centreline: further out the cab's front wall faces the cab too and could outvote the plate
     facing = [r for r in rays or [] if r.get("hit") and r.get("normalZ", 0) < -0.5 and abs(r.get("x", 0)) <= BACKHEAD_HALF_WIDTH]
@@ -204,33 +338,119 @@ def backhead(rays: list[dict]) -> dict | None:
     for r in facing:
         bins.setdefault(round(r["z"] / BACKHEAD_BIN_M), []).append(r)
     key, hits = max(bins.items(), key=lambda kv: (len(kv[1]), -kv[0]))
+    sloped = _sloped_plate(facing, plane)
+    if sloped and len(sloped) > len(hits):
+        hits = sloped  # a raked backhead (Western Maryland H9: z -4.48 at y 2.3 to -4.1 at y 4.0) spans many 2 cm bins
     if len(hits) < BACKHEAD_MIN_HITS:
         return None
-    z = sum(h["z"] for h in hits) / len(hits)
-    return {"z": z, "hits": len(hits), "of": len(rays), "points": [(h["x"], h["y"]) for h in hits]}
+    if hits is sloped:  # depth where the fire door is: the plate's lowest quarter, not the average of a leaning plate
+        low = sorted(hits, key=lambda h: h["y"])[:max(1, len(hits) // 4)]
+        z = sum(h["z"] for h in low) / len(low)
+    else:
+        z = sum(h["z"] for h in hits) / len(hits)
+    return {"z": z, "hits": len(hits), "of": len(rays), "points": [(h["x"], h["y"]) for h in hits],
+            "sloped": hits is sloped}
+
+
+def _sloped_plate(facing: list[dict], plane: float = BACKHEAD_PLANE_M) -> list[dict] | None:
+    """Cab-facing hits on one plane z = a + b*y (least squares, outliers beyond 5 cm dropped twice), kept within 3 cm:
+    a backhead that leans is still one flat plate. None when too few hits or steeper than 30 degrees from vertical."""
+    pts = list(facing)
+    for tolerance in (max(0.05, plane), max(0.05, plane), plane):
+        if len(pts) < BACKHEAD_MIN_HITS:
+            return None
+        n = len(pts)
+        my, mz = sum(p["y"] for p in pts) / n, sum(p["z"] for p in pts) / n
+        vy = sum((p["y"] - my) ** 2 for p in pts)
+        if vy <= 0:
+            return None
+        b = sum((p["y"] - my) * (p["z"] - mz) for p in pts) / vy
+        a = mz - b * my
+        if abs(b) > math.tan(math.radians(30)):
+            return None
+        pts = [p for p in facing if abs(p["z"] - (a + b * p["y"])) <= tolerance]
+    return pts if len(pts) >= BACKHEAD_MIN_HITS else None
+
+
+# Placement rules tried in order until every generated control fits: the usual band 0.2 m below to 1.2 m above the fire
+# door at 0.2 x 0.25 m spacing, then the upper plate too (to 1.7 m above), then 0.15 x 0.2 m spacing. Small backheads
+# (PLW Trojan: 10 of 17 fitted the usual band, 19 with the upper plate) still build; the rule used is reported.
+PLACEMENT_TIERS = ((0.2, 0.25, 1.2, "usual band"), (0.2, 0.25, 1.7, "upper backhead plate included"),
+                   (0.15, 0.2, 1.7, "upper plate and 0.15 x 0.2 m spacing"))
 
 
 def control_positions(points: list[tuple[float, float]], door: tuple[float, float], avoid: list[tuple[float, float]],
-                      count: int) -> list[tuple[float, float]]:
+                      count: int, tier: int = 0) -> list[tuple[float, float]]:
     """Places on the flat backhead plate for generated controls: clear of the fire door and each other, preferring
     the band 0.3-0.9 m above the door, nearest the centreline first; deterministic."""
+    sx, sy, up, _ = PLACEMENT_TIERS[tier]
     dx, dy = door
     free = [(x, y) for x, y in points
-            if math.hypot(x - dx, y - dy) >= DOOR_CLEARANCE_M and dy - 0.2 <= y <= dy + 1.2
+            if math.hypot(x - dx, y - dy) >= DOOR_CLEARANCE_M and dy - 0.2 <= y <= dy + up
             and all(math.hypot(x - ax, y - ay) >= 0.15 for ax, ay in avoid)]
     free.sort(key=lambda p: (0 if dy + 0.3 <= p[1] <= dy + 0.9 else 1, round(abs(p[1] - (dy + 0.5)), 2), round(abs(p[0]), 2), p[0], p[1]))
     chosen: list[tuple[float, float]] = []
     for x, y in free:
-        if all(abs(x - cx) >= CONTROL_SPACING_X - 1e-6 or abs(y - cy) >= CONTROL_SPACING_Y - 1e-6 for cx, cy in chosen):
+        if all(abs(x - cx) >= sx - 1e-6 or abs(y - cy) >= sy - 1e-6 for cx, cy in chosen):
             chosen.append((round(x, 3), round(y, 3)))
             if len(chosen) == count:
                 break
     return chosen
 
 
+def fitted_positions(points, door, avoid, count) -> tuple[list[tuple[float, float]], int]:
+    """The first placement rule that fits every control, else the one fitting the most (then the build stops)."""
+    best, best_tier = [], 0
+    for tier in range(len(PLACEMENT_TIERS)):
+        spots = control_positions(points, door, avoid, count, tier)
+        if len(spots) == count:
+            return spots, tier
+        if len(spots) > len(best):
+            best, best_tier = spots, tier
+    return best, best_tier
+
+
 def _anchor(anchors: dict, name: str) -> list[float] | None:
     a = anchors.get(name)
     return a["position"] if a and a.get("resolved") and a.get("position") else None
+
+
+def is_wheel_name(name: str) -> bool:
+    """Truck wheel objects: a name containing "wheel" ('Standard 33" Wheels.001', truck.usra-andrews70t) or starting
+    with the abbreviation "whl" (truck.commonwealth.a). Must match Rr2dvProbe.IsWheelName."""
+    n = name.casefold()
+    return "wheel" in n or n.startswith("whl")
+
+
+DV_DEFAULT_HALF_WHEELBASE_M = 1.0   # CCL v3.1.9 GetBogieOffset(Default) (board W21: CCL source, not measured)
+DV_DEFAULT_WHEEL_RADIUS_M = 0.459   # CCL v3.1.9 default car wheelRadius (board W21)
+TRUCK_WHEEL_PREFIX = "rr2dvWheel_"  # per-axle truck wheel nodes are renamed to this in the run's own truck prefab
+
+
+def axle_nodes(truck_wheels: list[dict]) -> list[str]:
+    """For each truck wheel mesh (every LOD), the highest node holding it and no wheel of another axle: what one DV
+    [axle] may turn. A shared wheel-named container is never picked (truck.archbar.diamond's 'Wheels Animation' holds
+    both axles' bones; turning it on one axle swung the other wheelset round the tender, L-27 game test 2026-09-28)."""
+    groups: list[tuple[float, list[str]]] = []
+    for w in truck_wheels:
+        z = w["centre"][2]
+        g = next((g for g in groups if abs(g[0] - z) <= AXLE_GROUP_M), None)
+        if g is None:
+            groups.append((z, [w["path"]]))
+        else:
+            g[1].append(w["path"])
+    nodes: set[str] = set()
+    for i, (_, paths) in enumerate(groups):
+        others = [p for j, (_, ps) in enumerate(groups) if j != i for p in ps]
+        for path in paths:
+            node = path
+            while "/" in node:
+                parent = node.rsplit("/", 1)[0]
+                if "/" not in parent or any(o == parent or o.startswith(parent + "/") for o in others):
+                    break  # the prefab's top node, or a node that also holds another axle
+                node = parent
+            nodes.add(node)
+    return sorted(n for n in nodes if not any(n != m and n.startswith(m + "/") for m in nodes))
 
 
 def truck_geometry(truck_out: dict) -> dict | None:
@@ -264,7 +484,8 @@ def truck_geometry(truck_out: dict) -> dict | None:
     strays = [p for p in nodes if p.rsplit("/", 1)[-1].startswith(prefix)
               and not any(p == w or p.startswith(w + "/") for w in wheel_nodes)] if prefix else []
     return {"axles": [a["z"] for a in axles], "radius": sum(treads) / len(treads), "treads": [a["tread"] for a in axles],
-            "prefix": prefix if prefix.casefold().startswith("wheel") and not strays else None, "strays": strays,
+            "axleNodes": axle_nodes(truck_out.get("truckWheels") or []),
+            "prefix": prefix if is_wheel_name(prefix) and not strays else None, "strays": strays,
             "names": names}
 
 
@@ -279,6 +500,7 @@ def _r(v, n: int = 4):
 class _Builder:
     def __init__(self, draft: dict, inv: dict, probe_in: dict, probe_out: dict, project: dict, answers: dict):
         self.draft, self.inv, self.answers, self.project = draft, inv, answers, project
+        self._inferred_axles: dict[int, int] = {}
         self.pin = {v["id"]: v for v in probe_in["vehicles"]}
         self.pout = {v["id"]: v for v in (probe_out or {}).get("vehicles", [])}
         self.blocks: list[dict] = []
@@ -365,6 +587,8 @@ class _Builder:
         }
 
         # ---------------- running gear
+        for note in self.definition_of(lid).get("rr2dvWheelsetNotes") or []:
+            self.choose(note)
         wheelsets = pv.get("wheelsets") or []
         wouts = ov.get("wheels") or []
         driver_idx = set(self._driver_indices(cfg))
@@ -404,7 +628,17 @@ class _Builder:
                     self.choose(f"wheelset {ws['clip']!r} has no wheel mesh: its clip turns with the car at the source radius "
                                 f"{ws['diameter'] / 2:g} m (as G-29's lubricator ratchet), no axle")
                 continue
+            inferred = inferred_axle_count(ws, wout, nodes) if i in driver_idx else None
+            if inferred:
+                self.choose(f"wheelset {i} ({ws.get('clip')}): the definition gives {ws.get('axles') or 0} axle(s) over "
+                            f"{ws.get('length'):g} m but the model has {inferred} wheels at axle height there; "
+                            f"using {inferred} evenly spaced axles, also for the simulation's powered axles (review)")
+                ws = {**ws, "axles": inferred}
+                self._inferred_axles[i] = inferred
             ax = measured_axles(ws, wout, nodes)
+            if ax and "shift" in ax[0]:
+                self.choose(f"wheelset {i} ({ws.get('clip')}): the model's {len(ax)} wheels are {ax[0]['shift']:+.3f} m from the "
+                            "definition's axle positions at the definition's spacing; the running gear uses the model's positions (review)")
             for a in ax:
                 a.update(driver=i in driver_idx, clip=ws.get("clip"), wheelset=i)
             axles += ax
@@ -413,7 +647,8 @@ class _Builder:
                 if None in parts:
                     self.block("drivers-not-found", f"{lid}: wheelset {i} ({ws.get('clip')}) has {len(ax)} driving axle(s) in the "
                                                     f"definition but the probe found a turning wheel for only {len(ax) - parts.count(None)} "
-                                                    "(probe/probe.json wheels); the builder needs every driving axle's wheel")
+                                                    "(probe/probe.json wheels); the builder needs every driving axle's wheel; "
+                                                    + wheel_evidence(wout))
                 if ws.get("clip") not in anims:
                     self.block("drivers-no-clip", f"{lid}: driving wheelset {i} has no animation clip in the model's clip map")
                 shared_unit = next((u for u in units if u['AnimKey'] == ws.get('clip')), None)
@@ -424,6 +659,16 @@ class _Builder:
                                   "StartOffset": 0})
             elif ws.get("clip") in anims:
                 ponies.append((ws["clip"], ax, ws))
+        if self._inferred_axles:
+            sets = (cfg.get("Wheelsets") or {}).get("value") or []
+            for i, n in self._inferred_axles.items():
+                if i < len(sets):
+                    sets[i][3] = n
+            powered = ((rec.get("hooks") or {}).get("SimSpec") or {}).get("poweredAxles")
+            if powered and isinstance(powered.get("value"), dict):
+                total = sum(a["driver"] for a in axles)
+                powered["value"] = env(total, "count", "measured", "probe/probe.json wheels: wheel nodes at axle height",
+                                       "the definition's numberOfAxles disagreed with the model (see review.json)")
         drivers = sorted((a for a in axles if a["driver"]), key=lambda a: -a["z"])
         if not drivers:
             self.block("no-drivers", f"{lid}: no driving wheelset found in the definition")
@@ -442,6 +687,17 @@ class _Builder:
             return rec
         f_pivot = f_ax.index(front_drivers[0])
         r_pivot = r_ax.index(drivers[-1]) if drivers[-1] in r_ax else len(r_ax) - 1
+        leading = [a for a in allax if a["z"] > drivers[0]["z"] + 1e-6]
+        if len(drivers) == 1 and len(leading) >= 2:
+            # One driving axle behind a leading bogie (RLW RPP-1 4-2-2): the body rides on that bogie. Pivoting the front
+            # bogie on the driver left a 2.7 m base under a 4.4 m front overhang and the body sagged through the leading
+            # truck (game test 2026-09-28). Front bogie = the leading truck; the driver heads the rear bogie.
+            f_ax, r_ax = leading, [a for a in allax if a not in leading]
+            f_pivot = -1  # the core's "average of the bogie's axles": the leading truck's centre
+            r_pivot = r_ax.index(drivers[0])
+            centre = sum(a["z"] for a in leading) / len(leading)
+            self.choose(f"single driving axle behind a {len(leading)}-axle leading truck: the front bogie is the leading "
+                        f"truck (pivot at its centre, z {centre:.3f}), the rear bogie pivots on the driver")
         evidence = [f"probe/probe.json wheels (nodes turned by the wheelset clips)", "Definitions wheelsets (RR axle positions)",
                     "guide A04; G-29 profile: bogies pivot on the end drivers (rigid wheelbase)"]
         cfg["Bogies"] = env([{"Bogie": "BogieF", "BogieCollider": "front", "Axles": [_r(a["z"]) for a in f_ax], "PivotAxle": f_pivot},
@@ -495,8 +751,8 @@ class _Builder:
         # ---------------- anchors
         chuff = next((c["name"] for c in comps if c["kind"] == "Chuff"), None)
         whistle = next((c["name"] for c in comps if c["kind"] == "Whistle"), None)
-        cocks = [c for c in comps if c["kind"] == "CylinderCock"]
-        for what, val in (("Chuff (chimney)", chuff), ("Whistle", whistle), ("CylinderCock", cocks)):
+        cocks, fallback_cock = self._ensure_cylinder_cock(cfg, comps, drivers, bmin, bmax, radius)
+        for what, val in (("Chuff (chimney)", chuff), ("Whistle", whistle)):
             if not val:
                 self.block("missing-anchor", f"{lid}: the definition has no {what} component; the builder places the smoke, "
                                              "steam and their sounds from it")
@@ -506,7 +762,7 @@ class _Builder:
         self._cylinder_cocks(cfg, comps, lid)
         chimney = _anchor(anchors, chuff) or [0, bmax[1], bmax[2] - 1]
         whistle_at = _anchor(anchors, whistle) or chimney
-        cock_at = _anchor(anchors, cocks[0]["name"]) or [0, radius, drivers[0]["z"] + 1.0]
+        cock_at = fallback_cock or _anchor(anchors, cocks[0]["name"]) or [0, radius, drivers[0]["z"] + 1.0]
 
         # ---------------- cab, backhead, fire door
         seats = [c["name"] for c in comps if c["kind"] == "Seat" and _anchor(anchors, c["name"])]
@@ -546,7 +802,10 @@ class _Builder:
             cfg["MainPressureGauge"] = gauges[0]
 
         # ---------------- controls
+        self._reversed = []
         levers, cab_objects, loads, taken = self._levers(cfg, comps, ov, anims, lid)
+        if self._reversed:
+            rec["metadata"]["reversedClips"] = self._reversed
         cfg["RrLevers"] = env([{k: v for k, v in l.items() if k != "_phys"} for l in levers], "1", "source",
                               "Definitions RadialControl components (purpose, clip, part); ControlControlsWizard types as G-29")
         rec["hooks"]["LeverPhysics"] = env([l["_phys"] for l in levers], "mixed deg/N/kg", "analogue_estimate",
@@ -557,7 +816,23 @@ class _Builder:
                  [g for g in GENERATED if g[1] not in taken]
         if plate:
             avoid = [tuple(nodes[l["Path"]][:2]) for l in levers if l["Path"] in nodes]
-            spots = control_positions(plate["points"], (door[0], door[1]), avoid, len(wanted))
+            spots, tier = fitted_positions(plate["points"], (door[0], door[1]), avoid, len(wanted))
+            # A leaning backhead crowded with pipes and fittings (DM&IR M-3, 2026-09-28: 13 of 20 at 3 cm) keeps more of
+            # its plate when points up to 5, then 8 cm off the fitted plane count. Only where controls go changes: each is
+            # seated on the visible surface in the build.
+            for loose in LOOSE_BACKHEAD_PLANES_M:
+                if len(spots) >= len(wanted) or not plate.get("sloped"):
+                    break
+                wider = backhead(ov.get("cabRays"), loose)
+                if wider:
+                    spots, tier = fitted_positions(wider["points"], (door[0], door[1]), avoid, len(wanted))
+                    if len(spots) >= len(wanted):
+                        self.choose(f"generated backhead controls placed on the leaning backhead with points up to "
+                                    f"{loose * 100:.0f} cm off its plane (pipes and fittings leave too few within 3 cm); "
+                                    "each is seated on the visible surface: check reach and clearance in the cab renders")
+            if tier and len(spots) == len(wanted):
+                self.choose(f"generated backhead controls placed with the relaxed rule '{PLACEMENT_TIERS[tier][3]}': "
+                            "the usual band did not fit them all; check reach and grip spacing in the cab renders")
         else:
             spots = []
         if len(spots) < len(wanted):
@@ -642,9 +917,12 @@ class _Builder:
                     "then tries running boards; a pair with no valid seat is omitted")
         coal_slot, water_slot = self._slots(self.definition_of(lid))
         self._resources(cfg, rec, comps, coal_slot, water_slot, tank=not tender)
-        rel_z = (drivers[-1]["z"] + drivers[-2]["z"]) / 2 if len(drivers) > 1 else cab_z + 0.5
+        # At the rear of the engine, under the cab bodywork by the steps (James, 2026-09-28): between the drivers the
+        # rod kept coming out through pipes and valve gear. The core fits it to the frame; the app moves it forward
+        # along the frame if that seat is too low.
+        rel_z = rear_end + 0.5
         rec["hooks"]["BrakeRelease"] = env({"pos": _r([min(1.1, half), 0.8, rel_z]), "euler": [0, 90, 0]}, "m/deg", "analogue_estimate",
-                                           "hint between the rear drivers, right side; the core fits it to the frame (S-16)")
+                                           "hint 0.5 m inside the loco's rear end, right side, under the cab; the core fits it to the frame")
         if not tender:
             rec["hooks"]["HandbrakeWheel"] = env({"pos": _r([-0.9, cab_y - 0.3, rear_end + 0.05]), "euler": [0, 180, 0]}, "m/deg",
                                                  "analogue_estimate", "hint on the cab back, fireman's side; the core fits it to the face (S-16)")
@@ -707,23 +985,36 @@ class _Builder:
             self.block("tender-trucks", f"{tid}: the definition lacks truckSeparation")
             return rec
         if not geo:
-            self.block("truck-wheels", f"{trucks[0]['id']}: the probe found no wheel meshes (transforms named Wheel*) on the truck prefab")
-            return rec
-        if not geo["prefix"]:
+            # The truck model has no separate wheel objects (RLW RPP-1 tender: one 'Tender Truck' mesh with the wheels
+            # baked in). Build it as a fixed truck on DV's default bogie layout: the wheels cannot turn.
+            geo = {"axles": [DV_DEFAULT_HALF_WHEELBASE_M, -DV_DEFAULT_HALF_WHEELBASE_M], "radius": DV_DEFAULT_WHEEL_RADIUS_M,
+                   "treads": [], "axleNodes": [], "prefix": "rr2dvNoWheels_", "strays": [], "names": [], "fixed": True}
+            self.choose(f"{trucks[0]['id']}: the truck model has no separate wheel objects (wheels modelled into the frame); "
+                        f"built as a fixed truck on Derail Valley's default bogie layout (axles +/-{DV_DEFAULT_HALF_WHEELBASE_M} m, "
+                        f"wheel radius {DV_DEFAULT_WHEEL_RADIUS_M} m): its wheels will not turn")
+        if not geo["axleNodes"] and not geo["prefix"]:
             self.block("truck-wheels", f"{trucks[0]['id']}: the truck's wheel objects ({', '.join(geo['names'])}) share no name prefix "
-                                       "starting with 'Wheel' that no other object uses" +
+                                       "naming a wheel ('...wheel...' or 'whl...') that no other object uses" +
                                        (f" (also: {', '.join(geo['strays'][:3])})" if geo["strays"] else ""))
             return rec
         z = sep / 2
-        cfg["WheelRadius"] = env(_r(geo["radius"]), "m", "measured", f"probe/probe.json truckWheels ({trucks[0]['id']}): tread band of "
-                                                                     f"{len(geo['axles'])} axle(s)")
-        self.choose(f"tender wheel radius {geo['radius']:.4f} m from the truck's measured tread (turns the wheels; review with the renders)")
+        if geo.get("fixed"):
+            cfg["WheelRadius"] = env(_r(geo["radius"]), "m", "DV_choice", "CCL v3.1.9 default car wheelRadius (the truck has no separate wheels)")
+        else:
+            cfg["WheelRadius"] = env(_r(geo["radius"]), "m", "measured", f"probe/probe.json truckWheels ({trucks[0]['id']}): tread band of "
+                                                                         f"{len(geo['axles'])} axle(s)")
+            self.choose(f"tender wheel radius {geo['radius']:.4f} m from the truck's measured tread (turns the wheels; review with the renders)")
         offs = [_r(a) for a in geo["axles"]]
         cfg["Bogies"] = env([{"Bogie": "BogieF", "BogieCollider": "front", "Axles": [_r(z + o) for o in offs]},
                              {"Bogie": "BogieR", "BogieCollider": "rear", "Axles": [_r(-z + o) for o in offs]}],
                             "m", "derived", f"Definitions {tid}.truckSeparation / 2", "probe/probe.json truckWheels axle offsets")
-        cfg["Trucks"] = env([{"Prefab": truck_v["unity_prefab"], "Wheelset": geo["prefix"], "Z": _r(z)},
-                             {"Prefab": truck_v["unity_prefab"], "Wheelset": geo["prefix"], "Z": _r(-z)}],
+        wheelset = TRUCK_WHEEL_PREFIX if geo["axleNodes"] else geo["prefix"]
+        if geo["axleNodes"]:
+            rec.setdefault("metadata", {})["truckWheelNodes"] = {"prefab": truck_v["unity_prefab"], "nodes": geo["axleNodes"], "prefix": TRUCK_WHEEL_PREFIX}
+            self.choose(f"tender truck wheel nodes, one per axle, renamed {TRUCK_WHEEL_PREFIX}N in the run's truck copy: "
+                        + ", ".join(geo["axleNodes"]))
+        cfg["Trucks"] = env([{"Prefab": truck_v["unity_prefab"], "Wheelset": wheelset, "Z": _r(z)},
+                             {"Prefab": truck_v["unity_prefab"], "Wheelset": wheelset, "Z": _r(-z)}],
                             "m", "source", f"Definitions {tid}.truckSeparation / 2 (RR places the trucks at +-half)")
         span = max(offs) - min(offs)
         cfg["Wheelsets"] = env([[_r(z), _r(span), _r(2 * geo["radius"]), len(offs), ""], [_r(-z), _r(span), _r(2 * geo["radius"]), len(offs), ""]],
@@ -749,6 +1040,17 @@ class _Builder:
         cfg["LoadAnimations"] = self._ordered_loads(loads, ov)
         coal_slot, water_slot = self._slots(td)
         self._resources(cfg, rec, comps, coal_slot, water_slot, tank=False, tender_bounds=(bmin, bmax, front_end))
+        if coal_slot is not None and not any(l[2] == "coal.NORMALIZED" for l in loads) and rec["hooks"].get("CoalPile"):
+            # Railroader draws a tender's coal at runtime when the model has no coal of its own (RLW RPP-1: no coal in
+            # the bunker in game, 2026-09-28). The core's generated coal load fills the shovelling space and rises and
+            # falls with coal.AMOUNT.
+            pile = _plain(rec["hooks"]["CoalPile"])
+            (cx, cy, cz), (sx, sy, sz) = pile["centre"], pile["size"]
+            cfg["CoalLoad"] = env({"Pivot": _r([cx, cy - sy / 2, cz]), "Footprint": _r([sx, sz]), "FullHeight": _r(sy),
+                                   "EmptyFraction": 0.07}, "m", "analogue_estimate",
+                                  "the tender model has no coal load animation: a generated coal load fills the coal space box")
+            self.choose("no modelled coal load on the tender: a generated coal heap fills the coal space and follows the coal "
+                        "amount; check it sits inside the bunker in the renders")
         half = (bmax[0] - bmin[0]) / 2
         rec["hooks"]["HandbrakeWheel"] = env({"pos": _r([-0.9, bmax[1] * 0.65, front_end - 0.25]), "euler": [0, 180, 0]}, "m/deg",
                                              "analogue_estimate", "hint on the tender front, fireman's side; the core fits it (G-29)")
@@ -841,6 +1143,30 @@ class _Builder:
             if r and abs(pos[0]) < 0.05:
                 c["pos"] = env([float(r), pos[1], pos[2]], "m", "source", f"Definitions {lid} CylinderCock {c['name']}: RR spawns the jets at +-radius")
 
+    def _ensure_cylinder_cock(self, cfg: dict, comps: list[dict], drivers: list[dict],
+                              bmin: list[float], bmax: list[float], radius: float) -> tuple[list[dict], list[float] | None]:
+        cocks = [c for c in comps if c["kind"] == "CylinderCock"]
+        if cocks:
+            return cocks, None
+        # The shared builder indexes the first CylinderCock for drain jets and sound (it mirrors x for the other side).
+        # With none in the source: cylinders sit ahead of the leading driver at about axle height, inside the model's width.
+        lead_z = max(a["z"] for a in drivers)
+        half_width = min(abs(bmin[0]), abs(bmax[0]))
+        pos = _r([min(COCK_HALF_SPAN_M, max(0.15, half_width * 0.8)), max(0.15, radius),
+                  max(bmin[2] + 0.1, min(bmax[2] - 0.1, lead_z + 1.0))])
+        evidence = ("probe/probe.json bounds and measured driving axles; 1.0 m ahead of the leading driver, "
+                    "80% of the narrower model half-width (at most 1.1 m), axle height (driving wheel radius)")
+        synthetic = {"kind": "CylinderCock", "name": "rr2dv fallback cylinder cock", "parentPath": "",
+                     "extra": "{}", "pos": env(pos, "m", "analogue_estimate", evidence),
+                     "rot": [0, 0, 0, 1], "scale": [1, 1, 1]}
+        cfg["Components"]["value"].append(synthetic)
+        cfg["Components"]["basis"] = "derived"
+        cfg["Components"]["evidence"].append(evidence)
+        comps.append(_plain(synthetic))
+        self.choose(f"no source CylinderCock: generated drain particle and sound anchor at {pos} m "
+                    "ahead of the leading driver; review the exhaust placement in the build renders and in game")
+        return [comps[-1]], pos
+
     def _levers(self, cfg, comps, ov, anims, lid):
         levers, cab_objects, loads, taken = [], [], [], set()
         for c in comps:
@@ -879,11 +1205,30 @@ class _Builder:
             if not path:
                 self.choose(f"RR control {c['name']!r}: its clip {clip!r} does not move its part {parent!r}; a generated lever replaces it")
                 continue
+            turn = pose_turn_deg(ov, clip, path)
+            if turn is not None and turn < MIN_LEVER_SWEEP_DEG:
+                # Derail Valley levers only swing. A handle that slides (L-27's push-pull throttle: 0 deg, 50 mm) gets a
+                # generated backhead lever; its own clip still follows the port, so the modelled handle moves with it.
+                self.choose(f"RR control {c['name']!r}: its handle {path!r} turns only {turn:.1f} deg in {clip!r} "
+                            "(it slides or is moved by linkage); a generated backhead lever works the function and the "
+                            "modelled handle follows the same setting")
+                loads.append([clip, "", port, False])
+                continue
             others = [p for k in anims if k != clip for p in self.bound_paths(ov, k)]
             if any(o.startswith(path + "/") for o in others):
                 self.choose(f"RR control {c['name']!r}: part {path!r} also carries parts other clips move; a generated lever replaces it")
                 continue
             n, spring, damper, mass, drag, ang, scroll, sspring, frac = LEVER_PHYSICS[role]
+            if role == "whistle" and rest_at_clip_end(ov, clip, path) and clip in anims:
+                # 0 must be the handle's resting end on every loco: this handle rests at its clip's last frame, so the
+                # lever uses the clip played backwards (made in the build stage from the original).
+                reversed_key = clip + REVERSED_CLIP_SUFFIX
+                reversed_asset = f"{REVERSED_CLIP_FOLDER}/{safe_name(clip, 'clip')}.anim"
+                self._reversed.append({"from": anims[clip], "to": reversed_asset})
+                anims[reversed_key] = reversed_asset
+                self.choose(f"RR control {c['name']!r}: its handle rests at the end of {clip!r}, so the whistle lever "
+                            "uses the clip reversed: closed (0) is the resting end")
+                clip = reversed_key
             lever = {"Path": path, "AnimKey": clip, "Port": port, "Ctl": ctl, "Toggle": toggle, "Hidden": False, "External": False,
                      **({"Label": label} if label else {})}
             phys = {"path": path, "min": 0, "notches": n, "spring": spring, "damper": damper, "mass": mass, "drag": drag,

@@ -1,13 +1,32 @@
 # When a conversion stops: how to resolve it
 
-`rr2dv` never guesses. When something is missing, ambiguous or needs your decision, it stops and says why, or lists
-the item for review. This page covers each case and what to do about it.
+`rr2dv` distinguishes source facts, measured candidates and labelled starting assumptions. Unresolved or ambiguous
+items require review. This page covers each case and what to do about it.
 
-**The tool cannot ask you questions mid-conversion or resume a stopped run yet.** You give your answers when you
-start a conversion (command-line options, or the app's Options row), and after fixing a block you convert again from
+**Engine specifications:** review cylinder bore/stroke (inches), boiler pressure (psi gauge), heating area (ft²),
+simulation boiler dimensions (metres), capacity factor and coal-consumption adjustment. Each field shows its
+origin and has a Restore button. Boiler basis values describe the inherited simulation, not the prototype.
+When editing capacity, spawn water scales to preserve the existing fill fraction. Heating-area edits retain the
+existing injector/firebed approximation. Coal adjustment changes coal required for the simulated firebed; it is
+not a historical burn-rate measurement or an oil-firing model.
+
+The live nominal TE estimate uses the existing 0.85-pressure convention, physical cylinder count, driving radius
+and selected fixed gearing. Factor of adhesion uses **weight on driven wheels**, never total locomotive weight.
+Published TE is an optional comparison; editing it does not retune the engine. The legacy equivalent-bore profile
+shows its separate calibration target. These are simple-expansion estimates, not measured drawbar pull or a
+validated compound-engine model. Bad numbers, non-finite values, and partial boiler dimensions are rejected before
+building. Leave both optional dimensions blank to inherit the basis, or restore their suggested values.
+
+**The app asks for vehicle choices after measuring the source.** In 0.1.3 it fills source facts, suitable tyre
+candidates and labelled defaults, and restores previous choices for an unchanged vehicle/source automatically.
+Confirm or change the fields directly; no JSON file or offline build folder is required. Measured tyre candidates
+are available in the review window. Geared wheel roles use named groups rather than numerical indices. Unknown
+ratios still require input. Advanced JSON import remains optional. After fixing another block, convert again from
 the start. Every run gets a fresh temporary folder and the input mod is never changed. By default the temporary
 inputs, ripped assets, Unity project and build intermediates are permanently deleted when the run stops or finishes.
 Answers and a rebuild recipe survive in `<workRoot>/reports/<run-id>`. Reruns re-extract and re-import.
+Remembered choices also survive in `<workRoot>/reviews`, keyed to vehicle, source, adapter and track catalogue.
+Changing any of these identities requires a fresh review; confirmation is never carried over automatically.
 Only explicit developer setting `"keepWorkFiles": true` enables retained workspaces and shared caches.
 The recipe records source/code/tool hashes and choices; byte-identical Unity rebuilds have not been verified.
 
@@ -48,7 +67,7 @@ The following detailed intermediate paths exist during conversion or with develo
 | `index_issues.json` | problems reading other mods while searching (usually harmless) |
 | `import/clips-*.json`, `import/clips-*-bindings.json` | how each animation's paths were restored, and every decision (bound to a model, left out, kept with absent targets) |
 | `import/clips-*-diagnosis.json` | written when an animation stops the import: which model names it, how many of its targets each model has, and where each missing target is found |
-| `probe/unity-1.log`, `probe/result.json`, `probe/probe.json` | what Unity reported while measuring the model |
+| `probe/unity-1.log`, `probe/result.json`, `probe/probe.json` | what Unity reported while measuring the model; `probe.json`, `result.json` and `probe-input.json` are kept in `reports/<run>/probe/` after cleanup (measurements only, no ripped assets) |
 | `record/vehicle-record.json` | the draft record: `metadata.pending` (review items), `metadata.wheelCandidates`, `metadata.leftOut` |
 | `build/blocks.json` | why the build stage stopped, one entry per thing to resolve (with the measured candidate for the wheel radius) |
 | `build/vehicle-record.json`, `build/review.json` | the record the pack was built from, and every choice made automatically to complete it (`choices`), for review |
@@ -103,7 +122,7 @@ Not blocking, but worth reading (amber ! in the app):
 |---|---|
 | `left-out` | a part the mod references but does not contain (Railroader cannot load it either) is left out; anything attached inside it goes too, and is named |
 | `missing-texture`, `ambiguous-texture` | an image (logo, decal) was not found, or found twice; it is left out |
-| `code-mod-component` | the loco relies on a Railroader code mod (e.g. LegosBetterSteam) for its behaviour; its Derail Valley simulation must be set deliberately |
+| `code-mod-component` | the loco relies on a Railroader code mod (e.g. LegosBetterSteam) for its behaviour; its Derail Valley simulation must be set deliberately. Vehicle choices shows what the mod's settings in the definition mean (never its code): for LegosBetterSteam's articulated engine, "Pull to build to" offers the mod's compound and simple pull (the mod's own mode first) and the published or plain Railroader figure; with the legacy-equivalent profile the equivalent bore is sized to the chosen pull. Other code-mod components have their settings listed, with multipliers, ratios and gearing flagged |
 | `pack-folder-mismatch`, `model-not-in-catalog`, `tender-archetype`, `unreadable-definitions` | the mod is laid out unusually; the conversion continues, check the result |
 
 ## Later stages
@@ -115,10 +134,11 @@ Not blocking, but worth reading (amber ! in the app):
 | `extract` | *cache entry … is inconsistent* | delete the named folder under `<workRoot>\_cache\assetripper` and convert again |
 | `import` | *animation clips fit several prefabs and the source does not say which* | the mod's animations could belong to more than one model and nothing in the mod says which. `import/clips-*-bindings.json` lists each clip and every model that names or references it. Report it on the app board; this needs a decision in `rr2dv`, not a guess |
 | `import` | *resolve_clip_paths: N clip(s) did not resolve … No prefab resolves every clip binding; …* | an animation targets objects that no single model in the pack has all of, and the rest of the message says why `rr2dv` will not keep it: *… name it* (several models' clip maps name the animation), *no prefab's clip map names it*, or *lacks targets that other prefabs have* (the missing targets live in another model file). Open the `import/clips-*-diagnosis.json` the message names: for each animation it lists which model's clip map names it, how many of its targets each model has, and each missing target's `found_in`. Report it on the app board with that file; the fix is decided in `rr2dv`, never guessed. (When exactly one model names the animation and its missing targets are in no model of the export, the conversion does not stop: see *animation …* under review items.) |
+| `import` | *the model … is not in the exported pack …: the pack's Catalog.json names it, but the export holds these prefabs: …* | the pack's catalogue names a model file the ripped bundle does not contain under that name. The message lists the prefabs it does contain. Check the dependency mod is installed and up to date (Railroader could not load it either); if it is and the list shows the model under another name, report it on the app board with the message |
 | `import` | *duplicate GUID* | two assets in the combined project claim the same identity; report it with the run folder |
 | `probe` | *scripts did not compile* | Unity could not compile our probe; the log path is in the message. Check the Unity version is exactly 2019.4.40f1 |
 | `probe` | *is open in another Unity editor* | close that Unity window, convert again |
-| `probe` | (seems stuck on *Measure the model*) | normal on a fresh project: Unity's splash and import window can appear and importing takes minutes (S-16 about 2, C-21 about 4). It is not hung while `probe/unity-1.log` keeps growing |
+| `probe` | (seems stuck on *Measure the model*) | normal on a fresh project: Unity's splash and import window can appear and importing takes minutes (S-16 about 2, C-21 about 4; texture-heavy mods such as the PLW Trojan took 10 before rr2dv stopped importing textures no converted model uses; `unity/project.json` `unused_textures` lists what was left out). It is not hung while `probe/unity-1.log` keeps growing |
 | `probe` | *did not finish … within … s* / *wrote no result.json* | see `probe/unity-1.log`; a licence prompt or a crash is the usual cause. Open Unity once by hand to settle the licence, then convert again |
 | `record` | *definition lacks maximumBoilerPressure / pistonDiameterInches / …* | the loco's definition is missing figures the simulation needs; report it to the mod's author |
 | `record` | *livery … is not one of …* | choose one of the liveries listed in the message (`--livery`, or the app's Livery box) |
@@ -151,14 +171,17 @@ The build first completes the draft record from the definitions and the measurem
 in `build/review.json`), then builds the pack with our builder in Unity. It stops with a block when something cannot
 be worked out; `build/blocks.json` lists them all at once.
 
+If the source has no `CylinderCock` (PLW Trojan), the vehicle record adds an estimated drain-jet and sound anchor 1.0 m
+ahead of the leading driver at axle height, 80% of the model's half-width (at most 1.1 m) each side. `build/review.json` lists its position; check the placement in the build renders and in game.
+
 | Code / message | Why | What to do |
 |---|---|---|
-| `needs-wheel-radius` (*the driving wheel tread radius needs your review*) | the first conversion of every loco stops here: the tread radius sets the pull (cylinder bore), and a person must confirm it (board X30). The message gives the probe's candidate | check the candidate (see `WheelRadius` under review items below), then convert again with it: in the app, **Use measured radius** fills it in (or type your own) and **Convert**; on the command line, the output ends with the exact command. The rerun reuses the imported project, so it goes straight to building |
-| `missing-anchor` (*no Chuff (chimney) / Whistle / CylinderCock component*) | the builder places the smoke, steam and their sounds from these Railroader components | the mod's definition lacks one; report it on the app board with the loco id |
-| `drivers-not-found`, `drivers-no-clip`, `no-drivers`, `one-axle` | the driving wheels could not be matched to turning wheels in the model | report it with `probe/probe.json` (its `wheels`); the definition and the model disagree |
+| `needs-wheel-radius` (*the driving wheel tread radius needs your review*) | no driving tyre radius was confirmed; legacy callers may reach this block directly | normally confirm the populated radius or select a measured candidate in **Vehicle choices** during the same conversion. If the run already stopped, use the candidate shown in the report and convert again. `--wheel-radius` remains available for scripts. Normal reruns use fresh temporary workspaces |
+| `missing-anchor` (*no Chuff (chimney) / Whistle component*) | the builder places chimney and whistle effects and sounds from these Railroader components | the mod's definition lacks one; report it on the app board with the loco id |
+| `drivers-not-found`, `drivers-no-clip`, `no-drivers`, `one-axle` | the driving wheels could not be matched to turning wheels in the model | when the definition gives one driving axle over a long wheelset (the Western Maryland H9 gives 1 over 5.5 m) and the model shows several wheels at axle height there, the model's count is used and listed in `review.json`, so that case no longer stops. Likewise when the model's driving wheels sit as a whole set away from the definition's positions at the definition's spacing (RLW ROF-1: 0.875 m), or a single driving wheel within 1 m of the definition's axle (RLW RPP-1: 0.5 m). A wheel's pivot must be within 2 m of the centreline. Otherwise the message says what the wheel clip turns and why each mesh under it was not used; report it with `probe/probe.json` (its `wheels`), kept in the run's reports folder |
 | `no-backhead` | no flat backhead plate was found from the cab, and the definition has no firebox glow to fall back on | report it with `probe/probe.json` (`cabRays`) |
-| `no-room-for-controls` | too little flat backhead plate for the generated controls | report it with `probe/probe.json` (`cabRays`) |
-| `tender-trucks`, `truck-wheels`, `tender-data`, `tender-empty` | the tender's trucks, their wheels, or its weight and load slots could not be found | report it with the tender and truck ids; the message says which |
+| `no-room-for-controls` | too little flat backhead plate for the generated controls, (a leaning backhead counts as one plate: hits within 3 cm of a fitted sloped plane), even after trying the upper plate (to 1.7 m above the fire door) and then 0.15 x 0.2 m spacing | report it with `probe/probe.json` (`cabRays`) |
+| `tender-trucks`, `truck-wheels`, `tender-data`, `tender-empty` | the tender's trucks, their wheels, or its weight and load slots could not be found | report it with the tender and truck ids; the message says which. A truck whose wheels are modelled into its frame (no separate wheel objects) is built as a fixed truck on Derail Valley's default layout (axles ±1.0 m, radius 0.459 m; the wheels do not turn) and listed in `review.json`. Truck wheels are found by name: objects whose name contains `wheel` or starts with `whl`; each axle's own node is then renamed `rr2dvWheel_N` in the run's truck copy, so a container holding both axles is never turned as one |
 | `no-materials`, `no-weight`, `no-geometry`, `probe-missing` | the model or definition lacks something every build needs | report it; the message names it |
 | *the builder did not export a pack: EXCEPTION …* | our builder stopped while building (the most common: *insufficient end-beam rays* when no buffer beam is found at coupler height, or a placement check for the handbrake wheel or brake release) | send `build/out/build_report.txt` and `run.log`; the renders in `build/out` often show the cause |
 | *Vehicle record validation failed* | the loader rejected the record (a `rr2dv` bug: the record is checked before Unity starts) | send `build/out/build_report.txt` and `build/vehicle-record.json` |
@@ -201,6 +224,96 @@ fingerprint stops before extraction: remeasure it. The file's contents are copie
 An explicit override remains a manual geometry review and will not be silently replaced by an automatic band.
 Automatic beam placement is a build-time measurement, not in-game acceptance: check that the stopcock, hook
 and hanging hose end are reachable. Cosmetic overlap with decorative pipework is acceptable.
+
+Material slots: a slot the export left empty or filled with Unity's white `Default-Material` (Railroader base-game
+truck rims, the `…deadbeef…` references) is given rr2dv's own dark matte gunmetal
+(`src/rr2dv/unity/materials/rr2dv_gunmetal.mat`), and a slot whose material is named `…glass…` gets rr2dv's own clear
+glass (`rr2dv_glass.mat`). An empty slot on a part named `…coal…` gets a bump-mapped coal (`rr2dv_coal.mat`), and
+glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow inside does not show. Lamp glass that Railroader
+draws fully transparent (alpha 0: a flare disc) stays invisible. When lamp glass shares the window material on one mesh,
+its triangles within a lamp lens of a lamp (`LampLenses`) are split onto the lens (`rr2dv glass: … split off`). The whole car
+is searched, trucks included (tender truck rims). A tender whose model has no coal of its own (Railroader draws it at
+runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount. All
+are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
+
+Oil cups: the driving groups' own clips are played through a revolution; a part whose middle travels is a rod (a cup
+on it rides with it), a part that turns in place is a wheel, axle or crank (no cup on it), whatever the parts are called
+(`rr2dv oil running gear by motion` in `build_report.txt`).
+
+Control response: the train and independent brakes, headlights and cab light move one notch per key press (a tap ran
+their few coarse notches end to end); a generated whistle (no Railroader handle) gets the same whistle physics as a
+Railroader whistle handle. Both are listed as `rr2dv control response` and still need the in-game check.
+
+Cylinders: the reviewed physical cylinder count is physics only. The simulation always runs 2 cylinders with the bore
+scaled to the same swept volume (bore x sqrt(n/2)): Derail Valley's chuff sound handles 2 (a 3-cylinder K-66 threw
+`ChuffClipsSimReader.OnChuff ... IndexOutOfRange` in Player.log). The physical count stays in the build's simulation profile.
+
+Brake cutout and cab light: generated as handwheels like the dynamo and air pump, whose F4 HUD buttons work; built as
+2-position levers, the HUD buttons did nothing.
+
+Railroader lights: every Unity light in the source model is removed (`rr2dv source lights` in `build_report.txt`).
+Railroader switches them from its own scripts, which are not converted, so they stayed on for good. The car keeps the
+builder's own switchable cab light under the roof centre and its lamps.
+
+Door, window and hatch toggles: only the parts a clip actually moves count. A clip that also keys other parts with
+flat curves no longer claims them, so later toggles are not left out as "Toggle overlaps another converted moving
+assembly"; a clip that moves nothing is left out as "Toggle clip moves nothing".
+
+Main driver with nothing behind it: when the definition's `mainDriverIndex` names a wheelset with no animation and no
+model part (ALCo 3-cylinder Mikado), and exactly one animated wheelset has the same axle count over the same span, that
+one is the main driver and the empty one is left out (listed as a choice). This used to stop the build with
+`drivers-not-found` / `drivers-no-clip`.
+
+`no-room-for-controls` on a leaning backhead crowded with pipes and fittings (DM&IR M-3): the fit retries with points up
+to 5, then 8 cm off the plate's plane, and uses the tightest that fits every control; each control is still seated on the
+visible surface.
+
+Cab controls: the walkable/items copies of the mod's own collision meshes let the control-grab ray pass through
+(`rr2dv grab rays pass through` in `build_report.txt`), so a handle you can see is never hidden behind an invisible,
+blockier collision shell. You still stand on and walk into them.
+
+Brake release: hinted 0.5 m inside the loco's rear end, under the cab, where the rod stays clear of pipes and valve
+gear; when the fitted seat at the hint is below the 0.30 m clearance floor (a low frame, Reading B8a
+camelback), the hint moves along the frame in 0.4 m steps to the first seat that clears it (`rr2dv brake release: … moved`).
+
+Oil cups are seated, per side and axle, on a rod big-end nub (islands of 20+ triangles), else on a flat top of the
+running gear (big ends, crossheads, axlebox tops; a cup on a moving part rides with it), else on the running board. A
+pair with no seat on either side is left out (`rr2dv oil pair … omitted`).
+
+Dynamo (Vehicle choices): suggested from the Railroader definition (a `Dynamo` component or not). With "no", the pack
+has no electric lamps, cab light, or Dynamo/Cab light/Headlights backhead controls, and the HUD has no dynamo or
+headlight controls; the dynamo stays off, so no dynamo steam jet.
+
+Firing (Vehicle choices): Railroader definitions do not say how the fire is fed, so the suggestion is always hand-fired.
+"oil-burner" (tank locos only for now) builds our builder core's oil firing: the loco's coal space holds fuel oil
+(refilled at the diesel pump; untested in game), the oil valve is on the HUD's dynamic-brake slot, the atomizer valve on
+Gearbox 1 (it lights the burner from cold); there is no shovel, coal dump or coal pile. Feed rate and pressures are the
+core's defaults, not calibrated for the loco. "Oil burner firing is built for tank locos only so far": a tender's coal
+space would still take coal; choose hand-fired. "Mechanical stoker firing is not built yet": it needs a builder core
+change (keep coal, give the stoker steam use); choose hand-fired or oil-burner.
+
+Whistle closed (0) is always the whistle handle's resting end. When a Railroader whistle handle is modelled at the end of
+its clip rather than the start, the lever uses the clip reversed (`RR control …: its handle rests at the end of …`).
+Generated whistle levers rest at 0 already.
+The steam exhaust reads the whistle through a 5% deadzone (`rr2dv whistle closure` in `build_report.txt`): a lever that
+settles a fraction short of closed after use still commands exactly 0, so there is no constant low chime (CTRL-02).
+
+A Railroader cab handle that does not swing in its own animation (the GN L-27's throttle slides 50 mm) cannot become a
+Derail Valley lever: a generated backhead lever works that function, the modelled handle follows the same setting, and
+`review.json` says so.
+
+A door, window or hatch animation (Railroader `ToggleAnimation`) that cannot be resolved (no clip, no or ambiguous
+target, a clip that does not move its declared target, overlap with another moving assembly) no longer stops the build:
+that one animation is left out, its model stays as modelled, and a `WARN rr2dv ancillary toggle '…' left out` line in
+`build_report.txt` names it and says why (L-27: a second roof-hatch toggle). Driving controls keep their hard checks.
+A rigged opening, whose clip moves the bones inside its declared target (the H9's windows, deflectors and roof hatch),
+is kept: the whole declared assembly, mesh and bones, becomes the opening, and it opens with a click.
+
+Generated backhead controls are placed against the visible model only: a model whose own collision shape has no
+backhead face (Reading B8a camelback) no longer loses every control with `no backhead found`.
+
+Number plates are seated on a flat side first, then on a curved or panelled side (a saddle tank); if neither fits,
+the plate stays at the source decal with `WARN plate …: no fully supported visible surface` instead of stopping the build.
 
 ## Stage `audit`
 

@@ -57,6 +57,9 @@ def _launch(unity: Path, project: Path, method: str, log: Path, env: dict, timeo
             procs.stop(proc)  # interruption must stop the editor before workspace cleanup
 
 
+RETRY_PAUSE_S = 10  # lets a just-closed editor release the project before the retry
+
+
 def run_method(unity: Path, project: Path, method: str, out: Path, extra_env: dict | None = None,
                timeout: float = 3600) -> dict:
     if not unity or not Path(unity).is_file():
@@ -73,6 +76,13 @@ def run_method(unity: Path, project: Path, method: str, out: Path, extra_env: di
         text = log.read_text(encoding="utf-8", errors="replace") if log.exists() else ""
         attempts.append({"attempt": attempt, "exit_code": code, "seconds": round(time.time() - started, 1)})
         if attempt == 1 and code != 0 and LICENCE_FLAKE in text and not (out / "result.json").exists():
+            continue
+        # Unity sometimes quits right after opening the project without running the method (exit 0, no result):
+        # seen straight after another editor closed on the same project (RLW RPP-1 audit, 2026-09-28). Once more.
+        # (the method name is always in the log's command line, so test that no scripts were ever loaded)
+        if attempt == 1 and not (out / "result.json").exists() and "ReloadAssembly" not in text \
+                and "error CS" not in text:
+            time.sleep(RETRY_PAUSE_S)
             continue
         break
     write_json(out / "launch.json", {"method": method, "project": str(project), "attempts": attempts})

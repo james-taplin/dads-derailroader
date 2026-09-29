@@ -99,6 +99,23 @@ class Window(unittest.TestCase):
         self.assertEqual(dialog.vars["unity"].get(), str(candidate))
         self.assertIn("Unity Editor", dialog.checks.get("1.0", "end"))
 
+    def test_a_failing_review_window_cancels_instead_of_freezing(self):
+        from rr2dv import reviewgui
+        from tkinter import messagebox
+        def broken(parent, req, answer):
+            raise ValueError("synthetic review failure")
+        reviewgui.show = broken
+        shown = []
+        original = messagebox.showerror
+        messagebox.showerror = lambda *a, **k: shown.append(a[1])
+        self.addCleanup(setattr, messagebox, "showerror", original)
+        self.select("Test Loco Mod", "ts-260-a")
+        self.app.convert()
+        self.until(lambda: not self.app.worker.busy and self.app.last_run, timeout=120)
+        self.assertIn("synthetic review failure", shown[0])
+        self.assertIn("Review cancelled", self.app.summary.cget("text"))
+        self.assertIsNotNone(self.app._pump_id)  # the window keeps working
+
     def test_convert_shows_each_stage(self):
         self.select("Test Loco Mod", "ts-260-a")
         self.app.convert()
