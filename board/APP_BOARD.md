@@ -1810,3 +1810,19 @@ Pre-release: none (this session cannot create one); `0.1.4-test1` from 0.2.X-exp
 **Core request (local sessions):** make PlaceBrakeRelease's valve-body margin match CheckReleaseClearance (0.08 vs 0.10 m;
 repo:tooling/builder/tools/unity/CclLocoBuild.cs:3558, RRPlacementValidation.cs CheckReleaseClearance), with W46's floor
 mismatch (yLow 0.3 vs position - 0.0806 >= 0.3); then the app's two workarounds can go.
+
+## W69 (cloud Claude, 2026-09-29): T1 installed; R48 coal box; plate shrink
+
+Branch `0.2.X-exp`, f50c734. C&O T1 built, audited and installed with bd9e2a1 (run 20260929-123658): tender release moved
+0.025 m inward (0.080 -> 0.105 m) and passed the core's exact-pose check; brake cutout built as a 2-notch lever, axis removed.
+T1 in-game items for James: loco/tender gap (builder warns both "no draw-gear meets" and "bodies overlap 35 mm"), headlight
+Glare slots given gunmetal, fixed tender trucks (wheels modelled into the frame), front hook meets Vert.047.
+- R48 (James's screenshots): the generated tender coal load showed as a cuboid across the gap into the cab. Cause: the
+  CoalPile/CoalLoad layout rule (buildrecord `_resources`, G-29 tender front) ends 0.25 m behind RrEndFront (the car end),
+  which is ahead of the tender's front sheet. App fix FitRr2dvCoalLoad (before BuildExterior): from the box front, the first
+  0.15 m run of z slices where both tender sides are within 0.6 m of the box at 30 % or 60 % coal height sets the new front;
+  shortens only, min 0.5 m. The shovelling trigger (CoalPile hook) is unchanged.
+- Info plates (James): SeatRr2dvPlates tries full size, then 90 %, then 80 % (cap) and sets the anchor's localScale.
+  CCL only strips the placeholder plate (InfoPlateProcessor); DV spawns the plate at the anchor, assumed parented so the
+  scale applies: unverified until seen in game.
+Tested: Python suite (2 known C# check failures unchanged). Untested in Unity/game.
