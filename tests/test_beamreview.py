@@ -75,6 +75,22 @@ class Proposal(unittest.TestCase):
             path, _ = beamreview.write_proposal(run, "f" * 64, "loco-a", "tender-a")
             self.assertEqual(list(read_json(path)["vehicles"]), ["tender-a"])
 
+    def test_the_other_cars_reviewed_band_is_kept(self):
+        # RLW RXM-1B: the loco's front band was reviewed, then the tender's rear stopped
+        with tempfile.TemporaryDirectory() as tmp:
+            run = Path(tmp) / "run-1"
+            data = survey()
+            data["isTender"] = True
+            write_json(run / "build" / "out" / "endbeam-survey.json", data)
+            loco_band = {"value": [1.5, 1.7], "unit": "m", "basis": "measured", "evidence": ["survey"]}
+            reviewed = {"schema": 1, "inputFingerprint": "f" * 64, "vehicles": {"loco-a": {"EndBeamProbeHeight": loco_band}}}
+            path, why = beamreview.write_proposal(run, "f" * 64, "loco-a", "tender-a", reviewed)
+            proposal = read_json(path)
+            self.assertEqual(proposal["vehicles"]["loco-a"]["EndBeamProbeHeight"], loco_band)
+            self.assertEqual(proposal["vehicles"]["tender-a"]["EndBeamProbeHeight"]["value"], [1.5, 1.7])
+            self.assertIn("keeps the reviewed band for loco-a", why)
+            self.assertTrue(geometryreview.validate(proposal, "f" * 64, {"loco-a", "tender-a"}))
+
     def test_nothing_without_a_survey(self):
         with tempfile.TemporaryDirectory() as tmp:
             self.assertEqual(beamreview.write_proposal(Path(tmp), "f" * 64, "loco-a", None), (None, ""))

@@ -335,7 +335,8 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
         if "end beam" in message:
             # the failed build's end-beam survey, turned into a proposed geometry review the user may choose to use
             proposal, why = beamreview.write_proposal(run.path, run.record["input_fingerprint"], chosen,
-                                                      inv["tender"]["id"] if inv.get("tender") else None)
+                                                      inv["tender"]["id"] if inv.get("tender") else None,
+                                                      run.record["answers"].get("geometryReview"))
             if proposal:
                 kept = run.path.parent / "reports" / run.path.name / proposal.name
                 run.record["geometryProposal"] = str(kept)

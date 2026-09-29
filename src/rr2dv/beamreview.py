@@ -74,8 +74,11 @@ def propose(survey: dict, fingerprint: str, vehicle_id: str, run_name: str) -> t
     return review, f'band {low:.2f}..{high:.2f} m'
 
 
-def write_proposal(run_path: Path, fingerprint: str, loco_id: str, tender_id: str | None) -> tuple[Path | None, str]:
-    """After a failed build: the proposal in the run folder (copied to the reports folder at cleanup), or why there is none."""
+def write_proposal(run_path: Path, fingerprint: str, loco_id: str, tender_id: str | None,
+                   reviewed: dict | None = None) -> tuple[Path | None, str]:
+    """After a failed build: the proposal in the run folder (copied to the reports folder at cleanup), or why there is none.
+    Bands already reviewed for this run's other car are carried over, so using the proposal keeps them (RLW RXM-1B: the
+    loco's reviewed front band, then the tender's rear stopped, 2026-09-29)."""
     survey_path = run_path / 'build' / 'out' / 'endbeam-survey.json'
     if not survey_path.is_file():
         return None, ''
@@ -84,6 +87,11 @@ def write_proposal(run_path: Path, fingerprint: str, loco_id: str, tender_id: st
     review, why = propose(survey, fingerprint, vehicle, run_path.name)
     if review is None:
         return None, why
+    if reviewed and reviewed.get('inputFingerprint') == fingerprint:
+        kept = {k: v for k, v in (reviewed.get('vehicles') or {}).items() if k != vehicle}
+        review['vehicles'] = {**kept, **review['vehicles']}
+        if kept:
+            why += '; keeps the reviewed band for ' + ', '.join(sorted(kept))
     path = run_path / 'geometry-review-proposed.json'
     write_json(path, review)
     return path, why
