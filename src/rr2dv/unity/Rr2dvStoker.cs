@@ -23,6 +23,31 @@ public static partial class CclLocoBuild
 {
     const string StokerControl = "stokerControl", Stoker = "stoker", StokingTag = "RR2DV_STOKING_NORMALIZED";
 
+    // Parts the source animates as stoker/auger toggles (PrepareRr2dvInteractions): car, toggle name, path under the body,
+    // local turning axis from the toggle's own clip.
+    static readonly List<(string car, string name, string path, Vector3 axis)> Rr2dvStokerParts = new List<(string, string, string, Vector3)>();
+    static readonly System.Text.RegularExpressions.Regex Rr2dvStokerToggle =
+        new System.Text.RegularExpressions.Regex("auger|stoker", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+    // The local axis a clip turns a transform about: its rotation at the first of the quarter points that has turned it
+    // (a full-turn clip is back where it started at its end), relative to its start. Null if it only slides or barely turns.
+    static Vector3? Rr2dvClipAxis(AnimationClip clip, string path)
+    {
+        var part = RefBody.Find(path);
+        if (!part) return null;
+        clip.SampleAnimation(RefBody.gameObject, 0f);
+        var start = part.localRotation;
+        Vector3? axis = null;
+        foreach (float f in new[] { .25f, .5f, .75f, 1f })
+        {
+            clip.SampleAnimation(RefBody.gameObject, clip.length * f);
+            (Quaternion.Inverse(start) * part.localRotation).ToAngleAxis(out float angle, out Vector3 a);
+            if (angle > 5f && angle < 355f) { axis = a.normalized; break; }
+        }
+        clip.SampleAnimation(RefBody.gameObject, 0f);
+        return axis;
+    }
+
     static void BuildRr2dvStoker()
     {
         Section("Mechanical stoker (pre-build review)");
@@ -96,6 +121,16 @@ public static partial class CclLocoBuild
             }
             // the tender's auger (if one can be found) turns with the stoking rate
             if (tender != null) Provider(stoker.gameObject, Stoker + ".STOKING_NORMALIZED", DVPortForwardConnectionType.COUPLED_REAR, StokingTag);
+            // and the loco's own stoker parts (the K-66's stoker drive shaft), from the stoker directly
+            var locoParts = Rr2dvDeclaredStokerParts(root.transform, loco);
+            if (locoParts.Count > 0)
+            {
+                var rotator = stoker.gameObject.AddComponent<RotatorPortReaderProxy>();
+                rotator.portId = Stoker + ".STOKING_NORMALIZED";
+                rotator.transformsToRotate = locoParts.Select(d => new RotatorPortReaderProxy.RotationData { transformToRotate = d.part, rotationAxis = d.axis, maxRps = AugerMaxRps }).ToArray();
+                rotator.OnValidate();
+                Line($"rr2dv stoker: loco part(s) {string.Join(", ", locoParts.Select(d => d.name))} turn with the stoking rate");
+            }
             conn.OnValidate();
             EditorUtility.SetDirty(conn);
             SaveRr2dvPrefab(root, locoPath);
@@ -118,8 +153,12 @@ public static partial class CclLocoBuild
             if (!coal) throw new InvalidOperationException("mechanical stoker: the tender has no 'coal' container");
             Provider(coal.gameObject, "coal.AMOUNT", DVPortForwardConnectionType.COUPLED_FRONT, "TENDER_COAL_AMOUNT");
             Consumer(coal.gameObject, "coal.CONSUME_EXT_IN", DVPortForwardConnectionType.COUPLED_FRONT, "TENDER_COAL_CONSUME", 0, true);
-            var auger = Rr2dvAuger(root.transform.Find("Model"));
-            if (auger.pivot)
+            var declared = Rr2dvDeclaredStokerParts(root.transform, tender);
+            var auger = declared.Count > 0 ? (pivot: (Transform)null, why: "the source's own " + string.Join(", ", declared.Select(d => d.name)))
+                                           : Rr2dvAuger(root.transform.Find("Model"));
+            var turning = declared.Select(d => new RotatorPortReaderProxy.RotationData { transformToRotate = d.part, rotationAxis = d.axis, maxRps = AugerMaxRps }).ToList();
+            if (auger.pivot) turning.Add(new RotatorPortReaderProxy.RotationData { transformToRotate = auger.pivot, rotationAxis = Vector3.forward, maxRps = AugerMaxRps });
+            if (turning.Count > 0)
             {
                 var conn = sim.GetComponent<SimConnectionsDefinitionProxy>();
                 conn.AfterImport();
@@ -131,9 +170,9 @@ public static partial class CclLocoBuild
                 conn.executionOrder.RemoveAll(p => p == drive);
                 conn.executionOrder.Add(drive);
                 conn.OnValidate();
-                var rotator = auger.pivot.gameObject.AddComponent<RotatorPortReaderProxy>();
+                var rotator = drive.gameObject.AddComponent<RotatorPortReaderProxy>();
                 rotator.portId = "stokerDrive.NORMALIZED";
-                rotator.transformsToRotate = new[] { new RotatorPortReaderProxy.RotationData { transformToRotate = auger.pivot, rotationAxis = Vector3.forward, maxRps = AugerMaxRps } };
+                rotator.transformsToRotate = turning.ToArray();
                 rotator.OnValidate();
             }
             SaveRr2dvPrefab(root, path);
@@ -142,12 +181,27 @@ public static partial class CclLocoBuild
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
+    // The source's declared stoker/auger parts on this car, found in the built template's body.
+    static List<(string name, Transform part, Vector3 axis)> Rr2dvDeclaredStokerParts(Transform root, LocoConfig car)
+    {
+        var body = root.Find("Model/" + car.BodyName);
+        var found = new List<(string, Transform, Vector3)>();
+        foreach (var p in Rr2dvStokerParts.Where(p => p.car == car.CarId))
+        {
+            var part = body ? body.Find(p.path) : null;
+            if (part) found.Add((p.name, part, p.axis));
+            else Warn($"rr2dv stoker part {p.name}: '{p.path}' not found in the built model; not animated");
+        }
+        return found;
+    }
+
     // Visual only: a stoker screw at full stoking turns about once every two seconds (DV_choice, not a measurement).
     const float AugerMaxRps = .5f;
     static readonly System.Text.RegularExpressions.Regex AugerName =
-        new System.Text.RegularExpressions.Regex(@"(^|[^a-z])(auger|stoker|screw|conveyor|worm)([^a-z]|$)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+        new System.Text.RegularExpressions.Regex(@"auger|stoker|(^|[^a-z])(screw|conveyor|worm)([^a-z]|$)", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
 
-    // The tender's stoker screw, found by its name and its shape, never guessed: exactly one visible mesh named auger, stoker,
+    // When the source has no stoker/auger toggle of its own (those come first: Rr2dvStokerParts), the tender's stoker
+    // screw, found by its name and its shape, never guessed ('AugerScrew' counts; a bolt named 'Screw.001' fails the shape): exactly one visible mesh named auger, stoker,
     // screw, conveyor or worm (the name or its parent's) that is long and round (length >= 4x each other extent, the other
     // two within 1.5x of each other) and lies within 30 deg of level. It turns about its own long axis through its middle
     // (a new pivot there; the mesh keeps its place). None, several, or a shape that is not a screw: no animation, and the

@@ -349,8 +349,10 @@ space would still take coal; choose hand-fired.
 slot and keys; no dynamic-brake slot) feeds coal from the bunker to the firebox, faster with more boiler pressure (full
 rate from half the safety-valve pressure), up to 1.5 x what this firebox burns at its hottest; it uses as much steam as the
 loco's air pump at full. On a tender loco the tender's coal amount and consumption cross the coupling as its water does.
-The shovel and coal pile stay as a backup. If the tender has exactly one level, long, round mesh named auger, stoker,
-screw, conveyor or worm, it turns with the stoking rate; none, several or another shape: no animation, and the build
+The shovel and coal pile stay as a backup. The source's own stoker or auger toggles (the K-66: 'Stoker' turns the loco's
+drive shaft, 'Auger' the tender's screw) are then not click toggles: their animated parts turn with the stoking rate,
+about the axis their own clips turn them. Without such a toggle, a tender with exactly one level, long, round mesh named
+auger, stoker, screw, conveyor or worm gets that turning; none, several or another shape: no animation, and the build
 report says why (`rr2dv stoker` in `build_report.txt`). Balance and the auger are untested in game.
 
 Whistle closed (0) is always the whistle handle's resting end. When a Railroader whistle handle is modelled at the end of
