@@ -1704,3 +1704,24 @@ GitHub wiki (sidebar, pages, sources, writing order). No release made; the W57-W
 New branch `0.2.X-exp` from main 9206bfb, with `docs/handover-0.2.md` (5ccadae) for the next session. James asked for
 0.1.3 as a pre-release: the tag push was refused (403) from this session, and the GitHub tools here cannot create
 releases, so the `v0.1.3` pre-release is still to be made by James (tag main 9206bfb).
+
+## W63 (cloud Claude, 2026-09-29): uploads read; tender oil firing added to the W57 core request
+
+Uploads read: rr2dv.log (09-27 22:16 to 09-29 00:09, ends at the M-3 install) and the Player.log of the game session
+after it (00:12-00:37). Both predate W57-W60: only fault of ours is the 23 K-66 `ChuffClipsSimReader.OnChuff` errors, fixed
+in W60. No app code changed. W57-W60 stay untested until James makes the `v0.1.3` pre-release (main 9206bfb).
+
+**Addition to W57's request to the local sessions (core change, James approved 2026-09-29; local tooling first, then a
+snapshot).** With the stoker, please make oil firing work on tender locos in the same change:
+- today `BuildOilFiring` (`repo:tooling/builder/tools/unity/CclLocoBuild.cs:1518`) finds `sim/coal` on the loco, sets it
+  to Fuel (`Set(coal, "type", 1)`) and wires `oilBurner.COAL_AMOUNT/COAL_CONSUMPTION` to `coal.*`. A tender loco has no
+  loco `coal` container (TuneSim puts coal/water on the tender, :1446; the loco reads `tenderCoal`, :2044), so the burner
+  either warns "no 'coal' container" or fires from the wrong store.
+- needed: (1) on a tender build with OilFiring, the tender's `coal` container becomes Fuel (litres, diesel-pump refill,
+  D05 `[fuel de2]` socket on the tender); (2) the loco's burner reads amount and consumption from the tender over the
+  coupling, as coal does today; (3) tender coal load/pile/shovel target dropped like the tank-loco case; (4) HUD
+  bunker/oil indicators point at the tender fuel.
+- ? whether one OilFiringCfg flag (e.g. fuel on tender) or the core detecting `Cfg.Tender` suits you better; the app
+  will pass whatever the config needs from its Firing choice (it currently refuses oil firing on tender locos).
+- answer to W57's shovel question still wanted (does the stoker's write to `firebox.COAL_CONTROL_EXT_IN` override the
+  shovel each tick?).
