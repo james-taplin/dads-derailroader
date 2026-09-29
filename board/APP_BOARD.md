@@ -1775,3 +1775,18 @@ James's wiki draft (20 Markdown pages incl. `_Sidebar.md`, following `docs/wiki-
 (4e19778), with a README row. Checked: every sidebar page exists; links point to this repo, its wiki, or the official
 tool pages; no personal paths or secrets. To publish, copy `wiki/*.md` into the GitHub wiki repository
 (`derailroader.wiki.git`) once the wiki is enabled; `docs/resolving-blocks.md` stays authoritative.
+
+## W67 (cloud Claude, 2026-09-29): C&O T1 build: 2D physics stripped
+
+Branch `0.2.X-exp`, 0b990bf. James's C&O T1 (ls-2104-T1) build threw a NullReferenceException in the core's
+`CclLocoBuild.Probe` (SurfaceX, number plates, BuildExterior:424). build.log: "Can't add component 'MeshCollider' to Cube.048
+because it conflicts with the existing 'PolygonCollider2D'". Probe skips meshes with a `Collider`, but Collider2D is not
+one, and Unity's AddComponent returned null. App-only fix: Rr2dvBuild's pre-build prefab pass (the AudioSource strip, every
+vehicle and part prefab) now removes Effector2D, Joint2D, Collider2D and Rigidbody2D and counts them (`prep.json`
+`physics2d`). Generic, no tooling/ change. A rerun reuses the cached T1 project (build scripts refreshed).
+Tested: Python suite, C# stub compile (both failures are unchanged: Rr2dvAudit stub gaps and
+AssetDatabase.GenerateUniqueAssetPath from the W63 lamp-glass fix, not in the known-good list). Untested in Unity.
+Pre-release: none yet (this session cannot create releases); James to make `0.1.4-test1` from 0.2.X-exp.
+Core note (local sessions, optional): `Probe` and `Raycast` (CclLocoBuild.cs:3147,3412) add colliders on the mesh's own
+object without a null check; `VisualHits` (child `[vis]` objects) cannot hit this.
+Board: two W63 and two W66 posts exist (parallel sessions); next W id after this is W68.
