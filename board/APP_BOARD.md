@@ -2149,3 +2149,9 @@ at z 0.579, 2.179, -2.179): the middle driver is 0.58 m from the even spacing's 
 now accepts measured positions when there is exactly one wheel group per axle (3+ axles), the first/last match the
 definition's ends and one or more inner ones do not; listed as a review choice. Missing wheels still block. Tested:
 unit test with the T-17 probe geometry and the real probe.json; Python suite. Untested: Unity build of the T-17.
+
+## W89 (cloud Claude, 2026-09-29): K-66 stoker build; declared auger lookup after regrouping
+Branch `0.3.X-exp` (no pre-release). K-66 with mechanical-stoker exported: loco 'Stoker' drive shaft on the rotator (clip
+axis -y), stoker 1.739 kg/s max, 1.0 kg/s steam, full at 7.7 bar, coal via tenderCoal. Tender 'Auger.002' was not found
+by path (the core regrouped TenderMain under an [anim] node); the name/shape fallback took AugerScrew (2.51 m, axis z).
+Declared parts are now matched by their path segments in order when the direct path fails. Unity/game untested.
