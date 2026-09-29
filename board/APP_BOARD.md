@@ -1866,3 +1866,22 @@ geared locos (main driver a shaft); it now applies only when the main driver is 
 source radius), so the RXM-1 prefills 0.915 m (source). Test added; test_reviewchoices/test_review pass (full suite not run
 this round). Other RXM-1 notes: oil budget 26 pairs -> 4 (8 cups); coal load trimmed 7.60 -> 7.15 m; loco/tender bodies
 overlap 82 mm (Cylinder.009 / Cylinder.088); trailing clip split, first region only; leading axle at RR position.
+
+## W73 (cloud Claude, 2026-09-29): RXM-1 game test: lever scroll, bell HUD, coal heap
+
+Branch `0.2.X-exp`, 39b4e7d + c78eaff. RLW RXM-1 (new loco, steamed up, not driven). Evidence: build_report, run.log,
+Player.log, DVStateProbe.log, HUD/backhead/tender screenshots, DVCCLControlFix sources (not the DLL).
+- Stepped levers: DV LeverBase moves SingleNotchAngle x scrollWheelHoverScroll per tap (G29Config.cs:249; G-29 uses 1 on
+  every stepped lever). RrControlResponse (from the 0.1.3 feature merge) wrote range/(notches-1) in degrees: train brake 8,
+  ind brake 9, headlights 15, 2-position toggles 170. James: brake nothing-to-full on one tap, headlights top-to-bottom,
+  brake cutout/lubricator/air pump/dynamo would not turn off (F4 or by hand). Now 1. Toggle latching attributed to this
+  pending retest; DVCCLControlFix ruled out (ControlFixPatch/KeyboardInputFixer only fill unassigned controls/inputs and
+  write no values).
+- HUD: bell slider in slot 22 lower half (CustomHUDLayout Slot24B.BellSlider) when a bell is wired and no rear headlights;
+  Rr2dvAudit's slot check accepts it.
+- Coal: side rule stopped at 7.15 but the box stood on the deck ahead of the coal doors. Front-wall rays (-z from ahead of the
+  tender, 5 across x 2 heights, median) end the coal 5 cm behind the wall; heap mesh (same unit bounds as the core's box).
+- Wheel radius 0.947: a saved review answer (reviewchoices.prepare restores previous choices first), not the prefill.
+Open for James: front windows (RXM-1 toggles are RCW/LCW side windows and RCV/LCV roof vents, no front-window toggle in the
+definition); train brake set points; generated control classes; cutout lever location (bottom row, x -0.5).
+Tested: Python suite; stub compile (only stub gaps). Untested in Unity/game.
