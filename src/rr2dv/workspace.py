@@ -131,6 +131,7 @@ def finish(run, lease: Lease) -> None:
             ('build/blocks.json', 'blocks.json'), ('build/out/build_report.txt', 'build_report.txt'),
             ('build/out/prep.json', 'prep.json'), ('audit/summary.json', 'audit.json'),
             ('geometry-review.json', 'geometry-review.json'),
+            ('geometry-review-proposed.json', 'geometry-review-proposed.json'), ('build/out/endbeam-survey.json', 'endbeam-survey.json'),
             ('review-questions.json', 'review-questions.json'), ('prebuild-review.json', 'prebuild-review.json'),
             ('rebuild.json', 'rebuild.json'),
             # Measurements only (transform paths, radii, ray hits), no ripped assets: blocks point the user at them.

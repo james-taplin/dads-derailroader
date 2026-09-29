@@ -26,6 +26,11 @@ NOTICE_FILE = "NOTICE.txt"
 PROVENANCE_FILE = "SOURCE_PROVENANCE.txt"
 RESERVED = (MARKER, NOTICE_FILE, PROVENANCE_FILE)
 GENERATOR = "rr2dv"
+FOLDER_PREFIX = "rr2dv_"  # every pack we install sorts together in the Mods folder (James, 2026-09-29)
+
+
+def folder_name(pack: str) -> str:
+    return pack if pack.startswith(FOLDER_PREFIX) else FOLDER_PREFIX + pack
 
 
 class InstallRefused(RuntimeError):
@@ -67,8 +72,9 @@ def provenance_text(name: str, sources: Sequence[dict], details: dict, acknowled
 
 def install(pack_dir: Path, dv: Install, expected: dict[str, str], sources: Sequence[dict], details: dict,
             ask: Callable[[str, Sequence[str]], bool] = consent_mod.ask) -> tuple[Path, dict]:
-    """Copy exactly the `expected` files (name -> sha256) from pack_dir to <DV Mods>/<pack name>, after consent.
-    Returns the destination and the acknowledgement record (for the run log)."""
+    """Copy exactly the `expected` files (name -> sha256) from pack_dir to <DV Mods>/rr2dv_<pack name>, after consent.
+    Our own earlier install of the same locomotive under the unprefixed name is removed once the new one is in place
+    (both would load the same car IDs). Returns the destination and the acknowledgement record (for the run log)."""
     name = pack_dir.name
     if Path(name).name != name or name in (".", "..") or name.startswith("."):
         raise UnsafePath(f"unsafe pack folder name {name!r}")
@@ -79,7 +85,11 @@ def install(pack_dir: Path, dv: Install, expected: dict[str, str], sources: Sequ
     for f in expected:
         if Path(f).name != f or f in (".", "..") or f in RESERVED:
             raise UnsafePath(f"install expects plain file names other than {', '.join(RESERVED)}, got {f!r}")
-    dest = dv.mods / name
+    dest = dv.mods / folder_name(name)
+    legacy = dv.mods / name
+    if legacy == dest or is_link(legacy) or not made_by_rr2dv(legacy) or \
+            (read_json(legacy / MARKER).get("locomotive") or None) != (details.get("locomotive") or None):
+        legacy = None
     replacing = dest.exists() or is_link(dest)
     if replacing and (is_link(dest) or not made_by_rr2dv(dest)):
         raise InstallRefused(f"{dest} already exists and was not made by rr2dv; it was left untouched. Rename or remove "
@@ -125,4 +135,9 @@ def install(pack_dir: Path, dv: Install, expected: dict[str, str], sources: Sequ
         raise
     if old is not None:
         shutil.rmtree(old, ignore_errors=True)  # our own previous conversion, already moved aside
+    if legacy is not None and made_by_rr2dv(legacy):
+        retired = dv.mods / f".rr2dv-old-{uuid.uuid4().hex[:12]}"
+        os.rename(legacy, retired)  # our own install of this loco from before the rr2dv_ prefix
+        shutil.rmtree(retired, ignore_errors=True)
+        record["replacedFolder"] = legacy.name
     return dest, record

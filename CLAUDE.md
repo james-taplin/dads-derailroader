@@ -162,6 +162,7 @@ run. No arbitrary config overrides, automatic beam approval or disabled placemen
 - Input: only a folder directly in the Railroader Mods folder (by name or path; a link placed there counts). No zips.
   Never write to it or anywhere in the Railroader install.
 - Build in a fresh per-run folder under the work root; refuse a work root inside the input or either game install.
-- Output: only `<DV>/Mods/<pack>`, only after the notice, only when every stage passed. Replace an existing folder only
+- Output: only `<DV>/Mods/rr2dv_<pack>` (prefix: James, 2026-09-29; our own unprefixed install of the same loco is
+  removed after the new one is in place), only after the notice, only when every stage passed. Replace an existing folder only
   if it carries our `rr2dv.json` marker; never touch another mod's folder or any save.
 - No zips are produced. Never extract Railroader audio.

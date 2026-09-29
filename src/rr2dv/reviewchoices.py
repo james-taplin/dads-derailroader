@@ -58,12 +58,20 @@ def suggest(req, source):
     # A unique measured radius is a suggestion, still confirmed in the review. A
     # shaft's nominal diameter must never win over a measured tyre candidate.
     radii = {round(c['tread'], 6) for c in high}
+    # A low-confidence main-driver tread that agrees with the source size (within 10%) is a real tyre, not a shaft
+    # (DM&IR M-3: 0.8001 m measured, 0.80 m source; the profile was left blank, 2026-09-28).
+    source_r = main.get('diameter') / 2 if isinstance(main.get('diameter'), (int, float)) and main['diameter'] > 0 else None
+    tyre_like = any(c.get('clip') == main_clip and c.get('tread') and source_r and abs(c['tread'] - source_r) <= .1 * source_r
+                    for c in candidates)
     radius = req.get('initialRadius')
     if radius:
         put('wheelRadius', radius, 'DV_choice', 'Previously entered driving tyre radius')
     elif len(matched) == 1:
         put('wheelRadius', matched[0]['tread'], 'measured', 'High-confidence tyre candidate for the source main driving animation; confirm')
-    elif len(radii) == 1:
+    elif len(radii) == 1 and not tyre_like:
+        # only when the main driver is no tyre (a geared loco's shaft): then the one confident tyre elsewhere is the
+        # powered wheel. A tyre-like main driver keeps its own size: the RLW RXM-1 took its trailing wheel (0.647 m,
+        # high) for the 0.915 m drivers (low, 0.947 m measured), 2026-09-29.
         put('wheelRadius', high[0]['tread'], 'measured', 'Only distinct high-confidence measured tyre radius; confirm it belongs to the powered wheels')
     elif values.get('physics') != 'geared' and isinstance(main.get('diameter'), (int, float)) and main['diameter'] > 0:
         # never on a geared loco: its main driver can be a shaft, whose diameter is no tyre
@@ -71,11 +79,6 @@ def suggest(req, source):
         # (James, 2026-09-28; K-66). It has been within ~4% of the measured tyre on every loco tested so far.
         put('wheelRadius', round(main['diameter'] / 2, 4), 'source',
             'Source main driver diameter / 2 (no confident tyre measurement); confirm against the renders')
-    # A low-confidence main-driver tread that agrees with the source size (within 10%) is a real tyre, not a shaft
-    # (DM&IR M-3: 0.8001 m measured, 0.80 m source; the profile was left blank, 2026-09-28).
-    source_r = main.get('diameter') / 2 if isinstance(main.get('diameter'), (int, float)) and main['diameter'] > 0 else None
-    tyre_like = any(c.get('clip') == main_clip and c.get('tread') and source_r and abs(c['tread'] - source_r) <= .1 * source_r
-                    for c in candidates)
     if main_clip and not matched and not tyre_like and high and any(c.get('clip') == main_clip for c in candidates) and values['physics'] != 'geared':
         put('physics', '', 'DV_choice',
             'The source main animation is not a confirmed tyre group. Choose direct-drive approximation or geared reduction; do not treat a shaft as a driving wheel')

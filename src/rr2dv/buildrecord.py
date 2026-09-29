@@ -62,11 +62,31 @@ GENERATED = [
     ("Cab light", "cabLight.EXT_IN", 12, True, True, 2, "car/cab_lights", 0),
     ("Headlights", "headlightDecoder.HEADLIGHTS_EXT_IN", 10, False, False, 7, "car/headlights", 90),
     ("Lubricator", "lubricatorControl.EXT_IN", 25, False, False, 2, "car/lubricator", 35),
-    ("Brake cutout", "brakeCutout.EXT_IN", 5, True, True, 2, "car/brake_cutout", 0),
+    ("Brake cutout", "brakeCutout.EXT_IN", 5, False, True, 2, "car/brake_cutout", 0),
 ]
-# Brake cutout and cab light are handwheels like the dynamo and air pump: the F4 HUD switches those, but did nothing to
-# the same 2-position toggles built as levers (James's game test, 2026-09-29: no error in Player.log, the cab lever
-# worked, the HUD button never changed it).
+# The cab light is a handwheel like the dynamo and air pump: the F4 HUD switches those, but did nothing to the same
+# 2-position toggle built as a lever (James's game test, 2026-09-29). The brake cutout is a 2-position lever, as in
+# vanilla DV: as a handwheel F4 showed it but never flipped it. Unlike those controls it has an absolute axis in CCL's
+# key map (BrakeCutoutAbsolute), which the build removes so the toggle key flips it (Rr2dvInteractions).
+# The four classes of generated control (James, 2026-09-29), by the DV function a control drives, never by loco:
+#  - switch: two positions that snap, flipped by a click, the toggle key or the F4 HUD (CCL ToggleSwitch). Two-notch levers
+#    fought the HUD: F4 never flipped the brake cutout or the lubricator, and switched the cab light only once it was a wheel;
+#  - wheel: a valve handwheel with fine steps over its turn (injector, blower, blowdown);
+#  - spring: returns to closed when let go (a generated whistle);
+#  - lever: a notched lever that stays where it is set (damper, fire door, coal dump, headlights, the driving controls).
+CONTROL_CLASS = {
+    "compressorControl.EXT_IN": "switch", "dynamoControl.EXT_IN": "switch", "cabLight.EXT_IN": "switch",
+    "brakeCutout.EXT_IN": "switch", "lubricatorControl.EXT_IN": "switch", "bellControl.EXT_IN": "switch",
+    "cylinderCock.EXT_IN": "switch", "sander.CONTROL_EXT_IN": "switch",
+    "injector.EXT_IN": "wheel", "blower.EXT_IN": "wheel", "blowdown.EXT_IN": "wheel",
+    "whistle.EXT_IN": "spring",
+}
+
+
+def control_class(port: str) -> str:
+    return CONTROL_CLASS.get(port, "lever")
+
+
 # Driving controls a loco needs even when Railroader models no handle for them: a generated backhead lever instead.
 DRIVING = [("Throttle", "throttle.EXT_IN", 0, 21), ("Reverser", "reverser.CONTROL_EXT_IN", 1, 41),
            ("Train brake", "brake.EXT_IN", 2, 11), ("Independent brake", "indBrake.EXT_IN", 3, 11),
@@ -118,6 +138,16 @@ def safe_name(text: str, fallback: str) -> str:
     """A pack/car name that is also a safe folder name on Windows (CCL exports the pack into a folder of this name)."""
     name = re.sub(r"\s+", " ", re.sub(r"[^A-Za-z0-9 _.()'&+-]", "", str(text or ""))).strip(" .")
     return name[:60] or fallback
+
+
+UNIT_SUFFIXES = ["", " Tender"]  # further units: " C", " D", ... (James, 2026-09-29)
+
+
+def unit_name(loco_name: str, index: int) -> str:
+    """Each unit of a conversion named after its locomotive, so DV's info boards and radio list them together: the loco
+    (A unit) as itself, its tender as '<loco> Tender', a third unit as '<loco> C' and so on."""
+    suffix = UNIT_SUFFIXES[index] if index < len(UNIT_SUFFIXES) else " " + chr(ord("A") + index)
+    return loco_name[:60 - len(suffix)].rstrip(" .") + suffix
 
 
 def rr_axles(ws: dict) -> list[float]:
@@ -843,6 +873,13 @@ class _Builder:
         for (nm, port, ctl, wheel, toggle, notches, label, rng), (x, y) in zip(wanted, spots):
             placed.append({"Name": nm, "Port": port, "Ctl": ctl, "Wheel": wheel, "Toggle": toggle, "Notches": notches,
                            **({"Label": label} if label else {}), "X": x, "Y": y, **({"Range": rng} if rng else {})})
+        if placed:
+            rec["metadata"]["controlClasses"] = [{"control": "C_" + p["Name"], "cls": control_class(p["Port"])} for p in placed]
+            by = {}
+            for p in placed:
+                by.setdefault(control_class(p["Port"]), []).append(p["Name"])
+            self.choose("generated controls by class: " + "; ".join(f"{k} ({', '.join(v)})" for k, v in sorted(by.items())) +
+                        ": check each moves, holds or returns as its class says, by hand, key and F4 (CTRL-01)")
         cfg["Placed"] = env(placed, "m/count/deg", "DV_choice",
                             "probe/probe.json cabRays: points on the flat backhead plate, 0.2 m apart, clear of the fire door",
                             f"{G29} generated controls (ports, notches, ranges); the core's own joint physics for generated controls")
@@ -959,7 +996,8 @@ class _Builder:
             return rec
         comps = _plain(cfg["Components"])
         anchors = self.anchors(ov)
-        cfg["CarName"] = safe_name(cfg.get("CarName"), cfg["CarId"])
+        # named after the loco (it is this loco's tender copy: CarId <loco>_TENDER), not the tender definition's own name
+        cfg["CarName"] = unit_name(safe_name(loco_cfg.get("CarName"), loco_cfg["CarId"]), 1)
         cfg["Version"] = loco_cfg.get("Version", "0.1.0")
         cfg["Author"] = loco_cfg.get("Author")
         cfg["BodyName"] = f"{tid}_body"
@@ -1099,6 +1137,19 @@ class _Builder:
             cfg["Livery"] = "Default"
             self.choose(f"{vid}: the definition has no livery; one untinted 'Default' livery (the textures as exported)")
             return
+        # The builder keys livery colours by id, ignoring case, and stops on a repeat (RLW RMWF-2 'RLW Grey' lists 'roof'
+        # twice, 2026-09-29): keep each id's first colour, as a lookup that finds the first match does, and say so.
+        for livery in cfg["Liveries"]:
+            seen, kept = {}, []
+            for cid, value in livery[1]:
+                key = str(cid).casefold()
+                if key in seen:
+                    same = "the same colour" if seen[key] == value else f"{value} dropped, {seen[key]} kept"
+                    self.choose(f"{vid}: livery '{livery[0]}' lists colour '{cid}' more than once ({same}); the first is used")
+                    continue
+                seen[key] = value
+                kept.append([cid, value])
+            livery[1] = kept
         names = [l[0] for l in cfg["Liveries"]]
         if prefer in names:
             cfg["Livery"] = prefer

@@ -84,9 +84,17 @@ public static partial class CclLocoBuild
         matMap = BuildMaterials(Livery);
         FinishRr2dvMaterials();
         PrepareRr2dvGrips();
+        FitRr2dvCoalLoad();
         CreateCar();
-        BuildExterior();
+        try { BuildExterior(); }
+        catch (InvalidOperationException e)
+        {
+            if (e.Message.Contains("end beam")) SurveyRr2dvEndBeams();
+            throw;
+        }
+        if (c.IsTender) ShapeRr2dvCoalLoad();
         FinishRr2dvMaterialSlots();
+        if (!c.IsTender) AimRr2dvJets();
         StripRr2dvModelLights();
         PassRr2dvGrabRays();
         if (!c.IsTender && Rr2dvNoDynamo) StripRr2dvDynamoHud();
@@ -146,6 +154,388 @@ public static partial class CclLocoBuild
     // whose seat clears the floor; the core then fits it again, with the same result.
     const float Rr2dvReleaseFloor = .3f + .080590f;
 
+    // The fitter also accepts a valve body 0.08 m behind the face (its pMax), but the final check needs 0.10 m from the
+    // outermost skin along the rod line (RRPlacementValidation.CheckReleaseClearance): a seat at the fitter's limit stops
+    // the build (C&O T1 tender, 2026-09-29: 0.080 m). Such a seat moves inward along the rod to 0.105 m and goes to the core
+    // as an exact pose; the core's final checks (handle exposed, bracket, floor) still judge it.
+    const float Rr2dvReleaseDepth = .105f;
+
+    static float Rr2dvReleaseSkinDepth(Vector3 pos, Vector3 dir)
+    {
+        using (var vh = new VisualHits(RefBody))
+            return vh.Ray(pos + dir * 1.5f, -dir, 3f, out var hit) ? Vector3.Dot(hit.point - pos, dir) : float.NaN;
+    }
+
+    // A generated tender coal load comes from a layout rule (a box at the tender front), which fits no particular tender: the
+    // R48's showed as a block across the gap into the cab, the RXM-1B's stood on the front deck ahead of its coal doors and
+    // through the bulkhead, with its real coal space (a stoker hopper) left empty (James's game tests, 2026-09-29). So the
+    // coal space is measured from above instead, starting at Railroader's coal loading target (the chute aims at the coal):
+    //  - downward rays every 4 cm give the surface under each point (hopper floor, sheet tops, decks);
+    //  - the rim is the lower of the two side sheets' tops across the target;
+    //  - the space runs forward and back from the target along the middle, then across each row, until a wall (a rise of
+    //    more than 0.2 m between neighbouring rays to above half the depth: doors, bulkheads, but not a stoker trough's
+    //    edge), the rim height (up a sloped hopper side) or a flat deck above half the depth (a tank top behind the coal).
+    // The load keeps the core's bottom-pivot box (so the coal amount still scales it), fitted to that space: from just
+    // under its floor to the rim plus the heap. Where nothing can be measured the layout box stays, with a warning.
+    static Rr2dvCoalSpace coalSpace;
+    class Rr2dvCoalSpace { public float floor, rim, peak, zRear, zFront; public float[] zs, left, right; }
+
+    const float CoalStep = .04f, CoalWallRise = .2f;
+
+    static void FitRr2dvCoalLoad()
+    {
+        coalSpace = null;
+        var cl = Cfg.CoalLoad;
+        if (cl == null || !cl.Pivot.HasValue) return;
+        var p = cl.Pivot.Value;
+        float boxRear = p.z - cl.Footprint.y / 2, boxFront = p.z + cl.Footprint.y / 2;
+        Vector3 anchor = p;
+        string from = "the layout box";
+        try
+        {
+            var target = Cfg.CoalTargetComp == null ? null : Components.FirstOrDefault(c => c.name == Cfg.CoalTargetComp);
+            if (target != null) { anchor = target.pos; from = $"Railroader's coal target {Cfg.CoalTargetComp}"; }
+        }
+        catch (Exception) { }
+        var rs = RefBody.GetComponentsInChildren<Renderer>(false).Where(r => r.enabled).ToArray();
+        if (rs.Length == 0) return;
+        var bounds = rs[0].bounds; foreach (var r in rs) bounds.Encapsulate(r.bounds);
+        float top = bounds.max.y + 1f;
+        using (var vh = new VisualHits(RefBody))
+        {
+            float Surface(float x, float z) => vh.Ray(new Vector3(x, top, z), Vector3.down, top + 1f, out var h) ? h.point.y : float.NaN;
+            float Middle(float z)
+            {
+                var hs = new[] { -.3f, 0f, .3f }.Select(x => Surface(anchor.x + x, z)).Where(h => !float.IsNaN(h)).OrderBy(h => h).ToArray();
+                return hs.Length == 0 ? float.NaN : hs[hs.Length / 2];
+            }
+            // the highest surface from `start` out to `stop`: a side sheet's top
+            float Highest(Func<float, float> surface, float start, float dir, float stop)
+            {
+                float best = float.NaN;
+                for (float u = start; dir > 0 ? u <= stop : u >= stop; u += dir * CoalStep)
+                {
+                    float h = surface(u);
+                    if (!float.IsNaN(h) && !(h <= best)) best = h;
+                }
+                return best;
+            }
+            // from `start` in steps along `dir`, the last open position before the coal space ends: a wall (a rise of more
+            // than 0.2 m to above half the depth: doors, bulkheads; not a stoker trough's edge), the rim height (up a sloped
+            // hopper side) or a flat deck above half the depth (a tank top behind the coal); with that wall's or deck's height
+            (float open, float wall) Walk(Func<float, float> surface, float start, float dir, float stop, float half, float top1)
+            {
+                float prev = surface(start), last = start, flatFrom = float.NaN;
+                int flat = 0;
+                for (float u = start + dir * CoalStep; dir > 0 ? u <= stop : u >= stop; u += dir * CoalStep)
+                {
+                    float h = surface(u);
+                    if (float.IsNaN(h)) continue;
+                    if (!float.IsNaN(prev) && h - prev > CoalWallRise && h >= half || h >= top1) return (last, h);
+                    if (!float.IsNaN(prev) && h >= half && Mathf.Abs(h - prev) < .01f)
+                    {
+                        if (flat++ == 0) flatFrom = last;
+                        if (flat >= 3) return (flatFrom, h);
+                    }
+                    else flat = 0;
+                    prev = h; last = u;
+                }
+                return (float.NaN, float.NaN);
+            }
+            float floor0 = Surface(anchor.x, anchor.z);
+            float wallL = Highest(x => Surface(x, anchor.z), anchor.x, -1, bounds.min.x);
+            float wallR = Highest(x => Surface(x, anchor.z), anchor.x, 1, bounds.max.x);
+            if (float.IsNaN(floor0) || float.IsNaN(wallL) || float.IsNaN(wallR))
+            {
+                Warn($"rr2dv coal load: no coal space with side walls found under {from}; the layout box stays (check it in game)");
+                return;
+            }
+            float rim = Mathf.Min(wallL, wallR), limit = rim - .1f, mid = (floor0 + rim) / 2;
+            if (rim - floor0 < .3f)
+            {
+                Warn($"rr2dv coal load: the surface under {from} is only {rim - floor0:F2} m below the side walls; the layout box stays");
+                return;
+            }
+            var front = Walk(Middle, anchor.z, 1, bounds.max.z, mid, limit);
+            var rear = Walk(Middle, anchor.z, -1, bounds.min.z, mid, limit);
+            if (float.IsNaN(front.open) || float.IsNaN(rear.open) || front.open - rear.open < .5f)
+            {
+                Warn($"rr2dv coal load: no front and rear wall found along the coal space under {from}; the layout box stays");
+                return;
+            }
+            var space = new Rr2dvCoalSpace { rim = rim, zFront = front.open - .03f, zRear = rear.open + .03f };
+            var zs = new System.Collections.Generic.List<float>(); var ls = new System.Collections.Generic.List<float>(); var rrs = new System.Collections.Generic.List<float>();
+            float floor = float.PositiveInfinity;
+            for (float z = space.zRear; z <= space.zFront + 1e-4f; z += CoalStep)
+            {
+                float zz = z;
+                var l = Walk(x => Surface(x, zz), anchor.x, -1, bounds.min.x, mid, limit);
+                var r = Walk(x => Surface(x, zz), anchor.x, 1, bounds.max.x, mid, limit);
+                if (float.IsNaN(l.open) || float.IsNaN(r.open)) continue;
+                zs.Add(z); ls.Add(l.open + .03f); rrs.Add(r.open - .03f);
+                for (float x = l.open; x <= r.open; x += CoalStep) { float h = Surface(x, z); if (!float.IsNaN(h)) floor = Mathf.Min(floor, h); }
+            }
+            if (zs.Count < 5) { Warn($"rr2dv coal load: the coal space under {from} has too few measurable rows; the layout box stays"); return; }
+            space.zs = zs.ToArray(); space.left = ls.ToArray(); space.right = rrs.ToArray();
+            float width = space.right.Max() - space.left.Min();
+            space.floor = floor - .02f;
+            space.peak = Mathf.Clamp(.2f * width, .15f, .45f);
+            float x0 = space.left.Min(), x1 = space.right.Max();
+            cl.Pivot = new Vector3((x0 + x1) / 2, space.floor, (space.zRear + space.zFront) / 2);
+            cl.Footprint = new Vector2(x1 - x0, space.zFront - space.zRear);
+            cl.FullHeight = space.rim + space.peak - space.floor;
+            coalSpace = space;
+            Line($"rr2dv coal load: coal space measured from above under {from}: z {space.zRear:F3}..{space.zFront:F3} (front wall top y {front.wall:F3}, " +
+                 $"rear {rear.wall:F3}), x {x0:F3}..{x1:F3}, floor {space.floor:F3}, rim {rim:F3}; heap up to {space.rim + space.peak:F3} " +
+                 $"(the layout box was z {boxRear:F3}..{boxFront:F3})");
+        }
+    }
+
+    // The generated coal load as a heap in the measured coal space (James, 2026-09-29: "a more hump like shape, tapering
+    // towards the tender front wall ... tighter sizing"): each measured row's own width, the top at the rim at the walls,
+    // rising to the heap's peak over the back half and falling to the rim at the front wall, with walls down to the floor.
+    // Drawn by its own renderer under the core's scaler (the core's box renderer is removed), in the box's unit coordinates,
+    // so the coal amount scales it as before.
+    static void ShapeRr2dvCoalLoad()
+    {
+        if (Cfg.CoalLoad == null || coalSpace == null) return;
+        string path = $"{carFolder}/{CarId}_template.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            var load = root.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "[coal load]");
+            var box = load ? load.Find("scaler/coal") : null;
+            if (!box) { Warn("rr2dv coal load: the core's coal load was not found; its heap was not made"); return; }
+            string file = System.Text.RegularExpressions.Regex.Replace($"{CarId}_coal_heap", "[^A-Za-z0-9_.-]", "_");
+            var mesh = Rr2dvCoalHeap(coalSpace, Cfg.CoalLoad);
+            AssetDatabase.CreateAsset(mesh, AssetDatabase.GenerateUniqueAssetPath($"{carFolder}/{file}.asset"));
+            var material = box.GetComponent<MeshRenderer>().sharedMaterial;
+            Object.DestroyImmediate(box.GetComponent<MeshRenderer>());
+            Object.DestroyImmediate(box.GetComponent<MeshFilter>());
+            var heap = new GameObject("rr2dv coal heap").transform;
+            heap.SetParent(box, false);
+            heap.gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
+            heap.gameObject.AddComponent<MeshRenderer>().sharedMaterial = material;
+            Line($"rr2dv coal load: heap mesh {mesh.name} ({mesh.vertexCount} vertices, {coalSpace.zs.Length} measured rows) replaces the core's box renderer");
+            SaveRr2dvPrefab(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    static Mesh Rr2dvCoalHeap(Rr2dvCoalSpace s, CoalLoadCfg cl)
+    {
+        const int n = 16;
+        var c = cl.Pivot.Value; float sx = cl.Footprint.x, sz = cl.Footprint.y, sy = cl.FullHeight;
+        float Row(float[] a, float z)
+        {
+            int i = Mathf.Clamp(Mathf.RoundToInt((z - s.zs[0]) / CoalStep), 0, s.zs.Length - 1);
+            return a[i];
+        }
+        // w 0 at the rear wall, 1 at the front wall; u 0 at the left wall, 1 at the right
+        float Top(float u, float w)
+        {
+            float across = 1f - (2 * u - 1) * (2 * u - 1);
+            float along = w < .5f ? 1f - (1 - 2 * w) * (1 - 2 * w) * .4f : 1f - (2 * w - 1) * (2 * w - 1);
+            return s.rim - .05f + (s.peak + .05f) * across * along;
+        }
+        var v = new System.Collections.Generic.List<Vector3>(); var uv = new System.Collections.Generic.List<Vector2>();
+        var t = new System.Collections.Generic.List<int>();
+        Vector3 Unit(float x, float y, float z) => new Vector3((x - c.x) / sx, (y - c.y) / sy, (z - c.z) / sz);
+        for (int j = 0; j <= n; j++)
+        {
+            float w = (float)j / n, z = Mathf.Lerp(s.zRear, s.zFront, w);
+            float l = Row(s.left, z), r = Row(s.right, z);
+            for (int i = 0; i <= n; i++)
+            {
+                float u = (float)i / n, x = Mathf.Lerp(l, r, u);
+                v.Add(Unit(x, Top(u, w), z)); uv.Add(new Vector2(x, z));
+            }
+        }
+        for (int j = 0; j < n; j++)
+            for (int i = 0; i < n; i++)
+            {
+                int a = j * (n + 1) + i, b = a + n + 1;
+                t.AddRange(new[] { a, b, b + 1, a, b + 1, a + 1 });
+            }
+        // skirt: each perimeter segment of the top down to the floor, both faces
+        var ring = new System.Collections.Generic.List<Vector3>();
+        for (int i = 0; i < n; i++) ring.Add(v[i]);
+        for (int j = 0; j < n; j++) ring.Add(v[j * (n + 1) + n]);
+        for (int i = n; i > 0; i--) ring.Add(v[n * (n + 1) + i]);
+        for (int j = n; j > 0; j--) ring.Add(v[j * (n + 1)]);
+        for (int k = 0; k < ring.Count; k++)
+        {
+            var top0 = ring[k]; var top1 = ring[(k + 1) % ring.Count];
+            var bot0 = new Vector3(top0.x, 0, top0.z); var bot1 = new Vector3(top1.x, 0, top1.z);
+            foreach (bool outer in new[] { true, false })
+            {
+                int st = v.Count;
+                v.AddRange(new[] { top0, top1, bot1, bot0 });
+                uv.AddRange(new[] { new Vector2(0, top0.y * sy), new Vector2(1, top1.y * sy), new Vector2(1, 0), new Vector2(0, 0) });
+                t.AddRange(outer ? new[] { st, st + 1, st + 2, st, st + 2, st + 3 } : new[] { st, st + 2, st + 1, st, st + 3, st + 2 });
+            }
+        }
+        var m = new Mesh { name = "rr2dv_coal_heap" };
+        m.SetVertices(v); m.SetUVs(0, uv); m.SetTriangles(t, 0);
+        m.RecalculateNormals(); m.RecalculateTangents(); m.RecalculateBounds();
+        return m;
+    }
+
+    // Whistle and dynamo steam jets. CCL's steam template makes 'Whistle' and 'DynamoSteam' unrotated, and its importer
+    // puts the vanilla steam system under each with identity rotation (ObjectInstancerProcessor), so it blows along the
+    // emitter's +z: forward along the boiler on every converted loco (James's game test, 2026-09-29). The whistle jet goes
+    // straight up. The dynamo jet follows its exhaust pipe where the tip can be measured (swept back, to the side or
+    // otherwise angled), else straight up (James: always up as the fallback).
+    static void AimRr2dvJets()
+    {
+        string path = $"{carFolder}/{CarId}_template.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            var particles = root.transform.Find("[particles]");
+            if (!particles) return;
+            foreach (Transform t in particles)
+            {
+                // the safety valves too (board X61: MarquetteCreations/Moon asked for upward safety, dynamo and whistle steam;
+                // the local core now turns all three holders -90 deg X, as the stock S282)
+                bool whistle = t.name == "Whistle" || t.name.Contains("Safety"), dynamo = t.name.Contains("Dynamo");
+                if (!whistle && !dynamo) continue;
+                var tip = dynamo ? Rr2dvExhaustTip(t.position) : null;
+                var dir = tip ?? Vector3.up;
+                var now = t.rotation * Vector3.forward;
+                t.rotation = Quaternion.FromToRotation(now, dir) * t.rotation;
+                Line($"rr2dv steam jet {t.name}: {V(now)} -> {V(dir)} " +
+                     (tip.HasValue ? "(along the measured exhaust pipe tip)" : dynamo ? "(straight up: no measurable exhaust pipe tip)" : "(straight up)"));
+            }
+            SaveRr2dvPrefab(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    // The exhaust pipe's direction at a jet point: the long axis of the model's vertices within 0.25 m. It counts only when
+    // the cloud is pipe-like (long axis variance >= 2.5x the next), the point sits at its end (the tip: at least 3 cm along
+    // the axis from the cloud's centre, nothing more than 8 cm beyond it) and the axis does not point down.
+    static Vector3? Rr2dvExhaustTip(Vector3 p)
+    {
+        const float r = .25f;
+        var pts = new System.Collections.Generic.List<Vector3>();
+        foreach (var mf in RefBody.GetComponentsInChildren<MeshFilter>(false))
+        {
+            var mr = mf.GetComponent<MeshRenderer>();
+            if (!mf.sharedMesh || !mr || !mr.enabled) continue;
+            var b = mr.bounds; b.Expand(2 * r);
+            if (!b.Contains(p)) continue;
+            foreach (var v in mf.sharedMesh.vertices)
+            {
+                var w = mf.transform.TransformPoint(v);
+                if ((w - p).sqrMagnitude <= r * r) pts.Add(w);
+            }
+        }
+        if (pts.Count < 12) return null;
+        var c = pts.Aggregate(Vector3.zero, (s, v) => s + v) / pts.Count;
+        float xx = 0, xy = 0, xz = 0, yy = 0, yz = 0, zz = 0;
+        foreach (var v in pts) { var d = v - c; xx += d.x * d.x; xy += d.x * d.y; xz += d.x * d.z; yy += d.y * d.y; yz += d.y * d.z; zz += d.z * d.z; }
+        Vector3 Mul(Vector3 v) => new Vector3(xx * v.x + xy * v.y + xz * v.z, xy * v.x + yy * v.y + yz * v.z, xz * v.x + yz * v.y + zz * v.z);
+        Vector3 Power(Vector3 v, Vector3 skip)
+        {
+            for (int i = 0; i < 50; i++) { v = Mul(v); v -= Vector3.Dot(v, skip) * skip; if (v.sqrMagnitude < 1e-12f) return Vector3.zero; v.Normalize(); }
+            return v;
+        }
+        var a = Power(new Vector3(.3f, .9f, .3f).normalized, Vector3.zero);
+        if (a == Vector3.zero) return null;
+        var seed = Mathf.Abs(a.y) < .9f ? Vector3.up : Vector3.right;
+        var a2 = Power((seed - Vector3.Dot(seed, a) * a).normalized, a);
+        float l1 = Vector3.Dot(a, Mul(a)), l2 = a2 == Vector3.zero ? 0f : Vector3.Dot(a2, Mul(a2));
+        if (l1 < 2.5f * l2) return null;
+        if (Vector3.Dot(p - c, a) < 0) a = -a;
+        if (Vector3.Dot(p - c, a) < .03f || pts.Max(v => Vector3.Dot(v - p, a)) > .08f || a.y <= 0f) return null;
+        return a;
+    }
+
+    // When the core stops on an end beam (ambiguous / insufficient rays / no broad face), the reviewed EndBeamProbeHeight
+    // band must come from a measurement, never from what merely passes (resolving-blocks.md; RLW RXM-1B front,
+    // 2026-09-29). This survey is that measurement, written to the build report before the error: every upright transverse
+    // face seen along the car axis across x -1.0..1.0 m and y 0.20..2.00 m, per 0.2 m band, outermost first, with its depth,
+    // ray count, support either side of +-0.3 m (the core wants both), distance from the source car end (the core allows
+    // 0.35 m) and part names. It changes nothing; the build still stops.
+    static void SurveyRr2dvEndBeams()
+    {
+        var ci = System.Globalization.CultureInfo.InvariantCulture;
+        string N(float v) => v.ToString("0.###", ci);
+        string Q(string t) => "\"" + (t ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+        var json = new System.Text.StringBuilder();
+        json.Append("{\"schema\":1,\"car\":").Append(Q(CarId)).Append(",\"isTender\":").Append(Cfg.IsTender ? "true" : "false")
+            .Append(",\"couplerHeight\":").Append(N(Cfg.CouplerHeight)).Append(",\"ends\":[");
+        bool firstEnd = true;
+        foreach (int dir in new[] { 1, -1 })
+        {
+            float? end = dir > 0 ? Cfg.RrEndFront : Cfg.RrEndRear;
+            // the ends the core rigs on a measured beam: not a drawbar end (tender front, loco rear with a tender), no buffer
+            // or explicit coupling face (CclLocoBuild.BuildExterior couplers)
+            bool drawbar = dir > 0 ? Cfg.IsTender && Cfg.RrEndFront.HasValue : Cfg.Tender != null && Cfg.RrEndRear.HasValue;
+            bool rigged = !drawbar && (dir > 0 ? Cfg.CouplingFaceFront : Cfg.CouplingFaceRear) == null &&
+                          (dir > 0 ? Cfg.BufferFront : Cfg.BufferRear) == null;
+            var hits = new System.Collections.Generic.List<(Vector3 p, string part)>();
+            var core = new System.Collections.Generic.List<string>();
+            using (var vh = new VisualHits(RefBody))
+            {
+                for (int ix = -10; ix <= 10; ix++)
+                    for (int iy = 0; iy <= 36; iy++)
+                        if (vh.Ray(new Vector3(ix * .1f, .2f + iy * .05f, dir * 30f), new Vector3(0, 0, -dir), 30f, out var h) &&
+                            dir * h.normal.z >= .95f && dir * h.point.z > .5f)
+                            hits.Add((h.point, h.collider.transform.parent.name));
+                // the core's own default check (CclLocoBuild.EndBeam) per 0.2 m band: x -0.6..0.6 by 0.1, five rows, every hit,
+                // the largest 1 cm depth bin within 0.5 m of the outermost hit; it passes with 20 hits and a 20-ray bin
+                for (float low = .2f; low <= 1.801f; low += .1f)
+                {
+                    var ray = new System.Collections.Generic.List<(float x, float z, string part)>();
+                    for (int ix = -6; ix <= 6; ix++)
+                        for (float y = low; y <= low + .201f; y += .05f)
+                            if (vh.Ray(new Vector3(ix * .1f, y, dir * 30f), new Vector3(0, 0, -dir), 30f, out var h))
+                                ray.Add((ix * .1f, h.point.z, h.collider.transform.parent.name));
+                    if (ray.Count == 0) continue;
+                    float outer = ray.Max(r => dir * r.z);
+                    var bin = ray.Where(r => outer - dir * r.z <= .5f).GroupBy(r => Mathf.RoundToInt(dir * r.z * 100f))
+                        .OrderByDescending(g => g.Count()).First().ToList();
+                    core.Add("{\"low\":" + N(low) + ",\"high\":" + N(low + .2f) + ",\"hits\":" + ray.Count + ",\"bin\":" + bin.Count +
+                             ",\"beam\":" + N(bin.Average(r => r.z)) + ",\"binLeft\":" + bin.Count(r => r.x <= -.299f) +
+                             ",\"binRight\":" + bin.Count(r => r.x >= .299f) + ",\"parts\":[" +
+                             string.Join(",", bin.Select(r => Q(r.part)).Distinct().Take(4)) + "]}");
+                }
+            }
+            Line($"rr2dv end-beam survey {(dir > 0 ? "front" : "rear")}: source car end {(end.HasValue ? end.Value.ToString("F3") : "unknown")}, " +
+                 $"{hits.Count} upright transverse hits (x -1.0..1.0 m, y 0.20..2.00 m){(rigged ? "" : "; this end is not rigged on a beam")}");
+            var faces = new System.Collections.Generic.List<string>();
+            for (float low = .2f; low <= 1.801f; low += .1f)
+            {
+                var band = hits.Where(h => h.p.y >= low - .001f && h.p.y <= low + .201f).OrderByDescending(h => dir * h.p.z).ToList();
+                var shown = new System.Collections.Generic.List<string>();
+                for (int i = 0; i < band.Count;)
+                {
+                    float z0 = band[i].p.z;
+                    var face = band.Skip(i).TakeWhile(h => Mathf.Abs(h.p.z - z0) <= .015f).ToList();
+                    i += face.Count;
+                    if (face.Count < 6) continue;
+                    float z = face.Average(h => h.p.z);
+                    int left = face.Count(h => h.p.x <= -.299f), right = face.Count(h => h.p.x >= .299f);
+                    var parts = face.Select(h => h.part).Distinct().Take(3).ToList();
+                    faces.Add("{\"low\":" + N(low) + ",\"high\":" + N(low + .2f) + ",\"z\":" + N(z) + ",\"rays\":" + face.Count +
+                              ",\"left\":" + left + ",\"right\":" + right + ",\"parts\":[" + string.Join(",", parts.Select(Q)) + "]}");
+                    if (shown.Count < 3)
+                        shown.Add($"z {z:F3} ({face.Count} rays, {left} left / {right} right of 0.3 m" +
+                                  (end.HasValue ? $", {z - end.Value:+0.000;-0.000} m from the source end" : "") + $"; {string.Join(", ", parts)})");
+                }
+                if (shown.Count > 0) Line($"  band {low:F2}..{low + .2f:F2} m: {string.Join(" | ", shown)}");
+            }
+            json.Append(firstEnd ? "" : ",").Append("{\"end\":").Append(Q(dir > 0 ? "front" : "rear")).Append(",\"dir\":").Append(dir)
+                .Append(",\"rigged\":").Append(rigged ? "true" : "false").Append(",\"sourceEnd\":").Append(end.HasValue ? N(end.Value) : "null")
+                .Append(",\"faces\":[").Append(string.Join(",", faces)).Append("],\"core\":[").Append(string.Join(",", core)).Append("]}");
+            firstEnd = false;
+        }
+        json.Append("]}");
+        File.WriteAllText(Path.Combine(outDir, "endbeam-survey.json"), json.ToString());
+    }
+
     static void Rr2dvReleaseSeat()
     {
         if (Cfg.BrakeRelease == null || Cfg.BrakeReleaseExact) return;
@@ -162,6 +552,18 @@ public static partial class CclLocoBuild
                 warnings = before;
                 if (seated && probe.localPosition.y >= Rr2dvReleaseFloor)
                 {
+                    var dir = probe.localRotation * Vector3.forward;
+                    float depth = Rr2dvReleaseSkinDepth(probe.localPosition, dir);
+                    if (!float.IsNaN(depth) && depth < Rr2dvReleaseDepth)
+                    {
+                        var pos = probe.localPosition - dir * (Rr2dvReleaseDepth - depth);
+                        var rot = probe.localEulerAngles;
+                        Cfg.BrakeRelease = _ => (pos, rot);
+                        Cfg.BrakeReleaseExact = true;
+                        Line($"rr2dv brake release: valve body {depth:F3} m behind the skin at z {candidate.z:F3} (the core's check needs 0.10 m); " +
+                             $"moved {Rr2dvReleaseDepth - depth:F3} m inward along the rod to {V(pos)}, handed to the core as an exact pose");
+                        return;
+                    }
                     if (step != 0)
                     {
                         Cfg.BrakeRelease = _ => (candidate, euler);
@@ -266,22 +668,18 @@ public static partial class CclLocoBuild
             using (var hits = new VisualHits(body))
             {
                 var remaining = nubs.Where(n => n.pos.x > 0).ToList();
-                int pair = 0;
+                var pairs = new System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)>();
                 foreach (var left in nubs.Where(n => n.pos.x < 0))
                 {
                     var right = remaining.OrderBy(n => Mathf.Abs(n.pos.z - left.pos.z)).FirstOrDefault();
                     if (right.rod && Mathf.Abs(right.pos.z - left.pos.z) <= .45f) remaining.Remove(right);
                     else right = (null, Vector3.zero);
-                    pair++;
-                    Rr2dvAddOilPair(placed, hits, body, pair,
-                        (left.rod, left.pos), (right.rod, right.pos), (left.pos.z + (right.rod ? right.pos.z : left.pos.z)) / 2);
+                    pairs.Add(((left.rod, left.pos), (right.rod, right.pos), (left.pos.z + (right.rod ? right.pos.z : left.pos.z)) / 2));
                 }
-                foreach (var right in remaining)
-                {
-                    pair++;
-                    Rr2dvAddOilPair(placed, hits, body, pair, (null, Vector3.zero),
-                        (right.rod, right.pos), right.pos.z);
-                }
+                foreach (var right in remaining) pairs.Add(((null, Vector3.zero), (right.rod, right.pos), right.pos.z));
+                pairs = Rr2dvOilBudget(pairs, hints);
+                int pair = 0;
+                foreach (var p in pairs) Rr2dvAddOilPair(placed, hits, body, ++pair, p.l, p.r, p.z);
                 if (nubs.Count == 0)
                 {
                     for (int i = 0; i < hints.Length; i += 2)
@@ -316,6 +714,37 @@ public static partial class CclLocoBuild
             SaveRr2dvPrefab(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    // Oil-cup budget (James, 2026-09-29): one left/right pair per driving axle, 10 cups at most on a large loco. Every
+    // rod nub became a pair before, so a model rich in nubs got cups on every surface (C&O T1: 28 cups, 8 pairs bunched
+    // around the cylinders and crossheads). Over budget, each driving axle (the provisional axle hints) keeps the nub
+    // pair nearest its z within 0.6 m (a crank throw and margin); the rest are dropped and listed.
+    const int Rr2dvOilPairsMax = 5;
+
+    static System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)> Rr2dvOilBudget(
+        System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)> pairs,
+        (string, Vector3)[] hints)
+    {
+        int budget = Mathf.Min(hints.Length / 2, Rr2dvOilPairsMax);
+        if (pairs.Count <= budget) return pairs;
+        var axles = Enumerable.Range(0, hints.Length / 2).Select(i => (hints[2 * i].Item2.z + hints[2 * i + 1].Item2.z) / 2).ToArray();
+        var free = pairs.ToList();
+        var chosen = new System.Collections.Generic.List<(((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z) pair, float dz)>();
+        foreach (float az in axles)
+        {
+            if (free.Count == 0) break;
+            var best = free.OrderBy(p => Mathf.Abs(p.z - az)).First();
+            if (Mathf.Abs(best.z - az) > .6f) { Line($"rr2dv oil budget: driving axle z {az:F3} has no rod nub pair within 0.6 m; no cup there"); continue; }
+            free.Remove(best);
+            chosen.Add((best, Mathf.Abs(best.z - az)));
+        }
+        var keep = chosen.OrderBy(c => c.dz).Take(budget).Select(c => c.pair).ToList();
+        var kept = pairs.Where(p => keep.Contains(p)).ToList();  // source order kept (O01: stable tags and indices)
+        foreach (var p in pairs.Where(p => !kept.Contains(p)))
+            Line($"rr2dv oil budget: nub pair at z {p.z:F3} dropped (one pair per driving axle, at most {Rr2dvOilPairsMax * 2} cups)");
+        Line($"rr2dv oil budget: {pairs.Count} nub pairs -> {kept.Count} ({axles.Length} driving axle(s), at most {Rr2dvOilPairsMax * 2} cups)");
+        return kept;
     }
 
     static void Rr2dvAddOilPair(System.Collections.Generic.List<(string tag, Vector3 pos, Transform rod, string seat)> placed,
@@ -626,15 +1055,22 @@ public static partial class CclLocoBuild
                 if (bodyBounds.Length == 0) throw new InvalidOperationException("No visible body for plates");
                 var extent = bodyBounds[0]; foreach (var b in bodyBounds) extent.Encapsulate(b);
                 float outside = Mathf.Max(Mathf.Abs(extent.min.x), Mathf.Abs(extent.max.x)) + 1;
-                // Search nearest to the source label, then verify the entire native plate footprint.
+                bool found = false; RaycastHit hit = new RaycastHit();
+                string fit = null; float scale = 1f;
+                // Full size first; where it would overhang, the plate may shrink to 90 then 80 % (James, 2026-09-29: no smaller,
+                // so it stays readable). Derail Valley spawns its plate at the anchor, so the anchor's scale sizes it.
+                foreach (var s in new[] { 1f, .9f, .8f })
+                {
+                if (found) break;
+                scale = s;
+                var fe = footprint.extents * s; var fs = footprint.size * s;
+                // Search nearest to the source label, then verify the entire plate footprint.
                 var candidates = new System.Collections.Generic.List<Vector3>();
-                for (float z = extent.min.z + footprint.extents.z; z <= extent.max.z - footprint.extents.z; z += .05f)
+                for (float z = extent.min.z + fe.z; z <= extent.max.z - fe.z; z += .05f)
                 for (int y = -10; y <= 10; y++) candidates.Add(new Vector3(side * outside, source.pos.y + y * .05f, z));
                 candidates.Insert(0, new Vector3(side * outside, source.pos.y, source.pos.z));
-                bool found = false; RaycastHit hit = new RaycastHit();
                 // Flat to 5.7 degrees within 8 mm first; then a curved or panelled side (PLW Trojan saddle tank, 2026-09-28)
                 // to 18 degrees within 25 mm; then the plate stays at the source decal with a WARN rather than stopping.
-                string fit = null;
                 foreach (var (flat, relief, rule) in new[] { (.995f, .008f, "flat"), (.95f, .025f, "curved side") })
                 {
                 if (found) break;
@@ -642,15 +1078,16 @@ public static partial class CclLocoBuild
                 {
                     if (!hits.Ray(origin, Vector3.left * side, outside, out hit, body) || hit.normal.x * side < flat) continue;
                     bool supported = true;
-                    int ny = Mathf.CeilToInt(footprint.size.y / .1f), nz = Mathf.CeilToInt(footprint.size.z / .1f);
+                    int ny = Mathf.CeilToInt(fs.y / .1f), nz = Mathf.CeilToInt(fs.z / .1f);
                     for (int iy = 0; iy <= ny && supported; iy++)
                     for (int iz = 0; iz <= nz; iz++)
                     {
-                        var sample = origin + new Vector3(0, Mathf.Lerp(-footprint.extents.y, footprint.extents.y, (float)iy/ny), Mathf.Lerp(-footprint.extents.z, footprint.extents.z, (float)iz/nz));
+                        var sample = origin + new Vector3(0, Mathf.Lerp(-fe.y, fe.y, (float)iy/ny), Mathf.Lerp(-fe.z, fe.z, (float)iz/nz));
                         if (!hits.Ray(sample, Vector3.left * side, outside, out var edge, body) || edge.collider != hit.collider ||
                             edge.normal.x * side < flat || Mathf.Abs(edge.point.x-hit.point.x) > relief) { supported = false; break; }
                     }
                     if (supported) { found = true; fit = rule; break; }
+                }
                 }
                 }
                 if (!found)
@@ -661,7 +1098,10 @@ public static partial class CclLocoBuild
                 var old = anchor.localPosition;
                 anchor.position = hit.point + Vector3.right * side * .01f;
                 anchor.localRotation = Quaternion.Euler(0, side > 0 ? 0 : 180, 0);
-                Line($"rr2dv visible plate {pair.Item1}: {V(old)} -> {V(anchor.localPosition)} on {hit.collider.transform.parent.name}; full {footprint.size.y:F3} x {footprint.size.z:F3} m footprint supported ({fit})");
+                if (scale < 1f) anchor.localScale = Vector3.one * scale;
+                Line($"rr2dv visible plate {pair.Item1}: {V(old)} -> {V(anchor.localPosition)} on {hit.collider.transform.parent.name}; " +
+                     (scale < 1f ? $"scaled to {scale * 100:F0} %: {footprint.size.y * scale:F3} x {footprint.size.z * scale:F3} m footprint supported ({fit}; the full size overhangs)"
+                                 : $"full {footprint.size.y:F3} x {footprint.size.z:F3} m footprint supported ({fit})"));
             }
             SaveRr2dvPrefab(root, path);
         }

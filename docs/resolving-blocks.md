@@ -194,6 +194,20 @@ If the default sampling heights miss the actual frame, the builder now automatic
 for a broad, upright end face supported on both sides of the drawgear. The build report records its measured
 height band and depth. If that also fails, an *ambiguous end beam* or *insufficient end-beam rays* error still
 requires review. Measure the current model first, including the broad beam face and nearby coupler/lift hardware.
+The failed build's `build_report.txt` now carries that measurement: `rr2dv end-beam survey` lists, for both ends and each
+0.2 m height band, the upright faces seen along the car axis (depth, ray count, support either side, distance from the
+source car end, part names). From that survey rr2dv also proposes a reviewed band itself, when the measurement supports one:
+`geometry-review-proposed.json` in the run's reports folder (the message and `run.log` give the path), with the survey
+figures as its evidence. It is never applied on its own: **Use proposed geometry** (or `--geometry-review` with that file)
+chooses it, then convert again. A band is proposed only when, at every end rigged on a beam, the builder's own check passes
+in it (20 rays on one face), the face has 3 or more of those rays either side of x +-0.3 m, it lies within 0.35 m of the
+source car end, and the same plane (within 3 cm) shows at another height; the band nearest coupler height wins. Otherwise
+the message says why none was proposed and a manual review is needed.
+When a loco and its tender both need a band, the first stop proposes the loco's; the next stop proposes a file holding
+both (it keeps the band already used). Choose that newest file, not the first one again, or the build stops on the same car.
+The **Reviewed geometry** list shows every review in your runs' reports that fits the selected locomotive's current
+files (newest first, with each car's band; "no tender band" when it covers only the loco); nothing is chosen for you.
+**Browse…** starts in the last run's reports folder.
 Do not choose a band merely because it passes. The height band changes where the existing rays sample; it does
 not change coupler height, the minimum ray count, clearance checks or any acceptance requirement.
 
@@ -227,29 +241,69 @@ and hanging hose end are reachable. Cosmetic overlap with decorative pipework is
 
 Material slots: a slot the export left empty or filled with Unity's white `Default-Material` (Railroader base-game
 truck rims, the `…deadbeef…` references) is given rr2dv's own dark matte gunmetal
-(`src/rr2dv/unity/materials/rr2dv_gunmetal.mat`), and a slot whose material is named `…glass…` gets rr2dv's own clear
-glass (`rr2dv_glass.mat`). An empty slot on a part named `…coal…` gets a bump-mapped coal (`rr2dv_coal.mat`), and
+(`src/rr2dv/unity/materials/rr2dv_gunmetal.mat`), and a slot whose material is named `…glass…`, or just `Window`/`Windows`
+(not `WindowColorable` or a frame), gets rr2dv's own clear glass (`rr2dv_glass.mat`), on the fixed body and on every
+opening door or window that moves, so both kinds of pane look the same. An empty slot on a part named `…coal…` gets a bump-mapped coal (`rr2dv_coal.mat`), and
 glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow inside does not show. Lamp glass that Railroader
 draws fully transparent (alpha 0: a flare disc) stays invisible. When lamp glass shares the window material on one mesh,
 its triangles within a lamp lens of a lamp (`LampLenses`) are split onto the lens (`rr2dv glass: … split off`). The whole car
 is searched, trucks included (tender truck rims). A tender whose model has no coal of its own (Railroader draws it at
-runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount. All
-are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
+runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount. The coal space is
+measured from above, starting under Railroader's coal loading target: downward rays every 4 cm find the floor (a hopper or
+stoker trough included), the side sheets' tops (the rim), and the walls that end it forward and back (doors or a bulkhead,
+a rise to above half its depth; the rim height up a sloped side; a flat deck such as a tank top). The heap fills each
+measured row between its walls, is highest over the back half and tapers to the rim at the sides and the front wall
+(`rr2dv coal load: coal space measured` and `heap mesh` in `build_report.txt`). If no coal space with walls can be
+measured the builder's layout box stays, with a warning; the audit also says when the exported load is that plain box
+(`exported coal load draws` in `run.log`). All are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
+
+Number plates: Derail Valley's info plate goes on the nearest flat (or gently curved) part of the side that holds its
+whole footprint. Where the full size would overhang, it may shrink to 90 % or at most 80 % (`rr2dv visible plate …
+scaled to 80 %`); if nothing holds even that, it stays at the source decal with a warning.
 
 Oil cups: the driving groups' own clips are played through a revolution; a part whose middle travels is a rod (a cup
 on it rides with it), a part that turns in place is a wheel, axle or crank (no cup on it), whatever the parts are called
-(`rr2dv oil running gear by motion` in `build_report.txt`).
+(`rr2dv oil running gear by motion` in `build_report.txt`). At most one left/right pair per driving axle and 10 cups in
+all: when the rods offer more seats, each driving axle keeps the pair nearest it (within 0.6 m) and the rest are dropped
+(`rr2dv oil budget` in `build_report.txt`).
 
-Control response: the train and independent brakes, headlights and cab light move one notch per key press (a tap ran
-their few coarse notches end to end); a generated whistle (no Railroader handle) gets the same whistle physics as a
+HUD: besides CCL's steam layout, the HUD shows the whistle, tender coal, the sander and the sand level.
+
+Steam jets: the whistle and safety-valve jets blow straight up. The dynamo jet follows its exhaust pipe when the pipe's tip can be
+measured at Railroader's dynamo point (a pipe-shaped cluster of the model within 25 cm, the point at its end, not
+pointing down), so a swept or angled exhaust is followed; otherwise it too blows straight up (`rr2dv steam jet` in
+`build_report.txt`).
+
+Control response: every stepped lever moves one notch per tap or scroll (G-29's setting; the app had moved several
+notches per tap, up to the whole range), and the train and independent brakes, headlights and cab light one notch per
+key press; a generated whistle (no Railroader handle) gets the same whistle physics as a
 Railroader whistle handle. Both are listed as `rr2dv control response` and still need the in-game check.
 
 Cylinders: the reviewed physical cylinder count is physics only. The simulation always runs 2 cylinders with the bore
 scaled to the same swept volume (bore x sqrt(n/2)): Derail Valley's chuff sound handles 2 (a 3-cylinder K-66 threw
 `ChuffClipsSimReader.OnChuff ... IndexOutOfRange` in Player.log). The physical count stays in the build's simulation profile.
 
-Brake cutout and cab light: generated as handwheels like the dynamo and air pump, whose F4 HUD buttons work; built as
-2-position levers, the HUD buttons did nothing.
+Generated controls come in four classes, chosen by the Derail Valley function a control drives, never by loco
+(`rr2dv control class` in `build_report.txt`, and `generated controls by class` in the review list):
+- switch: two positions that snap, flipped by a click, the toggle key or the F4 HUD (CCL's toggle switch, drawn as a
+  small lever): air pump, dynamo, cab light, brake cutout, lubricator, bell, cylinder cocks, sander. As two-notch levers
+  or wheels their joints held their own notch against the HUD, so F4 never flipped the brake cutout or the lubricator;
+- wheel: a valve handwheel with fine steps (injector, blower, blowdown);
+- spring: returns to closed when let go (a generated whistle);
+- lever: a notched lever that stays where it is set (damper, fire door, coal dump, headlights, the driving controls).
+Railroader's own cab handles stay as they are modelled.
+
+Brake cutout: CCL gives it an absolute axis input besides its toggle key, which let F4 treat it as a range; the build
+removes that axis (`rr2dv brake cutout ... absolute axis input removed` in `build_report.txt`).
+
+Livery colours: a livery that lists the same colour name twice (RLW RMWF-2's 'RLW Grey' lists 'roof' twice) keeps the
+first and lists the repeat among the automatic choices; the builder stopped on it before ("An item with the same key has
+already been added").
+
+Names: each unit is named after its locomotive so Derail Valley's info boards and radio list them together: the loco
+as itself, its tender as "<loco> Tender" (a third unit would be "<loco> C"). Packs install as `rr2dv_<loco>` in the Derail
+Valley Mods folder, so all conversions sit together; an earlier rr2dv install of the same loco under its old unprefixed
+name is removed once the new one is in place (both would load the same cars). Any other mod's folder is never touched.
 
 Railroader lights: every Unity light in the source model is removed (`rr2dv source lights` in `build_report.txt`).
 Railroader switches them from its own scripts, which are not converted, so they stayed on for good. The car keeps the

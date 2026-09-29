@@ -118,15 +118,90 @@ public static partial class CclLocoBuild
         var root = PrefabUtility.LoadPrefabContents(path);
         try
         {
+            var classes = Rr2dvControlClasses();
+            foreach (var lever in root.GetComponentsInChildren<Component>(true).Where(c => c && c.GetType().Name == "LeverProxy").ToList())
+                if (classes.TryGetValue(lever.name, out var cls) && cls == "switch") MakeRr2dvSwitch(lever);
             foreach (var control in root.GetComponentsInChildren<Component>(true).Where(c => c && c.GetType().Name == "LeverProxy"))
             {
+                if (classes.TryGetValue(control.name, out var cls)) Line($"rr2dv control class {control.name}: {cls}");
                 var renderers = control.GetComponentsInChildren<Renderer>(true).Where(r => r.enabled).ToArray();
                 if (renderers.Length > 0) RrHighlight(control.gameObject, renderers);
                 RrControlResponse(control);
             }
+            StripRr2dvCutoutAxis(root);
             SaveRr2dvPrefab(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    [Serializable] class Rr2dvControlClass { public string control, cls; }
+    [Serializable] class Rr2dvClassInput { public Rr2dvControlClass[] controlClasses; }
+
+    // The class of each generated control (buildrecord CONTROL_CLASS: switch, wheel, spring or lever), by control name.
+    static Dictionary<string, string> Rr2dvControlClasses()
+    {
+        var path = System.IO.Path.Combine(Application.dataPath, "Rr2dv/BuildInput.json");
+        var input = System.IO.File.Exists(path) ? JsonUtility.FromJson<Rr2dvClassInput>(System.IO.File.ReadAllText(path)) : null;
+        var map = new Dictionary<string, string>();
+        foreach (var c in input?.controlClasses ?? new Rr2dvControlClass[0]) map[c.control] = c.cls;
+        return map;
+    }
+
+    // A generated two-position control becomes a CCL toggle switch: it snaps between its two positions and flips on a click,
+    // its toggle key or the F4 HUD. As a two-notch lever (or wheel) its joint held its own notch against the HUD, so F4 never
+    // flipped the brake cutout or the lubricator (RLW RXM-1B game test, 2026-09-29) and the cab light only once it was a
+    // wheel. A generated wheel is drawn as the generated lever for a switch; the joint keeps the lever's axis and travel.
+    // The collider, interaction area, port feeder and key input stay as the core made them.
+    static void MakeRr2dvSwitch(Component lever)
+    {
+        var c = lever.transform;
+        var model = c.Find("model");
+        var collider = c.Find("collider");
+        var area = c.Find("IA_" + c.name.Substring(2));
+        if (!model || !collider || !area) { Warn($"rr2dv control class {c.name}: not a generated control (no model/collider/area); left a lever"); return; }
+        var mf = model.GetComponent<MeshFilter>();
+        Vector3 axis = Get<Vector3>(lever, "jointAxis");
+        float min = Get<float>(lever, "jointLimitMin"), max = Get<float>(lever, "jointLimitMax");
+        bool wheel = mf && mf.sharedMesh == wheelMesh;
+        if (wheel)
+        {
+            // Place(): a wheel sits 3.5 cm off the plate, a lever 2 cm; the lever tips 0..45 deg towards the cab about -x
+            c.localPosition += new Vector3(0, 0, .015f);
+            mf.sharedMesh = leverMesh;
+            model.GetComponent<MeshRenderer>().sharedMaterial = MatByName(Cfg.LeverMaterial);
+            foreach (var box in new[] { collider, area })
+            {
+                box.localPosition = new Vector3(0, .07f, -.01f);
+                box.GetComponent<BoxCollider>().size = new Vector3(.04f, .16f, .04f);
+            }
+            axis = Vector3.left; min = 0; max = 45;
+        }
+        var ia = area.GetComponents<Component>().FirstOrDefault(x => x && x.GetType().Name == "StaticInteractionAreaProxy");
+        Object.DestroyImmediate(lever);
+        var sw = Add(c.gameObject, "CCL.Types.Proxies.Controls.ToggleSwitchProxy");
+        Set(sw, "colliderGameObjects", new List<Object> { collider.gameObject });
+        if (ia) Set(sw, "nonVrStaticInteractionArea", ia);
+        Set(sw, "jointAxis", axis);
+        Set(sw, "jointLimitMin", min); Set(sw, "jointLimitMax", max);
+        Set(sw, "autoOffTimer", 0f);
+        var renderers = c.GetComponentsInChildren<Renderer>(true).Where(r => r.enabled).ToArray();
+        if (renderers.Length > 0) RrHighlight(c.gameObject, renderers);
+        Line($"rr2dv control class {c.name}: switch (CCL toggle switch, {min:F0}..{max:F0} deg about {V(axis)}{(wheel ? ", drawn as a lever instead of a wheel" : "")}); flips by click, toggle key and F4");
+    }
+
+    // The brake cutout is a two-position valve, but CCL's control wizard gives it an absolute axis (BrakeCutoutAbsolute:
+    // AnalogSetValueJoystickInputProxy) besides its toggle key, and the F4/keyboard route then drives it as a range
+    // (James's game test, 2026-09-29). The two-position controls that switch correctly there (cab light, air pump,
+    // dynamo, lubricator) have no absolute action in CCL's key map, so the cutout keeps only its toggle and scroll inputs.
+    static void StripRr2dvCutoutAxis(GameObject root)
+    {
+        foreach (var feeder in root.GetComponentsInChildren<Component>(true)
+                     .Where(c => c && c.GetType().Name == "InteractablePortFeederProxy" && Get<string>(c, "portId") == "brakeCutout.EXT_IN").ToList())
+            foreach (var axis in feeder.GetComponents<Component>().Where(c => c && c.GetType().Name == "AnalogSetValueJoystickInputProxy").ToList())
+            {
+                Object.DestroyImmediate(axis);
+                Line($"rr2dv brake cutout {feeder.name}: absolute axis input removed; toggle key and scroll stay (two positions, as the cab light)");
+            }
     }
 
     static void ConfigureRrOpeningMotion()
@@ -187,12 +262,17 @@ public static partial class CclLocoBuild
             Line($"rr2dv control response {control.name}: generated whistle given the RR whistle role physics (spring 50, damper 5, mass 5, drag 5)");
         }
         // Keep mass, spring and damping together; 0.1.2 changed mass alone and removed drag.
+        // DV LeverBase moves SingleNotchAngle x scrollWheelHoverScroll per tap or scroll, so 1 = one notch, as every stepped
+        // lever in G-29's accepted profile (G29Config.cs). Degrees per notch had been written here: the train brake took 8
+        // of its 10 notches per tap, the headlights 15 (top to bottom) and two-position toggles 170 (RLW RXM-1, 2026-09-29).
         if (Get<bool>(control, "useSteppedJoint"))
         {
             int notches = Get<int>(control, "notches");
             float range = Get<float>(control, "jointLimitMax") - Get<float>(control, "jointLimitMin");
             if (notches < 2 || range <= 0) throw new InvalidOperationException("Invalid stepped control: " + control.name);
-            Set(control, "scrollWheelHoverScroll", range / (notches - 1));
+            Set(control, "scrollWheelHoverScroll", 1f);
+            Line($"rr2dv control response {control.name}: one notch per tap or scroll ({notches} notches over {range:F1} deg)");
+            return;
         }
         else if (Get<bool>(control, "useSpring"))
         {
@@ -270,6 +350,8 @@ public static partial class CclLocoBuild
                     foreach (var m in t.GetComponents<MeshFilter>()) Object.DestroyImmediate(m);
                 }
             }
+            // the same slot rules as the fixed body: an opening window's glass matches the fixed panes (M-3, 2026-09-29)
+            Rr2dvFinishSlots(copy.transform, copy.transform, opening.name + " copy: ");
             Folder($"{Work}/Animators");
             var controller = AnimatorController.CreateAnimatorControllerAtPath($"{Work}/Animators/{opening.name}.controller");
             var state = controller.layers[0].stateMachine.AddState(opening.name);

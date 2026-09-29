@@ -156,7 +156,7 @@ class Install(unittest.TestCase):
 
     def test_installs_the_files_with_notice_and_marker_after_consent(self):
         dest = self.run_install()
-        self.assertEqual(dest, self.dv.mods / "RR2DV_TEST")
+        self.assertEqual(dest, self.dv.mods / "rr2dv_RR2DV_TEST")  # every rr2dv pack sorts together (James, 2026-09-29)
         self.assertEqual(sorted(p.name for p in dest.iterdir()), ["Info.json", NOTICE_FILE, PROVENANCE_FILE, "ccl_bundle", MARKER])
         marker = read_json(dest / MARKER)
         self.assertEqual((marker["generator"], marker["clicks"], marker["notice_version"]), ("rr2dv", 10, "1.0"))
@@ -174,7 +174,24 @@ class Install(unittest.TestCase):
     def test_declined_notice_installs_nothing(self):
         with self.assertRaisesRegex(InstallRefused, "not agreed"):
             self.run_install(ask=lambda pack, credits: False)
-        self.assertFalse((self.dv.mods / "RR2DV_TEST").exists())
+        self.assertFalse((self.dv.mods / "rr2dv_RR2DV_TEST").exists())
+        self.assertEqual(self.leftovers(), [])
+
+    def test_retires_its_own_unprefixed_install_of_the_same_loco_only(self):
+        dest = self.run_install()
+        legacy = self.dv.mods / "RR2DV_TEST"
+        os.rename(dest, legacy)  # as installed before the prefix
+        other = self.dv.mods / "Other"
+        shutil.copytree(legacy, other)  # ours, but a different loco under another name: kept
+        dest = self.run_install()
+        self.assertTrue(dest.is_dir())
+        self.assertFalse(legacy.exists())
+        self.assertEqual(self.record["replacedFolder"], "RR2DV_TEST")
+        self.assertTrue(other.is_dir())
+        legacy.mkdir()
+        (legacy / "Info.json").write_text("someone else's mod")  # not ours: never touched
+        self.run_install()
+        self.assertEqual((legacy / "Info.json").read_text(), "someone else's mod")
         self.assertEqual(self.leftovers(), [])
 
     def test_replaces_only_its_own_earlier_conversion(self):
@@ -187,7 +204,7 @@ class Install(unittest.TestCase):
         self.assertEqual(self.leftovers(), [])
 
     def test_never_touches_another_mods_folder(self):
-        other = self.dv.mods / "RR2DV_TEST"
+        other = self.dv.mods / "rr2dv_RR2DV_TEST"
         other.mkdir()
         (other / "Info.json").write_text("someone else's mod")
         with self.assertRaisesRegex(InstallRefused, "not made by rr2dv"):
@@ -200,7 +217,7 @@ class Install(unittest.TestCase):
         bad = dict(self.expected, ccl_bundle="0" * 64)
         with self.assertRaises(ValueError):
             install(self.pack, self.dv, bad, self.SOURCES, {}, self.agree)
-        self.assertEqual((self.dv.mods / "RR2DV_TEST" / "ccl_bundle").read_bytes(), b"bundle")
+        self.assertEqual((self.dv.mods / "rr2dv_RR2DV_TEST" / "ccl_bundle").read_bytes(), b"bundle")
         self.assertEqual(self.leftovers(), [])
 
     def test_refuses_odd_names(self):

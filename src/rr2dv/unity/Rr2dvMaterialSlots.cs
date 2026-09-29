@@ -1,8 +1,8 @@
 // rr2dv material slot finishing, after the builder has converted the source materials (partial of the builder core).
 //  - A slot left empty, or holding Unity's white 'Default-Material' (how the export fills an unresolved reference:
 //    Railroader base-game truck rims), gets rr2dv's dark matte gunmetal (Assets/Rr2dv/Materials/rr2dv_gunmetal.mat).
-//  - A slot whose converted material is named '...glass...' gets rr2dv's own clear glass (rr2dv_glass.mat, Standard
-//    transparent). DV's S282 window glass was tried first: its smudge texture showed as a dark circle pattern on other
+//  - A slot whose converted material is named '...glass...', or just 'Window(s)', gets rr2dv's own clear glass
+//    (rr2dv_glass.mat, Standard transparent), on the fixed body and on every opening's moving copy. DV's S282 window glass was tried first: its smudge texture showed as a dark circle pattern on other
 //    models' window UVs (L-27 game test, 2026-09-28).
 //  - An unresolved slot on a renderer named '...coal...' gets rr2dv_coal (bump-mapped lumps) instead of gunmetal (H9 tender
 //    coal load, 2026-09-28: gunmetal "looked very meh").
@@ -41,57 +41,71 @@ public static partial class CclLocoBuild
         {
             // The whole car, not only Model: Railroader trucks hang under BogieF/BogieR (L-27 tender rims stayed white,
             // 2026-09-28, because only Model was searched).
-            var model = root.transform;
-            var gunmetal = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvGunmetal);
-            var clear = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvGlass);
-            var coal = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvCoal);
-            var lens = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvLens);
-            if (!gunmetal || !clear || !coal || !lens) throw new InvalidOperationException("rr2dv fallback materials missing under Assets/Rr2dv/Materials");
-            int filled = 0, glazed = 0;
-            foreach (var r in model.GetComponentsInChildren<Renderer>(true))
-            {
-                var mats = r.sharedMaterials;
-                bool changed = false;
-                for (int i = 0; i < mats.Length; i++)
-                {
-                    string at = TPathOf(r.transform, root.transform);
-                    if (at.Contains("[coal load]") && mats[i] != coal)
-                    {
-                        // the core's generated coal heap (a tender with no modelled coal) looks like coal too
-                        Line($"rr2dv coal: {at} slot {i} {(mats[i] ? mats[i].name : "empty")} -> rr2dv_coal");
-                        mats[i] = coal; changed = true;
-                    }
-                    else if (Rr2dvUnresolvedMaterial(mats[i]))
-                    {
-                        var fill = Rr2dvPathHas(at, "coal") ? coal : gunmetal;
-                        Line($"rr2dv material fallback: {at} slot {i} " +
-                             $"{(mats[i] ? "had " + mats[i].name : "was empty")} -> {fill.name}");
-                        mats[i] = fill; changed = true; filled++;
-                    }
-                    else if (mats[i].name.IndexOf("glass", StringComparison.OrdinalIgnoreCase) >= 0 && mats[i] != clear && mats[i] != lens)
-                    {
-                        bool onLamp = Rr2dvPathHas(at, "lamp", "light", "lantern");
-                        if (onLamp && mats[i].HasProperty("_Color") && mats[i].color.a <= .01f)
-                        {
-                            // Railroader draws this lamp glass fully transparent (PLW Trojan: a disc over each lamp that
-                            // our glass or lens turned into a pale blob, 2026-09-29): keep it invisible.
-                            Line($"rr2dv glass: {at} slot {i} {mats[i].name} kept invisible (alpha 0 in the source)");
-                            continue;
-                        }
-                        var pane = onLamp ? lens : clear;
-                        Line($"rr2dv glass: {at} slot {i} {mats[i].name} -> {pane.name}");
-                        mats[i] = pane; changed = true; glazed++;
-                        if (!onLamp && Rr2dvSplitLampGlass(r, i, root.transform, lens, ref mats))
-                            Line($"rr2dv glass: {at} slot {i}: the glass in front of the lamp(s) split off -> {lens.name}");
-                    }
-                }
-                if (changed) r.sharedMaterials = mats;
-            }
+            var (filled, glazed) = Rr2dvFinishSlots(root.transform, root.transform, "");
             if (filled > 0) Warn($"rr2dv material fallback: {filled} unresolved material slot(s) given rr2dv_gunmetal or rr2dv_coal (check them in the renders)");
             if (glazed > 0) Line($"rr2dv glass: {glazed} slot(s) given rr2dv_glass or rr2dv_lens");
             PrefabUtility.SaveAsPrefabAsset(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    // A pane material: '...glass...', or a material named just 'Window'/'Windows' (C&O T1: 'Windows', converted opaque
+    // white, 2026-09-29). 'WindowColorable', 'Window Frame' and the like are frames and keep their own material.
+    static bool Rr2dvGlassMaterial(Material m) =>
+        m.name.IndexOf("glass", StringComparison.OrdinalIgnoreCase) >= 0 ||
+        System.Text.RegularExpressions.Regex.IsMatch(m.name, @"^\s*windows?(\s*[._ ]\d+)?\s*$", System.Text.RegularExpressions.RegexOptions.IgnoreCase);
+
+    // The slot rules for every renderer under 'scope' (the template, or an opening's moving copy: the M-3's opening
+    // windows kept the source glass while the fixed panes got ours, 2026-09-29). 'root' gives the car frame for lamp
+    // splitting; 'label' prefixes the report lines of a copy.
+    static (int filled, int glazed) Rr2dvFinishSlots(Transform scope, Transform root, string label)
+    {
+        var gunmetal = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvGunmetal);
+        var clear = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvGlass);
+        var coal = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvCoal);
+        var lens = AssetDatabase.LoadAssetAtPath<Material>(Rr2dvLens);
+        if (!gunmetal || !clear || !coal || !lens) throw new InvalidOperationException("rr2dv fallback materials missing under Assets/Rr2dv/Materials");
+        int filled = 0, glazed = 0;
+        foreach (var r in scope.GetComponentsInChildren<Renderer>(true))
+        {
+            var mats = r.sharedMaterials;
+            bool changed = false;
+            for (int i = 0; i < mats.Length; i++)
+            {
+                string at = label + TPathOf(r.transform, root);
+                if (at.Contains("[coal load]") && mats[i] != coal)
+                {
+                    // the core's generated coal heap (a tender with no modelled coal) looks like coal too
+                    Line($"rr2dv coal: {at} slot {i} {(mats[i] ? mats[i].name : "empty")} -> rr2dv_coal");
+                    mats[i] = coal; changed = true;
+                }
+                else if (Rr2dvUnresolvedMaterial(mats[i]))
+                {
+                    var fill = Rr2dvPathHas(at, "coal") ? coal : gunmetal;
+                    Line($"rr2dv material fallback: {at} slot {i} " +
+                         $"{(mats[i] ? "had " + mats[i].name : "was empty")} -> {fill.name}");
+                    mats[i] = fill; changed = true; filled++;
+                }
+                else if (Rr2dvGlassMaterial(mats[i]) && mats[i] != clear && mats[i] != lens)
+                {
+                    bool onLamp = Rr2dvPathHas(at, "lamp", "light", "lantern");
+                    if (onLamp && mats[i].HasProperty("_Color") && mats[i].color.a <= .01f)
+                    {
+                        // Railroader draws this lamp glass fully transparent (PLW Trojan: a disc over each lamp that
+                        // our glass or lens turned into a pale blob, 2026-09-29): keep it invisible.
+                        Line($"rr2dv glass: {at} slot {i} {mats[i].name} kept invisible (alpha 0 in the source)");
+                        continue;
+                    }
+                    var pane = onLamp ? lens : clear;
+                    Line($"rr2dv glass: {at} slot {i} {mats[i].name} -> {pane.name}");
+                    mats[i] = pane; changed = true; glazed++;
+                    if (!onLamp && Rr2dvSplitLampGlass(r, i, root, lens, ref mats))
+                        Line($"rr2dv glass: {at} slot {i}: the glass in front of the lamp(s) split off -> {lens.name}");
+                }
+            }
+            if (changed) r.sharedMaterials = mats;
+        }
+        return (filled, glazed);
     }
 
     // A lamp's glass sharing the window material on one big mesh (ALCo K-66: 'RRR Window Glass' on the body, so the

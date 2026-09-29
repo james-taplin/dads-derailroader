@@ -25,6 +25,7 @@ public static class Rr2dvAudit
         public int schema = 1; public string status; public string[] errors, warnings, bundleAssets, scriptAssemblies, dependencies;
         public int audioClips; public string[] audioClipNames; public string[] portFeeders;
         public int oilCupCount;
+        public string[] coalLoadMeshes;
     }
     [Serializable] public class Result { public string status; public int errors, warnings; public bool runtimeValidated; public string error; }
 
@@ -152,6 +153,15 @@ public static class Rr2dvAudit
                 }
             }
 
+            // what the exported tender coal load draws (RLW RXM-1B, 2026-09-29: a box in game though the build made a heap)
+            var coalMeshes = new List<string>();
+            foreach (var mf in all.OfType<MeshFilter>())
+                for (var t = mf.transform; t; t = t.parent)
+                    if (t.name == "[coal load]") { coalMeshes.Add(mf.name + ": " + (mf.sharedMesh ? mf.sharedMesh.name : "(no mesh)")); break; }
+            outp.coalLoadMeshes = coalMeshes.ToArray();
+            if (coalMeshes.Any(m => m.EndsWith(": unit_box_bottom_pivot", StringComparison.Ordinal)))
+                warnings.Add("the tender coal load is drawn as the builder's plain box, not a measured heap: " + string.Join(", ", coalMeshes));
+
             var oilCups = all.Where(o => o.GetType().Name == "ManualOilingPoint").ToArray();
             var oilProviders = all.Where(o => o.GetType().Name == "PositionSyncProviderProxy").ToArray();
             var cupTags = oilCups.Select(o => Str(o, "SyncTag")).ToArray();
@@ -225,9 +235,14 @@ public static class Rr2dvAudit
                         if (string.IsNullOrEmpty(Str(hud, "_json"))) errors.Add("Custom HUD has no serialized runtime layout");
                         hud.GetType().GetMethod("AfterImport")?.Invoke(hud, null);
                         var imported = new SerializedObject(hud);
-                        foreach (var binding in new[] { new[] { "CabLightStyle", "cabLight" }, new[] { "Headlights1", "headlightsFront" }, new[] { "Headlights2", "headlightsRear" } })
+                        foreach (var binding in new[] { new[] { "CabLightStyle", "cabLight" }, new[] { "Headlights1", "headlightsFront" } })
                             if (controls && (imported.FindProperty("CustomHUDSettings.Cab." + binding[0]).intValue != 0) != (bool)Ref(controls, binding[1]))
                                 errors.Add("HUD lighting slot differs from its control wiring: " + binding[0]);
+                        // slot 22 lower half: rear headlights when wired, else the bell slider (Slot24B 3) when a bell is wired
+                        int rearSlot = imported.FindProperty("CustomHUDSettings.Cab.Headlights2").intValue;
+                        if (controls && (rearSlot == 3 ? !(bool)Ref(controls, "bell") || (bool)Ref(controls, "headlightsRear")
+                                                       : (rearSlot != 0) != (bool)Ref(controls, "headlightsRear")))
+                            errors.Add("HUD lighting slot differs from its control wiring: Headlights2");
                         if (imported.FindProperty("HUDType").intValue != 1000 || Str(hud, "CustomHUDSettings.Powertrain") != "S" ||
                             imported.FindProperty("CustomHUDSettings.BasicControls.Speedometer").intValue != 1 ||
                             imported.FindProperty("CustomHUDSettings.BasicControls.Throttle").intValue == 0 ||

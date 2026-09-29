@@ -121,8 +121,12 @@ described above and check again. From the command line, use `rr2dv doctor`.
    can take a while for a big model. The measured project is then kept until that locomotive builds and passes its
    audit, so a failed build does not repeat the import.
 4. **Review.** After measuring, the **Pre-build review** asks what the source cannot answer (next section).
-5. **Agree to the notice**, and the pack is installed. Open the run report, vehicle record or finished pack from the
-   buttons afterwards.
+5. **Agree to the notice**, and the pack is installed as `rr2dv_<locomotive>` in Derail Valley's `Mods` folder, so all
+   conversions sit together; in game the tender is listed as "<locomotive> Tender" next to its engine. Open the run
+   report, vehicle record or finished pack from the buttons afterwards.
+6. **If it stops on the end beam**, rr2dv measures the car ends and proposes a geometry review itself. **Use proposed
+   geometry** fills it in, or pick any fitting review from the **Reviewed geometry** list (newest first; Browse opens the
+   reports folder), then convert again. A loco and its tender may need one stop each.
 
 ### The pre-build review
 
@@ -230,7 +234,7 @@ decision.
 - **Deterministic.** The same input files, answers and tool versions give the same result.
 - **Where it writes:** the run folder, and your Derail Valley `Mods` folder after you agree to the notice. It never
   writes to the Railroader install or touches saves. It replaces a folder in Derail Valley's `Mods` only if `rr2dv`
-  made it.
+  made it (including its own older, unprefixed install of the same locomotive).
 
 ## What a finished pack must pass
 
@@ -289,6 +293,7 @@ prefab-save regression, set `RR2DV_TEST_UNITY` to Unity 2019.4.40f1 and run
 | [`tooling/`](tooling/) | read-only snapshot of our conversion tooling and guides, the reference builder (start with [`tooling/NOTES.md`](tooling/NOTES.md)) |
 | [`wiki/`](wiki/) | the wiki pages (`_Sidebar.md` and 19 pages), kept here to copy into the GitHub wiki |
 | [`docs/`](docs/) | [resolving blocks](docs/resolving-blocks.md), [feature roadmap](docs/feature-roadmap.md), [wiki plan](docs/wiki-plan.md), design notes |
+| [`tools/dv-control-logger/`](tools/dv-control-logger/) | a small read-only Derail Valley mod that logs every cab control change, its input route and the simulation's response, for tuning controls |
 | [`board/APP_BOARD.md`](board/APP_BOARD.md) | message board between the app's and the local Claude and Codex sessions |
 | [`CLAUDE.md`](CLAUDE.md) | working notes for Claude sessions on the app |
 

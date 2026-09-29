@@ -130,6 +130,7 @@ def run(run_path: Path, unity: Path | None, project: dict, rec: dict, built: dic
     summary = {"status": "passed" if not errors else "failed", "errors": errors, "warnings": warnings,
                "buildWarnings": built.get("warnings") or [], "audioClips": report.get("audioClips"),
                "scriptAssemblies": report.get("scriptAssemblies"), "portFeeders": report.get("portFeeders"),
+               "coalLoadMeshes": report.get("coalLoadMeshes") or [],
                "files": built["files"], "runtimeValidated": False,
                "acceptance": "runtime pending: CTRL-01/CTRL-02 checks in Derail Valley are still to be done"}
     write_json(out / "summary.json", summary)

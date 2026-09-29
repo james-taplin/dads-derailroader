@@ -69,6 +69,10 @@ namespace UnityEngine
     public class Material : Object { }
     public class Collider : Component { public bool enabled; }
     public class MeshCollider : Collider { public Mesh sharedMesh; }
+    public class Collider2D : Behaviour { }
+    public class Rigidbody2D : Component { }
+    public class Joint2D : Behaviour { }
+    public class Effector2D : Behaviour { }
     public class AudioSource : Behaviour { public AudioClip clip; }
     public class AudioClip : Object { }
     public class AnimationClip : Object { public float length; public float frameRate; public void SampleAnimation(GameObject go, float t) { } }

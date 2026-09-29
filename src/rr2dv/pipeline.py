@@ -15,7 +15,7 @@ from typing import Sequence
 
 from typing import Callable
 
-from . import (assetripper, audit, build, buildrecord, consent, geometryreview, installs, probeinput, projectcache, publish, record,
+from . import (assetripper, audit, beamreview, build, buildrecord, consent, geometryreview, installs, probeinput, projectcache, publish, record,
                unityproject, unityrun, workspace, rebuild, review)
 from .jsonio import read_json, write_json
 from .machine import Machine, check_work_root
@@ -331,7 +331,22 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     try:
         built = build.run(run.path, machine.path("unity"), project, prepared["record"])
     except build.BuildError as e:
-        return fail("build", str(e))
+        message = str(e)
+        if "end beam" in message:
+            # the failed build's end-beam survey, turned into a proposed geometry review the user may choose to use
+            proposal, why = beamreview.write_proposal(run.path, run.record["input_fingerprint"], chosen,
+                                                      inv["tender"]["id"] if inv.get("tender") else None,
+                                                      run.record["answers"].get("geometryReview"))
+            if proposal:
+                kept = run.path.parent / "reports" / run.path.name / proposal.name
+                run.record["geometryProposal"] = str(kept)
+                run.log(f"proposed geometry review ({why}): {kept}")
+                message += (f"; a measured geometry review was proposed ({why}): {kept}. Check its evidence, choose it as "
+                            "Reviewed geometry ('Use proposed geometry') and convert again")
+            elif why:
+                run.log(f"no geometry review proposed: {why}")
+                message += f"; no geometry review could be proposed: {why}"
+        return fail("build", message)
     write_json(run.path / "build" / "built.json", built)
     for w in built["warnings"]:
         run.log(f"  builder warning: {w}")
@@ -347,6 +362,8 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
         return fail("audit", str(e))
     for w in summary["warnings"]:
         run.log(f"  audit note: {w}")
+    if summary.get("coalLoadMeshes"):
+        run.log(f"  exported coal load draws: {', '.join(summary['coalLoadMeshes'])}")
     if summary["status"] != "passed":
         for e in summary["errors"]:
             run.log(f"  audit error: {e}")
