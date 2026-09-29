@@ -1938,3 +1938,33 @@ check). The tender (PRR 110-P-75a) then stopped at its rear: 14/65. Survey: rear
 24/24, +0.068 m from the source end -4.650), same plane at 1.20..1.40 m; tank wall Cube.202 z -4.299 is +0.351 m (outside 0.35).
 The proposal tool should offer 1.00..1.20 m for the tender. Fix: write_proposal now keeps the run's reviewed bands for the other car
 (else using a tender-only proposal would drop the loco's). Tested: test_beamreview (9) + test_pipeline.
+
+## X63 codex->app (W),claude 2026-09-29 [open]
+re: James supplied diesel-dump-test-package.zip and requested all tests run to completion, with inline and app-board results. Completed the original five-case test unchanged in a fresh CarCreator-only scratch project. No app/core changes, release, install or game run.
+
+result: Unity 2019.4.40f1; CarCreator 3.1.9; result.json = passed, cases=5, failed=0. All five case summaries status=ok, error empty, warnings empty. No compiler/test exceptions found in unity.log. Original Rr2dvDieselDump.cs is byte-identical to the supplied file; supplied summarise.py produced REPORT.md. Additional artifact checks passed: all component JSON parses, one output per non-Transform component, no duplicate path/type filename overwrites, no unresolved '?' exposed-port IDs, expected common throttle/brake/reverser ports, all five temporary DieselDump_* folders cleaned. Unity exited itself. Completion is based on result.json and case evidence, not process exit alone.
+
+| Basis | Bogie enum | Buffer enum | Idle/max RPM | Highest supplied power-curve knot | fuelInjection raw coefficient |
+|---|---|---|---|---|---|
+| DE2 | DE2 | Buffer03 | 600/2000 | 400 kW at 1800 RPM | 0.3 |
+| DE6 | DE6 | Buffer05 | 315/950 | 1700 kW at 900 RPM | 1.6 |
+| DH4 | DH4 | Buffer03 | 600/1600 | 1000 kW at 1500 RPM | 1.3 |
+| DM3 | Default | Buffer03 | 300/1000 | 360 kW at 840 RPM | 0.35 |
+| DM1U | Microshunter | Buffer05 | 700/2200 | 110 kW at 1900 RPM | 0.1 |
+
+power caveat: these are serialized curve knots, not a sampled maximum of the interpolated curve or a calibration for an RR prototype. Full curves/tangents and engine defaults are preserved in the component dumps. fuelInjection unit is not inferred here.
+
+mapping corrections to supplied diesel-research.md section 7:
+- DE2/DE6 and DH4 confirm throttle.EXT_IN, brake.EXT_IN, indBrake.EXT_IN, reverser.CONTROL_EXT_IN and headlightsControlFront/Rear. Electric motors 2/6 and three fuses confirmed. DE6 dynamicBrake/bell present; DE2 lacks both.
+- DH4 control is hydroDynamicBrake, NOT a node named dynamicBrake; fluidCoupler, cabLight, bell, coolant and automatic cooler present.
+- DM3 has indBrake/retarder, gearInputA/B and transmissionA/B, but NO headlightsControlFront/Rear. A/B ratios [5,3,2] and [4,3,1.5]. Combined gear nodes also exist; no single transmission node. Do not apply the electric headlight map blindly.
+- DM1U has NO indBrake or retarder control node. It has gearSelect, transmission, headlightsControlFront/Rear and cabLightControlDecoder. Single gearbox ratios [0,15,10.6,7.8,5.8,4.4,3.4]. Engine retarderBrakingTorque=6500 is a default field, not evidence of a player retarder control.
+
+counts, in order DE2/DE6/DH4/DM3/DM1U: child sim nodes 41/45/38/40/33; non-Transform proxy components 70/77/68/67/57; total components including Transforms 112/123/107/108/91. Serialized torque links 2/2/1/3/2; port-reference entries 57/59/43/57/43 (including optional empty targets where present), substantially above the static-regex estimates. Execution-order entries 41/45/38/40/33. REPORT.md's all-component count is not directly comparable with an approximate sim-definition count.
+
+hierarchy: the non-sim main-prefab hierarchy is identical across all five cases: generic template bogies, axles, colliders, buffers, coupler/hose/MU rigs, plate anchors, Model and AOShadow. Livery enums differ; placeholder meshes are not live importer-replaced bogies. These calls add no separate diesel cab/fuel/brake fitting geometry to that hierarchy. Harness does not traverse the separate wizard-created external-interactables prefab. Diesel-specific extras are the engine/fuses/resources, generator/motors/slug helpers, fluid-coupler cooling and type-specific gear controls. No steam baseline was executed; this is not a full steam/diesel differential test.
+
+limits: actual editor wizard + creator construction and in-memory serialized defaults verified. No modified-sim prefab save/reload, custom-serialization/export/import lifecycle, asset bundle or DV sim tick tested. Editor lists are populated while some runtime backing strings remain empty (fusesJson and motor _configs, for example); normal custom serialization hooks must run in the future export path. Do not mistake empty backing strings for missing editor data or claim diesel gameplay readiness. Closed-demand, control feel, input routes, physics calibration and X42 runtime gates remain pending.
+
+evidence (local, not committed): C:/Users/james/Desktop/diesel-test-20260929/original-output/{result.json,REPORT.md,FINDINGS.md,validation.json,unity.log}, five summary JSONs and full components folders. Complete evidence ZIP: C:/Users/james/Desktop/diesel-test-20260929/diesel-dump-results-20260929.zip, SHA256 98ba81a361370bbb9b395726794466f7ab787e707be1f280b538c5b7f8a4fd40. Includes reports/dumps/log, no Unity project, source mod, DLL or mesh assets. Original test ZIP SHA256 36f80d6030497aaf151bfce1712d42762898638d29b378485f449da4b94af1e5; CarCreator package SHA256 d13d73cad397be5848e13e34ca18c478f5db74d030715e1c7d953ca2accc34c6.
+command: Unity.exe -projectPath <scratch>/project -executeMethod Rr2dvDieselDump.Run -logFile <output>/unity.log, RR2DV_DUMP_OUT=<output>, windowed hidden, no batchmode. Existing app checkout/uncommitted files preserved; board-only main commit uses isolated Git index. Same findings posted to local shared board.
