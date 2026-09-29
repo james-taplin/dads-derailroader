@@ -196,7 +196,13 @@ height band and depth. If that also fails, an *ambiguous end beam* or *insuffici
 requires review. Measure the current model first, including the broad beam face and nearby coupler/lift hardware.
 The failed build's `build_report.txt` now carries that measurement: `rr2dv end-beam survey` lists, for both ends and each
 0.2 m height band, the upright faces seen along the car axis (depth, ray count, support either side, distance from the
-source car end, part names). Send it; a reviewed band is written from it, never from what merely passes.
+source car end, part names). From that survey rr2dv also proposes a reviewed band itself, when the measurement supports one:
+`geometry-review-proposed.json` in the run's reports folder (the message and `run.log` give the path), with the survey
+figures as its evidence. It is never applied on its own: **Use proposed geometry** (or `--geometry-review` with that file)
+chooses it, then convert again. A band is proposed only when, at every end rigged on a beam, the builder's own check passes
+in it (20 rays on one face), the face has 3 or more of those rays either side of x +-0.3 m, it lies within 0.35 m of the
+source car end, and the same plane (within 3 cm) shows at another height; the band nearest coupler height wins. Otherwise
+the message says why none was proposed and a manual review is needed.
 Do not choose a band merely because it passes. The height band changes where the existing rays sample; it does
 not change coupler height, the minimum ray count, clearance checks or any acceptance requirement.
 

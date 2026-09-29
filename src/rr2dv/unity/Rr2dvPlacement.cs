@@ -359,36 +359,80 @@ public static partial class CclLocoBuild
     // 0.35 m) and part names. It changes nothing; the build still stops.
     static void SurveyRr2dvEndBeams()
     {
+        var ci = System.Globalization.CultureInfo.InvariantCulture;
+        string N(float v) => v.ToString("0.###", ci);
+        string Q(string t) => "\"" + (t ?? "").Replace("\\", "\\\\").Replace("\"", "\\\"") + "\"";
+        var json = new System.Text.StringBuilder();
+        json.Append("{\"schema\":1,\"car\":").Append(Q(CarId)).Append(",\"isTender\":").Append(Cfg.IsTender ? "true" : "false")
+            .Append(",\"couplerHeight\":").Append(N(Cfg.CouplerHeight)).Append(",\"ends\":[");
+        bool firstEnd = true;
         foreach (int dir in new[] { 1, -1 })
         {
             float? end = dir > 0 ? Cfg.RrEndFront : Cfg.RrEndRear;
+            // the ends the core rigs on a measured beam: not a drawbar end (tender front, loco rear with a tender), no buffer
+            // or explicit coupling face (CclLocoBuild.BuildExterior couplers)
+            bool drawbar = dir > 0 ? Cfg.IsTender && Cfg.RrEndFront.HasValue : Cfg.Tender != null && Cfg.RrEndRear.HasValue;
+            bool rigged = !drawbar && (dir > 0 ? Cfg.CouplingFaceFront : Cfg.CouplingFaceRear) == null &&
+                          (dir > 0 ? Cfg.BufferFront : Cfg.BufferRear) == null;
             var hits = new System.Collections.Generic.List<(Vector3 p, string part)>();
+            var core = new System.Collections.Generic.List<string>();
             using (var vh = new VisualHits(RefBody))
+            {
                 for (int ix = -10; ix <= 10; ix++)
                     for (int iy = 0; iy <= 36; iy++)
                         if (vh.Ray(new Vector3(ix * .1f, .2f + iy * .05f, dir * 30f), new Vector3(0, 0, -dir), 30f, out var h) &&
                             dir * h.normal.z >= .95f && dir * h.point.z > .5f)
                             hits.Add((h.point, h.collider.transform.parent.name));
+                // the core's own default check (CclLocoBuild.EndBeam) per 0.2 m band: x -0.6..0.6 by 0.1, five rows, every hit,
+                // the largest 1 cm depth bin within 0.5 m of the outermost hit; it passes with 20 hits and a 20-ray bin
+                for (float low = .2f; low <= 1.801f; low += .1f)
+                {
+                    var ray = new System.Collections.Generic.List<(float x, float z, string part)>();
+                    for (int ix = -6; ix <= 6; ix++)
+                        for (float y = low; y <= low + .201f; y += .05f)
+                            if (vh.Ray(new Vector3(ix * .1f, y, dir * 30f), new Vector3(0, 0, -dir), 30f, out var h))
+                                ray.Add((ix * .1f, h.point.z, h.collider.transform.parent.name));
+                    if (ray.Count == 0) continue;
+                    float outer = ray.Max(r => dir * r.z);
+                    var bin = ray.Where(r => outer - dir * r.z <= .5f).GroupBy(r => Mathf.RoundToInt(dir * r.z * 100f))
+                        .OrderByDescending(g => g.Count()).First().ToList();
+                    core.Add("{\"low\":" + N(low) + ",\"high\":" + N(low + .2f) + ",\"hits\":" + ray.Count + ",\"bin\":" + bin.Count +
+                             ",\"beam\":" + N(bin.Average(r => r.z)) + ",\"binLeft\":" + bin.Count(r => r.x <= -.299f) +
+                             ",\"binRight\":" + bin.Count(r => r.x >= .299f) + ",\"parts\":[" +
+                             string.Join(",", bin.Select(r => Q(r.part)).Distinct().Take(4)) + "]}");
+                }
+            }
             Line($"rr2dv end-beam survey {(dir > 0 ? "front" : "rear")}: source car end {(end.HasValue ? end.Value.ToString("F3") : "unknown")}, " +
-                 $"{hits.Count} upright transverse hits (x -1.0..1.0 m, y 0.20..2.00 m)");
+                 $"{hits.Count} upright transverse hits (x -1.0..1.0 m, y 0.20..2.00 m){(rigged ? "" : "; this end is not rigged on a beam")}");
+            var faces = new System.Collections.Generic.List<string>();
             for (float low = .2f; low <= 1.801f; low += .1f)
             {
                 var band = hits.Where(h => h.p.y >= low - .001f && h.p.y <= low + .201f).OrderByDescending(h => dir * h.p.z).ToList();
-                var faces = new System.Collections.Generic.List<string>();
-                for (int i = 0; i < band.Count && faces.Count < 3;)
+                var shown = new System.Collections.Generic.List<string>();
+                for (int i = 0; i < band.Count;)
                 {
                     float z0 = band[i].p.z;
                     var face = band.Skip(i).TakeWhile(h => Mathf.Abs(h.p.z - z0) <= .015f).ToList();
                     i += face.Count;
                     if (face.Count < 6) continue;
                     float z = face.Average(h => h.p.z);
-                    faces.Add($"z {z:F3} ({face.Count} rays, {face.Count(h => h.p.x <= -.299f)} left / {face.Count(h => h.p.x >= .299f)} right of 0.3 m" +
-                              (end.HasValue ? $", {z - end.Value:+0.000;-0.000} m from the source end" : "") +
-                              $"; {string.Join(", ", face.Select(h => h.part).Distinct().Take(3))})");
+                    int left = face.Count(h => h.p.x <= -.299f), right = face.Count(h => h.p.x >= .299f);
+                    var parts = face.Select(h => h.part).Distinct().Take(3).ToList();
+                    faces.Add("{\"low\":" + N(low) + ",\"high\":" + N(low + .2f) + ",\"z\":" + N(z) + ",\"rays\":" + face.Count +
+                              ",\"left\":" + left + ",\"right\":" + right + ",\"parts\":[" + string.Join(",", parts.Select(Q)) + "]}");
+                    if (shown.Count < 3)
+                        shown.Add($"z {z:F3} ({face.Count} rays, {left} left / {right} right of 0.3 m" +
+                                  (end.HasValue ? $", {z - end.Value:+0.000;-0.000} m from the source end" : "") + $"; {string.Join(", ", parts)})");
                 }
-                if (faces.Count > 0) Line($"  band {low:F2}..{low + .2f:F2} m: {string.Join(" | ", faces)}");
+                if (shown.Count > 0) Line($"  band {low:F2}..{low + .2f:F2} m: {string.Join(" | ", shown)}");
             }
+            json.Append(firstEnd ? "" : ",").Append("{\"end\":").Append(Q(dir > 0 ? "front" : "rear")).Append(",\"dir\":").Append(dir)
+                .Append(",\"rigged\":").Append(rigged ? "true" : "false").Append(",\"sourceEnd\":").Append(end.HasValue ? N(end.Value) : "null")
+                .Append(",\"faces\":[").Append(string.Join(",", faces)).Append("],\"core\":[").Append(string.Join(",", core)).Append("]}");
+            firstEnd = false;
         }
+        json.Append("]}");
+        File.WriteAllText(Path.Combine(outDir, "endbeam-survey.json"), json.ToString());
     }
 
     static void Rr2dvReleaseSeat()

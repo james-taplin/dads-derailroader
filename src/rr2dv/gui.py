@@ -289,6 +289,11 @@ class App:
         self.use_radius = ttk.Button(buttons, text="Use measured radius", state="disabled", command=self._use_candidate)
         self.use_radius.pack(side="left", padx=6)
         self.candidate: float | None = None
+        self.use_geometry = ttk.Button(buttons, text="Use proposed geometry", state="disabled", command=self._use_proposal)
+        self.use_geometry.pack(side="left")
+        Tooltip(self.use_geometry, "After a stop on the end beam: the geometry review rr2dv measured from that build (its evidence "
+                                   "is in the file). Fills in Reviewed geometry; press Convert to build with it.")
+        self.proposal: Path | None = None
 
     # ---- plumbing -----------------------------------------------------------------------------------------------------
     def _modal_error(self, *args, **kwargs) -> None:
@@ -514,6 +519,7 @@ class App:
         self.open_record.configure(state="disabled")
         self.open_build.configure(state="disabled")
         self.use_radius.configure(state="disabled")
+        self.use_geometry.configure(state="disabled")
         self._log(f"Converting {ident} from {folder}…")
 
         def progress(stage, status, detail):
@@ -567,6 +573,12 @@ class App:
             self.wheel.set(f"{self.candidate:.4f}")
             self._log(f"Wheel radius set to the measured candidate {self.candidate:.4f} m; press Convert to build with it.")
 
+    def _use_proposal(self) -> None:
+        """Fills in the geometry review measured from the last run's end-beam survey; the user still starts the conversion."""
+        if self.proposal:
+            self.geometry.set(str(self.proposal))
+            self._log(f"Reviewed geometry set to the proposal {self.proposal}; check its evidence, then press Convert.")
+
     def _converted(self, outcome) -> None:
         self._set_busy(False)
         applog.get().info("conversion finished (exit %s): %s; run %s", outcome.code, outcome.message,
@@ -581,6 +593,12 @@ class App:
         self.candidate = radius.get("candidate") if radius else None
         self.use_radius.configure(state="normal" if self.candidate else "disabled",
                                   text=f"Use measured radius ({self.candidate:.4f} m)" if self.candidate else "Use measured radius")
+        proposal = record.get("geometryProposal")
+        paths = [Path(proposal)] if proposal else []
+        if proposal and outcome.run:
+            paths.append(outcome.run.path / Path(proposal).name)
+        self.proposal = next((p for p in paths if p.is_file()), None)
+        self.use_geometry.configure(state="normal" if self.proposal else "disabled")
         installed = "Installed into your Derail Valley Mods folder. Check it in the game before calling it done: every control, " \
                     "closed throttle and whistle, brakes, lamps and the coupling (the conversion report lists what was chosen automatically)."
         if outcome.code == EXIT_OK:
