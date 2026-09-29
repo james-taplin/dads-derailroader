@@ -717,7 +717,16 @@ public static partial class CclLocoBuild
             var oilDefinition = root.transform.Find("[sim]/oilingPoints")?.GetComponents<Component>()
                 .FirstOrDefault(c => c.GetType().Name == "ManualOilingPointsDefinitionProxy");
             if (!oilDefinition) throw new InvalidOperationException("Missing simulation oiling-point definition");
-            Set(oilDefinition, "OilingPointCount", points.Length);
+            if (points.Length > 0) Set(oilDefinition, "OilingPointCount", points.Length);
+            else
+            {
+                // No manual oiling (James, 2026-09-29): with no seat at any driving axle, the oiling system keeps one internal
+                // point that never drains (no cup, the oil lamp never lights, no running-gear wear), rather than zero points,
+                // whose "lowest oil level" Derail Valley may read as empty. Deliberate and reported; the audit accepts it.
+                Set(oilDefinition, "OilingPointCount", 1);
+                Set(oilDefinition, "consumptionPerRev", 0f);
+                Warn("rr2dv oil: no accessible seat at any driving axle: no manual oiling (one internal oiling point that never drains, no cup)");
+            }
             oilDefinition.GetType().GetMethod("OnValidate", BF)?.Invoke(oilDefinition, null);
             Line($"rr2dv oil layout: {placed.Count} cups ({nubs.Count} rod-nub candidates, {hints.Length} provisional axle hints)");
             Line($"rr2dv oil simulation count: {points.Length}");
@@ -728,10 +737,10 @@ public static partial class CclLocoBuild
 
     // Oil-cup budget (James, 2026-09-29): one left/right pair per driving axle, 10 cups at most on a large loco. Every
     // rod nub became a pair before, so a model rich in nubs got cups on every surface (C&O T1: 28 cups, 8 pairs bunched
-    // around the cylinders and crossheads). Each driving axle (the provisional axle hints) takes the nub pair nearest its z
-    // within 0.6 m (a crank throw and margin), else the running gear's tops or the running board at the axle; at most 5
+    // around the cylinders and crossheads; James raised the cap from 10 to 12 cups for x-4-4-x articulateds). Each driving axle (the provisional axle hints) takes the nub pair nearest its z
+    // within 0.6 m (a crank throw and margin), else the running gear's tops or the running board at the axle; at most 6
     // pairs, nub-matched axles first; unused nubs are dropped and listed.
-    const int Rr2dvOilPairsMax = 5;
+    const int Rr2dvOilPairsMax = 6;  // 12 cups: an x-4-4-x articulated (James, 2026-09-29)
 
     static System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)> Rr2dvOilBudget(
         System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)> pairs,

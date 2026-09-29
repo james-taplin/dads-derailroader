@@ -173,11 +173,16 @@ public static class Rr2dvAudit
             var oilDefinition = One("ManualOilingPointsDefinitionProxy", "placed oil-cup count");
             if (oilDefinition != null)
             {
-                var count = new SerializedObject(oilDefinition).FindProperty("OilingPointCount");
-                if (count == null || count.intValue != oilCups.Length)
+                var so = new SerializedObject(oilDefinition);
+                var count = so.FindProperty("OilingPointCount");
+                var perRev = so.FindProperty("consumptionPerRev");
+                // the no-manual-oiling failsafe (Rr2dvPlacement): one internal point that never drains, no cup
+                bool noManualOiling = oilCups.Length == 0 && count != null && count.intValue == 1 && perRev != null && perRev.floatValue == 0f;
+                if (noManualOiling) warnings.Add("no manual oiling: no accessible seat at any driving axle, so the oiling system never drains (failsafe)");
+                else if (count == null || count.intValue != oilCups.Length)
                     errors.Add("oil simulation count differs from the placed cups");
             }
-            if (oilCups.Length == 0) warnings.Add("no accessible manual oil-cup pair was placed");
+            if (oilCups.Length == 0 && oilDefinition == null) warnings.Add("no accessible manual oil-cup pair was placed");
 
             // BR-01 (board X41): the stock brake-release fitting stands upright with its red handle pointing outward: in the
             // car's space its +z (handle) points to the side it is on and its +y (hanger) points up. Never rolled over.

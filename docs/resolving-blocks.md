@@ -263,10 +263,12 @@ scaled to 80 %`); if nothing holds even that, it stays at the source decal with 
 
 Oil cups: the driving groups' own clips are played through a revolution; a part whose middle travels is a rod (a cup
 on it rides with it), a part that turns in place is a wheel, axle or crank (no cup on it), whatever the parts are called
-(`rr2dv oil running gear by motion` in `build_report.txt`). At most one left/right pair per driving axle and 10 cups in
+(`rr2dv oil running gear by motion` in `build_report.txt`). At most one left/right pair per driving axle and 12 cups in
 all: each driving axle takes the rod nub pair nearest it (within 0.6 m); an axle with none near it gets its cups on the
 running gear's flat tops or the running board beside it instead (the GN A-18's only nubs were at the crossheads); spare
-nubs are dropped (`rr2dv oil budget` in `build_report.txt`).
+nubs are dropped (`rr2dv oil budget` in `build_report.txt`). If no driving axle has any usable seat, the loco needs no
+manual oiling: its oiling system keeps one internal point that never drains (no cup, no oil lamp, no wear), reported as
+`rr2dv oil: … no manual oiling` in `build_report.txt` and as an audit note.
 
 HUD: besides CCL's steam layout, the HUD shows the whistle, tender coal, the sander and the sand level.
 
