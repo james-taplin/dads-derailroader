@@ -2034,3 +2034,21 @@ Branch `0.2.X-exp`, commit 3cbfbcf (no pre-release; James makes one).
 Tested: new appmodel and GUI tests (Xvfb); full suite 270 tests, only the 2 known test_csharp_api stub failures.
 Untested: on Windows with James's real reports folder.
 X64 (diesel lifecycle research) read; nothing for the app yet.
+
+## W80 (cloud Claude, 2026-09-29): four generated control classes; coal heap in the measured coal space; logger 0.3
+Branch `0.2.X-exp`, commit bc11a42 (no pre-release; James makes one). App-side only (`src/rr2dv/unity/`), no tooling change.
+James's RXM-1B drive: controls fine by hand and key; F4 still cannot flip the brake cutout or switch the lubricator off;
+tender coal a flat box on the front deck through the bulkhead, stoker hopper empty; loco/tender gap parked (minor).
+- Control classes (James: "levers, wheels, springs and switches"), by DV function, never by loco (buildrecord
+  CONTROL_CLASS -> BuildInput `controlClasses`): switch = CCL ToggleSwitchProxy drawn as the generated lever (air pump,
+  dynamo, cab light, brake cutout, lubricator, bell, cylinder cocks, sander); wheel (injector, blower, blowdown); spring
+  (generated whistle); lever (the rest). RR cab handles unchanged. Hypothesis: the two-notch lever joint held its notch
+  against the HUD (F4 flipped the cab light only after it became a wheel). Replaces W74's core request with an app-side pass.
+- Coal: FitRr2dvCoalLoad now measures the coal space from above under RR's coal target (floor incl. stoker trough, side
+  sheet rim, walls: doors/bulkhead = rise > 0.2 m to above half depth, rim up sloped sides, flat deck above half depth);
+  the load box is fitted to it and the heap is a separate mesh per measured row. Unknown why W7x's heap showed as a box
+  in game (the report said it was applied): the audit now records the exported coal load's mesh and warns on the plain box.
+- Logger 0.3: traces changed calls into DV's OverridableBaseControl subclasses (found by name) with cursor state.
+- Train brake 4 notches still waits on evidence: the uploaded log was logger 0.1.0 (no pressures). Needs logger 0.3.
+Tested: Python suite (270, only the 2 known test_csharp_api stub failures; new build-input class test); new C# compiled
+at C# 7.3 with Roslyn against stubs (harness); logger at C# 5 against stubs. Untested: Unity build and the game.
