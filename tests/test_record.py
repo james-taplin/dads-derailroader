@@ -155,5 +155,19 @@ class Draft(unittest.TestCase):
             convert(self.m["mod"], self.machine, search=[self.m["search"]], livery="Green")
 
 
+class LiveryColours(unittest.TestCase):
+    def test_a_colour_listed_twice_keeps_the_first(self):
+        # RLW RMWF-2 'RLW Grey' lists 'roof' twice; the builder keys colours by id ignoring case and stopped on the repeat
+        from rr2dv import buildrecord
+        b = object.__new__(buildrecord._Builder)
+        chosen = []
+        b.choose = chosen.append
+        cfg = {"Liveries": [["RLW Grey", [["Roof", "#111111"], ["Body", "#222222"], ["roof", "#333333"]]]], "Livery": "RLW Grey"}
+        b._liveries(cfg, "rlw-2-8-8-4-l")
+        self.assertEqual(cfg["Liveries"][0][1], [["Roof", "#111111"], ["Body", "#222222"]])
+        self.assertIn("'roof' more than once (#333333 dropped, #111111 kept)", chosen[0])
+
+
+
 if __name__ == "__main__":
     unittest.main()

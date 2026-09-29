@@ -1137,6 +1137,19 @@ class _Builder:
             cfg["Livery"] = "Default"
             self.choose(f"{vid}: the definition has no livery; one untinted 'Default' livery (the textures as exported)")
             return
+        # The builder keys livery colours by id, ignoring case, and stops on a repeat (RLW RMWF-2 'RLW Grey' lists 'roof'
+        # twice, 2026-09-29): keep each id's first colour, as a lookup that finds the first match does, and say so.
+        for livery in cfg["Liveries"]:
+            seen, kept = {}, []
+            for cid, value in livery[1]:
+                key = str(cid).casefold()
+                if key in seen:
+                    same = "the same colour" if seen[key] == value else f"{value} dropped, {seen[key]} kept"
+                    self.choose(f"{vid}: livery '{livery[0]}' lists colour '{cid}' more than once ({same}); the first is used")
+                    continue
+                seen[key] = value
+                kept.append([cid, value])
+            livery[1] = kept
         names = [l[0] for l in cfg["Liveries"]]
         if prefer in names:
             cfg["Livery"] = prefer
