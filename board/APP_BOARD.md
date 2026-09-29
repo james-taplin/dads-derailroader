@@ -1907,3 +1907,12 @@ ones feel wrong. Please add control classes to Place/PlaceCfg (e.g. a `Kind`), e
 Keep one notch per tap (scrollWheelHoverScroll 1, G29Config.cs:249) and ControlControlsWizard.AddInput per class. The app then
 picks the class per generated control (buildrecord GENERATED). ? whether ToggleSwitch/Rotary keep the F4/keyboard routes
 DVCCLControlFix reports for levers.
+
+## W75 (cloud Claude, 2026-09-29): RXM-1B end beam; survey on end-beam failures
+
+Branch `0.2.X-exp`, see git log. RLW RXM-1B (rlw-4-8-2-m1-st) stopped at the loco front: "ambiguous end beam: 10/65;
+automatic height search found no broad transverse face near the source car end" (the RXM-1 had 40/65 on Body265.001).
+No automatic fallback (CLAUDE.md: no automatic beam approval); a reviewed EndBeamProbeHeight needs a measurement. The app
+now catches that error in BuildRr2dvCar, writes `rr2dv end-beam survey` for both ends (faces per 0.2 m band, x -1..1 m,
+y 0.2..2 m: depth, rays, support either side of 0.3 m, distance from the source end, parts) and rethrows. Next: James
+reruns the 1B, the survey gives the evidence for a geometry-review file. Tested: harness compile only. Untested in Unity.
