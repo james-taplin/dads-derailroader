@@ -2160,3 +2160,9 @@ Declared parts are now matched by their path segments in order when the direct p
 Branch `0.3.X-exp`. The K-66 stoker build exported but the audit refused it: openingCount still counted the source's
 Stoker/Auger toggles that Rr2dvStoker drives instead of building click controls. audit_input now skips toggles matching
 auger|stoker when metadata.firing is mechanical-stoker (same rule as the build). Tested: Python suite, new assertion.
+
+## W91 (cloud Claude, 2026-09-29): A-18 audit count (same toggle name on loco and tender)
+Branch `0.3.X-exp`. GN A-18 exported, audit: "Expected 10 ancillary controls, exported 11": loco 'Water Hatch' left out
+(no clip), tender 'Water Hatch' built; left_out_openings matched by name only. The left-out WARN now reads
+"'X' on <CarId> left out" and the audit matches name, clip and car (old reports without the car still match by name).
+Tested: Python suite, extended c70 test. Unity-untested.
