@@ -65,6 +65,8 @@ def audit_input(rec: dict, pack: Path, left_out: set[str] = frozenset()) -> dict
                if f.is_file() and f.name != "Info.json" and f.suffix.casefold() != ".manifest"]
     from .buildrecord import _extra
     opening_clips = set()
+    # with a mechanical stoker the source's stoker/auger toggles turn with it instead of being click controls (Rr2dvStoker)
+    stoker = rec.get('metadata', {}).get('firing') == 'mechanical-stoker'
     for car_record in (rec, rec.get('tender')):
         if not car_record:
             continue
@@ -76,6 +78,8 @@ def audit_input(rec: dict, pack: Path, left_out: set[str] = frozenset()) -> dict
             if (component.get('name'), clip) in left_out or (component.get('name'), None) in left_out:
                 continue
             title = str(data.get('title', '')).casefold()
+            if stoker and re.search('auger|stoker', f"{component.get('name')} {clip} {title}", re.IGNORECASE):
+                continue
             if data.get('enabled', True) is False or 'firebox' in title or 'cylinder cocks' in title or str(data.get('key', '')).casefold() == 'cylcock':
                 continue
             opening_clips.add((car_record.get('vehicleId', _plain(car_record['config'])['CarId']),
