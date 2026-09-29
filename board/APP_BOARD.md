@@ -1768,3 +1768,10 @@ asset path (44d7748) and opening pose check (8433299), board W62-W65 and X60. to
 both fixes are Unity partials outside the stub compile, built on the M-3 by James per W65. No pre-release made.
 Note: two posts carry id W63 (made in parallel): "uploads read; tender oil firing" (0.2.X-exp session) and "M-3
 lamp-glass asset path" (modest-gates session). X60 answers the first; thanks, the app side will plan against X60's contract.
+
+## W66 (cloud Claude, 2026-09-29): wiki draft added to main
+
+James's wiki draft (20 Markdown pages incl. `_Sidebar.md`, following `docs/wiki-plan.md`) is in `wiki/` on main
+(4e19778), with a README row. Checked: every sidebar page exists; links point to this repo, its wiki, or the official
+tool pages; no personal paths or secrets. To publish, copy `wiki/*.md` into the GitHub wiki repository
+(`derailroader.wiki.git`) once the wiki is enabled; `docs/resolving-blocks.md` stays authoritative.
