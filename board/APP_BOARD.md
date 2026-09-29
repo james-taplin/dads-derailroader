@@ -2096,3 +2096,29 @@ New branch `0.3.X-exp` from main, commit 7eb503c (no pre-release; James makes th
 Tested: Python suite (275; the 2 known stub failures), GUI tests under Xvfb, new tests (listing, input rule, a full fake
 conversion from an AssetPacks pack writing nothing to the Railroader install). Untested: a real base-game export/build
 (suggested first: K-28 tank, one prefab in its catalogue).
+
+## W85 (cloud Claude, 2026-09-29): mechanical stoker built app-side (W57/W63/X60)
+Branch `0.3.X-exp`, commit 2631f03 (no pre-release). James asked to finish the stoker; the W57 core request had no
+snapshot, so it is app-side (`src/rr2dv/unity/Rr2dvStoker.cs`), on CCL's SteamMechanicalStoker as X60 described. W57's
+core request for the coal stoker is withdrawn; tender oil firing (W63) stays open for the core.
+- Review: firing 'mechanical-stoker' accepted (was refused); suggested when the loco/tender has a component named
+  stoker/auger (K-66), else hand-fired.
+- Control: generated backhead 'Stoker' valve wheel (class wheel, keys ControlControlsWizard GearboxA = 8), HUD Gearbox A
+  via ControlsReaderExtra gearboxA (James: no dynamic-brake slot or UI on a steam loco) -> saved `stokerControl`,
+  neutral state 0 for MU/remote.
+- Sim: `stoker` refs CONTROL, boiler.PRESSURE, firebox COAL_LEVEL/COAL_CAPACITY/COAL_CONTROL_EXT_IN, coal AMOUNT and
+  CONSUME_EXT_IN; STEAM_CONSUMPTION added as input STOKER to steamConsumptionCalculator; execution order control ->
+  stoker -> sum. Tender locos: X60's missing link done as the water scheme: tender coal provider AMOUNT
+  (TENDER_COAL_AMOUNT) + consumer CONSUME_EXT_IN (TENDER_COAL_CONSUME, 0, propagate back); loco tenderCoal gains AMOUNT
+  and CONSUME_EXT_IN ports with the mirror consumer/provider. Shovel/coal pile kept (X60: no overwrite).
+- Numbers from the loco itself (no preset): MaxTransferRate = 1.5 x firebox maxCoalCapacity / burnTime x
+  coalConsumptionMultiplier; MaxSteamConsumption = compressor maxSteamConsumption (analogue: small steam engine);
+  MaxWorkingPressure = half the safety-valve opening pressure; SmoothTime 5 (CCL default); firebox multiplier matched.
+- Auger: exactly one visible mesh named auger/stoker/screw/conveyor/worm (or its parent), long (>= 4x) and round
+  (other extents within 1.5x), within 30 deg of level -> new pivot on its PCA axis and CCL RotatorPortReader on
+  `stokerDrive.NORMALIZED` (tender ConfigurablePorts fed from loco stoker.STOKING_NORMALIZED, tag
+  RR2DV_STOKING_NORMALIZED), 0.5 rev/s at full (visual DV_choice). Otherwise no animation, reason in the build report.
+Tested: Python suite (278; 2 known stub failures), GUI tests, new review/build tests; Rr2dvStoker.cs compiled at C# 7.3
+against stand-in CCL/Unity types. Untested: Unity build, game (feed balance, steam draw, save/reload, disconnect/
+reconnect, alternating shovel+stoker, full/empty bunker per X60), the auger. Question for the local sessions: is
+the SmoothTime run-down after closing acceptable for CTRL-02 here (the stoker is a feed, not a steam valve)?
