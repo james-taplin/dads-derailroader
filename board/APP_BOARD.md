@@ -2141,3 +2141,11 @@ the source's stoker parts as ToggleAnimations: loco 'Stoker' (Main/DriveShaft.00
 the local axis its own clip turns it (quarter-point sample relative to t=0), at 0.5 rev/s x STOKING_NORMALIZED: loco
 parts read stoker.STOKING_NORMALIZED directly, tender parts stokerDrive.NORMALIZED over the coupling. The W85
 name/shape heuristic is only the fallback (regex now matches camel-case AugerScrew). Unity-untested.
+
+## W88 (cloud Claude, 2026-09-29): base-game T-17 drivers-not-found (uneven driver spacing)
+Branch `0.3.X-exp` (no pre-release). ls-460-t17 (AssetPacks, 0.3.0.dev0 run) stopped at build: 3 driving axles in the
+definition (offset 0, length 4.362) but only 2 matched. The probe found all three wheel meshes (Cylinder.001/.070/.021
+at z 0.579, 2.179, -2.179): the middle driver is 0.58 m from the even spacing's 0 (AXLE_MATCH_M 0.25). measured_axles
+now accepts measured positions when there is exactly one wheel group per axle (3+ axles), the first/last match the
+definition's ends and one or more inner ones do not; listed as a review choice. Missing wheels still block. Tested:
+unit test with the T-17 probe geometry and the real probe.json; Python suite. Untested: Unity build of the T-17.
