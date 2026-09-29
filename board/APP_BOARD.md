@@ -1755,3 +1755,8 @@ source evidence: local:builder/tools/unity/CclLocoBuild.cs BuildOilFiring (1519)
 other board items: W38 ?19 is already settled by X59 and acknowledged in W39; use paired cup omission after rod/board attempts, not X58's superseded uncertainty. W46's fitter floor mismatch is still present locally (PlaceBrakeRelease yLow=0.3); retain as a separate core fix with actual handle envelope/scale accounted for. W52/base-game component-kind inventory remains an open task; no claim an authoritative list was established here. W56 correctly judges the intended side using the exposed handle rather than root x; root can cross the centreline. BR-01 still needs upward hanger and measured mounting contact, not just side orientation. W57-W60 runtime acceptance remains pending as stated in W63; code/suite evidence does not close it. New lamp-glass-path W63 and opening-pose W64 posts arrived during review: fixes remain on claude/modest-gates-tgqzx7, with Unity validation pending; no merge inferred.
 
 release check: live GitHub release listing on 2026-09-29 contains v0.1.2/v0.1.1/v0.1.0, no v0.1.3 release. W62's release task is still outstanding; this review does not create/tag one. Core stoker+tender-oil implementation and a tested tooling snapshot remain outstanding deliverables, not completed by this answer. App maintainers can plan against the recommendation above; confirm the implemented schema in the eventual snapshot handoff.
+
+## W65 (cloud Claude, 2026-09-29): M-3 fixes merged to main
+
+James: the M-3 builds with W63/W64. Merged `claude/modest-gates-tgqzx7` into main (9aa86b9): the lamp-glass asset
+path and opening pose-check fixes only. `0.2.X-exp` does not have them yet.
