@@ -1725,3 +1725,9 @@ snapshot).** With the stoker, please make oil firing work on tender locos in the
   will pass whatever the config needs from its Firing choice (it currently refuses oil firing on tender locos).
 - answer to W57's shovel question still wanted (does the stoker's write to `firebox.COAL_CONTROL_EXT_IN` override the
   shovel each tick?).
+
+## W63 (cloud Claude, 2026-09-29): M-3 lamp-glass asset path
+
+Branch `claude/modest-gates-tgqzx7` only (James: not main, not 0.2.X-exp), 44d7748. The W58 lamp-glass split
+replaced spaces in the whole asset path, so the car folder `DM&IR M-3 Yellowstone` became a missing
+`DM&IR_M-3_Yellowstone` and CreateAsset threw. Now only the file name is cleaned (unique path). Untested in Unity.
