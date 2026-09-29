@@ -87,6 +87,7 @@ public static partial class CclLocoBuild
         FitRr2dvCoalLoad();
         CreateCar();
         BuildExterior();
+        if (c.IsTender) ShapeRr2dvCoalLoad();
         FinishRr2dvMaterialSlots();
         if (!c.IsTender) AimRr2dvJets();
         StripRr2dvModelLights();
@@ -161,23 +162,34 @@ public static partial class CclLocoBuild
     }
 
     // A generated tender coal load comes from a layout rule ending 0.25 m behind Railroader's car end, but the car end can
-    // sit well ahead of the tender's front sheet: the R48's coal showed as a block across the gap into the cab (James's
-    // game test, 2026-09-29). Coal reaches forward only as far as the tender's sides enclose it at coal height: from the
-    // front, the first 0.15 m run of slices with a side sheet within 0.6 m of the box on both sides (a lone handrail is
-    // thinner). The box is only ever shortened, never below 0.5 m.
+    // sit well ahead of the tender's front: the R48's coal showed as a block across the gap into the cab, and the RXM-1's
+    // stood on the front deck ahead of its coal doors (James's game tests, 2026-09-29). Two measurements, at 30 % and 60 %
+    // of the coal height:
+    //  - the front wall: rays from ahead of the tender back along -z (five across the middle of the box); the median first
+    //    hit is the coal space's front (sheet, coal board or doors); the coal ends 5 cm behind it;
+    //  - failing that, the sides: from the front, the first 0.15 m run of slices with a side sheet within 0.6 m of the box
+    //    on both sides (a lone handrail is thinner).
+    // A front wall that leaves less than 0.5 m moves the box back behind it, keeping its length.
     static void FitRr2dvCoalLoad()
     {
         var cl = Cfg.CoalLoad;
         if (cl == null || !cl.Pivot.HasValue) return;
         var p = cl.Pivot.Value;
-        float half = cl.Footprint.x / 2, rear = p.z - cl.Footprint.y / 2, front = p.z + cl.Footprint.y / 2;
+        float half = cl.Footprint.x / 2, length = cl.Footprint.y, rear = p.z - length / 2, front = p.z + length / 2;
         float reach = half + .6f, start = half + 2f;
-        float edge = float.NaN;
+        float edge = float.NaN, wall = float.NaN;
+        var heights = new[] { .3f, .6f }.Select(f => p.y + cl.FullHeight * f).ToArray();
         using (var vh = new VisualHits(RefBody))
         {
+            var walls = new System.Collections.Generic.List<float>();
+            foreach (float y in heights)
+                foreach (float u in new[] { -.5f, -.25f, 0f, .25f, .5f })
+                    if (vh.Ray(new Vector3(u * half, y, front + 3f), Vector3.back, 3f + length, out var h) && h.point.z > rear + .3f)
+                        walls.Add(h.point.z);
+            if (walls.Count >= 5) wall = walls.OrderBy(z => z).ElementAt(walls.Count / 2);
             bool Side(float s, float y, float z) =>
                 vh.Ray(new Vector3(s * start, y, z), new Vector3(-s, 0, 0), start, out var h) && Mathf.Abs(h.point.x) <= reach;
-            bool Enclosed(float z) => new[] { .3f, .6f }.Any(f => Side(1, p.y + cl.FullHeight * f, z) && Side(-1, p.y + cl.FullHeight * f, z));
+            bool Enclosed(float z) => heights.Any(y => Side(1, y, z) && Side(-1, y, z));
             int run = 0;
             for (float z = front; z >= rear + .5f; z -= .05f)
             {
@@ -185,16 +197,84 @@ public static partial class CclLocoBuild
                 if (run == 3) { edge = z + .1f; break; }
             }
         }
+        string how;
+        if (!float.IsNaN(wall) && (float.IsNaN(edge) || wall - .05f < edge)) { edge = wall - .05f; how = $"the coal space's front wall at z {wall:F3}"; }
+        else how = "the tender sides end there at coal height";
         if (float.IsNaN(edge))
         {
-            Warn("rr2dv coal load: the tender sides enclose no 0.15 m of the coal box at coal height; left as placed (check it in game)");
+            Warn("rr2dv coal load: no front wall or enclosing sides found at coal height; left as placed (check it in game)");
             return;
         }
         if (edge >= front - .02f) return;
+        if (edge - rear < .5f) rear = edge - length;
         cl.Pivot = new Vector3(p.x, p.y, (rear + edge) / 2);
         cl.Footprint = new Vector2(cl.Footprint.x, edge - rear);
-        Line($"rr2dv coal load: front {front:F3} -> {edge:F3} (the tender sides end there at coal height); box {rear:F3}..{edge:F3}, " +
-             $"length {edge - rear:F3} m");
+        Line($"rr2dv coal load: front {front:F3} -> {edge:F3} ({how}); box {rear:F3}..{edge:F3}, length {edge - rear:F3} m");
+    }
+
+    // The generated coal load as a heap, not a block (James, 2026-09-29): the same unit footprint and height as the core's
+    // bottom-pivot box (so the coal-amount scaling is unchanged), highest at the back and centre, falling to 20 % at the
+    // front wall and 45 % at the sides, with walls down to the floor so no gap shows.
+    static void ShapeRr2dvCoalLoad()
+    {
+        if (Cfg.CoalLoad == null) return;
+        string path = $"{carFolder}/{CarId}_template.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            var load = root.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "[coal load]");
+            var mf = load ? load.Find("scaler/coal")?.GetComponent<MeshFilter>() : null;
+            if (!mf) return;
+            string file = System.Text.RegularExpressions.Regex.Replace($"{CarId}_coal_heap", "[^A-Za-z0-9_.-]", "_");
+            var mesh = Rr2dvCoalHeap();
+            AssetDatabase.CreateAsset(mesh, AssetDatabase.GenerateUniqueAssetPath($"{carFolder}/{file}.asset"));
+            mf.sharedMesh = mesh;
+            Line("rr2dv coal load: heap shape (full at the back and centre, 20 % at the front wall, 45 % at the sides)");
+            SaveRr2dvPrefab(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
+
+    static Mesh Rr2dvCoalHeap()
+    {
+        const int n = 12;
+        float H(float u, float w) => (1f - .55f * (2 * u - 1) * (2 * u - 1)) * (w < .35f ? 1f : Mathf.Lerp(1f, .2f, (w - .35f) / .65f));
+        var v = new System.Collections.Generic.List<Vector3>(); var uv = new System.Collections.Generic.List<Vector2>();
+        var t = new System.Collections.Generic.List<int>();
+        for (int j = 0; j <= n; j++)
+            for (int i = 0; i <= n; i++)
+            {
+                float u = (float)i / n, w = (float)j / n;   // u across (x), w rear (-z) to front (+z)
+                v.Add(new Vector3(u - .5f, H(u, w), w - .5f)); uv.Add(new Vector2(u * 2, w * 2));
+            }
+        for (int j = 0; j < n; j++)
+            for (int i = 0; i < n; i++)
+            {
+                int a = j * (n + 1) + i, b = a + n + 1;
+                t.AddRange(new[] { a, b, b + 1, a, b + 1, a + 1 });
+            }
+        // skirt: each perimeter segment of the top down to the floor, both faces
+        var ring = new System.Collections.Generic.List<Vector3>();
+        for (int i = 0; i < n; i++) ring.Add(v[i]);
+        for (int j = 0; j < n; j++) ring.Add(v[j * (n + 1) + n]);
+        for (int i = n; i > 0; i--) ring.Add(v[n * (n + 1) + i]);
+        for (int j = n; j > 0; j--) ring.Add(v[j * (n + 1)]);
+        for (int k = 0; k < ring.Count; k++)
+        {
+            var top0 = ring[k]; var top1 = ring[(k + 1) % ring.Count];
+            var bot0 = new Vector3(top0.x, 0, top0.z); var bot1 = new Vector3(top1.x, 0, top1.z);
+            foreach (bool outer in new[] { true, false })
+            {
+                int s = v.Count;
+                v.AddRange(new[] { top0, top1, bot1, bot0 });
+                uv.AddRange(new[] { new Vector2(0, top0.y), new Vector2(1, top1.y), new Vector2(1, 0), new Vector2(0, 0) });
+                t.AddRange(outer ? new[] { s, s + 1, s + 2, s, s + 2, s + 3 } : new[] { s, s + 2, s + 1, s, s + 3, s + 2 });
+            }
+        }
+        var m = new Mesh { name = "rr2dv_coal_heap" };
+        m.SetVertices(v); m.SetUVs(0, uv); m.SetTriangles(t, 0);
+        m.RecalculateNormals(); m.RecalculateTangents(); m.RecalculateBounds();
+        return m;
     }
 
     // Whistle and dynamo steam jets. CCL's steam template makes 'Whistle' and 'DynamoSteam' unrotated, and its importer

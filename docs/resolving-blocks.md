@@ -234,8 +234,9 @@ glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow 
 draws fully transparent (alpha 0: a flare disc) stays invisible. When lamp glass shares the window material on one mesh,
 its triangles within a lamp lens of a lamp (`LampLenses`) are split onto the lens (`rr2dv glass: … split off`). The whole car
 is searched, trucks included (tender truck rims). A tender whose model has no coal of its own (Railroader draws it at
-runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount; its front is cut back
-to where the tender's sides end at coal height, so it never reaches across the gap into the cab (`rr2dv coal load`). All
+runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount; it ends 5 cm behind
+the coal space's front wall (sheet, coal board or doors), or where the tender's sides end at coal height, so it never
+reaches across the gap into the cab, and it is shaped as a heap tapering towards the front wall (`rr2dv coal load`). All
 are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
 
 Number plates: Derail Valley's info plate goes on the nearest flat (or gently curved) part of the side that holds its
@@ -255,8 +256,9 @@ measured at Railroader's dynamo point (a pipe-shaped cluster of the model within
 pointing down), so a swept or angled exhaust is followed; otherwise it too blows straight up (`rr2dv steam jet` in
 `build_report.txt`).
 
-Control response: the train and independent brakes, headlights and cab light move one notch per key press (a tap ran
-their few coarse notches end to end); a generated whistle (no Railroader handle) gets the same whistle physics as a
+Control response: every stepped lever moves one notch per tap or scroll (G-29's setting; the app had moved several
+notches per tap, up to the whole range), and the train and independent brakes, headlights and cab light one notch per
+key press; a generated whistle (no Railroader handle) gets the same whistle physics as a
 Railroader whistle handle. Both are listed as `rr2dv control response` and still need the in-game check.
 
 Cylinders: the reviewed physical cylinder count is physics only. The simulation always runs 2 cylinders with the bore
