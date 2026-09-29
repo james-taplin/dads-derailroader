@@ -166,92 +166,191 @@ public static partial class CclLocoBuild
             return vh.Ray(pos + dir * 1.5f, -dir, 3f, out var hit) ? Vector3.Dot(hit.point - pos, dir) : float.NaN;
     }
 
-    // A generated tender coal load comes from a layout rule ending 0.25 m behind Railroader's car end, but the car end can
-    // sit well ahead of the tender's front: the R48's coal showed as a block across the gap into the cab, and the RXM-1's
-    // stood on the front deck ahead of its coal doors (James's game tests, 2026-09-29). Two measurements, at 30 % and 60 %
-    // of the coal height:
-    //  - the front wall: rays from ahead of the tender back along -z (five across the middle of the box); the median first
-    //    hit is the coal space's front (sheet, coal board or doors); the coal ends 5 cm behind it;
-    //  - failing that, the sides: from the front, the first 0.15 m run of slices with a side sheet within 0.6 m of the box
-    //    on both sides (a lone handrail is thinner).
-    // A front wall that leaves less than 0.5 m moves the box back behind it, keeping its length.
+    // A generated tender coal load comes from a layout rule (a box at the tender front), which fits no particular tender: the
+    // R48's showed as a block across the gap into the cab, the RXM-1B's stood on the front deck ahead of its coal doors and
+    // through the bulkhead, with its real coal space (a stoker hopper) left empty (James's game tests, 2026-09-29). So the
+    // coal space is measured from above instead, starting at Railroader's coal loading target (the chute aims at the coal):
+    //  - downward rays every 4 cm give the surface under each point (hopper floor, sheet tops, decks);
+    //  - the rim is the lower of the two side sheets' tops across the target;
+    //  - the space runs forward and back from the target along the middle, then across each row, until a wall (a rise of
+    //    more than 0.2 m between neighbouring rays to above half the depth: doors, bulkheads, but not a stoker trough's
+    //    edge), the rim height (up a sloped hopper side) or a flat deck above half the depth (a tank top behind the coal).
+    // The load keeps the core's bottom-pivot box (so the coal amount still scales it), fitted to that space: from just
+    // under its floor to the rim plus the heap. Where nothing can be measured the layout box stays, with a warning.
+    static Rr2dvCoalSpace coalSpace;
+    class Rr2dvCoalSpace { public float floor, rim, peak, zRear, zFront; public float[] zs, left, right; }
+
+    const float CoalStep = .04f, CoalWallRise = .2f;
+
     static void FitRr2dvCoalLoad()
     {
+        coalSpace = null;
         var cl = Cfg.CoalLoad;
         if (cl == null || !cl.Pivot.HasValue) return;
         var p = cl.Pivot.Value;
-        float half = cl.Footprint.x / 2, length = cl.Footprint.y, rear = p.z - length / 2, front = p.z + length / 2;
-        float reach = half + .6f, start = half + 2f;
-        float edge = float.NaN, wall = float.NaN;
-        var heights = new[] { .3f, .6f }.Select(f => p.y + cl.FullHeight * f).ToArray();
+        float boxRear = p.z - cl.Footprint.y / 2, boxFront = p.z + cl.Footprint.y / 2;
+        Vector3 anchor = p;
+        string from = "the layout box";
+        try
+        {
+            var target = Cfg.CoalTargetComp == null ? null : Components.FirstOrDefault(c => c.name == Cfg.CoalTargetComp);
+            if (target != null) { anchor = target.pos; from = $"Railroader's coal target {Cfg.CoalTargetComp}"; }
+        }
+        catch (Exception) { }
+        var rs = RefBody.GetComponentsInChildren<Renderer>(false).Where(r => r.enabled).ToArray();
+        if (rs.Length == 0) return;
+        var bounds = rs[0].bounds; foreach (var r in rs) bounds.Encapsulate(r.bounds);
+        float top = bounds.max.y + 1f;
         using (var vh = new VisualHits(RefBody))
         {
-            var walls = new System.Collections.Generic.List<float>();
-            foreach (float y in heights)
-                foreach (float u in new[] { -.5f, -.25f, 0f, .25f, .5f })
-                    if (vh.Ray(new Vector3(u * half, y, front + 3f), Vector3.back, 3f + length, out var h) && h.point.z > rear + .3f)
-                        walls.Add(h.point.z);
-            if (walls.Count >= 5) wall = walls.OrderBy(z => z).ElementAt(walls.Count / 2);
-            bool Side(float s, float y, float z) =>
-                vh.Ray(new Vector3(s * start, y, z), new Vector3(-s, 0, 0), start, out var h) && Mathf.Abs(h.point.x) <= reach;
-            bool Enclosed(float z) => heights.Any(y => Side(1, y, z) && Side(-1, y, z));
-            int run = 0;
-            for (float z = front; z >= rear + .5f; z -= .05f)
+            float Surface(float x, float z) => vh.Ray(new Vector3(x, top, z), Vector3.down, top + 1f, out var h) ? h.point.y : float.NaN;
+            float Middle(float z)
             {
-                run = Enclosed(z) ? run + 1 : 0;
-                if (run == 3) { edge = z + .1f; break; }
+                var hs = new[] { -.3f, 0f, .3f }.Select(x => Surface(anchor.x + x, z)).Where(h => !float.IsNaN(h)).OrderBy(h => h).ToArray();
+                return hs.Length == 0 ? float.NaN : hs[hs.Length / 2];
             }
+            // the highest surface from `start` out to `stop`: a side sheet's top
+            float Highest(Func<float, float> surface, float start, float dir, float stop)
+            {
+                float best = float.NaN;
+                for (float u = start; dir > 0 ? u <= stop : u >= stop; u += dir * CoalStep)
+                {
+                    float h = surface(u);
+                    if (!float.IsNaN(h) && !(h <= best)) best = h;
+                }
+                return best;
+            }
+            // from `start` in steps along `dir`, the last open position before the coal space ends: a wall (a rise of more
+            // than 0.2 m to above half the depth: doors, bulkheads; not a stoker trough's edge), the rim height (up a sloped
+            // hopper side) or a flat deck above half the depth (a tank top behind the coal); with that wall's or deck's height
+            (float open, float wall) Walk(Func<float, float> surface, float start, float dir, float stop, float half, float top1)
+            {
+                float prev = surface(start), last = start, flatFrom = float.NaN;
+                int flat = 0;
+                for (float u = start + dir * CoalStep; dir > 0 ? u <= stop : u >= stop; u += dir * CoalStep)
+                {
+                    float h = surface(u);
+                    if (float.IsNaN(h)) continue;
+                    if (!float.IsNaN(prev) && h - prev > CoalWallRise && h >= half || h >= top1) return (last, h);
+                    if (!float.IsNaN(prev) && h >= half && Mathf.Abs(h - prev) < .01f)
+                    {
+                        if (flat++ == 0) flatFrom = last;
+                        if (flat >= 3) return (flatFrom, h);
+                    }
+                    else flat = 0;
+                    prev = h; last = u;
+                }
+                return (float.NaN, float.NaN);
+            }
+            float floor0 = Surface(anchor.x, anchor.z);
+            float wallL = Highest(x => Surface(x, anchor.z), anchor.x, -1, bounds.min.x);
+            float wallR = Highest(x => Surface(x, anchor.z), anchor.x, 1, bounds.max.x);
+            if (float.IsNaN(floor0) || float.IsNaN(wallL) || float.IsNaN(wallR))
+            {
+                Warn($"rr2dv coal load: no coal space with side walls found under {from}; the layout box stays (check it in game)");
+                return;
+            }
+            float rim = Mathf.Min(wallL, wallR), limit = rim - .1f, mid = (floor0 + rim) / 2;
+            if (rim - floor0 < .3f)
+            {
+                Warn($"rr2dv coal load: the surface under {from} is only {rim - floor0:F2} m below the side walls; the layout box stays");
+                return;
+            }
+            var front = Walk(Middle, anchor.z, 1, bounds.max.z, mid, limit);
+            var rear = Walk(Middle, anchor.z, -1, bounds.min.z, mid, limit);
+            if (float.IsNaN(front.open) || float.IsNaN(rear.open) || front.open - rear.open < .5f)
+            {
+                Warn($"rr2dv coal load: no front and rear wall found along the coal space under {from}; the layout box stays");
+                return;
+            }
+            var space = new Rr2dvCoalSpace { rim = rim, zFront = front.open - .03f, zRear = rear.open + .03f };
+            var zs = new System.Collections.Generic.List<float>(); var ls = new System.Collections.Generic.List<float>(); var rrs = new System.Collections.Generic.List<float>();
+            float floor = float.PositiveInfinity;
+            for (float z = space.zRear; z <= space.zFront + 1e-4f; z += CoalStep)
+            {
+                float zz = z;
+                var l = Walk(x => Surface(x, zz), anchor.x, -1, bounds.min.x, mid, limit);
+                var r = Walk(x => Surface(x, zz), anchor.x, 1, bounds.max.x, mid, limit);
+                if (float.IsNaN(l.open) || float.IsNaN(r.open)) continue;
+                zs.Add(z); ls.Add(l.open + .03f); rrs.Add(r.open - .03f);
+                for (float x = l.open; x <= r.open; x += CoalStep) { float h = Surface(x, z); if (!float.IsNaN(h)) floor = Mathf.Min(floor, h); }
+            }
+            if (zs.Count < 5) { Warn($"rr2dv coal load: the coal space under {from} has too few measurable rows; the layout box stays"); return; }
+            space.zs = zs.ToArray(); space.left = ls.ToArray(); space.right = rrs.ToArray();
+            float width = space.right.Max() - space.left.Min();
+            space.floor = floor - .02f;
+            space.peak = Mathf.Clamp(.2f * width, .15f, .45f);
+            float x0 = space.left.Min(), x1 = space.right.Max();
+            cl.Pivot = new Vector3((x0 + x1) / 2, space.floor, (space.zRear + space.zFront) / 2);
+            cl.Footprint = new Vector2(x1 - x0, space.zFront - space.zRear);
+            cl.FullHeight = space.rim + space.peak - space.floor;
+            coalSpace = space;
+            Line($"rr2dv coal load: coal space measured from above under {from}: z {space.zRear:F3}..{space.zFront:F3} (front wall top y {front.wall:F3}, " +
+                 $"rear {rear.wall:F3}), x {x0:F3}..{x1:F3}, floor {space.floor:F3}, rim {rim:F3}; heap up to {space.rim + space.peak:F3} " +
+                 $"(the layout box was z {boxRear:F3}..{boxFront:F3})");
         }
-        string how;
-        if (!float.IsNaN(wall) && (float.IsNaN(edge) || wall - .05f < edge)) { edge = wall - .05f; how = $"the coal space's front wall at z {wall:F3}"; }
-        else how = "the tender sides end there at coal height";
-        if (float.IsNaN(edge))
-        {
-            Warn("rr2dv coal load: no front wall or enclosing sides found at coal height; left as placed (check it in game)");
-            return;
-        }
-        if (edge >= front - .02f) return;
-        if (edge - rear < .5f) rear = edge - length;
-        cl.Pivot = new Vector3(p.x, p.y, (rear + edge) / 2);
-        cl.Footprint = new Vector2(cl.Footprint.x, edge - rear);
-        Line($"rr2dv coal load: front {front:F3} -> {edge:F3} ({how}); box {rear:F3}..{edge:F3}, length {edge - rear:F3} m");
     }
 
-    // The generated coal load as a heap, not a block (James, 2026-09-29): the same unit footprint and height as the core's
-    // bottom-pivot box (so the coal-amount scaling is unchanged), highest at the back and centre, falling to 20 % at the
-    // front wall and 45 % at the sides, with walls down to the floor so no gap shows.
+    // The generated coal load as a heap in the measured coal space (James, 2026-09-29: "a more hump like shape, tapering
+    // towards the tender front wall ... tighter sizing"): each measured row's own width, the top at the rim at the walls,
+    // rising to the heap's peak over the back half and falling to the rim at the front wall, with walls down to the floor.
+    // Drawn by its own renderer under the core's scaler (the core's box renderer is removed), in the box's unit coordinates,
+    // so the coal amount scales it as before.
     static void ShapeRr2dvCoalLoad()
     {
-        if (Cfg.CoalLoad == null) return;
+        if (Cfg.CoalLoad == null || coalSpace == null) return;
         string path = $"{carFolder}/{CarId}_template.prefab";
         var root = PrefabUtility.LoadPrefabContents(path);
         try
         {
             var load = root.GetComponentsInChildren<Transform>(true).FirstOrDefault(t => t.name == "[coal load]");
-            var mf = load ? load.Find("scaler/coal")?.GetComponent<MeshFilter>() : null;
-            if (!mf) return;
+            var box = load ? load.Find("scaler/coal") : null;
+            if (!box) { Warn("rr2dv coal load: the core's coal load was not found; its heap was not made"); return; }
             string file = System.Text.RegularExpressions.Regex.Replace($"{CarId}_coal_heap", "[^A-Za-z0-9_.-]", "_");
-            var mesh = Rr2dvCoalHeap();
+            var mesh = Rr2dvCoalHeap(coalSpace, Cfg.CoalLoad);
             AssetDatabase.CreateAsset(mesh, AssetDatabase.GenerateUniqueAssetPath($"{carFolder}/{file}.asset"));
-            mf.sharedMesh = mesh;
-            Line("rr2dv coal load: heap shape (full at the back and centre, 20 % at the front wall, 45 % at the sides)");
+            var material = box.GetComponent<MeshRenderer>().sharedMaterial;
+            Object.DestroyImmediate(box.GetComponent<MeshRenderer>());
+            Object.DestroyImmediate(box.GetComponent<MeshFilter>());
+            var heap = new GameObject("rr2dv coal heap").transform;
+            heap.SetParent(box, false);
+            heap.gameObject.AddComponent<MeshFilter>().sharedMesh = mesh;
+            heap.gameObject.AddComponent<MeshRenderer>().sharedMaterial = material;
+            Line($"rr2dv coal load: heap mesh {mesh.name} ({mesh.vertexCount} vertices, {coalSpace.zs.Length} measured rows) replaces the core's box renderer");
             SaveRr2dvPrefab(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
-    static Mesh Rr2dvCoalHeap()
+    static Mesh Rr2dvCoalHeap(Rr2dvCoalSpace s, CoalLoadCfg cl)
     {
-        const int n = 12;
-        float H(float u, float w) => (1f - .55f * (2 * u - 1) * (2 * u - 1)) * (w < .35f ? 1f : Mathf.Lerp(1f, .2f, (w - .35f) / .65f));
+        const int n = 16;
+        var c = cl.Pivot.Value; float sx = cl.Footprint.x, sz = cl.Footprint.y, sy = cl.FullHeight;
+        float Row(float[] a, float z)
+        {
+            int i = Mathf.Clamp(Mathf.RoundToInt((z - s.zs[0]) / CoalStep), 0, s.zs.Length - 1);
+            return a[i];
+        }
+        // w 0 at the rear wall, 1 at the front wall; u 0 at the left wall, 1 at the right
+        float Top(float u, float w)
+        {
+            float across = 1f - (2 * u - 1) * (2 * u - 1);
+            float along = w < .5f ? 1f - (1 - 2 * w) * (1 - 2 * w) * .4f : 1f - (2 * w - 1) * (2 * w - 1);
+            return s.rim - .05f + (s.peak + .05f) * across * along;
+        }
         var v = new System.Collections.Generic.List<Vector3>(); var uv = new System.Collections.Generic.List<Vector2>();
         var t = new System.Collections.Generic.List<int>();
+        Vector3 Unit(float x, float y, float z) => new Vector3((x - c.x) / sx, (y - c.y) / sy, (z - c.z) / sz);
         for (int j = 0; j <= n; j++)
+        {
+            float w = (float)j / n, z = Mathf.Lerp(s.zRear, s.zFront, w);
+            float l = Row(s.left, z), r = Row(s.right, z);
             for (int i = 0; i <= n; i++)
             {
-                float u = (float)i / n, w = (float)j / n;   // u across (x), w rear (-z) to front (+z)
-                v.Add(new Vector3(u - .5f, H(u, w), w - .5f)); uv.Add(new Vector2(u * 2, w * 2));
+                float u = (float)i / n, x = Mathf.Lerp(l, r, u);
+                v.Add(Unit(x, Top(u, w), z)); uv.Add(new Vector2(x, z));
             }
+        }
         for (int j = 0; j < n; j++)
             for (int i = 0; i < n; i++)
             {
@@ -270,10 +369,10 @@ public static partial class CclLocoBuild
             var bot0 = new Vector3(top0.x, 0, top0.z); var bot1 = new Vector3(top1.x, 0, top1.z);
             foreach (bool outer in new[] { true, false })
             {
-                int s = v.Count;
+                int st = v.Count;
                 v.AddRange(new[] { top0, top1, bot1, bot0 });
-                uv.AddRange(new[] { new Vector2(0, top0.y), new Vector2(1, top1.y), new Vector2(1, 0), new Vector2(0, 0) });
-                t.AddRange(outer ? new[] { s, s + 1, s + 2, s, s + 2, s + 3 } : new[] { s, s + 2, s + 1, s, s + 3, s + 2 });
+                uv.AddRange(new[] { new Vector2(0, top0.y * sy), new Vector2(1, top1.y * sy), new Vector2(1, 0), new Vector2(0, 0) });
+                t.AddRange(outer ? new[] { st, st + 1, st + 2, st, st + 2, st + 3 } : new[] { st, st + 2, st + 1, st, st + 3, st + 2 });
             }
         }
         var m = new Mesh { name = "rr2dv_coal_heap" };

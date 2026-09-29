@@ -25,6 +25,7 @@ public static class Rr2dvAudit
         public int schema = 1; public string status; public string[] errors, warnings, bundleAssets, scriptAssemblies, dependencies;
         public int audioClips; public string[] audioClipNames; public string[] portFeeders;
         public int oilCupCount;
+        public string[] coalLoadMeshes;
     }
     [Serializable] public class Result { public string status; public int errors, warnings; public bool runtimeValidated; public string error; }
 
@@ -151,6 +152,15 @@ public static class Rr2dvAudit
                     if (!renderer || !renderer.transform.IsChildOf(root)) errors.Add("Opening highlight is missing or outside its prefab: " + control.name);
                 }
             }
+
+            // what the exported tender coal load draws (RLW RXM-1B, 2026-09-29: a box in game though the build made a heap)
+            var coalMeshes = new List<string>();
+            foreach (var mf in all.OfType<MeshFilter>())
+                for (var t = mf.transform; t; t = t.parent)
+                    if (t.name == "[coal load]") { coalMeshes.Add(mf.name + ": " + (mf.sharedMesh ? mf.sharedMesh.name : "(no mesh)")); break; }
+            outp.coalLoadMeshes = coalMeshes.ToArray();
+            if (coalMeshes.Any(m => m.EndsWith(": unit_box_bottom_pivot", StringComparison.Ordinal)))
+                warnings.Add("the tender coal load is drawn as the builder's plain box, not a measured heap: " + string.Join(", ", coalMeshes));
 
             var oilCups = all.Where(o => o.GetType().Name == "ManualOilingPoint").ToArray();
             var oilProviders = all.Where(o => o.GetType().Name == "PositionSyncProviderProxy").ToArray();

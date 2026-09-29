@@ -362,6 +362,8 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
         return fail("audit", str(e))
     for w in summary["warnings"]:
         run.log(f"  audit note: {w}")
+    if summary.get("coalLoadMeshes"):
+        run.log(f"  exported coal load draws: {', '.join(summary['coalLoadMeshes'])}")
     if summary["status"] != "passed":
         for e in summary["errors"]:
             run.log(f"  audit error: {e}")

@@ -2,7 +2,7 @@
   "Id": "RR2DVControlLogger",
   "DisplayName": "rr2dv control logger",
   "Author": "rr2dv",
-  "Version": "0.2.0",
+  "Version": "0.3.0",
   "AssemblyName": "RR2DVControlLogger.dll",
   "EntryMethod": "RR2DVControlLogger.Main.Load"
 }

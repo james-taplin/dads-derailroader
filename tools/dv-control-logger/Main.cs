@@ -12,8 +12,8 @@ using LocoSim.Implementations;
 using UnityEngine;
 using UnityModManagerNet;
 
-[assembly: AssemblyVersion("0.2.0.0")]
-[assembly: AssemblyFileVersion("0.2.0.0")]
+[assembly: AssemblyVersion("0.3.0.0")]
+[assembly: AssemblyFileVersion("0.3.0.0")]
 
 namespace RR2DVControlLogger
 {
@@ -37,6 +37,7 @@ namespace RR2DVControlLogger
                 _harmony = new Harmony(modEntry.Info.Id);
                 _harmony.PatchAll(Assembly.GetExecutingAssembly());
                 KeyboardTicks.PatchAll(_harmony);
+                OverriderCalls.PatchAll(_harmony);
                 _runner = new GameObject("rr2dv control logger");
                 UnityEngine.Object.DontDestroyOnLoad(_runner);
                 _runner.AddComponent<Watcher>();
@@ -69,7 +70,7 @@ namespace RR2DVControlLogger
             string root = Path.GetDirectoryName(Application.dataPath);
             _w = new StreamWriter(Path.Combine(root, "rr2dv-controls.log"), true, Encoding.UTF8);
             _w.WriteLine();
-            _w.WriteLine("==== rr2dv control logger 0.2.0, session " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
+            _w.WriteLine("==== rr2dv control logger 0.3.0, session " + DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
             _w.WriteLine("columns: time | car | control | port | source | control value old -> new (delta) | port value");
             string watch = Path.Combine(modPath, "watch.txt");
             if (!File.Exists(watch)) File.WriteAllText(watch, DefaultWatch);
@@ -146,6 +147,58 @@ namespace RR2DVControlLogger
             var c = __instance.GetComponent<ControlImplBase>();
             if (c != null && !float.IsNaN(__state) && Math.Abs(c.Value - __state) > 1e-4f)
                 LastKeyChange[c.GetInstanceID()] = Time.realtimeSinceStartup;
+        }
+    }
+
+    // What reaches DV's overridable controls (the F4 HUD, keyboard and remote routes write through them): every declared
+    // method with one float or bool argument on OverridableBaseControl and its subclasses, logged when its argument changes.
+    // Found by name, so nothing is logged if DV names it differently. RLW RXM-1B, 2026-09-29: F4 never changed the brake
+    // cutout's control or port; this shows whether the HUD calls its overridable control at all, and with what.
+    internal static class OverriderCalls
+    {
+        private static readonly Dictionary<string, string> Last = new Dictionary<string, string>();
+
+        internal static void PatchAll(Harmony harmony)
+        {
+            Type baseType = null;
+            foreach (var t in typeof(BaseControlsOverrider).Assembly.GetTypes())
+                if (t.Name == "OverridableBaseControl") { baseType = t; break; }
+            if (baseType == null) { Log.Write("overrider trace: OverridableBaseControl not found; not traced"); return; }
+            var pre = new HarmonyMethod(typeof(OverriderCalls).GetMethod("Prefix", BindingFlags.Static | BindingFlags.NonPublic));
+            int n = 0;
+            foreach (var t in baseType.Assembly.GetTypes())
+            {
+                if (!baseType.IsAssignableFrom(t)) continue;
+                foreach (var m in t.GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly))
+                {
+                    var ps = m.GetParameters();
+                    if (m.IsAbstract || m.IsSpecialName || m.ContainsGenericParameters || ps.Length != 1) continue;
+                    if (ps[0].ParameterType != typeof(float) && ps[0].ParameterType != typeof(bool)) continue;
+                    try { harmony.Patch(m, pre); n++; }
+                    catch (Exception ex) { Log.Write("overrider trace: " + t.Name + "." + m.Name + " not traced: " + ex.Message); }
+                }
+            }
+            Log.Write("overrider trace: " + n + " method(s) on " + baseType.Name + " and its subclasses");
+        }
+
+        private static void Prefix(object __instance, object[] __args, MethodBase __originalMethod)
+        {
+            try
+            {
+                var c = __instance as Component;
+                string who = (c != null && c.gameObject != null ? c.gameObject.name + "/" : "") + __instance.GetType().Name;
+                string key = who + "." + __originalMethod.Name + "#" + (c != null ? c.GetInstanceID() : 0);
+                object a = __args != null && __args.Length > 0 ? __args[0] : null;
+                string v = a is float ? ((float)a).ToString("0.000") : Convert.ToString(a);
+                string old;
+                if (Last.TryGetValue(key, out old) && old == v) return;
+                Last[key] = v;
+                var car = c != null ? c.GetComponentInParent<TrainCar>() : null;
+                string id = car == null ? "-" : car.carLivery != null ? car.carLivery.id : car.name;
+                Log.Write(id + " | overrider " + who + "." + __originalMethod.Name + "(" + v + ")" + (old != null ? " was " + old : "") +
+                          " | cursor " + (Cursor.visible ? "shown (F4 HUD or a menu)" : "hidden"));
+            }
+            catch (Exception) { }
         }
     }
 

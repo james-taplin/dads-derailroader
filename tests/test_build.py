@@ -58,6 +58,10 @@ class BuildStages(unittest.TestCase):
         inp = read_json(run.path / "unity/project/Assets/Rr2dv/BuildInput.json")
         self.assertEqual([p["name"] for p in inp["composites"][0]["parts"]], ["bell1"])
         self.assertTrue(inp["audioStrip"])
+        # the four generated control classes by DV function (James, 2026-09-29), handed to the build by control name
+        classes = {c["control"]: c["cls"] for c in inp["controlClasses"]}
+        self.assertEqual((classes["C_Cab light"], classes["C_Injector"], classes["C_Fire door"]), ("switch", "wheel", "lever"))
+        self.assertEqual(set(classes), {"C_" + p["Name"] for p in cfg["Placed"]})
         env = read_json(run.path / "build/out/record_seen.json")["env"]
         self.assertEqual(env, {"CCL_SHARE": "1", "CCL_NEW_LOCO": "0", "CCL_CATALOG_RECORD": ""})
         # the audit asked Unity for the driving controls and the HUD's controls

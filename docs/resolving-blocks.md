@@ -248,10 +248,14 @@ glass on a lamp gets a pale opaque lens (`rr2dv_lens.mat`) so the lamp's hollow 
 draws fully transparent (alpha 0: a flare disc) stays invisible. When lamp glass shares the window material on one mesh,
 its triangles within a lamp lens of a lamp (`LampLenses`) are split onto the lens (`rr2dv glass: … split off`). The whole car
 is searched, trucks included (tender truck rims). A tender whose model has no coal of its own (Railroader draws it at
-runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount; it ends 5 cm behind
-the coal space's front wall (sheet, coal board or doors), or where the tender's sides end at coal height, so it never
-reaches across the gap into the cab, and it is shaped as a heap tapering towards the front wall (`rr2dv coal load`). All
-are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
+runtime) gets a generated coal heap in its coal space, rising and falling with the coal amount. The coal space is
+measured from above, starting under Railroader's coal loading target: downward rays every 4 cm find the floor (a hopper or
+stoker trough included), the side sheets' tops (the rim), and the walls that end it forward and back (doors or a bulkhead,
+a rise to above half its depth; the rim height up a sloped side; a flat deck such as a tank top). The heap fills each
+measured row between its walls, is highest over the back half and tapers to the rim at the sides and the front wall
+(`rr2dv coal load: coal space measured` and `heap mesh` in `build_report.txt`). If no coal space with walls can be
+measured the builder's layout box stays, with a warning; the audit also says when the exported load is that plain box
+(`exported coal load draws` in `run.log`). All are listed in `build_report.txt` (`rr2dv material fallback`, `rr2dv glass`).
 
 Number plates: Derail Valley's info plate goes on the nearest flat (or gently curved) part of the side that holds its
 whole footprint. Where the full size would overhang, it may shrink to 90 % or at most 80 % (`rr2dv visible plate …
@@ -279,12 +283,18 @@ Cylinders: the reviewed physical cylinder count is physics only. The simulation 
 scaled to the same swept volume (bore x sqrt(n/2)): Derail Valley's chuff sound handles 2 (a 3-cylinder K-66 threw
 `ChuffClipsSimReader.OnChuff ... IndexOutOfRange` in Player.log). The physical count stays in the build's simulation profile.
 
-Cab light: generated as a handwheel like the dynamo and air pump, whose F4 HUD buttons work; built as a 2-position
-lever, the HUD button did nothing.
+Generated controls come in four classes, chosen by the Derail Valley function a control drives, never by loco
+(`rr2dv control class` in `build_report.txt`, and `generated controls by class` in the review list):
+- switch: two positions that snap, flipped by a click, the toggle key or the F4 HUD (CCL's toggle switch, drawn as a
+  small lever): air pump, dynamo, cab light, brake cutout, lubricator, bell, cylinder cocks, sander. As two-notch levers
+  or wheels their joints held their own notch against the HUD, so F4 never flipped the brake cutout or the lubricator;
+- wheel: a valve handwheel with fine steps (injector, blower, blowdown);
+- spring: returns to closed when let go (a generated whistle);
+- lever: a notched lever that stays where it is set (damper, fire door, coal dump, headlights, the driving controls).
+Railroader's own cab handles stay as they are modelled.
 
-Brake cutout: a 2-position lever, as in vanilla Derail Valley. CCL gives it an absolute axis input besides its toggle
-key, which let F4 treat it as a range that never flipped; the build removes that axis (`rr2dv brake cutout ... absolute
-axis input removed` in `build_report.txt`). The cab light, air pump, dynamo and lubricator have no such axis.
+Brake cutout: CCL gives it an absolute axis input besides its toggle key, which let F4 treat it as a range; the build
+removes that axis (`rr2dv brake cutout ... absolute axis input removed` in `build_report.txt`).
 
 Railroader lights: every Unity light in the source model is removed (`rr2dv source lights` in `build_report.txt`).
 Railroader switches them from its own scripts, which are not converted, so they stayed on for good. The car keeps the

@@ -9,7 +9,10 @@ each cab control's value (0..1) and the sim port that control feeds, and logs:
   control's own key input moved it), `scroll`, `grab (mouse)`, `F4 HUD (mouse, cursor shown)`, or
   `no player input (sim or another mod)`;
 - a port that changes while its control does not (`port changed without the control`): something else writes it;
-- the watched sim ports at each change, then 1 s and 3 s later, to see what the simulation did.
+- the watched sim ports at each change, then 1 s and 3 s later, to see what the simulation did, with the car's brake
+  pressures (brake pipe, main reservoir, cylinder) where DV exposes them;
+- each call that reaches one of DV's overridable controls (the route the F4 HUD, keyboard and remote use), with its
+  value, when it changes (`overrider ...`), and whether the cursor was shown (F4 HUD or a menu).
 
 The source is a best guess from what the player did in the last second (mouse, cursor, scroll, keys), except
 `keyboard`, which is certain when the control's own keyboard input moved it.

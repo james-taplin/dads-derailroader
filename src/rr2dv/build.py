@@ -104,7 +104,8 @@ def prepare(run_path: Path, inv: dict, probe_in: dict, probe_out: dict | None, p
     data = {"schema": 1, "absentBindings": clips, "audioStrip": prefabs, "composites": specs, "review": answers.get("prebuildReview", {}).get("values"),
             "truckWheels": [wheel_nodes] if wheel_nodes else [],
             "reversedClips": rec["metadata"].get("reversedClips") or [],
-            "noDynamo": bool(rec["metadata"].get("noDynamo"))}
+            "noDynamo": bool(rec["metadata"].get("noDynamo")),
+            "controlClasses": rec["metadata"].get("controlClasses") or []}
     write_json(run_path / project["project"] / BUILD_INPUT, data)
     return {"record": rec, "choices": choices, "input": data}
 
