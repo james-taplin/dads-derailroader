@@ -110,7 +110,9 @@ public static partial class CclLocoBuild
             FreshRr2dvSource();
         }
         Rr2dvReleaseSeat();
+        StripRr2dvHiddenMeshes();
         BuildInteractables();
+        FreshRr2dvSource();
         BuildRr2dvAncillaries();
         var sound = c.IsTender ? null : BuildSound();
         ConfigureAssets(sound);
@@ -632,6 +634,21 @@ public static partial class CclLocoBuild
         var colliders = RefBody.GetComponentsInChildren<Collider>(true);
         foreach (var collider in colliders) Object.DestroyImmediate(collider);
         if (colliders.Length > 0) Line($"rr2dv cab measured on the visible model: {colliders.Length} source collider(s) set aside");
+    }
+
+    // The core seats the handbrake wheel on the visible model (VisualHits: active meshes with an enabled renderer), then its
+    // final check (RRPlacementValidation.CheckHandbrake) casts against every MeshFilter, hidden ones too, and can find a
+    // surface nobody sees in front of the wheel: the base-game K-28T stopped with "handbrake mount misfit: stand-off
+    // -0.092 m" (2026-09-29). On the measuring copy only, meshes that are never drawn (inactive, no renderer or a disabled
+    // one) are removed for that step, so both see the same surfaces; a fresh source copy follows for everything after.
+    static void StripRr2dvHiddenMeshes()
+    {
+        var hidden = RefBody.GetComponentsInChildren<MeshFilter>(true)
+            .Where(f => { var r = f.GetComponent<MeshRenderer>(); return !f.gameObject.activeInHierarchy || !r || !r.enabled; }).ToList();
+        var names = hidden.Select(f => f.name).ToList();
+        foreach (var f in hidden) { var r = f.GetComponent<MeshRenderer>(); if (r) Object.DestroyImmediate(r); Object.DestroyImmediate(f); }
+        if (names.Count > 0)
+            Line($"rr2dv fittings measured on the visible model: {names.Count} hidden mesh(es) set aside ({string.Join(", ", names.Take(6))}{(names.Count > 6 ? ", ..." : "")})");
     }
 
     static void FreshRr2dvSource()
