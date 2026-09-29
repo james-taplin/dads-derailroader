@@ -1698,3 +1698,9 @@ James asked: push all this to main, polish the README, plan a wiki. `claude/mode
 the board. Board conflict only; tooling/ MANIFEST ok; Python suite as on the branch (the known C# stub-compile failure
 only). README rewritten around current behaviour (review choices table, status, rules); `docs/wiki-plan.md` plans the
 GitHub wiki (sidebar, pages, sources, writing order). No release made; the W57-W60 changes are still untested in game.
+
+## W62 (cloud Claude, 2026-09-29): 0.2.X-exp branch; 0.1.3 pre-release pending
+
+New branch `0.2.X-exp` from main 9206bfb, with `docs/handover-0.2.md` (5ccadae) for the next session. James asked for
+0.1.3 as a pre-release: the tag push was refused (403) from this session, and the GitHub tools here cannot create
+releases, so the `v0.1.3` pre-release is still to be made by James (tag main 9206bfb).
