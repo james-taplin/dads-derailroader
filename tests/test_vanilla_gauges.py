@@ -16,11 +16,11 @@ def gauge(name, style, pos, scale=0.8, rot=(0.0, 1.0, 0.0, 0.0)):
             "pos": list(pos), "rot": list(rot), "scale": [scale, scale, 1.0]}
 
 
-def run(gauges):
+def run(gauges, back_z=-4.7):
     builder = buildrecord._Builder({}, {}, {"vehicles": []}, {}, {}, {})
     cfg = {"Components": buildrecord.env([dict(g) for g in gauges], "mixed", "source", "source definitions")}
     comps = [buildrecord._plain(g) for g in cfg["Components"]["value"]]
-    builder._ensure_gauges(cfg, comps, "ls-x")
+    builder._ensure_gauges(cfg, comps, "ls-x", back_z)
     return builder, cfg, cfg["Components"]["value"]
 
 
@@ -47,6 +47,24 @@ class Gauges(unittest.TestCase):
             for b in pos[i + 1:]:
                 self.assertGreater(math.dist(a, b), 0.12)
         self.assertTrue(any("generated one beside" in c for c in builder.choices))
+
+    def test_a_loco_whose_gauges_all_face_sideways_gets_generated_ones_on_the_backhead_plate_facing_the_crew(self):
+        side = (0.0, 0.707, 0.0, 0.707)
+        builder, cfg, value = run([gauge("BP Engineer", "BoilerPressure", (0.052, 3.381, -4.632), 1.0, side),
+                                   gauge("BP Fireman", "BoilerPressure", (-0.048, 3.381, -4.632), 1.0, (0.0, 0.707, 0.0, -0.707))], back_z=-4.71)
+        self.assertEqual(sorted(set(styles(value))), sorted(STYLES))
+        for c in value:
+            if c["name"].startswith("rr2dv generated"):
+                pos = buildrecord._plain(c["pos"])
+                self.assertAlmostEqual(pos[2], -4.74, places=3)
+                self.assertEqual(c["rot"], [0.0, 1.0, 0.0, 0.0])
+                self.assertAlmostEqual(pos[1], 3.381, places=3)
+        xs = sorted(buildrecord._plain(c["pos"])[0] for c in value if c["name"].startswith("rr2dv generated"))
+        self.assertGreater(min(b - a for a, b in zip(xs, xs[1:])), 0.1)  # none on another
+        errors = []
+        recordcheck._evidence(cfg["Components"], "config.Components", False, errors)
+        self.assertEqual(errors, [])
+        self.assertTrue(any("face sideways" in c for c in builder.choices))
 
     def test_nothing_changes_when_the_model_has_every_gauge(self):
         full = [gauge("BP", "BoilerPressure", (0, 3, -4)), gauge("DBCL", "DualBrakeCylinderLine", (0.3, 3, -4)),

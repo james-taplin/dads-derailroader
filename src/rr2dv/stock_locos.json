@@ -23,9 +23,10 @@
    "conversion": {
     "audit": "passed",
     "notes": [
-     "LOD meshes (LOD0-3) counted as geometry: main rod found as the LOD2 copy, small end blocked by Cab_1_LOD3 (fixed by the LOD scope, untested)",
-     "tender brake release: no seat found (10 warnings), rod left pointing sideways (LOD scope should help; untested)",
-     "right-hand number plate: no supported surface, left at the source decal"
+     "round 1: LOD meshes counted as geometry: main rod found as the LOD2 copy, small end blocked by Cab_1_LOD3, right number plate unsupported",
+     "round 2 (LOD0-only queries): main rods are LOD0, both plates placed; small end still blocked (Cab_1_LOD0 above the crosshead end)",
+     "tender brake release: no seat found (10 warnings) in both rounds, rod left pointing sideways; not a LOD problem; skin-profile diagnostic added",
+     "speedometer generated beside the DRME gauge (same angled panel); 28 + 14 + 24 material slots took the fallback"
     ],
     "oilCupPairs": 1,
     "status": "converted"
@@ -853,8 +854,15 @@
     ]
    },
    "conversion": {
-    "notes": [],
-    "status": "untested"
+    "audit": "not seen",
+    "notes": [
+     "big-end pair placed; small end blocked by the piston above the crosshead end",
+     "end beam: the core's automatic height search resolved the ambiguity (band 0.20..0.40 m, front)",
+     "no brake or speed gauge in the model and both boiler gauges face sideways: the first build generated the three missing gauges along the car axis beside the boiler (floating); now generated on the backhead plate facing the crew (untested)",
+     "tender brake release seated"
+    ],
+    "oilCupPairs": 1,
+    "status": "converted"
    },
    "displayName": "K-35 Logging Mikado",
    "driver": {
@@ -870,7 +878,7 @@
     "radiusM": 0.6096
    },
    "endBeam": {
-    "none": "untested"
+    "none": "not needed in any run so far (builds without a review)"
    },
    "gauges": {
     "generated": [
@@ -1634,9 +1642,9 @@
     "audit": "passed",
     "notes": [
      "big end: no level spot on the rod; small end blocked; one running-board pair placed instead",
-     "Quadruplex brake gauge had no HUD reading (now built as DV's main-reservoir/equalizing gauge plus a generated brake-cylinder gauge; untested)",
+     "round 2: Quadruplex built as DV's main-reservoir/equalizing gauge, brake-cylinder gauge generated 0.33 m beside it: the HUD now has brake pipe, cylinder and main reservoir readings",
      "front doors left out (overlap another moving assembly)",
-     "tender brake release: no seat found",
+     "tender brake release: no seat found in both rounds",
      "coupling: no draw-gear part meets the other car (96 mm)"
     ],
     "oilCupPairs": 1,

@@ -29,16 +29,21 @@ OBSERVED = {
         "big-end pair placed; small-end pair dropped (something visible above the crosshead end)",
         "5 gauges placed next to model parts (nearest part 0.04-0.08 m)", "17 generated backhead controls"]},
     "ls-060-s23": {"status": "converted", "audit": "passed", "oilCupPairs": 1, "notes": [
-        "LOD meshes (LOD0-3) counted as geometry: main rod found as the LOD2 copy, small end blocked by Cab_1_LOD3 (fixed by the LOD scope, untested)",
-        "tender brake release: no seat found (10 warnings), rod left pointing sideways (LOD scope should help; untested)",
-        "right-hand number plate: no supported surface, left at the source decal"]},
+        "round 1: LOD meshes counted as geometry: main rod found as the LOD2 copy, small end blocked by Cab_1_LOD3, right number plate unsupported",
+        "round 2 (LOD0-only queries): main rods are LOD0, both plates placed; small end still blocked (Cab_1_LOD0 above the crosshead end)",
+        "tender brake release: no seat found (10 warnings) in both rounds, rod left pointing sideways; not a LOD problem; skin-profile diagnostic added",
+        "speedometer generated beside the DRME gauge (same angled panel); 28 + 14 + 24 material slots took the fallback"]},
     "ls-440-a23": {"status": "converted", "audit": "passed", "oilCupPairs": 1, "notes": [
         "no LOD meshes; small-end pair blocked by real geometry (Driversnstuff_003_low)", "throttle and whistle handles do not move their own part: generated levers",
         "gauges report no nearest model part (dials are part of one large mesh)"]},
     "ls-462-p48": {"status": "converted", "audit": "passed", "oilCupPairs": 1, "notes": [
         "big end: no level spot on the rod; small end blocked; one running-board pair placed instead",
-        "Quadruplex brake gauge had no HUD reading (now built as DV's main-reservoir/equalizing gauge plus a generated brake-cylinder gauge; untested)",
-        "front doors left out (overlap another moving assembly)", "tender brake release: no seat found", "coupling: no draw-gear part meets the other car (96 mm)"]},
+        "round 2: Quadruplex built as DV's main-reservoir/equalizing gauge, brake-cylinder gauge generated 0.33 m beside it: the HUD now has brake pipe, cylinder and main reservoir readings",
+        "front doors left out (overlap another moving assembly)", "tender brake release: no seat found in both rounds", "coupling: no draw-gear part meets the other car (96 mm)"]},
+    "ls-282-k35": {"status": "converted", "audit": "not seen", "oilCupPairs": 1, "notes": [
+        "big-end pair placed; small end blocked by the piston above the crosshead end", "end beam: the core's automatic height search resolved the ambiguity (band 0.20..0.40 m, front)",
+        "no brake or speed gauge in the model and both boiler gauges face sideways: the first build generated the three missing gauges along the car axis beside the boiler "
+        "(floating); now generated on the backhead plate facing the crew (untested)", "tender brake release seated"]},
     "ls-284-b65": {"status": "converted", "audit": "passed", "oilCupPairs": 1, "notes": [
         "first run stopped at the tender end beam (ambiguous); James accepted the proposed band 1.00..1.20 m",
         "loco and tender bodies overlap in 38 cells (worst -204 mm): check the join in game", "tender brake release seated"]},

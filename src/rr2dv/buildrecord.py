@@ -824,7 +824,6 @@ class _Builder:
         # ---------------- anchors
         chuff = next((c["name"] for c in comps if c["kind"] == "Chuff"), None)
         whistle = next((c["name"] for c in comps if c["kind"] == "Whistle"), None)
-        self._ensure_gauges(cfg, comps, lid)
         cocks, fallback_cock = self._ensure_cylinder_cock(cfg, comps, drivers, bmin, bmax, radius)
         for what, val in (("Chuff (chimney)", chuff), ("Whistle", whistle)):
             if not val:
@@ -871,6 +870,7 @@ class _Builder:
         cab_y = seat_at[1] if seat_at else door[1] + 0.5
         cfg["CabLightProbe"] = env(_r([0, cab_y + 1.0, cab_z]), "m", "DV_choice", "1 m above the crew seat; the core raycasts up to the roof")
         cfg["RenderCabLight"] = env(_r([0, cab_y + 1.0, cab_z]), "m", "DV_choice", RENDER)
+        self._ensure_gauges(cfg, comps, lid, back_z)
         gauges = [c["name"] for c in comps if c["kind"] == "Gauge" and _extra(c).get("style") == "BoilerPressure"]
         if gauges:
             cfg["MainPressureGauge"] = gauges[0]
@@ -1232,7 +1232,7 @@ class _Builder:
 
     GAUGE_SIZE_M = 0.19  # the core's dial diameter at RR scale 1 (CclLocoBuild.BuildInterior)
 
-    def _ensure_gauges(self, cfg: dict, comps: list[dict], lid: str) -> None:
+    def _ensure_gauges(self, cfg: dict, comps: list[dict], lid: str, back_z: float | None = None) -> None:
         """Every converted loco gets the normal Derail Valley gauges (James, 2026-09-30): boiler pressure, a two-needle brake gauge
         that reads brake pipe (and cylinder), a main-reservoir gauge and a speedometer. RR's 4-needle Quadruplex becomes DV's
         main-reservoir/equalizing gauge (the core makes no HUD reading of it); a style the model lacks is generated beside the
@@ -1260,9 +1260,38 @@ class _Builder:
         have = {style(c) for c in gauges}
         brake = [c for c in gauges if style(c) in ("DualBrakeCylinderLine", "DualReservoirMainEq")]
         boiler = [c for c in gauges if style(c) == "BoilerPressure"]
-        anchor = (brake or boiler or gauges)[0]
+
+
+        def faces_backhead(c):  # the dial looks along the car (toward the crew): a side-facing gauge has no panel to extend
+            return abs(_rotate(_plain(c["rot"]), [0.0, 0.0, 1.0])[2]) > 0.7
+
+        panel = [c for c in gauges if faces_backhead(c)]
+        anchor = next((c for c in brake + boiler + gauges if c in panel), None)
         for want in ("DualBrakeCylinderLine", "DualReservoirMainEq", "Speedometer100"):
             if want in have:
+                continue
+            if anchor is None:  # every source gauge faces sideways (K-35): a row on the backhead plate, facing the crew
+                if back_z is None:
+                    self.choose(f"no {want} gauge in the model and no backhead plane to place one on: none generated")
+                    continue
+                plain = [_plain(c["pos"]) for c in value if c["kind"] == "Gauge"]
+                y = round(sum(p[1] for p in plain) / len(plain), 4)
+                size = self.GAUGE_SIZE_M * 0.6
+                others = [(_plain(c["pos"]), self.GAUGE_SIZE_M * _plain(c["scale"])[0]) for c in value if c["kind"] == "Gauge"]
+                row = [[x, y, round(back_z - 0.03, 4)] for x in (0.3, -0.3, 0.55, -0.55, 0.8, -0.8)]
+                pos = next((p for p in row if min(math.dist(p, o) - 0.5 * (size + osz) for o, osz in others) >= 0.02), row[0])
+                evidence = (f"the model's gauges all face sideways, so on the backhead plate (z {round(back_z, 3)} m) at the gauges' mean "
+                            f"height, facing the crew, clear of the others; Derail Valley's normal {want} gauge (the model has none)")
+                synthetic = {"kind": "Gauge", "name": f"rr2dv generated {want}", "parentPath": "",
+                             "extra": json.dumps({"style": want, "enabled": True}, separators=(",", ":")),
+                             "pos": env(pos, "m", "analogue_estimate", evidence), "rot": [0.0, 1.0, 0.0, 0.0], "scale": [0.6, 0.6, 1.0]}
+                value.append(synthetic)
+                cfg["Components"]["basis"] = "derived"
+                cfg["Components"]["evidence"].append(evidence)
+                comps.append(_plain(synthetic))
+                have.add(want)
+                self.choose(f"no {want} gauge in the model and its gauges face sideways: generated one on the backhead plate at {pos} m "
+                            "(estimated position: check it in game)")
                 continue
             a_pos, a_rot, a_scale = _plain(anchor["pos"]), _plain(anchor["rot"]), _plain(anchor["scale"])
             scale = list(a_scale)

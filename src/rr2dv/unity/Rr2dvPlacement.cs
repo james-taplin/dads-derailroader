@@ -540,6 +540,23 @@ public static partial class CclLocoBuild
         File.WriteAllText(Path.Combine(outDir, "endbeam-survey.json"), json.ToString());
     }
 
+    // Diagnostic (S-23 and P-48 tenders found no seat, 2026-09-30): the outer skin x at each height near the hint, LOD0 only,
+    // so the build report shows why the core's fitter finds no side edge with a rod under it.
+    static void Rr2dvReleaseProfile(Vector3 hint)
+    {
+        float side = Mathf.Sign(hint.x);
+        using (new Rr2dvLodScope(RefBody))
+        using (var vh = new VisualHits(RefBody))
+            foreach (float dz in new[] { -1f, 0f, 1f })
+            {
+                var sb = new System.Text.StringBuilder();
+                for (float y = 0.2f; y <= 2.001f; y += 0.1f)
+                    sb.Append(vh.Ray(new Vector3(side * 3.5f, y, hint.z + dz), new Vector3(-side, 0, 0), 3.5f, out var h)
+                        ? $" y{y:F1}:{h.point.x * side:F2}" : $" y{y:F1}:-");
+                Line($"rr2dv brake release skin profile z {hint.z + dz:F2} (outer x by height, LOD0 only):{sb}");
+            }
+    }
+
     static void Rr2dvReleaseSeat()
     {
         if (Cfg.BrakeRelease == null || Cfg.BrakeReleaseExact) return;
@@ -579,6 +596,7 @@ public static partial class CclLocoBuild
                 }
             }
             Warn("rr2dv brake release: no seat along the frame clears the 0.30 m floor; the core's own check decides");
+            Rr2dvReleaseProfile(hint);
         }
         finally { Object.DestroyImmediate(probe.gameObject); }
     }
