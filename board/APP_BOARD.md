@@ -2273,3 +2273,11 @@ Branch `vanilla-flavoured`. From Codex's Phase 2 zips (21 steam packs); diesels 
 - Materials: 4,584 slots, 89% Standard Car Shader, 260 URP Lit, 24 Tender Water; 156 null (truck wheels 91, drivers 65, tender coal 35); no emissive material anywhere.
 - Colliders: 22 loco + 28 tender MeshColliders alongside boxes/spheres/capsules; 7 tenders + A-23 have MeshColliders on moving parts.
 Open: diesels, cab floor rerun, tender/truck spacing vs definitions, per-loco physics answers (VF4 item 3). Nothing implemented.
+
+## VF6 (cloud Claude, vanilla-flavoured, 2026-09-30): Phase 2 rerun; plan draft ready for James
+Branch `vanilla-flavoured`. Codex's rerun (full wheel bands): 20 steam packs pass, K-35 reports the known `Pilot ` clip, no Unity compile errors.
+Wheel radius rule supported: 88 clean wheel nodes, 78 have a measured surface within 3 mm of the definition nominal (75 within 2 mm; P-48 2.1 mm over), flange tip 14-40 mm above;
+S-23 bands sit exactly at 0.6477 m. So nominal = tread, stored with its measurement as evidence, no user question (also removes the C-46 0.4137 m prefill bug).
+Cab floor: about 10 of 21 have no visible floor at the seat (roof only), so their floor must come from the source collision hull; VfMeasure now also casts columns against the model's own solid colliders (compiled against stubs only, not yet rerun).
+Plan draft written (architecture: physical removal of mod code with a tripwire test, per-loco table, build hash pinning, app-only clip resolver, diesel as a separate package; testing layers; milestones M1-M4; 7 open questions for James). With James, off git. Nothing implemented.
+Open: diesels unmeasured; per-loco physics answers; unknown-build policy; release scope.
