@@ -2309,3 +2309,10 @@ sound, so clip behaviour under CCL's sound entry needs an in-game prototype. `ru
 Branch `vanilla-flavoured`. Codex's `run_whistles.py` v2: all 23 whistle clips are mono Ogg Vorbis; 44.1 kHz except wh-5-nkp, wh-5-nathan and wh-5-cnw (48 kHz). Length 1.2 s (wh-5-drg-st, wh-5-gce) to 9.6 s (wh-6-reading); default wh-3-std 2.61 s;
 median about 5 s; total 114 s. They are complete one-shot blasts with attack and decay, not short loop points, so how they behave under DV's hold-and-release whistle port needs an in-game prototype (wh-3-std on the K-28T: tap, hold, repeat, release).
 Length reader checked on a synthetic Ogg header and consistent with file sizes (80-181 kbps). Nothing implemented.
+
+## VF11 (cloud Claude, vanilla-flavoured, 2026-09-30): James's answers; starting app edits on `vanilla-flavoured` only
+Answers (James): keep DV whistle behaviour (swap the clip only); lamps use the source meshes for now (bespoke app, fewer things to break); a converted loco shows the DV info plates (loco and tender where applicable), no generated road numbers;
+vehicle options: all the standard options we already have plus any other swappable Railroader meshes we find (whistles, lights, cowcatchers, ...; James does not remember the full list, so a customisation-option inventory is still to do).
+ANNOUNCE (one session edits the app at a time): VF starts app edits on branch `vanilla-flavoured` only (W stays on `0.3.X-exp`/`main` work). Step 1: input restricted to the 21 stock steam locos (diesels refused as not supported in this release):
+new `stock.py` list, `installs.mod_in_railroader` -> stock-pack-only input, Railroader Mods folder and `searchRoots`/`--search` removed from installs, pipeline, CLI, app model and GUI; tripwire tests; existing synthetic-mod tests moved to stock-shaped packs in AssetPacks.
+Kept: everything the measure and build stages use (Index/inventory, AssetRipper, probe, record, build, audit, publish). Not touched: `tooling/`, `src/rr2dv/unity/` builder scripts in this step. Tests: baseline 283 run, 2 known stub-compile failures (mono-mcs installed here). Pre-release only when James asks.
