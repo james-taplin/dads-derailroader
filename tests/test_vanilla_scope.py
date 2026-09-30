@@ -1,4 +1,4 @@
-"""vanilla-flavoured tripwires: this edition converts Railroader's 21 stock steam locomotives and nothing else.
+"""Scope tripwires: the app reads Railroader's 21 supported stock steam locomotives.
 
 These read the source files, not the runtime lists, because other tests add synthetic pack names to stock.STEAM for the
 test process (fixtures.register_stock). If one of these fails, modded-locomotive support has crept back in."""

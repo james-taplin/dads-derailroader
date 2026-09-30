@@ -32,7 +32,7 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(self.c.tools_missing(), [])
 
     def test_lists_only_stock_steam_locomotive_packs(self):
-        # vanilla-flavoured: the list is the stock steam list, filtered to the packs that are installed and readable
+        # The list is the supported stock steam set, filtered to installed and readable packs.
         packs = self.m["search"]
         write_pack(packs / "ls-282-k28t", objects=[loco("ls-282-k28t")], assets={"ls-282-k28t": {"filename": "k28t.prefab"}})
         write_pack(packs / "truck.archbar.diamond", assets={"t": {"filename": "t.prefab"}})  # not a locomotive, not stock

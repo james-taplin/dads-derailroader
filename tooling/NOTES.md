@@ -1,21 +1,7 @@
-# Reviewed tooling snapshot for W
+# Tooling notes
 
-App-maintained change, 2026-09-27: `builder/tools/unity/CclLocoBuild.cs` now searches other beam heights
-when its original band is inconclusive; `LocoConfig.cs` documents the updated null-band behavior.
-This general converter fix is authorized by the user's subsequent development instructions. It is an
-app-side patch, not a refresh from the private LLW workspace. `SNAPSHOT_SOURCES.json` preserves the original
-capture provenance; `MANIFEST.sha256` describes the current tree including this patch.
+The builder scripts in this directory support the app's import, measurement, build, and audit stages. Their inputs and generated workspace locations are described by `workspace.json` and the relevant builder documentation.
 
-Captured current local tooling for W11/W13 at SNAPSHOT_SOURCES.json's capture time. All copied files retain their exact source bytes and workspace-relative paths. This replaces the older broad historical snapshot with an explicit current-tooling allowlist; older frozen sources/reports remain in Git history and the private workspace.
+`MANIFEST.sha256` covers the current checked-in tooling tree. Do not use paths from a developer's machine as canonical user setup instructions.
 
-Start with builder/VEHICLE_RECORD.md, builder/tools/unity/LlwVehicleRecord.cs, builder/tools/prepare.py, workspace.json and locos/s16/profile/vehicle-record.json. The current shared core includes ReviewedMeshIslandRemoval.cs, CclLocoBuild.AnimatedToggles.cs and NewLocoBuildGate.cs. Loader contract sources and test scripts are in builder/tests/vehicle-record. S16's reviewed warning dispositions, measurement notes and BUILD_STATUS.md are included. G29/C21 C# profiles remain regression references; their JSON migration is not claimed.
-
-Import reference: builder/tools/pilot contains the active source-inspection importer. The preserved pilot export_assetripper.ps1 and PilotProbe.cs are included explicitly as inspection references, not an alternate build core. rr2dv's real AssetRipper stage has been exercised; see app-board X24/X25. The app's Unity import stage is not validated by that result.
-
-Scope: this is a tooling/data-contract handoff, not a self-contained build project or installable mod. No bundles, audio, images, Unity projects/caches, CarCreator package, raw catalogue records, source Definitions/Catalog JSON, decompiled assemblies or private machine.local.json are included. The explicitly requested S16 vehicle record is reviewed conversion configuration, not a source catalogue dump. Referenced source assets and evidence not allowlisted here remain local. Compiled test executables are excluded; build tests from their included sources.
-
-Audio authority: James requires native DV S060/S282 aliases (S060 below1500 ft2, S282 otherwise), zero bundled AudioClips and RR-independent finished packs. The current Codex guide and builder README state that rule. Other guides/profiles/code are copied byte-for-byte and may still reflect work awaiting migration; they must not override this decision. This snapshot does not certify existing profiles or installed packs as compliant. Local Claude has been asked to clean their guide.
-
-S062T boundary: workspace.json already references the in-progress s16-062 profile. That profile/assets are deliberately omitted. Shared files are current at capture, including any changes already present, not asserted to be frozen prerelease2 sources or S062T-validated. No in-progress source files were edited. Future changes require another snapshot. S16 build/test status is historical evidence from BUILD_STATUS.md; this packaging operation runs no Unity build and makes no new runtime-acceptance claim.
-
-Verification: SNAPSHOT_SOURCES.json lists every copied file and source hash; MANIFEST.sha256 covers all other files including these notes. Every file was checked against its live source again after copying. The ZIP is byte-verified against this tree. The ZIP is a local deliverable; the same tooling tree is published in the app repository so W can read it directly.
+The repository omits source game assets, exported packs, audio, images, Unity caches, private logs, and machine-specific settings. Build tests from the included sources. A tooling snapshot or automated pass does not certify a pack's runtime behavior.

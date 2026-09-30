@@ -1,17 +1,16 @@
 # derailroader
 
-**Convert the Railroader steam locomotives you already have installed into Derail Valley locomotives.**
+**Convert Railroader's 21 stock steam locomotives into Derail Valley locomotives.**
 
 `derailroader` (command line: `rr2dv`) takes one of Railroader's own stock steam locomotives from your own Railroader
 install, rebuilds it for Derail Valley's Custom Car Loader (CCL 3.1.9), checks the result, and installs it into your own
-Derail Valley `Mods` folder. It never changes your Railroader install. **This is the vanilla-flavoured edition:** it
-converts only the 21 stock steam locomotives (S-23, S-51, D-46, F-71, G-16, G-25, C-25, C-46, C-55, K-28T, K-35, B-65,
-A-23, A-26, T-17, T-21, T-22, P-18, P-43, P-48 and C-40) and has no support for modded locomotives. The three stock
-diesels are not supported in this edition.
+Derail Valley `Mods` folder. It never changes your Railroader install. It converts the 21 stock steam locomotives
+(S-23, S-51, D-46, F-71, G-16, G-25, C-25, C-46, C-55, K-28T, K-35, B-65, A-23, A-26, T-17, T-21, T-22, P-18,
+P-43, P-48 and C-40).
 
 ![The derailroader app](docs/app-window.png)
 
-> **Status: vanilla-flavoured edition, in development.** The pipeline runs end to end on the stock steam locomotives, but
+> **Status: in development.** The pipeline runs end to end on the stock steam locomotives, but
 > most of them have not been built and driven in game yet. An installed pack is still a **candidate**: controls and
 > handling are checked in game (see [What a finished pack must pass](#what-a-finished-pack-must-pass)).
 
@@ -46,7 +45,7 @@ diesels are not supported in this edition.
 - **Asks you only what the source cannot answer**, in a pre-build review (below), and remembers your answers.
 - **Audits the finished pack** before installing it: no audio, Custom Car Loader scripts only, every HUD control
   wired, mass and wheel radius as recorded.
-- **Uses vanilla Derail Valley sounds.** Railroader audio is never extracted.
+- **Uses built-in Derail Valley sounds.** Railroader audio is never extracted.
 
 ## Personal use only
 
@@ -102,10 +101,10 @@ opening an archive, and avoid third-party mirrors.
 
 ### 3. Install derailroader
 
-- **Portable app:** from the [0.1.2 release](https://github.com/james-taplin/derailroader/releases/tag/v0.1.2), download
-  `Derailroader-0.1.2-Windows.zip`. Extract the **whole** folder and run `Derailroader.exe`, keeping its `_internal`
-  folder beside it.
-- **From source:** download `Derailroader-0.1.2-Source.zip`, extract it, and run `Launch Derailroader.bat`. This needs
+- **Portable app:** if a Windows package is listed on [Releases](https://github.com/james-taplin/dads-derailroader/releases),
+  extract the **whole** folder and run `Derailroader.exe`, keeping its `_internal` folder beside it.
+- **From source:** clone the [repository](https://github.com/james-taplin/dads-derailroader) or choose **Code → Download ZIP**,
+  then run `Launch Derailroader.bat`. This needs
   Python 3.11+ with Tk.
 
 Neither download includes Unity, AssetRipper or the Car Creator Package.
@@ -155,21 +154,20 @@ Inherited boiler values are labelled as simulation defaults, not measurements of
 
 ```
 rr2dv doctor                      # find both games and check Unity, Car Creator, AssetRipper and CCL
-rr2dv list                        # the stock steam locomotives this edition converts, and which are installed
+rr2dv list                        # the supported stock steam locomotives, and which are installed
 rr2dv scan ls-282-k28t            # read-only: what the locomotive needs
 rr2dv convert ls-282-k28t         # convert, with the pre-build review in the terminal
 rr2dv convert ls-282-k28t --review-file prebuild-review.json  # replay reviewed choices
 ```
 
-Name the locomotive by its Railroader pack name (as `rr2dv list` shows), or give the path of that pack folder in
-`Railroader_Data\StreamingAssets\AssetPacks`. Anything else is refused: mods, zip files, links, other folders and the
-three stock diesels.
+Name the locomotive by its Railroader pack name (as `rr2dv list` shows), or give the path of its pack folder in
+`Railroader_Data\StreamingAssets\AssetPacks`.
 
 | `convert` option | Meaning |
 |---|---|
 | `--loco ID` | the locomotive identifier (the pack's own; normally not needed) |
 | `--livery NAME` | livery to use (default: the locomotive's first) |
-| `--audio S060\|S282` | vanilla sound set instead of the boiler-size rule |
+| `--audio S060\|S282` | built-in Derail Valley sound set instead of the boiler-size rule |
 | `--wheel-radius M` | the driving-wheel radius, once you have reviewed the measured candidate |
 | `--geometry-review FILE` | reviewed end-beam heights, when automatic measurement is inconclusive |
 
@@ -222,11 +220,10 @@ decision.
 
 ## Rules the tool follows
 
-- **Generic.** One pipeline for every locomotive; no per-locomotive scripts. What one model does differently becomes a
-  general rule.
+- **Consistent.** One pipeline for the supported stock steam locomotives; no per-locomotive scripts. Differences become explicit rules with evidence.
 - **Nothing is guessed silently.** Values that need a person stay empty and are listed. Every automatic choice is
   written to `build/review.json`. Two equally good matches are an error, never a first pick.
-- **Sounds are never converted.** Every locomotive uses vanilla Derail Valley sounds: S060 below 1,500 ft² of heating
+- **Sounds are never converted.** Each supported locomotive uses built-in Derail Valley sounds: S060 below 1,500 ft² of heating
   surface, S282 above. `--audio` overrides this.
 - **Dependencies.** Everything a locomotive uses comes from your own Railroader install's asset packs. A part the
   source pack references but does not contain is left out and listed.
@@ -287,18 +284,16 @@ prefab-save regression, set `RR2DV_TEST_UNITY` to Unity 2019.4.40f1 and run
 | Path | What |
 |---|---|
 | [`src/rr2dv/`](src/rr2dv/) | the app: Python standard library only (Tk for the window); Unity editor scripts in [`src/rr2dv/unity/`](src/rr2dv/unity/) |
-| [`tests/`](tests/) | automated tests on made-up mods, with stand-ins for AssetRipper and Unity |
-| [`tooling/`](tooling/) | read-only snapshot of our conversion tooling and guides, the reference builder (start with [`tooling/NOTES.md`](tooling/NOTES.md)) |
+| [`tests/`](tests/) | automated tests on synthetic stock-shaped inputs, with stand-ins for AssetRipper and Unity |
+| [`tooling/`](tooling/) | builder tooling and technical reference material (start with [`tooling/NOTES.md`](tooling/NOTES.md)) |
 | [`wiki/`](wiki/) | the wiki pages (`_Sidebar.md` and 19 pages), kept here to copy into the GitHub wiki |
-| [`docs/`](docs/) | [resolving blocks](docs/resolving-blocks.md), [feature roadmap](docs/feature-roadmap.md), [wiki plan](docs/wiki-plan.md), design notes |
+| [`docs/`](docs/) | [resolving blocks](docs/resolving-blocks.md), [scope and validation](docs/feature-roadmap.md), [stock measurements](docs/stock-measurements.md), [conversion reference](docs/conversion-reference.md), [wiki plan](docs/wiki-plan.md), design notes |
 | [`tools/dv-control-logger/`](tools/dv-control-logger/) | a small read-only Derail Valley mod that logs every cab control change, its input route and the simulation's response, for tuning controls |
-| [`board/APP_BOARD.md`](board/APP_BOARD.md) | message board between the app's and the local Claude and Codex sessions |
-| [`CLAUDE.md`](CLAUDE.md) | working notes for Claude sessions on the app |
+| [`CLAUDE.md`](CLAUDE.md) | contributor notes for the app |
 
 Changes go on a branch, and test builds are GitHub pre-releases; `main` gets a change after it has been tested.
 
 ## Licence
 
-The code in this repository is released under the Unlicense (see [`LICENSE`](LICENSE)). It covers this tool only,
-not the content it converts: copyright and other rights in the source assets remain with their respective rights
-holders.
+License: PolyForm Noncommercial 1.0.0 (see [`LICENSE`](LICENSE)). This covers the code in this repository, not the
+content it uses: copyright and other rights in source assets remain with their respective rights holders.

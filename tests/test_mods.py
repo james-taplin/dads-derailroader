@@ -83,7 +83,7 @@ class Dependencies(Base):
         self.assertFalse(record.left_out_component(c, "tt-260-a", left))
 
     def test_sources_credit_railroader_only(self):
-        # vanilla-flavoured: everything used comes from Railroader's own asset packs, credited once as the base game
+        # Source files come from Railroader's own asset packs and are credited as base-game content.
         objects = [loco("ts-260-a", tender="tt-260-a", parts=[part("ts-260-a\\parts", "bell", "bell1")]),
                    tender("tt-260-a", truck="game-truck")]
         (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": objects}))

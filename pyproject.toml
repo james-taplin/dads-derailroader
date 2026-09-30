@@ -4,8 +4,10 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rr2dv"
-version = "0.3.0.dev0"
-description = "Convert Railroader steam locomotive mods into Derail Valley (CCL) packs"
+version = "0.4.0"
+description = "Convert Railroader stock steam locomotives into Derail Valley (CCL) packs"
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 # The app core uses the standard library only. Unity-side stages call the tooling's own Python environment.
 dependencies = []

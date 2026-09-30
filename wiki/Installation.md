@@ -19,7 +19,7 @@ Select the extracted file for each tool, not its ZIP or enclosing folder. The ap
 
 ## 3. Install and check derailroader
 
-Download the current Windows package from [Releases](https://github.com/james-taplin/derailroader/releases), extract the whole folder, and run `Derailroader.exe`. Keep `_internal` beside the executable. For the source package, run `Launch Derailroader.bat`; it needs Python 3.11 or newer with Tk.
+If a Windows package is listed on [Releases](https://github.com/james-taplin/dads-derailroader/releases), extract the whole folder and run `Derailroader.exe`. Keep `_internal` beside the executable. To use the source, clone the [repository](https://github.com/james-taplin/dads-derailroader) or choose **Code → Download ZIP**, then run `Launch Derailroader.bat`; it needs Python 3.11 or newer with Tk.
 
 In **Settings**, select <kbd>Check</kbd>, correct any missing paths, then <kbd>Save</kbd>. The command-line check is `rr2dv doctor`. A short work folder such as `C:\rr2dv` helps Unity 2019.4 avoid long-path failures; the supported work folder path is at most 74 characters.
 
@@ -32,7 +32,7 @@ In **Settings**, select <kbd>Check</kbd>, correct any missing paths, then <kbd>S
 - **No Derail Valley Mods folder:** Finish the Unity Mod Manager setup, then check CCL.
 - **Work folder too long:** Choose a short path outside either game.
 
-See [When a conversion stops](https://github.com/james-taplin/derailroader/wiki/When-a-conversion-stops) for messages from later stages.
+See [When a conversion stops](https://github.com/james-taplin/dads-derailroader/wiki/When-a-conversion-stops) for messages from later stages.
 </details>
 
-Next: [Your first conversion](https://github.com/james-taplin/derailroader/wiki/Your-first-conversion).
+Next: [Your first conversion](https://github.com/james-taplin/dads-derailroader/wiki/Your-first-conversion).

@@ -1,7 +1,7 @@
 """Builds src/rr2dv/stock_locos.json, the per-locomotive table of the vanilla edition (one entry per stock steam loco).
 
 Everything in the table is either copied from Railroader's own definitions, measured (the Codex bulk runs of 2026-09-30:
-docs/vanilla/bulk-findings.md) or an explicit decision by James; each entry says which. Run it after a new Railroader build
+docs/stock-measurements.md) or an explicit decision by James; each entry says which. Run it after a new Railroader build
 or new measurements, review the diff, commit the result. Usage:
 
   python tools/vanilla/make_table.py --railroader <Railroader folder> --hashes game-hashes.json --bulk <unzipped vf_bulk.zip> \
@@ -20,7 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[2] / "src"))
 from rr2dv import stock  # noqa: E402
 
 GAME_BUILD = "20238526"
-MEASURED = "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md)"
+MEASURED = "Codex bulk measurement run 2026-09-30 (docs/stock-measurements.md)"
 
 # What happened when each loco was converted with this edition (run logs and build reports James sent, 2026-09-30).
 # Status is "untested" until a run exists; nothing here is in-game acceptance.

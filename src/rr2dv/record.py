@@ -41,7 +41,7 @@ TENDER_CAR = {"BaseCarType": 8, "License": None}
 AUDIO = {"S060": {"ChuffType": 0, "WhistleSystem": 3050}, "S282": {"ChuffType": 1, "WhistleSystem": 3100}}
 # Draft DV-side simulation starting points (X30): the values of our S16 draft record, with its units, bases and evidence.
 # They are not validated for any loco; every one is listed for per-engine review in metadata.pending.
-GUIDE = "GUIDE_UNIFIED_LLW_CONVERSION.md"
+GUIDE = "docs/conversion-reference.md"
 U02 = f"{GUIDE}#U02 and implementation profile choices"
 E06 = f"{GUIDE}#E06"
 DRAFT_ENGINE = {"minCutoff": (0.1, "1", "DV_choice", U02), "maxCutoff": (0.85, "1", "DV_choice", U02),

@@ -28,7 +28,7 @@ def package(name,g29,c21):
             files.append((p,Path('profiles')/profile/p.name))
     for basename in ('README.md','MIGRATION_PLAN.md','UnityProjectContext.md'):
         files.append((ROOT/basename,Path('builder')/basename))
-    files.append((WORKSPACE/'GUIDE_UNIFIED_LLW_CONVERSION.md',Path('builder/docs/GUIDE_UNIFIED_LLW_CONVERSION.md')))
+    files.append((ROOT.parent.parent/'docs/conversion-reference.md',Path('builder/docs/conversion-reference.md')))
     if (ROOT/'analysis/VALIDATION.md').exists():files.append((ROOT/'analysis/VALIDATION.md',Path('evidence/VALIDATION.md')))
     manifest=[]
     for source,relative in files:

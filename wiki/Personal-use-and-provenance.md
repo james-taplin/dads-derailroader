@@ -5,7 +5,7 @@
 
 Before writing a pack into Derail Valley's `Mods` folder, the app displays a notice listing the source content detected. You click <kbd>I agree</kbd> once. Cancel or close the notice and nothing is installed. There is no skip setting.
 
-The notice says the conversion is for your own personal use, that `derailroader` contains no Railroader code or art and distributes none (it only reads the files already installed on your computer), that you should not share the converted locomotive without permission from the Railroader developers and any other rights holders, and that `derailroader` is unofficial. The tool does not decide rights questions for you. This wording is a first draft. See the [notice implementation](https://github.com/james-taplin/derailroader/blob/vanilla-flavoured/src/rr2dv/consent.py) for its exact current text.
+The notice says the conversion is for your own personal use, that `derailroader` contains no Railroader code or art and distributes none (it only reads the files already installed on your computer), that you should not share the converted locomotive without permission from the Railroader developers and any other rights holders, and that `derailroader` is unofficial. The tool does not decide rights questions for you. See the [notice implementation](https://github.com/james-taplin/dads-derailroader/blob/main/src/rr2dv/consent.py) for its exact current text.
 
 <details>
 <summary><strong>Read the full notice text</strong></summary>
@@ -28,7 +28,7 @@ The installed `NOTICE.txt` inserts the actual pack name and detected sources int
 
 </details>
 
-![Personal-use notice with made-up sources](https://raw.githubusercontent.com/james-taplin/derailroader/main/docs/personal-use-notice.png)
+![Personal-use notice with made-up sources](https://raw.githubusercontent.com/james-taplin/dads-derailroader/main/docs/personal-use-notice.png)
 
 <sub>Example screen; your notice lists the detected content.</sub>
 
@@ -40,4 +40,4 @@ The installed `NOTICE.txt` inserts the actual pack name and detected sources int
 
 `rr2dv` reads the game files locally and does not change your Railroader install. It does not import Railroader code DLLs. A provenance record helps identify inputs; it is not a permission grant.
 
-When reporting a bug, share the stage, message, and relevant diagnostic excerpts. Keep converted assets and full private logs out of public posts. See [Testing a pack in Derail Valley](https://github.com/james-taplin/derailroader/wiki/Testing-a-pack-in-Derail-Valley).
+When reporting a bug, share the stage, message, and relevant diagnostic excerpts. Keep converted assets and full private logs out of public posts. See [Testing a pack in Derail Valley](https://github.com/james-taplin/dads-derailroader/wiki/Testing-a-pack-in-Derail-Valley).

@@ -48,10 +48,7 @@ adapter, derivation, assumptions, calibration targets and empty results until me
 | Conventional simple | Source bore and stroke with explicitly reviewed 2, 3 or 4 cylinders; uncalibrated |
 | Saturated / superheated | Boiler / firebox intake-temperature references following the CCL creator wiring; uncalibrated |
 | Fixed geared steam | CCL-only prototype: engine RPM = wheel RPM × ratio; wheel torque = engine torque × ratio × efficiency; engine intake flow still supplies steam demand |
-| Compound/simple switching | Pending feasibility and coupled demand/torque implementation; no torque-only “compound” mode |
 | Simple articulated | Geometry/runtime acceptance and calibration pending |
-| Oil-fired regime combinations | Pending; dynamic brake is reserved for firing, Gearbox A for atomizer, Gearbox B for a future simpling control |
-| Diesel mechanical / hydraulic / electric | Separate adapters pending; no generic steam-to-diesel toggle |
 
 Geared review requires a ratio, its evidence or explicit assumption, efficiency, and physical powered wheelset
 indices and any unpowered physical indices. All other indices are treated as non-physical placeholders/shafts. Animation shafts must not be counted as wheel axles even if Railroader calls one the main driver. Existing
@@ -61,8 +58,8 @@ identified or animated by the current probe stop with a geometry block. Shaft ph
 checks; a valid CCL simulation graph does not prove a particular geared vehicle's visual conversion.
 
 Calibration targets are starting pull, adhesion, sustained pull at several speeds, steam/water consumption and fuel
-consumption. No numeric target or test result is invented when evidence is missing. Later adapters remain explicit
-pending work under the [staged roadmap](feature-roadmap.md).
+consumption. No numeric target or test result is invented when evidence is missing. Keep unverified calibration
+explicit in the vehicle record and validation notes.
 
 ## Wheel support and oil cups
 

@@ -7,7 +7,7 @@ using UnityEditor.SceneManagement;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
-// vanilla-flavoured Phase 2 measurements (docs/vanilla/measurement-regime.md, M1-M13). Unity 2019.4, editor only.
+// Stock-locomotive geometry measurements. Unity editor only.
 // Read-only like Rr2dvProbe: temporary copies in an empty scene, temporary colliders removed again, nothing saved.
 // Input: Assets/Rr2dv/ProbeInput.json (the probe's own input, so the same vehicles, prefabs, wheelsets, anchors and
 // clip maps). Output: <VF_OUT>/vf-measure.json and result.json. Every value is a measurement or a copy of a

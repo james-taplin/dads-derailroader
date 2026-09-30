@@ -1,6 +1,6 @@
 # The pipeline, stage by stage
 
-Every conversion starts from installed source files and a fresh run identity. The app stops at the first unresolved block and records the reason. See [When a conversion stops](https://github.com/james-taplin/derailroader/wiki/When-a-conversion-stops) for user actions.
+Every conversion starts from installed source files and a fresh run identity. The app stops at the first unresolved block and records the reason. See [When a conversion stops](https://github.com/james-taplin/dads-derailroader/wiki/When-a-conversion-stops) for user actions.
 
 | Stage | Input and result | Typical stop |
 | --- | --- | --- |
@@ -18,4 +18,4 @@ Every conversion starts from installed source files and a fresh run identity. Th
 
 `run.log` is the readable timeline. The compact report retains `run.json`, review answers, the vehicle record, `build_report.txt` and audit results where produced. `rebuild.json` records source, code, tool, and answer fingerprints plus expected output hashes. It identifies a recipe; byte-identical Unity bundles are not verified.
 
-The imported and probed project can be reused after a failed build, keyed to inputs that shape the probe. Successful cleanup removes temporary conversion data. A pack that passes `audit` is still a candidate until [Testing a pack in Derail Valley](https://github.com/james-taplin/derailroader/wiki/Testing-a-pack-in-Derail-Valley).
+The imported and probed project can be reused after a failed build, keyed to inputs that shape the probe. Successful cleanup removes temporary conversion data. A pack that passes `audit` is still a candidate until [Testing a pack in Derail Valley](https://github.com/james-taplin/dads-derailroader/wiki/Testing-a-pack-in-Derail-Valley).

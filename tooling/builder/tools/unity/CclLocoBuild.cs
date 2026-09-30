@@ -13,7 +13,7 @@ using Object = UnityEngine.Object;
 
 // Generic Railroader -> Derail Valley CCL 3.1.9 steam loco builder. All loco-specific data comes from a LocoConfig
 // (RlwConfig.cs: RLW RBBM-1t 2-4-4-2T Mallet tank; RgbConfig.cs: RLW RGB-2 0-10-0 + tender). A tender loco builds two cars
-// (loco, then its tender) into one pack. Guide: Claudes Place\GUIDE_Railroader_to_DV_CCL.md.
+// (loco, then its tender) into one pack. See docs/review-and-geometry.md for the placement rules.
 // Source: AssetRipper export of the RR asset bundle, version-changed to 2019.4, clip paths restored from CRC32.
 // Run windowed (Personal licence refuses -batchmode):
 //   Unity.exe -projectPath <project> -executeMethod RgbConfig.Build     env CCL_BUILD_OUT (or RLW_BUILD_OUT) = output folder

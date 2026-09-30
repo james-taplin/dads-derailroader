@@ -1,4 +1,4 @@
-"""vanilla-flavoured bulk measurement run: one command, resumable, never stops on one bad pack.
+"""Stock-locomotive bulk measurement run: one command, resumable, never stops on one bad pack.
 
 For each of the 21 stock steam packs (the 3 diesels have no project: the pipeline is steam only):
   1. project: run the pipeline as far as the pre-build review (answers refused, nothing built, nothing installed). The
@@ -70,7 +70,7 @@ def preflight(machine, rr, out_dir: Path) -> tuple[list[str], list[str]]:
     if sys.version_info < (3, 11):
         problems.append(f"Python {sys.version.split()[0]} is too old; 3.11 or newer is needed")
     if not SCRIPT.is_file():
-        problems.append(f"{SCRIPT} is missing: pull the vanilla-flavoured branch again")
+        problems.append(f"{SCRIPT} is missing: restore it from the repository")
     if machine.values.get("keepWorkFiles") is not True:
         machine.values["keepWorkFiles"] = True  # this run only, in memory: the settings file is never edited
         notes.append('"keepWorkFiles" is off in the settings; it is switched on for this run only (the file is not changed)')

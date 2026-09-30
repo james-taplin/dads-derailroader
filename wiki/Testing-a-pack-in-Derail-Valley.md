@@ -1,6 +1,6 @@
 # Testing a pack in Derail Valley
 
-An installed pack has passed a build and exported-bundle audit. **It is still a candidate.** Test a fresh spawn in game and record what you observed. See [Personal use and provenance](https://github.com/james-taplin/derailroader/wiki/Personal-use-and-provenance) before sharing any evidence that contains third-party content.
+An installed pack has passed a build and exported-bundle audit. **It is still a candidate.** Test a fresh spawn in game and record what you observed. See [Personal use and provenance](https://github.com/james-taplin/dads-derailroader/wiki/Personal-use-and-provenance) before sharing any evidence that contains third-party content.
 
 ## Twelve acceptance checks
 
@@ -23,4 +23,4 @@ Also drive under load and check steam raising, wheel contact, braking, firing, s
 
 Use **Open run folder** for `run.log`, `build_report.txt`, `build/review.json`, and the audit result. For a game-side failure, collect Derail Valley's `Player.log` from `%USERPROFILE%\AppData\LocalLow\Altfuture\Derail Valley\`. A useful report gives the game and app versions, locomotive, exact steps, expected and observed behavior, and one clear screenshot of the affected control or fitting. Do not post converted models or full private logs.
 
-See the [full acceptance gates](https://github.com/james-taplin/derailroader#what-a-finished-pack-must-pass) and [When a conversion stops](https://github.com/james-taplin/derailroader/wiki/When-a-conversion-stops).
+See the [full acceptance gates](https://github.com/james-taplin/dads-derailroader#what-a-finished-pack-must-pass) and [When a conversion stops](https://github.com/james-taplin/dads-derailroader/wiki/When-a-conversion-stops).

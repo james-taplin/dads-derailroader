@@ -1,12 +1,11 @@
-# LLW vehicle record, schema 1
+# Vehicle record schema 1
 
-`LlwVehicleRecord.Build` loads the file named by `CCL_VEHICLE_RECORD`, creates the
+The record loader reads the file named by `CCL_VEHICLE_RECORD`, creates the
 existing `LocoConfig`, resolves source component parent transforms, and calls
 `CclLocoBuild.Run`. If `CCL_CATALOG_RECORD` is set, the existing catalogue bridge
-also checks the source identifier and source pony radii. G29/C21 retain their C#
-profile entry points; this work does not migrate them or claim parity.
+also checks the source identifier and source wheel radii.
 
-The loader is editor-only: copy `LlwVehicleRecord.cs` into the project's
+The loader is editor-only: copy the record-loader source into the project's
 `Assets/Editor` through the shared builder sync. No package is required. The
 strict JSON parser preserves missing/null distinctions, dictionaries and tuple
 arrays that Unity JsonUtility alone cannot represent.
@@ -18,7 +17,7 @@ arrays that Unity JsonUtility alone cannot represent.
   "schemaVersion": 1,
   "vehicleId": "ls-060-s16",
   "config": {
-    "CarId": "LLW_S16",
+    "CarId": "RR2DV_SAMPLE",
     "WeightEmptyKg": {
       "value": 12345,
       "unit": "kg",
@@ -107,8 +106,8 @@ core's lighting build. Use `OilAnchors` or `RodOilers` in config for the existin
 source-validated strategies. Record order is preserved.
 
 Additional delegate behaviors (`BodyExtras`, per-placed-control `Phys`, and
-arbitrary lamp predicates) are intentionally not inferred. Extend the generic
-loader with a reviewed declarative behavior when a future vehicle needs one.
+arbitrary lamp predicates) are intentionally not inferred. Any new declarative
+behavior requires review and validation before use.
 
 A coupled tender is a top-level `tender` object containing its own `config`,
 `hooks`, optional `metadata`, and `config.IsTender=true`. Do not put a nested
@@ -123,11 +122,9 @@ Generation `Work` must name a dedicated `Assets/<conversion>/<car>` subtree.
 It rejects duplicate JSON keys, unknown fields, nonfinite values, malformed
 numbers, fractional integers, and missing provenance.
 
-`CCL_SHARE=1` clears custom Sounds and RemoveVanillaSounds on every car so stock
-DV audio remains available. The separate serialized-bundle audit still must
-confirm zero embedded AudioClips.
+The share-build setting clears custom sound references so built-in DV audio remains available. The serialized-bundle audit must still confirm zero embedded AudioClips.
 
-`LlwVehicleRecord.ValidateRecord` is an optional Unity executeMethod that loads
+`ValidateRecord` is an optional Unity executeMethod that loads
 the record, checks its source prefab, resolves its source component parents,
 writes `record_validation.json` beneath `CCL_BUILD_OUT`, and exits. It does not
 build/export a car or prove runtime behavior.
@@ -139,5 +136,4 @@ a **stub CclLocoBuild** and must never be copied into Assets/Editor. These tests
 exercise parsing/conversion and failure semantics; actual prefab resolution,
 export, bundle audits, rendered appearance, and in-game checks are separate.
 
-On 2026-09-26 the 17 contract cases and the staged S16 record all passed. Unity
-Editor build and runtime acceptance remain the parent task's responsibility.
+Contract tests exercise parsing and failure semantics. Unity editor build and runtime acceptance are separate checks.

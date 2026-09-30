@@ -16,7 +16,7 @@
       "unit": "1",
       "basis": "DV_choice",
       "evidence": [
-        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        "docs/conversion-reference.md#U02 and implementation profile choices"
       ]
     },
     "ReportTitle": "S16 measured 0-6-0T conversion",
@@ -3179,7 +3179,7 @@
       "unit": "m",
       "basis": "DV_choice",
       "evidence": [
-        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        "docs/conversion-reference.md#U02 and implementation profile choices"
       ]
     },
     "CouplerInset": {
@@ -3187,7 +3187,7 @@
       "unit": "m",
       "basis": "DV_choice",
       "evidence": [
-        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        "docs/conversion-reference.md#U02 and implementation profile choices"
       ]
     },
     "License": "SH060",
@@ -3196,7 +3196,7 @@
       "unit": "1",
       "basis": "DV_choice",
       "evidence": [
-        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        "docs/conversion-reference.md#U02 and implementation profile choices"
       ]
     },
     "SimBasis": {
@@ -3204,7 +3204,7 @@
       "unit": "1",
       "basis": "DV_choice",
       "evidence": [
-        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        "docs/conversion-reference.md#U02 and implementation profile choices"
       ]
     },
     "WheelslipFriction": {
@@ -3212,7 +3212,7 @@
       "unit": "1",
       "basis": "DV_choice",
       "evidence": [
-        "GUIDE_UNIFIED_LLW_CONVERSION.md#E05",
+        "docs/conversion-reference.md#E05",
         "all 3 physical axles driven"
       ]
     },
@@ -3221,7 +3221,7 @@
       "unit": "hp",
       "basis": "analogue_estimate",
       "evidence": [
-        "GUIDE_UNIFIED_LLW_CONVERSION.md#E06 heating-surface-scaled estimate"
+        "docs/conversion-reference.md#E06 heating-surface-scaled estimate"
       ]
     },
     "MechanicalPowertrainHP": {
@@ -3229,7 +3229,7 @@
       "unit": "hp",
       "basis": "analogue_estimate",
       "evidence": [
-        "GUIDE_UNIFIED_LLW_CONVERSION.md#E06 heating-surface-scaled estimate"
+        "docs/conversion-reference.md#E06 heating-surface-scaled estimate"
       ]
     },
     "PortRefOverrides": {
@@ -3250,7 +3250,7 @@
       "unit": "1",
       "basis": "DV_choice",
       "evidence": [
-        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        "docs/conversion-reference.md#U02 and implementation profile choices"
       ]
     },
     "RrEndFront": {
@@ -3332,7 +3332,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         }
       }
@@ -3349,7 +3349,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         }
       },
@@ -3365,7 +3365,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         }
       }
@@ -3394,7 +3394,7 @@
       "unit": "bar",
       "basis": "DV_choice",
       "evidence": [
-        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        "docs/conversion-reference.md#U02 and implementation profile choices"
       ]
     },
     "CabControlObjects": [
@@ -3550,7 +3550,7 @@
       "unit": "1",
       "basis": "DV_choice",
       "evidence": [
-        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        "docs/conversion-reference.md#U02 and implementation profile choices"
       ]
     },
     "WhistleSystem": {
@@ -3558,7 +3558,7 @@
       "unit": "1",
       "basis": "DV_choice",
       "evidence": [
-        "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+        "docs/conversion-reference.md#U02 and implementation profile choices"
       ]
     },
     "SndCab": {
@@ -3794,7 +3794,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false,
@@ -3834,7 +3834,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false,
@@ -3874,7 +3874,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false,
@@ -3914,7 +3914,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false,
@@ -3954,7 +3954,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false,
@@ -3994,7 +3994,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": true,
@@ -4035,7 +4035,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": true,
@@ -4108,7 +4108,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false,
@@ -4148,7 +4148,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false,
@@ -4188,7 +4188,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false,
@@ -4228,7 +4228,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false,
@@ -4268,7 +4268,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false,
@@ -4335,7 +4335,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         }
       },
@@ -4373,7 +4373,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         }
       },
@@ -4411,7 +4411,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         }
       },
@@ -4449,7 +4449,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         }
       }
@@ -4584,7 +4584,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Label": "car/damper",
@@ -4593,7 +4593,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": true
@@ -4623,7 +4623,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Label": "car/fire_door",
@@ -4632,7 +4632,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": true
@@ -4662,7 +4662,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Label": "car/ash_pan",
@@ -4671,7 +4671,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false
@@ -4701,7 +4701,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Label": "car/cab_lights",
@@ -4710,7 +4710,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": true
@@ -4740,7 +4740,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Label": "car/headlights",
@@ -4749,7 +4749,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false
@@ -4779,7 +4779,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Label": "car/lubricator",
@@ -4788,7 +4788,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": false
@@ -4818,7 +4818,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Label": "car/brake_cutout",
@@ -4827,7 +4827,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Toggle": true
@@ -4844,7 +4844,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Look": {
@@ -4856,7 +4856,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Fov": {
@@ -4864,7 +4864,7 @@
           "unit": "degrees",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "File": "built_left.png"
@@ -4879,7 +4879,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Look": {
@@ -4891,7 +4891,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Fov": {
@@ -4899,7 +4899,7 @@
           "unit": "degrees",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "File": "built_front34.png"
@@ -4914,7 +4914,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Look": {
@@ -4926,7 +4926,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Fov": {
@@ -4934,7 +4934,7 @@
           "unit": "degrees",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "File": "built_rear34.png"
@@ -4949,7 +4949,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Look": {
@@ -4961,7 +4961,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Fov": {
@@ -4969,7 +4969,7 @@
           "unit": "degrees",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "File": "built_gear_left.png"
@@ -4984,7 +4984,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Look": {
@@ -4996,7 +4996,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Fov": {
@@ -5004,7 +5004,7 @@
           "unit": "degrees",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "File": "built_gear_right.png"
@@ -5021,7 +5021,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Look": {
@@ -5033,7 +5033,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Fov": {
@@ -5041,7 +5041,7 @@
           "unit": "degrees",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "File": "built_cab_backhead.png"
@@ -5056,7 +5056,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Look": {
@@ -5068,7 +5068,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Fov": {
@@ -5076,7 +5076,7 @@
           "unit": "degrees",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "File": "built_backhead_left.png"
@@ -5091,7 +5091,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Look": {
@@ -5103,7 +5103,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Fov": {
@@ -5111,7 +5111,7 @@
           "unit": "degrees",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "File": "built_backhead_right.png"
@@ -5128,7 +5128,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Look": {
@@ -5140,7 +5140,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Fov": {
@@ -5148,7 +5148,7 @@
           "unit": "degrees",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "File": "built_lamps_front_lit.png"
@@ -5163,7 +5163,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Look": {
@@ -5175,7 +5175,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Fov": {
@@ -5183,7 +5183,7 @@
           "unit": "degrees",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "File": "built_lamps_rear_lit.png"
@@ -5200,7 +5200,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Look": {
@@ -5212,7 +5212,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Fov": {
@@ -5220,7 +5220,7 @@
           "unit": "degrees",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "File": "markers_release.png"
@@ -5235,7 +5235,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Look": {
@@ -5247,7 +5247,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "Fov": {
@@ -5255,7 +5255,7 @@
           "unit": "degrees",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "File": "markers_handbrake.png"
@@ -5283,7 +5283,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Label": "car/injector",
@@ -5292,7 +5292,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Toggle": false
@@ -5318,7 +5318,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Label": "car/blower",
@@ -5327,7 +5327,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Toggle": false
@@ -5353,7 +5353,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Label": "car/air_pump",
@@ -5362,7 +5362,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Toggle": true
@@ -5388,7 +5388,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Label": "car/dynamo",
@@ -5397,7 +5397,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Toggle": true
@@ -5423,7 +5423,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Label": "car/sander",
@@ -5432,7 +5432,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Toggle": true
@@ -5458,7 +5458,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Label": "car/water_dump",
@@ -5467,7 +5467,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Toggle": true
@@ -5490,7 +5490,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Pos": {
@@ -5510,7 +5510,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "MaxDistance": {
@@ -5518,7 +5518,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "VolumeCurve": {
@@ -5543,7 +5543,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "PitchCurve": {
@@ -5560,7 +5560,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Inertia": {
@@ -5568,7 +5568,7 @@
           "unit": "s",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         }
       },
@@ -5581,7 +5581,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Pos": {
@@ -5601,7 +5601,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "MaxDistance": {
@@ -5609,7 +5609,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "VolumeCurve": {
@@ -5626,7 +5626,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         }
       },
@@ -5639,7 +5639,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Pos": {
@@ -5659,7 +5659,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "MaxDistance": {
@@ -5667,7 +5667,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "VolumeCurve": {
@@ -5688,7 +5688,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "PitchCurve": {
@@ -5705,7 +5705,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         }
       },
@@ -5718,7 +5718,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "Pos": {
@@ -5738,7 +5738,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "MaxDistance": {
@@ -5746,7 +5746,7 @@
           "unit": "m",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "VolumeCurve": {
@@ -5767,7 +5767,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         },
         "PitchCurve": {
@@ -5784,7 +5784,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         }
       }
@@ -6458,7 +6458,7 @@
         "unit": "mixed degrees/kg/DV coefficients",
         "basis": "DV_choice",
         "evidence": [
-          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          "docs/conversion-reference.md#U02 and implementation profile choices"
         ]
       },
       {
@@ -6477,7 +6477,7 @@
         "unit": "mixed degrees/kg/DV coefficients",
         "basis": "DV_choice",
         "evidence": [
-          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          "docs/conversion-reference.md#U02 and implementation profile choices"
         ]
       },
       {
@@ -6496,7 +6496,7 @@
         "unit": "mixed degrees/kg/DV coefficients",
         "basis": "DV_choice",
         "evidence": [
-          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          "docs/conversion-reference.md#U02 and implementation profile choices"
         ]
       },
       {
@@ -6515,7 +6515,7 @@
         "unit": "mixed degrees/kg/DV coefficients",
         "basis": "DV_choice",
         "evidence": [
-          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          "docs/conversion-reference.md#U02 and implementation profile choices"
         ]
       },
       {
@@ -6535,7 +6535,7 @@
         "unit": "mixed degrees/kg/DV coefficients",
         "basis": "DV_choice",
         "evidence": [
-          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          "docs/conversion-reference.md#U02 and implementation profile choices"
         ]
       },
       {
@@ -6554,7 +6554,7 @@
         "unit": "mixed degrees/kg/DV coefficients",
         "basis": "DV_choice",
         "evidence": [
-          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          "docs/conversion-reference.md#U02 and implementation profile choices"
         ]
       },
       {
@@ -6573,7 +6573,7 @@
         "unit": "mixed degrees/kg/DV coefficients",
         "basis": "DV_choice",
         "evidence": [
-          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          "docs/conversion-reference.md#U02 and implementation profile choices"
         ]
       },
       {
@@ -6592,7 +6592,7 @@
         "unit": "mixed degrees/kg/DV coefficients",
         "basis": "DV_choice",
         "evidence": [
-          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          "docs/conversion-reference.md#U02 and implementation profile choices"
         ]
       },
       {
@@ -6611,7 +6611,7 @@
         "unit": "mixed degrees/kg/DV coefficients",
         "basis": "DV_choice",
         "evidence": [
-          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          "docs/conversion-reference.md#U02 and implementation profile choices"
         ]
       },
       {
@@ -6630,7 +6630,7 @@
         "unit": "mixed degrees/kg/DV coefficients",
         "basis": "DV_choice",
         "evidence": [
-          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          "docs/conversion-reference.md#U02 and implementation profile choices"
         ]
       },
       {
@@ -6649,7 +6649,7 @@
         "unit": "mixed degrees/kg/DV coefficients",
         "basis": "DV_choice",
         "evidence": [
-          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          "docs/conversion-reference.md#U02 and implementation profile choices"
         ]
       },
       {
@@ -6668,7 +6668,7 @@
         "unit": "mixed degrees/kg/DV coefficients",
         "basis": "DV_choice",
         "evidence": [
-          "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+          "docs/conversion-reference.md#U02 and implementation profile choices"
         ]
       }
     ],
@@ -6688,7 +6688,7 @@
           "basis": "derived",
           "evidence": [
             "locos/s16/profile/s16.json#source_objects[0].definition#RR TE formula",
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#E02/E03"
+            "docs/conversion-reference.md#E02/E03"
           ]
         },
         "pistonStroke": {
@@ -6704,7 +6704,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "maxCutoff": {
@@ -6712,7 +6712,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "throttleMaxFlow": {
@@ -6720,7 +6720,7 @@
           "unit": "kg/s",
           "basis": "analogue_estimate",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06"
+            "docs/conversion-reference.md#E06"
           ]
         },
         "steamChestVolume": {
@@ -6728,7 +6728,7 @@
           "unit": "L",
           "basis": "analogue_estimate",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06"
+            "docs/conversion-reference.md#E06"
           ]
         },
         "maxCondensationRate": {
@@ -6736,7 +6736,7 @@
           "unit": "1",
           "basis": "analogue_estimate",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06"
+            "docs/conversion-reference.md#E06"
           ]
         }
       },
@@ -6770,7 +6770,7 @@
           "unit": "L/s",
           "basis": "analogue_estimate",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06 scaled 876/1735 sq ft"
+            "docs/conversion-reference.md#E06 scaled 876/1735 sq ft"
           ]
         },
         "defaultFeedwaterTemperature": {
@@ -6778,7 +6778,7 @@
           "unit": "degC",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "waterConsumptionMultiplier": {
@@ -6786,7 +6786,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "maxBlowdownRate": {
@@ -6794,7 +6794,7 @@
           "unit": "L/s",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "safetyValveOpeningPressure": {
@@ -6818,7 +6818,7 @@
           "unit": "kg/s",
           "basis": "analogue_estimate",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06"
+            "docs/conversion-reference.md#E06"
           ]
         },
         "spawnWaterLevel": {
@@ -6834,7 +6834,7 @@
           "unit": "bar absolute",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#DV integration choice"
+            "docs/conversion-reference.md#DV integration choice"
           ]
         }
       },
@@ -6844,7 +6844,7 @@
           "unit": "kg",
           "basis": "analogue_estimate",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06 firebed scaled heating surface876/1735"
+            "docs/conversion-reference.md#E06 firebed scaled heating surface876/1735"
           ]
         },
         "burnTime": {
@@ -6852,7 +6852,7 @@
           "unit": "s",
           "basis": "analogue_estimate",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#E06 firing rate scaled heating surface876/1735"
+            "docs/conversion-reference.md#E06 firing rate scaled heating surface876/1735"
           ]
         },
         "coalDumpRate": {
@@ -6860,7 +6860,7 @@
           "unit": "kg/s",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         },
         "coalConsumptionMultiplier": {
@@ -6868,7 +6868,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         }
       },
@@ -6878,7 +6878,7 @@
           "unit": "1",
           "basis": "DV_choice",
           "evidence": [
-            "GUIDE_UNIFIED_LLW_CONVERSION.md#U02 and implementation profile choices"
+            "docs/conversion-reference.md#U02 and implementation profile choices"
           ]
         }
       },

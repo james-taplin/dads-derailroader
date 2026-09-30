@@ -13,7 +13,7 @@
 | `audit` | `audit.json`: exported audio, missing controls, forbidden scripts, or values that differ from the record. |
 | `publish` | The notice, or an existing pack folder that `rr2dv` did not create. |
 
-The [complete block and review-item guide](https://github.com/james-taplin/derailroader/blob/main/docs/resolving-blocks.md) is the maintained source for exact messages, codes, and fixes. After a fix, run the conversion again. Your Railroader install is read only; saved review answers and compact reports survive a stopped run.
+The [complete block and review-item guide](https://github.com/james-taplin/dads-derailroader/blob/main/docs/resolving-blocks.md) is the maintained source for exact messages, codes, and fixes. After a fix, run the conversion again. Your Railroader install is read only; saved review answers and compact reports survive a stopped run.
 
 <details>
 <summary><strong>What to include when asking for help</strong></summary>
