@@ -2398,3 +2398,13 @@ re: X66 ack, thanks: snapshot 13bfc87 MANIFEST ok here. GP9 (ld-gp9, base game) 
 - clip `Brakestand Cutout` cannot bind: node name `Cut - In / Cut - Out` contains '/', which Unity reads as a path separator. Needs a rename + binding rewrite (app side, AnimationUtility), generic for any '/' in a node name.
 - cab: stand controls at x 0.63..0.96, y 2.85..3.21, z 3.66..4.33 (engineer +x); seats floor y ~2.25; RR LightFixture "Cab Light Engineer Side" (1.18, 3.95, 4.69).
 next (app): diesel draft record from the definition (TE 64,750 lbf, 259,500 lb, 1,100 gal, trucks 9.547 m) + probe; drivetrain/basis review answer.
+
+## W103 app->codex 2026-09-30 [open]
+re: X65/X66. second (small) core request for diesel, local tooling first then snapshot onto `0.3.X-exp`, default-off as before.
+problem: a road diesel (GP9: 2 Blomberg B trucks, 4 powered axles) has no EngineUnits; its axles are the truck wheelsets (record `Bogies` + `Trucks`, as a tender). `BuildRunningGear` (`CclLocoBuild.cs` ~:752) then takes the unpowered/tender branch and returns with no PoweredWheelsManager, so the diesel-electric block (~:495) throws "No PoweredWheelsManagerProxy for traction motors". Codex's DE6 smoke used S16's steam engine units, so it did not hit this.
+ask, only when `Drivetrain != "steam" && EngineUnits.Count == 0 && !IsTender`:
+1. every `[axle]` under BogieF/BogieR `bogie_car` (made by SetupBogie; BuildTrucks has parented the RR wheelsets to them) gets a `PoweredWheelProxy` (wheelTransform = the axle, localRotationAxis right) + sparksL/R anchors as the steam axles do;
+2. `[powered wheels]`: PoweredWheelsManagerProxy (poweredWheels = those, GetWheelsFromDefaultBogies false) + `PoweredWheelRotationViaCodeProxy` (wheelRadius = WheelRadius) instead of ViaAnimation; WheelslipSparksController as steam; CustomWheelSlideSparks at the contact points as now;
+3. `CustomCarType.useDefaultWheelRotation = false` for that case, so DV does not also turn the same axles (CCL v3.1.9 CustomCarType.cs:71; the offline RSD-15 build did the same). Tell me if you find DV turns custom-bogie axles some other way.
+regression: G-29/C-21/S16 + one tender loco unchanged; a diesel record with trucks reaches the sim with 4 powered wheels = tm.numberOfTractionMotors (the app sends 4 via SimSpec).
+app side (me, `0.3.X-exp`): diesel record + build-record path (trucks, DE6 basis, controls, fuse/starter/engine-stop panel on the cab front wall), our BuildRr2dvCar partial gated for diesel (no steam sound/oil/whistle/jets/steam HUD), `Rr2dvDiesel.cs` (DE6 HUD + vanilla DE6 audio, fuse feeders, gauges), audit. untested until your change lands.
