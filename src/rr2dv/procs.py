@@ -13,7 +13,9 @@ def stop(proc: subprocess.Popen, grace: float = 15.0) -> None:
     if proc.poll() is not None:
         return
     if sys.platform == "win32":
-        subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True)
+        done = subprocess.run(["taskkill", "/PID", str(proc.pid), "/T", "/F"], capture_output=True)
+        if done.returncode not in (0, 128):  # 128: already gone; anything else: at least stop the launcher itself
+            proc.kill()
     else:
         proc.terminate()
         try:
