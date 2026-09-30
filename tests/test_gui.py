@@ -72,6 +72,15 @@ class Window(unittest.TestCase):
         self.assertEqual(self.app.facts["tender"].cget("text"), "tt-260-a")
         self.assertEqual(str(self.app.convert_button.cget("state")), "normal")
 
+    def test_whistle_option_lists_the_whistles_and_defaults_to_the_definitions(self):
+        self.select("ts-260-a", "ts-260-a")
+        values = list(self.app.whistle.cget("values"))
+        self.assertEqual(values[0], "(default: wh-test, from definition)")
+        self.assertIn("Whistle wh-other (wh-other)", values)
+        self.assertIsNone(self.app.whistle_ids[self.app.whistle.get()])  # nothing chosen: the default
+        self.app.whistle.set("Whistle wh-other (wh-other)")
+        self.assertEqual(self.app.whistle_ids[self.app.whistle.get()], "wh-other")
+
     def test_geometry_box_lists_fitting_reviews_and_browse_starts_in_reports(self):
         from rr2dv import installs
         from rr2dv.pipeline import fingerprint, search_roots

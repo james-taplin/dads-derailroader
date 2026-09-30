@@ -52,7 +52,7 @@ class Dependencies(Base):
         self.parts_mod(where=game / "PartsMod")
         inv = inventory(Index(self.m["mod"], [self.m["search"], game]), "ts-260-a")
         self.assertEqual(blocking(inv), [])
-        self.assertEqual([p["asset"] for p in inv["parts"]], ["bell", "horn"])
+        self.assertEqual([p["asset"] for p in inv["parts"]], ["bell", "horn", "TestChime"])  # TestChime: the whistle mesh
 
     def test_trucks_and_tenders_from_other_mods_are_used(self):
         write_pack(self.m["search"] / "TenderMod" / "Tenders", objects=[tender("tt-ext", truck="test-truck-2s")],
@@ -61,7 +61,7 @@ class Dependencies(Base):
         inv = self.inv()
         self.assertEqual(blocking(inv), [])
         self.assertEqual({v["id"]: v["role"] for v in inv["vehicles"]}, {"ts-260-a": "locomotive", "tt-ext": "tender", "test-truck-2s": "truck"})
-        self.assertEqual([p["name"] for p in inv["packs"]], ["ts-260-a", "Tenders", "Trucks"])
+        self.assertEqual([p["name"] for p in inv["packs"]], ["ts-260-a", "Tenders", "Trucks", "audio.whistles01"])
 
     def test_broken_part_is_left_out_never_staged_or_placed(self):
         self.parts_mod(catalogue=False)

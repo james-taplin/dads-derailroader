@@ -35,8 +35,10 @@ class Scan(unittest.TestCase):
         self.assertEqual(inv["tender"]["id"], "tt-260-a")
         self.assertEqual([t["id"] for t in inv["trucks"]], ["test-truck-2s"])
         self.assertEqual(inv["trucks"][0]["pack"]["root"], "search1")
-        self.assertEqual([(p["pack"], p["asset"], p["filename"]) for p in inv["parts"]], [("parts", "bell", "bell.prefab")])
-        self.assertEqual([p["name"] for p in inv["packs"]], ["parts", "ts-260-a", "Trucks"])
+        self.assertEqual([(p["pack"], p["asset"], p["filename"]) for p in inv["parts"]],
+                         [("parts", "bell", "bell.prefab"), ("audio.whistles01", "TestChime", "TestChime.prefab")])
+        self.assertEqual((inv["whistle"]["id"], inv["whistle"]["source"], inv["whistle"]["placed"]), ("wh-test", "definition", True))
+        self.assertEqual([p["name"] for p in inv["packs"]], ["parts", "ts-260-a", "Trucks", "audio.whistles01"])
         self.assertEqual((inv["audio"]["basis"], inv["audio"]["replaces"]), ("S060", ["Chuff", "Whistle"]))
         self.assertEqual([c["purpose"] for c in inv["controls"]["radial"]], ["Throttle", "Reverser"])
         bundle = self.m["mod"] / "ts-260-a" / "bundle"
@@ -45,7 +47,7 @@ class Scan(unittest.TestCase):
 
     def test_missing_truck_blocks(self):
         inv = inventory(Index(self.m["mod"]), "ts-260-a")
-        self.assertEqual(codes(inv), ["missing-truck"])
+        self.assertEqual(codes(inv), ["missing-truck", "whistle-left-out"])  # no search folder: no trucks, no whistle pack either
 
     def test_duplicate_identifier_at_same_rank_is_an_error_not_a_first_match(self):
         write_pack(self.m["mod"] / "copy", objects=[tender("tt-260-a")], assets={})
@@ -85,7 +87,7 @@ class Scan(unittest.TestCase):
             tender("tt-260-a", truck="test-truck-2s")]}))
         inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
         self.assertEqual(blocking(inv), [])
-        self.assertEqual([p["asset"] for p in inv["parts"]], ["bell"])
+        self.assertEqual([p["asset"] for p in inv["parts"]], ["bell", "TestChime"])  # TestChime: the whistle mesh
         self.assertEqual((inv["left_out"][0]["asset"], inv["left_out"][0]["anchored"]), ("", ["lamp"]))
         self.assertIn("loses its anchor: lamp", inv["left_out"][0]["effect"])
 
@@ -132,6 +134,36 @@ class Scan(unittest.TestCase):
         index = Index(self.m["mod"], [self.m["search"]])
         self.assertEqual([o["identifier"] for _, o in index.other_locomotives()], ["ds-1"])
         self.assertIn("not-steam", codes(inventory(index, "ds-1")))
+
+    def test_the_whistle_is_the_option_then_the_definition_then_the_default(self):
+        index = Index(self.m["mod"], [self.m["search"]])
+        inv = inventory(index, "ts-260-a")
+        self.assertEqual((inv["whistle"]["id"], inv["whistle"]["source"], inv["whistle"]["model"]), ("wh-test", "definition", "TestChime"))
+        self.assertEqual([o["id"] for o in inv["whistle"]["options"]], ["wh-other", "wh-test"])
+        chosen = inventory(index, "ts-260-a", whistle="wh-other")
+        self.assertEqual((chosen["whistle"]["id"], chosen["whistle"]["source"]), ("wh-other", "option"))
+        self.assertEqual([p["asset"] for p in chosen["parts"] if p.get("whistle")], ["OtherChime"])
+        mesh = next(p for p in chosen["parts"] if p.get("whistle"))
+        self.assertEqual((mesh["component"], mesh["source_component"]), ("Whistle mesh", "Whistle"))
+        # a definition that names none gets the stock default (here absent from the test pack: left out with a warning)
+        (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [
+            loco("ts-260-a", tender="tt-260-a", parts=[part("ts-260-a\\parts", "bell", "bell1")], whistle=None,
+                 extra_components=[{"kind": "Whistle", "defaultWhistleIdentifier": "", "name": "Whistle", "transform": {"position": [0, 3, 0]}}]),
+            tender("tt-260-a", truck="test-truck-2s")]}))
+        plain = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
+        self.assertEqual((plain["whistle"]["id"], plain["whistle"]["source"]), ("wh-3-std", "default"))
+        self.assertIn("whistle-left-out", codes(plain))
+
+    def test_an_unknown_whistle_option_is_an_error_and_a_missing_default_only_a_warning(self):
+        index = Index(self.m["mod"], [self.m["search"]])
+        bad = inventory(index, "ts-260-a", whistle="wh-nope")
+        self.assertIn("unknown-whistle", codes(bad))
+        self.assertTrue(blocking(bad))
+        (self.m["search"] / "audio.whistles01" / "Definitions.json").unlink()
+        gone = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
+        self.assertEqual(blocking(gone), [])
+        self.assertIn("whistle-left-out", codes(gone))
+        self.assertFalse(gone["whistle"]["placed"])
 
 
 if __name__ == "__main__":

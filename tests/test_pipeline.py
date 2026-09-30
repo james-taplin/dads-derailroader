@@ -50,7 +50,7 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(read_json(run.file)["status"], "incomplete")
         self.assertEqual((run.record["answers"]["locomotive"], run.record["answers"]["audio"]["basis"]), ("ts-260-a", "S060"))
         staged = read_json(run.path / "staged.json")["files"]
-        self.assertEqual(len(staged), 8)  # 3 loco pack + 2 parts pack + 3 truck pack
+        self.assertEqual(len(staged), 11)  # 3 loco pack + 2 parts pack + 3 truck pack + 3 whistle pack
         for f in staged:
             self.assertEqual(sha256_file(run.path / f["file"]), f["sha256"])
         self.assertTrue((run.path / "inputs" / "search1" / "TruckMod" / "Trucks" / "Bundle").is_file())

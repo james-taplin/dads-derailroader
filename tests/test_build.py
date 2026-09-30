@@ -56,7 +56,7 @@ class BuildStages(unittest.TestCase):
         self.assertEqual((t["Trucks"][0]["Wheelset"], t["WheelRadius"]), (buildrecord.TRUCK_WHEEL_PREFIX, 0.42))
         # Rr2dvBuild's input: the part is placed, every prefab loses its AudioSources
         inp = read_json(run.path / "unity/project/Assets/Rr2dv/BuildInput.json")
-        self.assertEqual([p["name"] for p in inp["composites"][0]["parts"]], ["bell1"])
+        self.assertEqual([p["name"] for p in inp["composites"][0]["parts"]], ["bell1", "Whistle mesh"])  # the whistle mesh is placed like a part
         self.assertTrue(inp["audioStrip"])
         # the four generated control classes by DV function (James, 2026-09-29), handed to the build by control name
         classes = {c["control"]: c["cls"] for c in inp["controlClasses"]}

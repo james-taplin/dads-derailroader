@@ -77,6 +77,10 @@ def cmd_scan(args) -> int:
               f"parts: {len(inv['parts'])}; packs: {', '.join(p['name'] for p in inv['packs'])}")
         purposes = sorted({c['purpose'] for c in inv['controls']['radial'] if c.get('purpose')})
         print(f"  controls: {', '.join(purposes) or 'none'}; toggles: {len(inv['controls']['toggles'])}")
+        whistle = inv.get("whistle") or {}
+        if whistle.get("id"):
+            print(f"  whistle: {whistle['id']} ({whistle.get('name') or '?'}), from {whistle['source']}; "
+                  f"{len(whistle.get('options', []))} available: {', '.join(o['id'] for o in whistle.get('options', []))}")
         audio = inv["audio"]
         print(f"  sounds: vanilla {audio['basis'] or '(choose S060 or S282)'} - {audio['rule']}")
         for issue in inv["issues"]:
@@ -92,7 +96,8 @@ def cmd_convert(args) -> int:
     machine = machine_mod.load(args.machine)
     try:
         outcome = convert(args.input, machine, args.loco, args.audio, args.livery, args.wheel_radius,
-                          geometry_review=args.geometry_review, prebuild_review=args.review_file or review.cli)
+                          geometry_review=args.geometry_review, prebuild_review=args.review_file or review.cli,
+                          whistle=args.whistle)
     except Exception as e:  # stopped inside a run: show how far it got and where its log is, then report the error
         _print_run(getattr(e, "rr2dv_run", None))
         raise
@@ -103,7 +108,7 @@ def cmd_convert(args) -> int:
     if radius:  # the rerun command, with every answer already given, for the user to check and run
         parts = ["rr2dv"] + (["--machine", f'"{args.machine}"'] if args.machine else []) + \
                 ["convert", f'"{args.input}"'] + (["--loco", args.loco] if args.loco else []) + \
-                (["--livery", f'"{args.livery}"'] if args.livery else []) + (["--audio", args.audio] if args.audio else []) + \
+                (["--livery", f'"{args.livery}"'] if args.livery else []) + (["--audio", args.audio] if args.audio else []) + (["--whistle", args.whistle] if args.whistle else []) + \
                 (["--geometry-review", f'"{args.geometry_review}"'] if args.geometry_review else []) + \
                 ["--wheel-radius", f"{radius['candidate']:.4f}"]
         print("\nAfter checking the candidate against the tyre in the model, convert again with:\n  " + " ".join(parts))
@@ -138,6 +143,8 @@ def build_parser() -> argparse.ArgumentParser:
     conv.add_argument("input", help="stock locomotive pack name, e.g. ls-282-k28t (never modified)")
     conv.add_argument("--loco", help="locomotive identifier (the pack's own; normally not needed)")
     conv.add_argument("--livery", help="livery name to use (default: the locomotive's first)")
+    conv.add_argument("--whistle", metavar="ID", help="Railroader whistle to place on the locomotive, e.g. wh-3-std "
+                      "(default: the one its definition names, else wh-3-std; `rr2dv scan` lists them)")
     conv.add_argument("--audio", choices=["S060", "S282"],
                       help="vanilla Derail Valley sound set to use instead of the boiler-size rule")
     conv.add_argument("--wheel-radius", type=float, metavar="METRES",

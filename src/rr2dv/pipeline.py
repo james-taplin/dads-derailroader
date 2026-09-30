@@ -80,7 +80,7 @@ def extract(run: Run, inv: dict, machine: Machine) -> dict:
 def convert(mod: str | Path, machine: Machine, loco: str | None = None,
             audio: str | None = None, livery: str | None = None, wheel_radius: float | None = None,
             ask: Callable = consent.ask, on_progress: Callable[[str | None, str, str], None] | None = None,
-            geometry_review: Path | None = None, prebuild_review=None) -> Outcome:
+            geometry_review: Path | None = None, prebuild_review=None, whistle: str | None = None) -> Outcome:
     # Both installs (and CCL) first (W25), then the input must be one of the 21 stock steam packs (nothing is read before this).
     rr, dv = _installs(machine)
     input_path = installs.stock_pack(rr, mod)
@@ -93,7 +93,7 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None,
 
     request = {"input": str(input_path), "locomotive": loco, "railroader": rr.describe(), "derail_valley": dv.describe(),
                "search_roots": [str(p) for p in roots], "audio": audio, "livery": livery, "wheel_radius": wheel_radius,
-               "geometry_review": str(geometry_review) if geometry_review else None}
+               "geometry_review": str(geometry_review) if geometry_review else None, "whistle": whistle}
     cleanup_warnings = workspace.recover(work_root)
     run = Run.create(work_root, loco or input_path.name, request)
     run.listener = on_progress
@@ -109,7 +109,7 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None,
             + "search: " + ", ".join(str(r) for r in roots))
     try:
         rebuild.capture(run, machine)
-        outcome = _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius, ask, geometry_review, prebuild_review)
+        outcome = _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius, ask, geometry_review, prebuild_review, whistle)
     except BaseException as e:  # include interruption; stop tools and retain a truthful receipt before cleanup
         current = next((n for n, s in run.record["stages"].items() if s["status"] == "running"), None)
         message = f"{type(e).__name__}: {e}"
@@ -158,7 +158,7 @@ def install_pack(run: Run, machine: Machine, pack_dir: Path, expected: dict[str,
 
 def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path],
             audio: str | None, machine: Machine, livery: str | None = None, wheel_radius: float | None = None,
-            ask: Callable = consent.ask, geometry_review: Path | None = None, prebuild_review=None) -> Outcome:
+            ask: Callable = consent.ask, geometry_review: Path | None = None, prebuild_review=None, whistle: str | None = None) -> Outcome:
     def fail(stage: str, message: str, code: int = EXIT_FAILED) -> Outcome:
         run.finish(stage, "failed", message)
         run.close("failed", message)
@@ -177,10 +177,11 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     run.finish("locate", "done", f"{chosen} ({len(index.packs)} packs indexed)")
 
     run.begin("link")
-    inv = inventory(index, chosen, audio=audio)
+    inv = inventory(index, chosen, audio=audio, whistle=whistle)
     write_json(run.path / "inventory.json", inv)
     errors = blocking(inv)
     run.record["answers"]["audio"] = inv["audio"]
+    run.record["answers"]["whistle"] = {k: inv["whistle"][k] for k in ("id", "source", "model", "audio", "placed")}
     if errors:
         return fail("link", f"{len(errors)} blocking issue(s): " + "; ".join(e["message"] for e in errors))
     for issue in inv["issues"]:

@@ -83,10 +83,10 @@ class Export(unittest.TestCase):
                                  "unity": str(fake_unity(self.tmp / "tools")), "carCreator": str(fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage"))})
         a = convert(m["mod"], machine)
         self.assertEqual(a.code, EXIT_INCOMPLETE, a.message)
-        self.assertIn("3 bundle(s) exported (0 reused", a.run.record["stages"]["extract"]["detail"])
+        self.assertIn("4 bundle(s) exported (0 reused", a.run.record["stages"]["extract"]["detail"])
         b = convert(m["mod"], machine)
-        self.assertIn("3 bundle(s) exported (3 reused", b.run.record["stages"]["extract"]["detail"])
-        self.assertEqual(self.exports_made(), 3)
+        self.assertIn("4 bundle(s) exported (4 reused", b.run.record["stages"]["extract"]["detail"])
+        self.assertEqual(self.exports_made(), 4)
 
 
 if __name__ == "__main__":

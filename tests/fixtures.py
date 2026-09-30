@@ -110,7 +110,22 @@ def standard_mod(base: Path) -> dict:
     write_pack(mod / "parts", assets={"bell": {"filename": "bell.prefab"}})
     write_pack(packs / "TruckMod" / "Trucks", objects=[truck("test-truck-2s")],
                assets={"test-truck-2s": {"filename": "Test-Truck-2s.prefab"}}, bundle_name="Bundle")
+    write_pack(packs / stock_whistle_pack(), objects=[whistle("wh-test", "TestChime"), whistle("wh-other", "OtherChime")],
+               assets={"TestChime": {"name": "TestChime", "type": "prefab", "filename": "TestChime.prefab"},
+                       "OtherChime": {"name": "OtherChime", "type": "prefab", "filename": "OtherChime.prefab"},
+                       "wh-test": {"name": "wh-test", "type": "audio", "filename": "wh-test.wav"}}, bundle_name="Bundle")
     return {"mod": mod, "search": packs, "games": games, "dv_mods": Path(games["game"]) / "Mods"}
+
+
+def stock_whistle_pack() -> str:
+    from rr2dv import stock
+    return stock.WHISTLE_PACK
+
+
+def whistle(ident: str, model: str) -> dict:
+    return {"identifier": ident, "metadata": {"name": f"Whistle {ident}"},
+            "definition": {"kind": "Whistle", "model": {"assetPackIdentifier": "", "assetIdentifier": model},
+                           "audio": {"assetPackIdentifier": "", "assetIdentifier": ident}, "components": None}}
 
 
 def register_stock(*names: str) -> None:

@@ -65,6 +65,8 @@ class RealStockPacks(unittest.TestCase):
             got = ((inv.get("tender") or {}).get("id"), [t["id"] for t in inv["trucks"]])
             if got != (tender, trucks):
                 problems.append(f"{pack}: tender/trucks {got} != expected {(tender, trucks)}")
+            if not inv["whistle"]["placed"] or len(inv["whistle"]["options"]) != 23:
+                problems.append(f"{pack}: whistle {inv['whistle']['id']} placed={inv['whistle']['placed']}, {len(inv['whistle']['options'])} options (expected 23)")
             if [s["kind"] for s in inv["sources"]] != ["game"]:
                 problems.append(f"{pack}: sources {[s['id'] for s in inv['sources']]}")
         self.assertEqual(problems, [])

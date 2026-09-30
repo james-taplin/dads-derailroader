@@ -222,6 +222,10 @@ class App:
         self.audio = ttk.Combobox(options, state="readonly", width=24, values=AUDIO_CHOICES)
         self.audio.current(0)
         self.audio.pack(side="left", padx=(6, 18))
+        ttk.Label(options, text="Whistle").pack(side="left")
+        self.whistle = ttk.Combobox(options, state="readonly", width=30)
+        self.whistle.pack(side="left", padx=(6, 18))
+        self.whistle_ids: dict[str, str | None] = {}
         wheel_label = ttk.Label(options, text="Wheel radius (m)")
         wheel_label.pack(side="left")
         self.wheel = tk.StringVar()
@@ -484,6 +488,11 @@ class App:
             self.issues.insert("", "end", text=mark, values=(issue["message"],), tags=(issue["severity"],))
         self.livery.configure(values=loco.get("liveries") or ["(default)"])
         self.livery.current(0)
+        whistle = inv.get("whistle") or {}
+        default = f"(default: {whistle.get('id')}, from {whistle.get('source')})" if whistle.get("id") else "(none found)"
+        self.whistle_ids = {default: None, **{f"{o['name']} ({o['id']})": o["id"] for o in whistle.get("options", [])}}
+        self.whistle.configure(values=list(self.whistle_ids))
+        self.whistle.current(0)
         self.loco_sub.configure(text=f"{ident} in {Path(folder).name}" + (" (Railroader base game)" if Path(folder).is_absolute() else ""))
         self._update_convert_button()
         self._find_geometry_reviews()
@@ -547,6 +556,7 @@ class App:
         chosen = self.geometry_choices.get(chosen, chosen)
         geometry_review = Path(chosen) if chosen else None
         livery = self.livery.get() if self.livery.get() != "(default)" else None
+        whistle = self.whistle_ids.get(self.whistle.get())
         for mark in self.stage_rows.values():
             mark.configure(text="\u25cb", fg=COLOURS["muted"])
         self.summary.configure(text="Converting\u2026", foreground="")
@@ -573,9 +583,10 @@ class App:
             answer['event'].wait()
             return answer['value']
 
-        applog.get().info("converting %s from %s (livery %s, audio %s, wheel radius %s)", ident, folder, livery, audio, wheel_radius)
+        applog.get().info("converting %s from %s (livery %s, audio %s, wheel radius %s, whistle %s)", ident, folder, livery, audio, wheel_radius, whistle)
         started = self.worker.run("Conversion", lambda: self.c.convert(folder, ident, livery, audio, wheel_radius, progress, ask,
-                                                                      geometry_review=geometry_review, prebuild_review=prebuild_review),
+                                                                      geometry_review=geometry_review, prebuild_review=prebuild_review,
+                                                                      whistle=whistle),
                                   self._converted)
         if started:
             self._set_busy(True)

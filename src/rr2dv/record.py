@@ -214,8 +214,8 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
     pending.append("simulation: draft engine, boiler, firebox and exhaust choices need per-engine calibration "
                    "(throttleMaxFlow, steamChestVolume, blowdown, vent rate, firing, exhaust, cutoff range)")
     if inv.get("left_out"):
-        pending.append(f"left out: {len(inv['left_out'])} part(s) broken in the source mod (metadata.leftOut with reason "
-                       "and effect); check the loco still looks and works right without them")
+        pending.append(f"left out: {len(inv['left_out'])} item(s) broken or missing in Railroader's packs, including any whistle mesh "
+                       "(metadata.leftOut with reason and effect); check the loco still looks and works right without them")
     absent_bindings = absent_bindings or []
     for a in absent_bindings:
         what = ("animates nothing in the exported model" if not a["restored"] else
@@ -292,6 +292,7 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
                                           "sourceWeightKg": (d.get("weightEmpty") or 0) * LB_KG,
                                           "interpretation": "working order incl. boiler water (guide E04); spawn water to subtract is pending"},
                            "wheelCandidates": wheel_candidates, "leftOut": inv.get("left_out", []),
+                           "whistle": {k: v for k, v in (inv.get("whistle") or {}).items() if k != "options"},
                            "absentBindings": absent_bindings, "materialProblems": material_problems,
                            "sources": inv.get("sources", []),
                            "audio": inv["audio"], "pending": pending}}

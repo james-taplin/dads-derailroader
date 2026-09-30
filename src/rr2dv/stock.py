@@ -39,6 +39,12 @@ DIESEL: dict[str, str] = {
 }
 
 
+# Railroader's optional whistle meshes live in one pack; a whistle is a model plus a clip (VF9). The default is what a
+# locomotive gets when its definition names none (James, 2026-09-30).
+WHISTLE_PACK = "audio.whistles01"
+DEFAULT_WHISTLE = "wh-3-std"
+
+
 def refusal(pack_name: str) -> str | None:
     """Why a pack folder name is not converted here, or None when it is one of the 21 stock steam locomotives."""
     if pack_name in STEAM:

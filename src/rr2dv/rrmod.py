@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Iterable, Sequence
 
 from .jsonio import SourceError, read_json_lenient, sha256_file
+from . import stock
 from .safety import is_link
 
 DEFINITIONS = "definitions.json"
@@ -300,7 +301,67 @@ def _unreadable_hint(index: "Index") -> str:
         ", ".join(f"{p.root.label}:{p.rel}" for p in broken[:5]) + ("..." if len(broken) > 5 else "") + ")"
 
 
-def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | None = None) -> dict:
+def whistle_options(index: Index) -> list[dict]:
+    """Every whistle Railroader offers (objects of kind Whistle), by identifier: {id, name, model, audio}."""
+    out = []
+    for pack, obj in index.objects_of_kind("Whistle"):
+        d = definition(obj)
+        model, audio = d.get("model") or {}, d.get("audio") or {}
+        out.append({"id": obj["identifier"], "name": (obj.get("metadata") or {}).get("name") or obj["identifier"],
+                    "model": model.get("assetIdentifier"), "audio": audio.get("assetIdentifier")})
+    return sorted(out, key=lambda o: o["id"])
+
+
+def _whistle(index: Index, loco_id: str, ldef: dict, chosen: str | None, packs: dict, parts: list, left_out: list,
+             issues: list) -> dict:
+    comp = next((c for c in components(ldef) if c.get("kind") == "Whistle"), None)
+    source, wanted = "default", stock.DEFAULT_WHISTLE
+    named = comp.get("defaultWhistleIdentifier") if comp else None
+    if isinstance(named, str) and named:
+        source, wanted = "definition", named
+    if chosen:
+        source, wanted = "option", chosen
+    info = {"id": wanted, "source": source, "component": comp.get("name") if comp else None, "model": None, "audio": None,
+            "name": None, "placed": False, "options": whistle_options(index)}
+    if comp is None:
+        issues.append(Issue("warning", "no-whistle-component", f"{loco_id} has no Whistle component; no whistle mesh is placed"))
+        return info
+
+    def leave_out(reason: str) -> dict:
+        left_out.append({"what": "whistle", "owner": loco_id, "component": comp.get("name"), "asset": wanted, "reason": reason,
+                         "effect": "no whistle mesh", "anchored": []})
+        issues.append(Issue("warning" if source != "option" else "error", "whistle-left-out" if source != "option" else "unknown-whistle",
+                            f"{loco_id}: whistle {wanted!r} {reason}" + ("" if source == "option" else "; no whistle mesh is placed")))
+        return info
+
+    res = index.find_object(wanted)
+    if res.hit is None:
+        return leave_out("was not found among Railroader's whistles")
+    wpack, wobj = res.hit
+    d = definition(wobj)
+    if d.get("kind") != "Whistle":
+        return leave_out(f"is a {d.get('kind')!r}, not a whistle")
+    model, audio = d.get("model") or {}, d.get("audio") or {}
+    info.update(name=(wobj.get("metadata") or {}).get("name") or wanted, model=model.get("assetIdentifier"), audio=audio.get("assetIdentifier"))
+    pack_ident, asset_ident = model.get("assetPackIdentifier"), model.get("assetIdentifier")
+    mpack = wpack  # an empty pack identifier names the whistle's own pack
+    if isinstance(pack_ident, str) and pack_ident:
+        pres = index.find_pack(pack_ident)
+        if pres.hit is None:
+            return leave_out(f"needs pack {pack_ident!r}, which was not found")
+        mpack = pres.hit
+    asset = mpack.assets.get(asset_ident) if isinstance(asset_ident, str) else None
+    if not isinstance(asset, dict) or not isinstance(asset.get("filename"), str):
+        return leave_out(f"has model {asset_ident!r}, which is not in {mpack.name}/Catalog.json")
+    packs[mpack.path] = mpack
+    parts.append({"owner": loco_id, "component": "Whistle mesh", "source_component": comp.get("name"), "whistle": wanted,
+                  "pack": mpack.name, "pack_ref": mpack.describe(), "asset": asset_ident, "filename": asset["filename"],
+                  "enabled": comp.get("enabled", True)})
+    info["placed"] = True
+    return info
+
+
+def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | None = None, whistle: str | None = None) -> dict:
     """Dependency closure of one steam locomotive, as a deterministic JSON-ready dict."""
     issues: list[Issue] = []
     res = index.find_object(loco_id)
@@ -432,6 +493,11 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
             parts.append({"owner": vid, "component": comp.get("name"), "pack": ppack.name, "pack_ref": ppack.describe(),
                           "asset": asset_ident, "filename": asset.get("filename"), "enabled": comp.get("enabled", True)})
 
+    # The whistle: an optional Railroader mesh (a model in the whistle pack) placed at the locomotive's Whistle component,
+    # chosen by the user, else the definition's defaultWhistleIdentifier, else the stock default. Its mesh is placed like
+    # any part; a whistle that cannot be found is left out and listed, never a block.
+    whistle_info = _whistle(index, loco_id, ldef, whistle, packs, parts, left_out, issues)
+
     ordered = sorted(packs.values(), key=lambda p: (p.root.rank, p.rel))
     pack_records = []
     for p in ordered:
@@ -464,6 +530,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         "trucks": trucks,
         "vehicles": vehicle_records,
         "parts": parts,
+        "whistle": whistle_info,
         "left_out": left_out,
         "packs": pack_records,
         "sources": sources,

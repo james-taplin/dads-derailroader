@@ -40,11 +40,13 @@ def _part_specs(owner: str, d: dict, parts: list[dict]) -> list[dict]:
     """Where Railroader places each part: its component's transform, under its parent path. A part anchored inside
     another part comes after it, so the parent exists when it is placed."""
     comps = {c.get("name"): c for c in components(d) if c.get("kind") == "PrefabModelComponent"}
+    everything = {c.get("name"): c for c in components(d)}
     specs = []
     for p in parts:
         if p["owner"] != owner or p.get("enabled") is False:
             continue
-        c = comps.get(p["component"]) or {}
+        # a whistle mesh is placed at the loco's Whistle component (its transform), not at a PrefabModelComponent
+        c = (everything.get(p["source_component"]) if p.get("source_component") else comps.get(p["component"])) or {}
         t = c.get("transform") or {}
         parent = c.get("parent") or {}
         specs.append({"name": p["component"], "parentPath": "/".join(parent.get("path", [])) if isinstance(parent, dict) else "",
