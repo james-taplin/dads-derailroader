@@ -188,10 +188,10 @@ class Window(unittest.TestCase):
         self.assertIn(f"Run log: {self.app.last_run / 'run.log'}", shown[0])
         self.assertEqual(self.app.stage_rows["import"].cget("text"), "\u2717")
 
-    def test_notice_opens_inside_the_app_and_needs_ten_clicks(self):
+    def test_notice_opens_inside_the_app_and_needs_one_click(self):
         import threading
         answer = {"event": threading.Event(), "value": None}
-        self.app._ask("INSERT_MOD_NAME", ["SOURCE_1"], answer)
+        self.app._ask("INSERT_PACK_NAME", ["SOURCE_1"], answer)
         self.root.update()
         top = [w for w in self.root.winfo_children() if isinstance(w, tk.Toplevel)][-1]
         agree = next(b for b in top.winfo_children()[1].winfo_children() if b.cget("text") == "I agree")

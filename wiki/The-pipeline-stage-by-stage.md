@@ -4,7 +4,7 @@ Every conversion starts from installed source files and a fresh run identity. Th
 
 | Stage | Input and result | Typical stop |
 | --- | --- | --- |
-| `locate` | Find the selected steam locomotive in the Railroader mod. | No steam locomotive or ambiguous selection. |
+| `locate` | Find the selected stock steam locomotive in its Railroader pack. | No steam locomotive or ambiguous selection. |
 | `link` | Resolve tender, trucks, parts, images, and source provenance. | Missing or duplicate dependency. |
 | `stage` | Copy only needed inputs into a guarded run workspace and verify hashes. | Source changed during copying. |
 | `extract` | Use AssetRipper to export bundles. | Tool startup or incomplete export. |

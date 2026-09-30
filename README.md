@@ -50,19 +50,21 @@ diesels are not supported in this edition.
 
 ## Personal use only
 
-A converted pack contains third-party work. Before anything is written to your Derail Valley `Mods` folder, `rr2dv`
-shows a large notice. It says that:
-- copyright in the source assets stays with their rights holders;
-- rr2dv grants no permission to redistribute;
-- you should not share the conversion unless the applicable licences already permit it, or you have any required
-  permission from the relevant rights holders.
+A converted pack is built from Railroader's own game files. Before anything is written to your Derail Valley `Mods`
+folder, `rr2dv` shows a large notice. It says that:
+- everything in the pack comes from Railroader and belongs to the Railroader developers and their rights holders;
+- derailroader contains no Railroader code or art and distributes none; it only reads the files already installed on
+  your computer;
+- the conversion is for your own personal use, and must not be shared without the permission of the Railroader
+  developers and any other rights holders;
+- derailroader is unofficial.
 
-The notice also lists the source content it detected. You click **I agree** ten times to continue, and there is no
+The notice also lists the source content it detected. You click **I agree** once to continue, and there is no
 setting that skips it.
 
 The installed pack carries three records:
 - `NOTICE.txt`: the same text;
-- `SOURCE_PROVENANCE.txt`: the notice version, when it was acknowledged, and which mods and authors the content came
+- `SOURCE_PROVENANCE.txt`: the notice version, when it was acknowledged, and which Railroader packs the content came
   from;
 - `rr2dv.json`: the same information as a machine-readable record.
 

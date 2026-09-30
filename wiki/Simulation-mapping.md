@@ -8,7 +8,6 @@ The vehicle record keeps **source specifications** separate from **Derail Valley
 | Physical 3- or 4-cylinder engine | Keep the physical count in metadata; simulate two cylinders with adjusted bore for equal swept volume. | Sound compatibility workaround; gameplay calibration pending. |
 | Heating area and boiler data | Choose S060 or S282 vanilla audio and inherited boiler/firebox starting values. | Boiler defaults are simulation values, not prototype measurements. |
 | Fixed geared steam | Apply reviewed ratio and efficiency to engine RPM and wheel torque. | Shaft animation, slip, and performance under load need game tests. |
-| Code-mod pull figures | Offer source-stated pull targets for the legacy equivalent profile. | Railroader code DLLs are not read or imported. |
 | Oil firing | Map a tank locomotive's fuel oil and firing controls through available CCL slots. | Tender oil firing and mixed regimes remain pending. |
 
 The **Engine specifications** review shows units and provenance. Published tractive effort is a comparison figure. Weight on driven wheels informs factor of adhesion; total locomotive weight is not substituted. The coal-consumption adjustment changes simulated firebed replenishment, not a measured historical burn rate.

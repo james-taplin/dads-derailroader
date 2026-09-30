@@ -1,12 +1,12 @@
 # Testing and diagnostics
 
-Use synthetic mods and controlled Unity projects for development tests. Do not commit real locomotive assets or full private logs. The [repository README](https://github.com/james-taplin/derailroader#for-developers) and [contributor notes](https://github.com/james-taplin/derailroader/blob/main/CLAUDE.md) hold current commands and environment requirements.
+Use synthetic packs and controlled Unity projects for development tests. Do not commit real locomotive assets or full private logs. The [repository README](https://github.com/james-taplin/derailroader#for-developers) and [contributor notes](https://github.com/james-taplin/derailroader/blob/main/CLAUDE.md) hold current commands and environment requirements.
 
 ## Test layers
 
 | Layer | What it checks | What it cannot prove |
 | --- | --- | --- |
-| Python `unittest` suite | Scan, review, records, pipeline, safety, and report behavior with made-up mods and fake external tools. | Real Unity imports or game behavior. |
+| Python `unittest` suite | Scan, review, records, pipeline, safety, and report behavior with made-up stock-shaped packs and fake external tools. | Real Unity imports or game behavior. |
 | C# API/stub compilation | Editor script types against available stubs or Mono, when installed. | Complete pinned-builder behavior or rendered placement. |
 | Real Unity runtime regressions | Prefab save/reload, measured placement, and selected synthetic build paths. | Driving and control feel in Derail Valley. |
 | Exported-bundle audit | Serialized mass, radius, scripts, audio, HUD feeders, and other pack invariants. | Physics calibration, input response, and visual fit in game. |

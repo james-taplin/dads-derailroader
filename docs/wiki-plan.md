@@ -98,7 +98,7 @@ Why does it need Unity? Why no Railroader sounds? Why can't I share the pack? Wh
 Why is the cylinder count only physics? Why did it leave a door out? Can it do diesels? (not yet; roadmap)
 
 ### Personal use and provenance
-Purpose: the notice in full, why the ten clicks, what `NOTICE.txt`, `SOURCE_PROVENANCE.txt` and `rr2dv.json` record,
+Purpose: the notice in full, why one click, what `NOTICE.txt`, `SOURCE_PROVENANCE.txt` and `rr2dv.json` record,
 and what the tool does not decide for you.
 Source: `consent.py`, CLAUDE.md "Personal use".
 

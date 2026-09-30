@@ -1,6 +1,6 @@
 """Install a finished pack into the Derail Valley Mods folder, only after the personal-use notice (W25).
 
-Nothing is written until the user has clicked "I agree" the required number of times (consent.py). The pack is
+Nothing is written until the user has clicked "I agree" (consent.py). The pack is
 assembled in a hidden staging folder beside the destination, every file is hash-checked, NOTICE.txt,
 SOURCE_PROVENANCE.txt (notice version, when it was acknowledged, the source content detected) and an rr2dv.json
 marker are added, and only then is it renamed into place. An existing folder of the same name is replaced
@@ -49,7 +49,7 @@ def made_by_rr2dv(folder: Path) -> bool:
 
 
 def source_label(source: dict) -> str:
-    """One line of "Source content detected": the mod id, and the authors its definitions credit."""
+    """One line of "Source content detected": the source id, and the authors its definitions credit."""
     credits = source.get("credits") or []
     return source["id"] + (f" (credited: {', '.join(credits)})" if credits else "")
 
@@ -58,7 +58,7 @@ def provenance_text(name: str, sources: Sequence[dict], details: dict, acknowled
     lines = ["rr2dv source provenance", "",
              f"Pack: {name}",
              f"Notice version: {consent_mod.NOTICE_VERSION}",
-             f"Acknowledged: {acknowledged} ({consent_mod.REQUIRED_CLICKS} clicks on \"I agree\")",
+             f"Acknowledged: {acknowledged} (clicked \"I agree\")",
              f"Converted from: {details.get('input', '?')} (locomotive {details.get('locomotive', '?')})",
              f"Input fingerprint: {details.get('input_fingerprint') or '?'}", "",
              consent_mod.SOURCES_HEADING]
@@ -66,7 +66,7 @@ def provenance_text(name: str, sources: Sequence[dict], details: dict, acknowled
         where = f" [{s['root']}{':' + s['path'] if s.get('path') else ''}]" if s.get("root") else ""
         lines.append(f"  - {source_label(s)}{where}")
         lines += [f"      {p}" for p in s.get("packs", [])]
-    lines += ["", "Copyright and other rights in the source assets remain with their respective rights holders.", ""]
+    lines += ["", "Railroader and its assets are the property of the Railroader developers and their respective rights holders.", ""]
     return "\n".join(lines)
 
 
