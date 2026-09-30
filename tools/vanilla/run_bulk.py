@@ -198,7 +198,9 @@ def check_output(path: Path, run: Path) -> dict:
              "axles": sum(len(v.get("axles") or []) for v in vehicles),
              "columnsWithColliderYs": sum(1 for v in vehicles for c in (v.get("columns") or []) if c.get("colliderYs")),
              "sweeps": sum(len(v.get("sweeps") or []) for v in vehicles),
-             "renderers": sum(len(v.get("renderers") or []) for v in vehicles)}
+             "renderers": sum(len(v.get("renderers") or []) for v in vehicles),
+             "hulls": sum(len(v.get("hulls") or []) for v in vehicles),
+             "visibleLevels": sum(len(v.get("visibleLevels") or []) for v in vehicles)}
     if len(vehicles) != expected:
         return {"verdict": "FAILED", "why": f"{len(vehicles)} vehicles measured, {expected} expected", **facts}
     if facts["axles"] == 0:

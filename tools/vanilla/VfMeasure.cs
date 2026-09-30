@@ -56,6 +56,9 @@ public static class VfMeasure
     [Serializable] public class Near { public string path; public float distance; public string[] emissiveMaterials; }
     [Serializable] public class LampOut { public string kind, name, purpose; public float[] position; public Near[] near; }
     [Serializable] public class LightOut { public string path, type; public float range, intensity; public bool enabled; }
+    // M14: flat (near-horizontal) triangle areas by height, from the real mesh triangles in world space: floors that rays miss.
+    [Serializable] public class Level { public float y, areaUp, areaDown, xMin, xMax, zMin, zMax; public string mainPath; }
+    [Serializable] public class HullOut { public string path, mesh; public bool readable; public int triangles; public float[] boundsMin, boundsMax; public Level[] levels; }
     [Serializable] public class Odd { public string path, what; public float[] value; }
     [Serializable] public class Named { public string path; public float[] position; }
     [Serializable] public class VehicleOut
@@ -63,7 +66,7 @@ public static class VfMeasure
         public string id, role, prefab; public float originY; public float[] boundsMin, boundsMax;
         public Axle[] axles; public PhaseSet[] phases; public RayOut[] beamFront, beamRear; public ColumnRay[] columns;
         public Sweep[] sweeps; public RendererOut[] renderers; public SkinnedOut[] skinned; public ColliderOut[] colliders;
-        public LampOut[] lamps; public LightOut[] lights; public Odd[] oddities; public Named[] named; public int skippedSkinnedForRays;
+        public HullOut[] hulls; public Level[] visibleLevels; public LampOut[] lamps; public LightOut[] lights; public Odd[] oddities; public Named[] named; public int skippedSkinnedForRays;
     }
     [Serializable] public class Output { public int schema = 1; public string unity; public VehicleOut[] vehicles; public string[] problems; }
     [Serializable] public class Result { public string status; public int exitCode, problems; public string error; }
@@ -135,6 +138,12 @@ public static class VfMeasure
             o.renderers = Renderers(v, root);
             o.skinned = root.GetComponentsInChildren<SkinnedMeshRenderer>(true).Select(s => Skinned(root, s)).ToArray();
             o.colliders = root.GetComponentsInChildren<Collider>(true).Select(c => ColliderInfo(root, c, animated)).ToArray();
+            try
+            {
+                o.hulls = root.GetComponentsInChildren<MeshCollider>(true).Select(c => Hull(root, c)).ToArray();
+                o.visibleLevels = VisibleLevels(root);
+            }
+            catch (Exception e) { Problems.Add($"{v.id}: flat-surface levels failed: {e.GetType().Name}: {e.Message}"); }
             o.lights = root.GetComponentsInChildren<Light>(true).Select(l => new LightOut { path = TPath(l.transform, root), type = l.type.ToString(), range = l.range, intensity = l.intensity, enabled = l.enabled }).ToArray();
             o.lamps = (v.components ?? new Comp[0]).Where(c => IsLampKind(c.kind)).Select(c => Lamp(v, root, c)).ToArray();
             o.oddities = Oddities(root);
@@ -441,6 +450,59 @@ public static class VfMeasure
         if (sph) { o.centre = V(sph.center); o.radius = sph.radius; }
         if (mc) { o.convex = mc.convex; o.mesh = mc.sharedMesh ? mc.sharedMesh.name : ""; }
         return o;
+    }
+
+    const float LevelStep = 0.02f;
+
+    // Horizontal-ish triangles (|normal.y| > 0.9) of one mesh in world space, summed per 2 cm height.
+    static void AddLevels(Mesh m, Transform t, string path, Dictionary<int, Level> acc, Dictionary<int, Dictionary<string, float>> who)
+    {
+        var vs = m.vertices; var tris = m.triangles;
+        for (int i = 0; i + 2 < tris.Length; i += 3)
+        {
+            Vector3 a = t.TransformPoint(vs[tris[i]]), b = t.TransformPoint(vs[tris[i + 1]]), c = t.TransformPoint(vs[tris[i + 2]]);
+            Vector3 n = Vector3.Cross(b - a, c - a); float area = n.magnitude * 0.5f;
+            if (area < 1e-6f) continue;
+            n = n.normalized; if (Mathf.Abs(n.y) < 0.9f) continue;
+            float y = (a.y + b.y + c.y) / 3f;
+            if (y < 0.2f || y > 3.2f) continue;
+            int key = Mathf.RoundToInt(y / LevelStep);
+            Level l; if (!acc.TryGetValue(key, out l)) { l = new Level { y = key * LevelStep, xMin = 1e9f, xMax = -1e9f, zMin = 1e9f, zMax = -1e9f }; acc[key] = l; who[key] = new Dictionary<string, float>(); }
+            if (n.y > 0) l.areaUp += area; else l.areaDown += area;
+            l.xMin = Mathf.Min(l.xMin, a.x, b.x, c.x); l.xMax = Mathf.Max(l.xMax, a.x, b.x, c.x);
+            l.zMin = Mathf.Min(l.zMin, a.z, b.z, c.z); l.zMax = Mathf.Max(l.zMax, a.z, b.z, c.z);
+            float w; who[key].TryGetValue(path, out w); who[key][path] = w + area;
+        }
+    }
+
+    static Level[] Finish(Dictionary<int, Level> acc, Dictionary<int, Dictionary<string, float>> who)
+    {
+        foreach (var kv in acc) kv.Value.mainPath = who[kv.Key].OrderByDescending(p => p.Value).First().Key;
+        return acc.Values.Where(l => l.areaUp + l.areaDown >= 0.05f).OrderByDescending(l => l.areaUp + l.areaDown).Take(60).OrderBy(l => l.y).ToArray();
+    }
+
+    static HullOut Hull(Transform root, MeshCollider c)
+    {
+        var h = new HullOut { path = TPath(c.transform, root), mesh = c.sharedMesh ? c.sharedMesh.name : null };
+        if (!c.sharedMesh) return h;
+        h.readable = c.sharedMesh.isReadable; h.triangles = c.sharedMesh.triangles.Length / 3;
+        var bb = c.bounds; h.boundsMin = V(bb.min); h.boundsMax = V(bb.max);
+        var acc = new Dictionary<int, Level>(); var who = new Dictionary<int, Dictionary<string, float>>();
+        AddLevels(c.sharedMesh, c.transform, h.path, acc, who);
+        h.levels = Finish(acc, who);
+        return h;
+    }
+
+    static Level[] VisibleLevels(Transform root)
+    {
+        var acc = new Dictionary<int, Level>(); var who = new Dictionary<int, Dictionary<string, float>>();
+        foreach (var mf in root.GetComponentsInChildren<MeshFilter>(false))
+        {
+            var r = mf.GetComponent<MeshRenderer>();
+            if (!mf.sharedMesh || !r || !r.enabled) continue;
+            AddLevels(mf.sharedMesh, mf.transform, TPath(mf.transform, root), acc, who);
+        }
+        return Finish(acc, who);
     }
 
     static bool IsLampKind(string kind)
