@@ -82,10 +82,10 @@ def truck(ident: str) -> dict:
 
 
 def game_installs(base: Path) -> dict:
-    """Fake Railroader and Derail Valley installs under base (W25: both are required), DV with Custom Car Loader."""
+    """Fake Railroader and Derail Valley installs under base (W25: both are required), DV with Custom Car Loader.
+    Railroader has no Mods folder here: the edition never reads one."""
     rr, dv = base / "Railroader", base / "Derail Valley"
     (rr / "Railroader_Data" / "StreamingAssets" / "AssetPacks").mkdir(parents=True, exist_ok=True)
-    (rr / "Mods").mkdir(exist_ok=True)
     (dv / "DerailValley_Data").mkdir(parents=True, exist_ok=True)
     (dv / "Mods" / "DVCustomCarLoader").mkdir(parents=True, exist_ok=True)
     (dv / "Mods" / "DVCustomCarLoader" / "Info.json").write_text('{"Id": "DVCustomCarLoader", "Version": "3.1.9"}')
@@ -93,22 +93,46 @@ def game_installs(base: Path) -> dict:
 
 
 def standard_mod(base: Path) -> dict:
-    """A tender loco with one part in a second pack, in a fake Railroader install's Mods folder. The tender's trucks
-    live in a separate mod there (search root)."""
+    """A tender loco with one part in a second pack, inside a stock-named folder in a fake Railroader install's AssetPacks
+    folder (`mod` is that folder, kept under this name for the many tests that use it; packs inside it are found as
+    before). The tender's trucks live in a separate folder there (the search root). The folder name is added to the
+    stock list for the test process (see register_stock)."""
     games = game_installs(base)
-    mods = Path(games["railroader"]) / "Mods"
-    mod = mods / "Test Loco Mod"
+    packs = Path(games["railroader"]) / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
+    mod = packs / "ts-260-a"
+    register_stock("ts-260-a", "ts-260-b", "ts-060-b", "ls-460-a")
     mod.mkdir(parents=True)
-    (mod / "info.json").write_text('{"id": "test-loco-mod"}', encoding="utf-8")
     write_pack(mod / "ts-260-a",
-               objects=[loco("ts-260-a", tender="tt-260-a", parts=[part("Test Loco Mod\\parts", "bell", "bell1")]),
+               objects=[loco("ts-260-a", tender="tt-260-a", parts=[part("ts-260-a\\parts", "bell", "bell1")]),
                         tender("tt-260-a", truck="test-truck-2s")],
                assets={"ts-260-a": {"filename": "ts-260-a.prefab"}, "tt-260-a": {"filename": "tt-260-a.prefab"}},
                trailing_commas=True)
     write_pack(mod / "parts", assets={"bell": {"filename": "bell.prefab"}})
-    write_pack(mods / "TruckMod" / "Trucks", objects=[truck("test-truck-2s")],
+    write_pack(packs / "TruckMod" / "Trucks", objects=[truck("test-truck-2s")],
                assets={"test-truck-2s": {"filename": "Test-Truck-2s.prefab"}}, bundle_name="Bundle")
-    return {"mod": mod, "search": mods, "games": games, "dv_mods": Path(games["game"]) / "Mods"}
+    write_pack(packs / stock_whistle_pack(), objects=[whistle("wh-test", "TestChime"), whistle("wh-other", "OtherChime")],
+               assets={"TestChime": {"name": "TestChime", "type": "prefab", "filename": "TestChime.prefab"},
+                       "OtherChime": {"name": "OtherChime", "type": "prefab", "filename": "OtherChime.prefab"},
+                       "wh-test": {"name": "wh-test", "type": "audio", "filename": "wh-test.wav"}}, bundle_name="Bundle")
+    return {"mod": mod, "search": packs, "games": games, "dv_mods": Path(games["game"]) / "Mods"}
+
+
+def stock_whistle_pack() -> str:
+    from rr2dv import stock
+    return stock.WHISTLE_PACK
+
+
+def whistle(ident: str, model: str) -> dict:
+    return {"identifier": ident, "metadata": {"name": f"Whistle {ident}"},
+            "definition": {"kind": "Whistle", "model": {"assetPackIdentifier": "", "assetIdentifier": model},
+                           "audio": {"assetPackIdentifier": "", "assetIdentifier": ident}, "components": None}}
+
+
+def register_stock(*names: str) -> None:
+    """Tests use synthetic pack names; the tripwire list is patched for the test process only (never by app code)."""
+    from rr2dv import stock
+    for name in names:
+        stock.STEAM.setdefault(name, name)
 
 
 def tree_state(root: Path) -> dict:
@@ -257,7 +281,7 @@ args = sys.argv[1:]
 project = Path(args[args.index("-projectPath") + 1]); log = Path(args[args.index("-logFile") + 1])
 method = args[args.index("-executeMethod") + 1]
 out = Path(os.environ.get({"Rr2dvProbe.Run": "RR2DV_PROBE_OUT", "Rr2dvBuild.Build": "CCL_BUILD_OUT",
-                           "Rr2dvAudit.Run": "RR2DV_AUDIT_OUT"}[method]))
+                           "Rr2dvAudit.Run": "RR2DV_AUDIT_OUT", "VfMeasure.Run": "VF_OUT"}[method]))
 mode = os.environ.get("FAKE_UNITY_MODE", "")
 state = Path(os.environ.get("FAKE_UNITY_STATE", str(out) + ".state"))
 calls = int(state.read_text()) + 1 if state.exists() else 1
@@ -345,7 +369,20 @@ def audit():
                                                 "runtimeValidated": False}))
     return 2 if errors else 0
 
-sys.exit({"Rr2dvProbe.Run": probe, "Rr2dvBuild.Build": build, "Rr2dvAudit.Run": audit}[method]())
+def vfmeasure():
+    data = json.loads((project / "Assets/Rr2dv/ProbeInput.json").read_text())
+    if mode == "vf-fail":
+        (out / "result.json").write_text('{"status":"error","error":"fake"}')
+        return 1
+    vehicles = [{"id": v["id"], "role": v["role"], "prefab": v["prefab"],
+                 "axles": [{"clip": w["clip"], "path": "Main/" + w["clip"] + "1", "maxRadius": w["diameter"] / 2} for w in v["wheelsets"]],
+                 "columns": [{"x": 0.0, "z": 0.0, "ys": [1.0], "colliderYs": [0.9]}],
+                 "sweeps": [], "renderers": [{"path": "Main", "kind": "MeshRenderer"}]} for v in data["vehicles"]]
+    (out / "vf-measure.json").write_text(json.dumps({"schema": 1, "vehicles": vehicles, "problems": []}))
+    (out / "result.json").write_text('{"status":"passed","exitCode":0,"problems":0}')
+    return 0
+
+sys.exit({"Rr2dvProbe.Run": probe, "Rr2dvBuild.Build": build, "Rr2dvAudit.Run": audit, "VfMeasure.Run": vfmeasure}[method]())
 '''
 
 

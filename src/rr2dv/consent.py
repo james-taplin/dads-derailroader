@@ -1,14 +1,15 @@
-"""The personal-use notice shown before a converted pack goes into the Derail Valley Mods folder (James, W25).
+"""The personal-use notice shown before a converted pack goes into the Derail Valley Mods folder (James, W25; reworded
+for the vanilla-flavoured edition, 2026-09-30, a first draft to be polished).
 
-A large window in the middle of the screen says the pack is for personal use, that copyright stays with the rights
-holders of the source assets, that rr2dv grants no permission to redistribute, and that redistribution needs the
-applicable licences or the rights holders' permission. It lists the source content detected. The user must click
-"I agree" ten separate times; closing the window or "Cancel" installs nothing. There is no setting or command-line
-option that skips it. Counted clicks must be real mouse clicks, at least CLICK_GAP_S apart, so a held key or a double
-click cannot rush through it.
+A large window in the middle of the screen says the pack is for personal use, that everything in it comes from Railroader
+and belongs to the Railroader developers and their rights holders, that derailroader ships none of it, and that the pack
+must not be shared without their permission. It lists the source content detected. The user must click "I agree" once;
+closing the window or "Cancel" installs nothing. There is no setting or command-line option that skips it. The counted
+click must be a real mouse click (no keyboard activation), and the counter still enforces CLICK_GAP_S between clicks when
+more than one is required.
 
-Wording (James, 2026-09-27): every claim is one the tool can stand behind; it does not decide copyright questions on
-the user's behalf. Changing any text below means a new NOTICE_VERSION (the test pins TEMPLATE_SHA256).
+Wording: every claim is one the tool can stand behind; it does not decide copyright questions on the user's behalf.
+Changing any text below means a new NOTICE_VERSION (the test pins TEMPLATE_SHA256).
 """
 from __future__ import annotations
 
@@ -16,24 +17,27 @@ import hashlib
 import time
 from typing import Callable, Sequence
 
-NOTICE_VERSION = "1.0"
-REQUIRED_CLICKS = 10
+NOTICE_VERSION = "2.0"
+REQUIRED_CLICKS = 1
 CLICK_GAP_S = 0.25
 TITLE = "Personal use only"
 
 HEADING = "PERSONAL USE ONLY"
-INTRO = ('This Derail Valley mod ("{pack}") was converted locally on your computer from Railroader mods already '
-         "installed on it. It contains third-party work including models, textures, animations and other content.")
+INTRO = ('This Derail Valley locomotive ("{pack}") was converted locally on your computer from the Railroader game files '
+         "already installed on it. The models, textures, animations and other content in it come from Railroader and belong "
+         "to the Railroader developers and their rights holders.")
 POINTS = [
-    "Copyright and other rights in the source assets remain with their respective rights holders.",
-    "rr2dv does not grant you permission to redistribute third-party content.",
-    "Do not share, upload, sell or otherwise redistribute this conversion unless the applicable licences already permit "
-    "it, or you have obtained any required permission from the relevant rights holders.",
-    "Unauthorised redistribution may infringe copyright.",
-    "Check the permissions for every source asset before publishing a converted locomotive.",
+    "Railroader and its assets are the property of the Railroader developers and their respective rights holders. "
+    "derailroader and its authors claim no ownership of them.",
+    "derailroader contains no Railroader code or art and does not distribute any. It only reads the files already "
+    "installed on your computer to make this conversion.",
+    "This conversion is for your own personal use, on your own computer.",
+    "Do not share, upload, sell or otherwise redistribute this converted locomotive, or any part of it, without permission "
+    "from the Railroader developers and any other rights holders.",
+    "derailroader is unofficial. It is not made, supported or endorsed by the developers of Railroader or Derail Valley.",
 ]
 SOURCES_HEADING = "Source content detected:"
-CLOSING = 'Click "I agree" {clicks} times to confirm that you have read and understood this notice.'
+CLOSING = 'Click "I agree" to confirm that you have read and understood this notice.'
 TEMPLATE = "\n".join([NOTICE_VERSION, HEADING, INTRO, *POINTS, SOURCES_HEADING, CLOSING])
 TEMPLATE_SHA256 = hashlib.sha256(TEMPLATE.encode("utf-8")).hexdigest()
 
@@ -44,7 +48,7 @@ class ConsentError(RuntimeError):
 
 def notice_parts(pack: str, sources: Sequence[str]) -> dict:
     return {"heading": HEADING, "intro": INTRO.format(pack=pack), "points": list(POINTS),
-            "sources": list(sources) or ["(none recorded)"], "closing": CLOSING.format(clicks=REQUIRED_CLICKS)}
+            "sources": list(sources) or ["(none recorded)"], "closing": CLOSING}
 
 
 def notice_text(pack: str, sources: Sequence[str], width: int = 100) -> str:
@@ -84,6 +88,8 @@ class Counter:
         return self.count >= self.required
 
     def label(self) -> str:
+        if self.required == 1:
+            return 'Click "I agree" to continue'
         return f'Click "I agree" {self.required} times to continue: {self.count} of {self.required}'
 
 

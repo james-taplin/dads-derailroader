@@ -189,7 +189,8 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
         found = (f"probe candidate {main['tread']:.6f} m, {main['confidence']} confidence"
                  if main and main["tread"] else "no probe candidate")
         pending.append(f"WheelRadius: review the tread candidates in metadata.wheelCandidates ({found}; source nominal "
-                       f"radius {main_ws.get('diameter', 0) / 2:g} m is not the tread), then pass --wheel-radius")
+                       f"radius {main_ws.get('diameter', 0) / 2:g} m; on Railroader's own locomotives it is the tread, checked on all 21), "
+                       "then confirm it in the pre-build review or pass --wheel-radius")
 
     needed = [f for f in ("maximumBoilerPressure", "pistonDiameterInches", "pistonStrokeInches", "wheelsets")
               if not d.get(f)]
@@ -214,8 +215,8 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
     pending.append("simulation: draft engine, boiler, firebox and exhaust choices need per-engine calibration "
                    "(throttleMaxFlow, steamChestVolume, blowdown, vent rate, firing, exhaust, cutoff range)")
     if inv.get("left_out"):
-        pending.append(f"left out: {len(inv['left_out'])} part(s) broken in the source mod (metadata.leftOut with reason "
-                       "and effect); check the loco still looks and works right without them")
+        pending.append(f"left out: {len(inv['left_out'])} item(s) broken or missing in Railroader's packs, including any whistle mesh "
+                       "(metadata.leftOut with reason and effect); check the loco still looks and works right without them")
     absent_bindings = absent_bindings or []
     for a in absent_bindings:
         what = ("animates nothing in the exported model" if not a["restored"] else
@@ -230,10 +231,6 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
     if material_problems:
         pending.append(f"materials: {len(material_problems)} renderer(s) have an empty material slot in the export "
                        f"(metadata.materialProblems, first: {material_problems[0]}); check the part looks right in the renders")
-    code_mods = sorted({c["provider"] for c in inv.get("code_mods", [])})
-    if code_mods:
-        pending.append(f"simulation: nonstandard running gear ({', '.join(sorted({c['kind'] for c in inv['code_mods']}))} from "
-                       f"{', '.join(code_mods)}, e.g. articulated); Railroader's figures depend on it, review pull and cylinders (E02)")
     other_loads = sorted({str(slot.get("requiredLoadIdentifier")) for obj, _ in defs.values()
                           for slot in definition(obj).get("loadSlots") or []
                           if str(slot.get("requiredLoadIdentifier", "")).casefold() not in ("water", "coal")})
@@ -296,9 +293,10 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
                                           "sourceWeightKg": (d.get("weightEmpty") or 0) * LB_KG,
                                           "interpretation": "working order incl. boiler water (guide E04); spawn water to subtract is pending"},
                            "wheelCandidates": wheel_candidates, "leftOut": inv.get("left_out", []),
+                           "whistle": {k: v for k, v in (inv.get("whistle") or {}).items() if k != "options"},
                            "absentBindings": absent_bindings, "materialProblems": material_problems,
                            "sources": inv.get("sources", []),
-                           "audio": inv["audio"], "codeMods": code_mods, "pending": pending}}
+                           "audio": inv["audio"], "pending": pending}}
     if inv.get("tender"):
         tender_id = inv["tender"]["id"]
         t_obj, t_src = defs[tender_id]

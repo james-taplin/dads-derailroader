@@ -17,6 +17,7 @@ namespace UnityEngine
     public class Component : Object
     {
         public Transform transform; public GameObject gameObject;
+        public T[] GetComponents<T>() => null;
         public T GetComponent<T>() => default(T);
         public T[] GetComponentsInChildren<T>(bool includeInactive) => null;
         public T[] GetComponentsInChildren<T>() => null;
@@ -61,6 +62,8 @@ namespace UnityEngine
         public static Quaternion Inverse(Quaternion q) => q;
     }
     public struct Bounds { public Bounds(Vector3 c, Vector3 s) { center = c; min = c; max = c; } public Vector3 center, min, max; public void Encapsulate(Vector3 p) { } public void Encapsulate(Bounds b) { } }
+    public struct LOD { public float screenRelativeTransitionHeight; public Renderer[] renderers; }
+    public class LODGroup : Component { public LOD[] GetLODs() => null; }
     public class Renderer : Component { public bool enabled; public Bounds bounds; public Material[] sharedMaterials; }
     public class MeshRenderer : Renderer { }
     public class SkinnedMeshRenderer : Renderer { public Mesh sharedMesh; }

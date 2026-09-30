@@ -28,7 +28,7 @@ class BuildStages(unittest.TestCase):
         def ask(pack, sources):
             self.asked.append((pack, sources))
             return agree
-        return convert(self.m["mod"], self.machine, search=[self.m["search"]], ask=ask, **kw)
+        return convert(self.m["mod"], self.machine, ask=ask, **kw)
 
     def test_reviewed_radius_builds_audits_and_installs_after_the_notice(self):
         rr_before = tree_state(Path(self.machine.values["railroader"]))
@@ -56,7 +56,7 @@ class BuildStages(unittest.TestCase):
         self.assertEqual((t["Trucks"][0]["Wheelset"], t["WheelRadius"]), (buildrecord.TRUCK_WHEEL_PREFIX, 0.42))
         # Rr2dvBuild's input: the part is placed, every prefab loses its AudioSources
         inp = read_json(run.path / "unity/project/Assets/Rr2dv/BuildInput.json")
-        self.assertEqual([p["name"] for p in inp["composites"][0]["parts"]], ["bell1"])
+        self.assertEqual([p["name"] for p in inp["composites"][0]["parts"]], ["bell1", "Whistle mesh"])  # the whistle mesh is placed like a part
         self.assertTrue(inp["audioStrip"])
         # the four generated control classes by DV function (James, 2026-09-29), handed to the build by control name
         classes = {c["control"]: c["cls"] for c in inp["controlClasses"]}
@@ -130,12 +130,10 @@ class BuildStages(unittest.TestCase):
         self.assertEqual(audit.audit_input(rec, out.run.path / "build")["openingCount"], with_stoker + 1)
 
     def test_a_base_game_pack_converts_and_is_credited_as_railroader(self):
-        # 0.3 (James): a locomotive pack from Railroader_Data/StreamingAssets/AssetPacks is an input, read only
-        packs = self.tmp / "Railroader" / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
-        pack = packs / "ts-260-a"
-        shutil.move(str(self.m["mod"] / "ts-260-a"), str(pack))
+        # a locomotive pack from Railroader_Data/StreamingAssets/AssetPacks is the only input, read only
+        pack = self.m["mod"]
         before = tree_state(self.tmp / "Railroader")
-        out = convert(pack, self.machine, search=[self.m["search"]], ask=lambda *a: True, wheel_radius=0.598)
+        out = convert(pack, self.machine, ask=lambda *a: True, wheel_radius=0.598)
         self.assertEqual(out.code, EXIT_OK, out.message)
         sources = read_json(out.run.path / "inventory.json")["sources"]
         game = [s for s in sources if s["kind"] == "game"]
@@ -421,7 +419,7 @@ class Rules(unittest.TestCase):
         levers, cab, loads, taken = b._levers(cfg, comps, ov, {"Throttle": "a", "Reverser": "b"}, "x")
         self.assertEqual([(l["Path"], l["Port"], l["Ctl"]) for l in levers],
                          [("Main/Throttle", "throttle.EXT_IN", 0), ("Main/Rev/Bar", "reverser.CONTROL_EXT_IN", 1)])
-        self.assertEqual(levers[0]["_phys"]["notches"], 21)  # G-29 throttle: 5 % per notch
+        self.assertEqual(levers[0]["_phys"]["notches"], 11)  # throttle: 10 % per notch (was 21 from G-29; James 2026-09-30)
         self.assertEqual((cfg["ReverserHandle"], cfg["ReverserClip"]), ("Main/Rev/Bar", "Reverser"))
         self.assertEqual(cab, ["Main/Throttle"])
         self.assertEqual(loads, [["Throttle", "", "throttle.EXT_IN", False]])  # the rod follows the port outside
@@ -455,10 +453,10 @@ class RerunCache(unittest.TestCase):
         self.machine = Machine(None, tool_machine(self.tmp))
 
     def test_answering_reuses_the_imported_project_in_a_new_run(self):
-        first = convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        first = convert(self.m["mod"], self.machine)
         self.assertEqual(first.code, EXIT_INCOMPLETE, first.message)
         self.assertIn("saved the imported project", (first.run.path / "run.log").read_text())
-        second = convert(self.m["mod"], self.machine, search=[self.m["search"]], wheel_radius=0.5988, ask=lambda p, s: False)
+        second = convert(self.m["mod"], self.machine, wheel_radius=0.5988, ask=lambda p, s: False)
         self.assertEqual(second.run.record["stages"]["audit"]["status"], "done", second.message)
         self.assertNotEqual(first.run.path, second.run.path)
         self.assertIn("reused from an earlier run", second.run.record["stages"]["import"]["detail"])
@@ -469,11 +467,11 @@ class RerunCache(unittest.TestCase):
         self.assertFalse((entry / "project" / "Assets" / "Rr2dv" / "BuildInput.json").exists())
 
     def test_a_changed_export_misses_the_cache(self):
-        convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        convert(self.m["mod"], self.machine)
         for f in (self.tmp / "work" / "_cache" / "assetripper").rglob("*.prefab"):
             f.write_text(f.read_text() + "\n")
             break
-        again = convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        again = convert(self.m["mod"], self.machine)
         self.assertNotIn("reused", again.run.record["stages"]["import"]["detail"])
 
 
@@ -495,16 +493,16 @@ class RerunCacheWithoutKeptFiles(unittest.TestCase):
         return [p for p in self.cache.iterdir() if (p / "complete.json").is_file()] if self.cache.is_dir() else []
 
     def test_kept_after_a_stop_reused_then_deleted_after_a_build(self):
-        first = convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        first = convert(self.m["mod"], self.machine)
         self.assertEqual(first.code, EXIT_INCOMPLETE, first.message)
         self.assertEqual(len(self.entries()), 1)
-        second = convert(self.m["mod"], self.machine, search=[self.m["search"]], wheel_radius=0.5988, ask=lambda p, s: False)
+        second = convert(self.m["mod"], self.machine, wheel_radius=0.5988, ask=lambda p, s: False)
         self.assertEqual(second.run.record["stages"]["audit"]["status"], "done", second.message)
         self.assertIn("reused from an earlier run", second.run.record["stages"]["import"]["detail"])
         self.assertEqual(self.entries(), [])
 
     def test_a_restored_project_gets_the_current_editor_scripts(self):
-        convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        convert(self.m["mod"], self.machine)
         entry = self.entries()[0]
         editor = entry / "project" / "Assets" / "Editor"
         (editor / "Rr2dvPlacement.cs").write_text("// stale\n")

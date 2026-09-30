@@ -55,7 +55,7 @@ class Draft(unittest.TestCase):
         self.machine = Machine(None, tool_machine(self.tmp))
 
     def run_convert(self, **kw):
-        out = convert(self.m["mod"], self.machine, search=[self.m["search"]], ask=lambda pack, sources: False, **kw)
+        out = convert(self.m["mod"], self.machine, ask=lambda pack, sources: False, **kw)
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)
         return out.run
 
@@ -152,7 +152,7 @@ class Draft(unittest.TestCase):
 
     def test_livery_choice_is_checked(self):
         with self.assertRaisesRegex(ValueError, "livery 'Green'"):
-            convert(self.m["mod"], self.machine, search=[self.m["search"]], livery="Green")
+            convert(self.m["mod"], self.machine, livery="Green")
 
 
 class LiveryColours(unittest.TestCase):

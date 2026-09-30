@@ -86,6 +86,19 @@ def cache_key(bundle_sha256: str, extractor_sha256: str, target: str = TARGET_VE
     return f"{bundle_sha256[:16]}-{extractor_sha256[:12]}-{target}"
 
 
+def _rename_when_released(src: Path, dst: Path, tries: int = 20, pause: float = 0.5) -> None:
+    """Rename a folder, retrying on Windows while a just-stopped tool's process still holds a file inside it
+    (WinError 32): the handle is released a moment after the process ends."""
+    for attempt in range(tries):
+        try:
+            src.rename(dst)
+            return
+        except PermissionError:
+            if sys.platform != "win32" or attempt == tries - 1 or dst.exists():
+                raise
+            time.sleep(pause)
+
+
 def export(exe: Path, bundle: Path, bundle_sha256: str, cache_root: Path, target: str = TARGET_VERSION,
            startup_timeout: float = 60, load_timeout: float = 600, export_timeout: float = 1800) -> dict:
     """Return {"key", "path" (the folder holding ExportedProject), "cached"} for one bundle."""
@@ -147,7 +160,7 @@ def export(exe: Path, bundle: Path, bundle_sha256: str, cache_root: Path, target
                                           "extractor_sha256": extractor_sha, "target": target,
                                           "created": time.strftime("%Y-%m-%dT%H:%M:%S%z")})
         try:
-            temp.rename(final)
+            _rename_when_released(temp, final)
         except OSError:
             if (final / "export.json").is_file():  # another run finished the same export first
                 shutil.rmtree(temp, ignore_errors=True)

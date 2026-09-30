@@ -7,6 +7,7 @@ import json
 import math
 from pathlib import Path
 
+from . import stock
 from .jsonio import read_json, write_json
 
 IDENTITY = ('schema', 'adapterVersion', 'vehicleId', 'fingerprint', 'catalogueHash')
@@ -86,8 +87,36 @@ def suggest(req, source):
     if main_clip and not matched and not tyre_like and high and any(c.get('clip') == main_clip for c in candidates) and values['physics'] != 'geared':
         put('physics', '', 'DV_choice',
             'The source main animation is not a confirmed tyre group. Choose direct-drive approximation or geared reduction; do not treat a shaft as a driving wheel')
+    origin = 'Suggested from source data, measurements and labelled defaults'
+    if req.get('vehicleId') in stock.STEAM:
+        origin = _stock_answers(req, source, main, put, values)
     values['acknowledgeExperimental'] = False
-    return {'values': values, 'provenance': evidence, 'origin': 'Suggested from source data, measurements and labelled defaults'}
+    return {'values': values, 'provenance': evidence, 'origin': origin}
+
+
+def _stock_answers(req, source, main, put, values):
+    """The vanilla edition's reviewed answers for Railroader's own steam locomotives (James, 2026-09-30), from the per-loco table
+    (stock_locos.json): all are two-cylinder simple engines (DV cannot model compounds, so a compound is simulated as simple), coal
+    hand-fired with no auto-stoking, with a dynamo. The tyre radius is the driver diameter / 2: the bulk measurement of all 21
+    (2026-09-30) found the highest point of every rail-touching driving wheel 19-40 mm above it (flange), and level with it on
+    blind drivers, so it is the tread. A definition that disagrees with the table (a new game build) wins, and says so."""
+    tab = stock.entry(req.get('vehicleId'))
+    diameter = main.get('diameter')
+    if isinstance(diameter, (int, float)) and diameter > 0:
+        radius = round(diameter / 2, 4)
+        why = ('Definition driver diameter / 2: the tread, checked against the measured wheel tops of all 21 stock locomotives '
+               '(flange 19-40 mm above it)')
+        if tab is not None and abs(tab['driver']['radiusM'] - radius) > 1e-3:
+            why += f"; NOTE the vanilla table has {tab['driver']['radiusM']} m (another game build?): the definition is used"
+        put('wheelRadius', radius, 'source', why)
+    answers = (tab or {}).get('answers') or {}
+    put('cylinders', answers.get('cylinders', 2), 'DV_choice', 'All stock locomotives are two-cylinder; a compound is simulated as a simple engine '
+        '(Derail Valley cannot model compounds)')
+    put('firing', answers.get('firing', 'hand-fired'), 'DV_choice', 'Stock locomotives are coal hand-fired, no auto-stoking')
+    put('dynamo', answers.get('dynamo', 'yes'), 'DV_choice', 'Every stock locomotive has a dynamo')
+    if not values.get('physics'):
+        put('physics', answers.get('physics', 'legacy-equivalent'), 'DV_choice', 'Existing tractive-effort approximation; confirm')
+    return 'Reviewed answers for this stock locomotive; check them and confirm'
 
 
 def profile_path(root: Path, req) -> Path:

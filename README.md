@@ -2,18 +2,18 @@
 
 **Convert the Railroader steam locomotives you already have installed into Derail Valley locomotives.**
 
-`derailroader` (command line: `rr2dv`) takes a steam locomotive mod from your own Railroader `Mods` folder,
-rebuilds it for Derail Valley's Custom Car Loader (CCL 3.1.9), checks the result, and installs it into your own
-Derail Valley `Mods` folder. It works the same way for any locomotive, with no per-locomotive scripts, and it never
-changes the Railroader mod it reads.
+`derailroader` (command line: `rr2dv`) takes one of Railroader's own stock steam locomotives from your own Railroader
+install, rebuilds it for Derail Valley's Custom Car Loader (CCL 3.1.9), checks the result, and installs it into your own
+Derail Valley `Mods` folder. It never changes your Railroader install. **This is the vanilla-flavoured edition:** it
+converts only the 21 stock steam locomotives (S-23, S-51, D-46, F-71, G-16, G-25, C-25, C-46, C-55, K-28T, K-35, B-65,
+A-23, A-26, T-17, T-21, T-22, P-18, P-43, P-48 and C-40) and has no support for modded locomotives. The three stock
+diesels are not supported in this edition.
 
 ![The derailroader app](docs/app-window.png)
 
-> **Status: working, in active testing.** Every stage runs end to end, from finding the mod to installing the pack.
-> Locomotives built and driven in game so far include the H9, RPP-1, L-27, Trojan, Reading camelback, ALCo K-66,
-> R48 and DM&IR M-3 Yellowstone. An installed pack is still a **candidate**: controls and handling are checked in game
-> (see [What a finished pack must pass](#what-a-finished-pack-must-pass)). The latest published build is
-> [0.1.2](https://github.com/james-taplin/derailroader/releases/tag/v0.1.2); `main` is 0.1.3 in development.
+> **Status: vanilla-flavoured edition, in development.** The pipeline runs end to end on the stock steam locomotives, but
+> most of them have not been built and driven in game yet. An installed pack is still a **candidate**: controls and
+> handling are checked in game (see [What a finished pack must pass](#what-a-finished-pack-must-pass)).
 
 ## Contents
 
@@ -32,8 +32,8 @@ changes the Railroader mod it reads.
 
 ## What it does
 
-- **Finds everything the locomotive uses** in your Railroader install: its tender, trucks and parts, from any
-  installed mod or Railroader's own asset packs.
+- **Finds everything the locomotive uses** in your Railroader install: its tender, trucks and parts, all from
+  Railroader's own asset packs.
 - **Measures the model in Unity**: cab, backhead, wheels, rods, lamps, doors and windows.
 - **Builds a working Derail Valley locomotive**, which includes:
   - Railroader's cab handles become Derail Valley levers;
@@ -50,19 +50,21 @@ changes the Railroader mod it reads.
 
 ## Personal use only
 
-A converted pack contains third-party work. Before anything is written to your Derail Valley `Mods` folder, `rr2dv`
-shows a large notice. It says that:
-- copyright in the source assets stays with their rights holders;
-- rr2dv grants no permission to redistribute;
-- you should not share the conversion unless the applicable licences already permit it, or you have any required
-  permission from the relevant rights holders.
+A converted pack is built from Railroader's own game files. Before anything is written to your Derail Valley `Mods`
+folder, `rr2dv` shows a large notice. It says that:
+- everything in the pack comes from Railroader and belongs to the Railroader developers and their rights holders;
+- derailroader contains no Railroader code or art and distributes none; it only reads the files already installed on
+  your computer;
+- the conversion is for your own personal use, and must not be shared without the permission of the Railroader
+  developers and any other rights holders;
+- derailroader is unofficial.
 
-The notice also lists the source content it detected. You click **I agree** ten times to continue, and there is no
+The notice also lists the source content it detected. You click **I agree** once to continue, and there is no
 setting that skips it.
 
 The installed pack carries three records:
 - `NOTICE.txt`: the same text;
-- `SOURCE_PROVENANCE.txt`: the notice version, when it was acknowledged, and which mods and authors the content came
+- `SOURCE_PROVENANCE.txt`: the notice version, when it was acknowledged, and which Railroader packs the content came
   from;
 - `rr2dv.json`: the same information as a machine-readable record.
 
@@ -113,12 +115,10 @@ described above and check again. From the command line, use `rr2dv doctor`.
 
 ## Using the app
 
-1. **Pick a locomotive.** The left side lists the steam locomotives in two groups: **Base game** (Railroader's own
-   locomotive packs in `Railroader_Data\StreamingAssets\AssetPacks`) and **Mods** (your Railroader `Mods` folder),
-   each showing the folder it comes from; type to filter.
+1. **Pick a locomotive.** The left side lists Railroader's stock steam locomotives (the packs in
+   `Railroader_Data\StreamingAssets\AssetPacks`); type to filter.
    The coloured chips at the top show whether Railroader, Derail Valley, Custom Car Loader and the tools were found.
-2. **Check what it uses.** You see its tender, trucks, parts, controls and sounds, whose work it contains, and any
-   problems. Choose the livery and sounds.
+2. **Check what it uses.** You see its tender, trucks, parts, controls and sounds, and any problems. Choose the livery and sounds.
 3. **Convert.** The stages tick off as they run. The first run of a locomotive imports and measures it in Unity. This
    can take a while for a big model. The measured project is then kept until that locomotive builds and passes its
    audit, so a failed build does not repeat the import.
@@ -146,7 +146,6 @@ of the same unchanged source.
 | Driving-wheel radius | pre-filled from the source's driver size, with measured candidates to choose from |
 | Dynamo | yes or no. With no dynamo, the pack has no electric lamps, cab light, or controls for them |
 | Firing | hand-fired, oil burner (tank locomotives for now), or mechanical stoker (valve wheel on the backhead and the HUD's Gearbox A; a tender auger turns with it when one can be identified) |
-| Pull to build to | shown when the Railroader mod relies on a code mod, such as LegosBetterSteam's articulated engine, that Derail Valley cannot run. You choose which figure to match |
 
 The **Engine specifications** tab shows bore, stroke, pressure, heating area, boiler dimensions and a coal adjustment,
 with units, sources and **Restore** buttons. Nominal tractive effort and factor of adhesion update as you edit.
@@ -156,22 +155,22 @@ Inherited boiler values are labelled as simulation defaults, not measurements of
 
 ```
 rr2dv doctor                      # find both games and check Unity, Car Creator, AssetRipper and CCL
-rr2dv list                        # steam locomotives in your Railroader Mods folder and the base game
-rr2dv scan "Some Loco Mod"        # read-only: what the mod contains and what each loco needs
-rr2dv convert "Some Loco Mod"     # convert, with the pre-build review in the terminal
-rr2dv convert "Some Loco Mod" --review-file prebuild-review.json  # replay reviewed choices
+rr2dv list                        # the stock steam locomotives this edition converts, and which are installed
+rr2dv scan ls-282-k28t            # read-only: what the locomotive needs
+rr2dv convert ls-282-k28t         # convert, with the pre-build review in the terminal
+rr2dv convert ls-282-k28t --review-file prebuild-review.json  # replay reviewed choices
 ```
 
-Name a mod by its folder in the Railroader `Mods` folder, or give that folder's path. Zip files and folders elsewhere
-are refused.
+Name the locomotive by its Railroader pack name (as `rr2dv list` shows), or give the path of that pack folder in
+`Railroader_Data\StreamingAssets\AssetPacks`. Anything else is refused: mods, zip files, links, other folders and the
+three stock diesels.
 
 | `convert` option | Meaning |
 |---|---|
-| `--loco ID` | which locomotive, when the mod has more than one |
-| `--livery NAME` | livery to use (default: the mod's first) |
+| `--loco ID` | the locomotive identifier (the pack's own; normally not needed) |
+| `--livery NAME` | livery to use (default: the locomotive's first) |
 | `--audio S060\|S282` | vanilla sound set instead of the boiler-size rule |
 | `--wheel-radius M` | the driving-wheel radius, once you have reviewed the measured candidate |
-| `--search DIR` | an extra folder to look in for dependencies |
 | `--geometry-review FILE` | reviewed end-beam heights, when automatic measurement is inconclusive |
 
 ## How a conversion runs
@@ -180,8 +179,8 @@ Each conversion gets a fresh run folder under the work folder, and stops at the 
 
 | Stage | What it does |
 |---|---|
-| locate | find the locomotive in the mod |
-| link | resolve its tender, trucks and parts, from any installed mod or Railroader's asset packs |
+| locate | find the locomotive in its pack |
+| link | resolve its tender, trucks and parts from Railroader's asset packs |
 | stage | copy the needed files into the run folder, hash-checked |
 | extract | export the bundles with AssetRipper |
 | import | assemble a Unity 2019.4 project with the Car Creator Package and our builder |
@@ -229,10 +228,8 @@ decision.
   written to `build/review.json`. Two equally good matches are an error, never a first pick.
 - **Sounds are never converted.** Every locomotive uses vanilla Derail Valley sounds: S060 below 1,500 ft² of heating
   surface, S282 above. `--audio` overrides this.
-- **Dependencies.** Everything a locomotive uses from your own Railroader install is used, whichever mod it comes
-  from. A part the source mod references but does not contain is left out and listed.
-- **Code mods are never run or opened.** Railroader-only code mods, such as LegosBetterSteam, are detected from the
-  locomotive's settings. Their effect becomes a review choice instead.
+- **Dependencies.** Everything a locomotive uses comes from your own Railroader install's asset packs. A part the
+  source pack references but does not contain is left out and listed.
 - **Deterministic.** The same input files, answers and tool versions give the same result.
 - **Where it writes:** the run folder, and your Derail Valley `Mods` folder after you agree to the notice. It never
   writes to the Railroader install or touches saves. It replaces a folder in Derail Valley's `Mods` only if `rr2dv`
@@ -274,7 +271,6 @@ same file. Everything is optional except the three tools.
 | `game`, `mods` | Derail Valley install and `Mods` folder (default: found through Steam) |
 | `steamRoots` | Steam folders to search instead of the registry and default locations |
 | `workRoot` | where run folders go; at most 74 characters, e.g. `C:\rr2dv` (Unity 2019.4 needs short paths) |
-| `searchRoots` | extra folders to look in for dependencies |
 
 ## For developers
 

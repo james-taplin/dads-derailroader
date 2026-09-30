@@ -70,50 +70,69 @@ class Detection(unittest.TestCase):
         shutil.rmtree(dv.mods / "DVCustomCarLoader")
         self.assertFalse(installs.ccl_installed(dv))
 
-    def test_input_must_sit_directly_in_the_railroader_mods_folder(self):
-        rr = installs.railroader(Machine(None, game_installs(self.tmp)))
-        (rr.mods / "Some Mod" / "pack").mkdir(parents=True)
-        self.assertEqual(installs.mod_in_railroader(rr, "Some Mod"), rr.mods / "Some Mod")
-        self.assertEqual(installs.mod_in_railroader(rr, rr.mods / "Some Mod"), rr.mods / "Some Mod")
-        for bad in (rr.mods / "Some Mod" / "pack", self.tmp, "Missing Mod", rr.mods / ".." / "Mods" / "Some Mod" / "pack"):
-            with self.assertRaises(installs.InstallError, msg=str(bad)):
-                installs.mod_in_railroader(rr, bad)
-
-    def test_a_base_game_asset_pack_is_an_input_too(self):
+    def test_input_is_a_stock_steam_pack_directly_in_the_asset_packs_folder(self):
         rr = installs.railroader(Machine(None, game_installs(self.tmp)))
         pack = rr.asset_packs / "ls-282-k28t"
         pack.mkdir(parents=True)
-        self.assertEqual(installs.mod_in_railroader(rr, pack), pack)
-        self.assertEqual(installs.mod_in_railroader(rr, "ls-282-k28t"), pack)  # not in Mods: found in AssetPacks
-        self.assertTrue(installs.is_base_game(rr, pack))
-        (rr.mods / "ls-282-k28t").mkdir()
-        self.assertEqual(installs.mod_in_railroader(rr, "ls-282-k28t"), rr.mods / "ls-282-k28t")  # a bare name: Mods first
+        self.assertEqual(installs.stock_pack(rr, "ls-282-k28t"), pack)
+        self.assertEqual(installs.stock_pack(rr, pack), pack)
+        (rr.asset_packs / "SomeMod").mkdir()
+        (rr.asset_packs / "truck.archbar.diamond").mkdir()
+        (pack / "sub").mkdir()
+        for bad in (pack / "sub", self.tmp, "Missing Mod", "SomeMod", "truck.archbar.diamond", "ls-460-t17",  # not installed
+                    rr.asset_packs.parent, rr.asset_packs / ".." / "AssetPacks" / "SomeMod"):
+            with self.assertRaises(installs.InstallError, msg=str(bad)):
+                installs.stock_pack(rr, bad)
+
+    def test_stock_diesels_are_known_but_refused(self):
+        rr = installs.railroader(Machine(None, game_installs(self.tmp)))
+        (rr.asset_packs / "ld-gp9").mkdir(parents=True)
+        with self.assertRaisesRegex(installs.InstallError, "not supported in this release"):
+            installs.stock_pack(rr, "ld-gp9")
+
+    def test_a_folder_in_a_railroader_mods_folder_is_never_read(self):
+        rr = installs.railroader(Machine(None, game_installs(self.tmp)))
+        (rr.root / "Mods" / "ls-282-k28t").mkdir(parents=True)  # a mod folder carrying a stock name
         with self.assertRaises(installs.InstallError):
-            installs.mod_in_railroader(rr, rr.asset_packs.parent)
+            installs.stock_pack(rr, "ls-282-k28t")  # the asset pack is missing: the Mods folder is not a substitute
+        with self.assertRaises(installs.InstallError):
+            installs.stock_pack(rr, rr.root / "Mods" / "ls-282-k28t")
+
+    def test_railroader_needs_no_mods_folder(self):
+        games = game_installs(self.tmp)
+        self.assertFalse((Path(games["railroader"]) / "Mods").exists())
+        self.assertEqual(installs.railroader(Machine(None, games)).source, "settings")
 
     @unittest.skipIf(sys.platform == "win32", "symlink creation needs privileges on Windows")
-    def test_a_link_placed_in_the_mods_folder_counts(self):
+    def test_a_link_placed_in_the_asset_packs_folder_is_refused(self):
         rr = installs.railroader(Machine(None, game_installs(self.tmp)))
-        real = self.tmp / "elsewhere" / "Linked Mod"
+        real = self.tmp / "elsewhere" / "ls-282-k28t"
         real.mkdir(parents=True)
-        os.symlink(real, rr.mods / "Linked Mod")
-        self.assertEqual(installs.mod_in_railroader(rr, "Linked Mod"), rr.mods / "Linked Mod")
+        os.symlink(real, rr.asset_packs / "ls-282-k28t")
+        with self.assertRaisesRegex(installs.InstallError, "link"):
+            installs.stock_pack(rr, "ls-282-k28t")
 
 
 class Notice(unittest.TestCase):
-    def test_ten_separate_clicks_are_needed(self):
+    def test_one_click_is_needed(self):
+        counter = consent.Counter()
+        self.assertEqual(consent.REQUIRED_CLICKS, 1)
+        self.assertFalse(counter.done)
+        self.assertTrue(counter.click())
+        self.assertEqual(counter.label(), 'Click "I agree" to continue')
+
+    def test_several_required_clicks_are_counted_separately(self):
         now = [0.0]
-        counter = consent.Counter(clock=lambda: now[0])
-        for i in range(consent.REQUIRED_CLICKS - 1):
+        counter = consent.Counter(required=10, clock=lambda: now[0])
+        for i in range(9):
             self.assertFalse(counter.click())
             now[0] += 0.3
         self.assertEqual(counter.count, 9)
         self.assertTrue(counter.click())
-        self.assertEqual(consent.REQUIRED_CLICKS, 10)
 
     def test_rushed_clicks_do_not_count(self):
         now = [0.0]
-        counter = consent.Counter(clock=lambda: now[0])
+        counter = consent.Counter(required=10, clock=lambda: now[0])
         for _ in range(50):
             counter.click()
             now[0] += 0.01
@@ -121,18 +140,20 @@ class Notice(unittest.TestCase):
         self.assertFalse(counter.done)
 
     def test_notice_says_what_it_must(self):
-        text = consent.notice_text("RR2DV_TS_260_A", ["test-loco-mod (credited: Eilelwen)", "FoxTrucks"])
-        for phrase in ("PERSONAL USE ONLY", "remain with their respective rights holders",
-                       "does not grant you permission to redistribute", "unless the applicable licences already permit it",
-                       "may infringe copyright", "Check the permissions for every source asset",
-                       "Source content detected:\n  test-loco-mod (credited: Eilelwen)\n  FoxTrucks", "10 times",
-                       "notice version 1.0"):
+        text = consent.notice_text("RR2DV_LS_282_K28T", ["Railroader (base game asset packs)"])
+        for phrase in ("PERSONAL USE ONLY", "belong to the Railroader developers and their rights holders",
+                       "property of the Railroader developers and their respective rights holders",
+                       "contains no Railroader code or art and does not distribute any",
+                       "for your own personal use", "without permission from the Railroader developers",
+                       "derailroader is unofficial", "Click \"I agree\" to confirm",
+                       "Source content detected:\n  Railroader (base game asset packs)", "notice version 2.0"):
             self.assertIn(phrase, text if "\n" in phrase else " ".join(text.split()))
         self.assertNotIn("illegal", text)  # James, 2026-09-27: only claims the tool can stand behind
+        self.assertNotIn("times", text)  # one click
 
     def test_changed_wording_needs_a_new_notice_version(self):
         self.assertEqual((consent.NOTICE_VERSION, consent.TEMPLATE_SHA256),
-                         ("1.0", "387b127795393d40d536bc6101b070a04210b5cd2ffa72db1fe7ef7803d9c838"),
+                         ("2.0", "6d25066bb78fc14bc3e6b1f37d4d8cf773ea30e6dfd99237339346efd0a04a56"),
                          "the notice text changed: bump NOTICE_VERSION and update the pinned hash here")
 
 
@@ -153,13 +174,12 @@ class Install(unittest.TestCase):
         self.asked.append((pack, list(credits)))
         return True
 
-    SOURCES = [{"id": "test-loco-mod", "kind": "mod", "root": "input", "path": "", "credits": ["Test Author"]},
-               {"id": "Railroader (base game asset packs)", "kind": "game", "root": "", "path": "", "credits": [],
-                "packs": ["truck.archbar.diamond"]}]
+    SOURCES = [{"id": "Railroader (base game asset packs)", "kind": "game", "root": "", "path": "", "credits": [],
+                "packs": ["ls-282-k28t", "truck.archbar.diamond"]}]
 
     def run_install(self, ask=None):
         dest, record = install(self.pack, self.dv, self.expected, self.SOURCES,
-                               {"run": "r1", "input": "Mods/Test Loco Mod", "locomotive": "ts-260-a"}, ask or self.agree)
+                               {"run": "r1", "input": "AssetPacks/ls-282-k28t", "locomotive": "ls-282-k28t"}, ask or self.agree)
         self.record = record
         return dest
 
@@ -171,16 +191,16 @@ class Install(unittest.TestCase):
         self.assertEqual(dest, self.dv.mods / "rr2dv_RR2DV_TEST")  # every rr2dv pack sorts together (James, 2026-09-29)
         self.assertEqual(sorted(p.name for p in dest.iterdir()), ["Info.json", NOTICE_FILE, PROVENANCE_FILE, "ccl_bundle", MARKER])
         marker = read_json(dest / MARKER)
-        self.assertEqual((marker["generator"], marker["clicks"], marker["notice_version"]), ("rr2dv", 10, "1.0"))
+        self.assertEqual((marker["generator"], marker["clicks"], marker["notice_version"]), ("rr2dv", 1, "2.0"))
         self.assertEqual(marker["sources"], self.SOURCES)
         self.assertEqual(self.record["acknowledged"], marker["acknowledged"])
         provenance = (dest / PROVENANCE_FILE).read_text()
-        for line in ("Notice version: 1.0", "Acknowledged: " + marker["acknowledged"], "Source content detected:",
-                     "  - test-loco-mod (credited: Test Author) [input]", "  - Railroader (base game asset packs)\n",
-                     "      truck.archbar.diamond", "Converted from: Mods/Test Loco Mod (locomotive ts-260-a)"):
+        for line in ("Notice version: 2.0", "Acknowledged: " + marker["acknowledged"], "Source content detected:",
+                     "  - Railroader (base game asset packs)\n", "      truck.archbar.diamond",
+                     "Converted from: AssetPacks/ls-282-k28t (locomotive ls-282-k28t)"):
             self.assertIn(line, provenance)
         self.assertIn("PERSONAL USE ONLY", (dest / NOTICE_FILE).read_text())
-        self.assertEqual(self.asked, [("RR2DV_TEST", ["test-loco-mod (credited: Test Author)", "Railroader (base game asset packs)"])])
+        self.assertEqual(self.asked, [("RR2DV_TEST", ["Railroader (base game asset packs)"])])
         self.assertEqual(self.leftovers(), [])
 
     def test_declined_notice_installs_nothing(self):

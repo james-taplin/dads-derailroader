@@ -38,7 +38,7 @@ class Pipeline(unittest.TestCase):
 
     def test_convert_stages_inputs_and_never_writes_to_either_game(self):
         rr_before, dv_before = tree_state(self.tmp / "Railroader"), tree_state(self.tmp / "Derail Valley")
-        outcome = convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        outcome = convert(self.m["mod"], self.machine)
         self.assertEqual(outcome.code, EXIT_INCOMPLETE, outcome.message)
         self.assertEqual(tree_state(self.tmp / "Railroader"), rr_before)
         self.assertEqual(tree_state(self.tmp / "Derail Valley"), dv_before)  # installing needs the build first
@@ -50,7 +50,7 @@ class Pipeline(unittest.TestCase):
         self.assertEqual(read_json(run.file)["status"], "incomplete")
         self.assertEqual((run.record["answers"]["locomotive"], run.record["answers"]["audio"]["basis"]), ("ts-260-a", "S060"))
         staged = read_json(run.path / "staged.json")["files"]
-        self.assertEqual(len(staged), 8)  # 3 loco pack + 2 parts pack + 3 truck pack
+        self.assertEqual(len(staged), 11)  # 3 loco pack + 2 parts pack + 3 truck pack + 3 whistle pack
         for f in staged:
             self.assertEqual(sha256_file(run.path / f["file"]), f["sha256"])
         self.assertTrue((run.path / "inputs" / "search1" / "TruckMod" / "Trucks" / "Bundle").is_file())
@@ -59,25 +59,27 @@ class Pipeline(unittest.TestCase):
         bad = self.m["mod"] / "k50parts"
         bad.mkdir()
         (bad / "Catalog.json").write_text('{"assets": {"x": "a\x01b"}}')
-        outcome = convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        outcome = convert(self.m["mod"], self.machine)
         self.assertEqual(outcome.code, EXIT_INCOMPLETE, outcome.message)
         self.assertIn("pack-unreadable", (outcome.run.path / "index_issues.json").read_text())
 
     def test_same_input_same_fingerprint(self):
-        a = convert(self.m["mod"], self.machine, search=[self.m["search"]]).run
-        b = convert(self.m["mod"], self.machine, search=[self.m["search"]]).run
+        a = convert(self.m["mod"], self.machine).run
+        b = convert(self.m["mod"], self.machine).run
         self.assertNotEqual(a.path, b.path)
         self.assertEqual(a.record["input_fingerprint"], b.record["input_fingerprint"])
 
-    def test_input_is_a_mod_in_the_railroader_mods_folder_by_name_or_path(self):
-        by_name = convert("Test Loco Mod", self.machine)
+    def test_input_is_a_stock_pack_in_the_asset_packs_folder_by_name_or_path(self):
+        by_name = convert("ts-260-a", self.machine)
         self.assertEqual(by_name.code, EXIT_INCOMPLETE, by_name.message)
         self.assertEqual(by_name.run.record["request"]["input"], str(self.m["mod"]))
-        elsewhere = self.tmp / "Downloads" / "Test Loco Mod"
+        elsewhere = self.tmp / "Downloads" / "ts-260-a"
         shutil.copytree(self.m["mod"], elsewhere)
+        modded = self.tmp / "Railroader" / "Mods" / "ts-260-a"  # a Mods folder is never an input, even with a stock name
+        shutil.copytree(self.m["mod"], modded)
         archive = self.tmp / "mod.zip"
         archive.write_bytes(b"PK\x05\x06" + b"\0" * 18)
-        for bad in (elsewhere, archive, self.m["mod"] / "ts-260-a", "No Such Mod"):
+        for bad in (elsewhere, modded, archive, self.m["mod"] / "ts-260-a", "No Such Mod", "ld-gp9"):
             with self.assertRaises(InstallError, msg=str(bad)):
                 convert(bad, self.machine)
         runs = [p for p in (self.tmp / "work").iterdir() if not p.name.startswith("_")]
@@ -106,12 +108,12 @@ class Pipeline(unittest.TestCase):
 
     def test_several_locomotives_need_a_choice(self):
         write_pack(self.m["mod"] / "ts-060-b", objects=[loco("ts-060-b")], assets={"ts-060-b": {"filename": "b.prefab"}})
-        outcome = convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        outcome = convert(self.m["mod"], self.machine)
         self.assertEqual(outcome.code, EXIT_FAILED)
         self.assertIn("--loco", outcome.message)
-        outcome = convert(self.m["mod"], self.machine, loco="ts-060-b", search=[self.m["search"]])
+        outcome = convert(self.m["mod"], self.machine, loco="ts-060-b")
         self.assertEqual(outcome.code, EXIT_INCOMPLETE, outcome.message)
-        outcome = convert(self.m["mod"], self.machine, loco="nope", search=[self.m["search"]])
+        outcome = convert(self.m["mod"], self.machine, loco="nope")
         self.assertIn("not a steam locomotive", outcome.message)
 
     def test_refuses_a_work_folder_inside_the_input_or_either_game(self):
@@ -126,7 +128,7 @@ class Pipeline(unittest.TestCase):
         deep = self.tmp / ("w" * max_work_root_length())
         machine = Machine(None, {**self.machine.values, "workRoot": str(deep)})
         with self.assertRaisesRegex(ValueError, "workRoot"):
-            convert(self.m["mod"], machine, search=[self.m["search"]])
+            convert(self.m["mod"], machine)
         self.assertFalse(deep.exists())
 
     def test_source_changing_during_copy_stops_the_run(self):
@@ -165,16 +167,11 @@ class Cli(unittest.TestCase):
 
     def test_scan_reports_and_writes_json(self):
         report = self.tmp / "report.json"
-        code, text = self.run_cli("scan", "Test Loco Mod", "--json", str(report))
+        code, text = self.run_cli("scan", "ts-260-a", "--json", str(report))
         self.assertEqual(code, 0, text)
         self.assertIn("ts-260-a - Test ts-260-a: ready for the next stage", text)
         self.assertIn("Reverser, Throttle", text)
         self.assertEqual(list(read_json(report)["inventories"]), ["ts-260-a"])
-
-    def test_scan_blocked_without_search_roots(self):
-        code, text = self.run_cli("scan", "Test Loco Mod", "--no-default-search")
-        self.assertEqual(code, EXIT_FAILED)
-        self.assertIn("BLOCKED", text)
 
     def test_zip_or_outside_folder_is_refused(self):
         archive = self.tmp / "mod.zip"
@@ -182,12 +179,14 @@ class Cli(unittest.TestCase):
         with redirect_stderr(io.StringIO()) as err:
             code, _ = self.run_cli("scan", str(archive))
         self.assertEqual(code, EXIT_FAILED)
-        self.assertIn("Railroader Mods folder", err.getvalue())
+        self.assertIn("asset packs folder", err.getvalue())
 
-    def test_list_shows_steam_loco_mods(self):
+    def test_list_shows_the_stock_steam_locomotives_and_names_the_diesels_as_unsupported(self):
         code, text = self.run_cli("list")
         self.assertEqual(code, 0, text)
-        self.assertIn("Test Loco Mod: ts-260-a (Test ts-260-a)", text)
+        self.assertIn("ls-282-k28t: K-28T Logging Tank Mikado  (pack not found)", text)
+        self.assertIn("ts-260-a: ts-260-a", text)  # the test pack registered as stock by the fixture
+        self.assertIn("Not supported in this release: ld-gp9 (EMD GP9)", text)
         self.assertNotIn("TruckMod", text)
 
     def test_doctor_reports_both_installs_and_ccl(self):
@@ -196,7 +195,7 @@ class Cli(unittest.TestCase):
             self.assertIn(line, text)
 
     def test_convert_reports_where_it_stopped(self):
-        code, text = self.run_cli("convert", "Test Loco Mod")
+        code, text = self.run_cli("convert", "ts-260-a")
         self.assertEqual(code, EXIT_INCOMPLETE, text)
         self.assertIn("extract  done", text)
         self.assertIn("import   done", text)
@@ -210,11 +209,11 @@ class Cli(unittest.TestCase):
         # X39: an error raised mid-run still shows the stages reached and where run.log is
         settings = Path(self.base[1])
         settings.write_text(json.dumps({**read_json(settings), 'keepWorkFiles': True}))
-        self.run_cli("convert", "Test Loco Mod")  # fills the export cache
+        self.run_cli("convert", "ts-260-a")  # fills the export cache
         for anim in (self.tmp / "work" / "_cache" / "assetripper").rglob("Drivers.anim"):
             anim.write_text("AnimationClip:\n  - path: path_0xdeadbeef_x\n")
         with redirect_stderr(io.StringIO()) as err:
-            code, text = self.run_cli("convert", "Test Loco Mod")
+            code, text = self.run_cli("convert", "ts-260-a")
         self.assertEqual(code, EXIT_FAILED)
         self.assertIn("extract  done", text)
         self.assertIn("import   failed", text)

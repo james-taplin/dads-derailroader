@@ -273,8 +273,18 @@ public static partial class CclLocoBuild
         if (port == "whistle.EXT_IN" && Cfg.Placed.Any(p => "C_" + p.Name == control.name && p.Port == port))
         {
             float travel = Get<float>(control, "jointLimitMax") - Get<float>(control, "jointLimitMin");
-            Phys(control, 0, travel, 0, 50, 5, 5, 5, 0, travel * .25f, 100);
-            Line($"rr2dv control response {control.name}: generated whistle given the RR whistle role physics (spring 50, damper 5, mass 5, drag 5)");
+            // keep in step with buildrecord.LEVER_PHYSICS["whistle"] (spring 120, damper 6, mass 1.5, drag 1.5, scroll half the travel)
+            Phys(control, 0, travel, 0, 120, 6, 1.5f, 1.5f, 0, travel * .5f, 100);
+            Line($"rr2dv control response {control.name}: generated whistle given the RR whistle role physics (spring 120, damper 6, mass 1.5, drag 1.5)");
+        }
+        // A generated throttle or reverser (no RR handle) had the core's own joint physics: stiff, with too much inertia (James,
+        // 2026-09-30). The same role physics as RR-handle levers; keep in step with buildrecord.LEVER_PHYSICS.
+        if (Cfg.Placed.Any(p => "C_" + p.Name == control.name && p.Port == port) && (port == "throttle.EXT_IN" || port == "reverser.CONTROL_EXT_IN"))
+        {
+            bool throttle = port == "throttle.EXT_IN";
+            Phys(control, Get<float>(control, "jointLimitMin"), Get<float>(control, "jointLimitMax"), Get<int>(control, "notches"),
+                 throttle ? 50f : 85f, 10f, throttle ? 4f : 6f, throttle ? 3f : 4f, 0, 1f, throttle ? 400f : 200f);
+            Line($"rr2dv control response {control.name}: generated {(throttle ? "throttle" : "reverser")} given the role physics (spring {(throttle ? 50 : 85)}, damper 10, mass {(throttle ? 4 : 6)}, drag {(throttle ? 3 : 4)})");
         }
         // Keep mass, spring and damping together; 0.1.2 changed mass alone and removed drag.
         // DV LeverBase moves SingleNotchAngle x scrollWheelHoverScroll per tap or scroll, so 1 = one notch, as every stepped

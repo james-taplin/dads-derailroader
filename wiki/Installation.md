@@ -30,7 +30,7 @@ In **Settings**, select <kbd>Check</kbd>, correct any missing paths, then <kbd>S
 - **A ZIP was selected:** Extract Car Creator or AssetRipper and select the exact file above.
 - **A game is missing:** Point Settings at the game folder containing `Railroader_Data` or `DerailValley_Data`.
 - **No Derail Valley Mods folder:** Finish the Unity Mod Manager setup, then check CCL.
-- **Work folder too long:** Choose a short path outside either game and the source mod.
+- **Work folder too long:** Choose a short path outside either game.
 
 See [When a conversion stops](https://github.com/james-taplin/derailroader/wiki/When-a-conversion-stops) for messages from later stages.
 </details>

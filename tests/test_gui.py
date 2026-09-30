@@ -28,7 +28,7 @@ class Window(unittest.TestCase):
         self.tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.tmp, True)
         self.m = standard_mod(self.tmp)
-        write_pack(self.m["search"] / "Another Loco Mod" / "a", objects=[loco("ls-460-a", parts=[part("Nope\\x", "y", "z")])],
+        write_pack(self.m["search"] / "ls-460-a", objects=[loco("ls-460-a", parts=[part("Nope\\x", "y", "z")])],
                    assets={"ls-460-a": {"filename": "a.prefab"}})
         settings = self.tmp / "machine.json"
         settings.write_text(json.dumps({**tool_machine(self.tmp), "python": sys.executable}))
@@ -64,13 +64,22 @@ class Window(unittest.TestCase):
         self.until(lambda: self.app.report and self.app.report["_folder"] == folder and not self.app.worker.busy)
         self.root.update()
 
-    def test_lists_mods_and_shows_a_ready_locomotive(self):
+    def test_lists_stock_locomotives_and_shows_a_ready_locomotive(self):
         self.until(lambda: self.app.mods)
         self.assertEqual(self.app.chips["railroader"].cget("bg"), self.gui.COLOURS["ok"])
-        self.assertIn("2 mods, 2 steam locomotives", self.app.mods_status.cget("text"))
-        self.select("Test Loco Mod", "ts-260-a")
+        self.assertIn("2 stock steam locomotives", self.app.mods_status.cget("text"))
+        self.select("ts-260-a", "ts-260-a")
         self.assertEqual(self.app.facts["tender"].cget("text"), "tt-260-a")
         self.assertEqual(str(self.app.convert_button.cget("state")), "normal")
+
+    def test_whistle_option_lists_the_whistles_and_defaults_to_the_definitions(self):
+        self.select("ts-260-a", "ts-260-a")
+        values = list(self.app.whistle.cget("values"))
+        self.assertEqual(values[0], "(default: wh-test, from definition)")
+        self.assertIn("Whistle wh-other (wh-other)", values)
+        self.assertIsNone(self.app.whistle_ids[self.app.whistle.get()])  # nothing chosen: the default
+        self.app.whistle.set("Whistle wh-other (wh-other)")
+        self.assertEqual(self.app.whistle_ids[self.app.whistle.get()], "wh-other")
 
     def test_geometry_box_lists_fitting_reviews_and_browse_starts_in_reports(self):
         from rr2dv import installs
@@ -78,12 +87,12 @@ class Window(unittest.TestCase):
         from rr2dv.rrmod import Index, inventory
         c = self.app.c
         rr = installs.railroader(c.machine)
-        fp = fingerprint(inventory(Index(installs.mod_in_railroader(rr, "Test Loco Mod"), search_roots(rr, c.machine.search_roots())), "ts-260-a"))
+        fp = fingerprint(inventory(Index(installs.stock_pack(rr, "ts-260-a"), search_roots(rr)), "ts-260-a"))
         path = c.reports() / "20260929-192000-ts" / "geometry-review-proposed.json"
         path.parent.mkdir(parents=True)
         path.write_text(json.dumps({"schema": 1, "inputFingerprint": fp, "vehicles": {"ts-260-a": {"EndBeamProbeHeight": {
             "value": [1.0, 1.2], "unit": "m", "basis": "measured", "evidence": ["survey"]}}}}))
-        self.select("Test Loco Mod", "ts-260-a")
+        self.select("ts-260-a", "ts-260-a")
         labels = list(self.app.geometry_box.cget("values"))
         self.assertEqual(len(labels), 1)
         self.assertEqual(self.app.geometry_choices[labels[0]], str(path))
@@ -91,7 +100,7 @@ class Window(unittest.TestCase):
         self.assertEqual(self.app._reports_folder(), c.reports())
 
     def test_blocked_locomotive_cannot_be_converted(self):
-        self.select("Another Loco Mod", "ls-460-a")
+        self.select("ls-460-a", "ls-460-a")
         self.assertEqual(str(self.app.convert_button.cget("state")), "disabled")
         self.assertIn("must be fixed", self.app.convert_hint.cget("text"))
 
@@ -99,8 +108,8 @@ class Window(unittest.TestCase):
         self.until(lambda: self.app.mods)
         self.app.search.set("460")
         self.root.update()
-        self.assertEqual(self.app.tree.get_children(), ("group::mods",))
-        self.assertEqual(self.app.tree.get_children("group::mods"), ("loco::Another Loco Mod::ls-460-a",))
+        self.assertEqual(self.app.tree.get_children(), ("group::stock",))
+        self.assertEqual(self.app.tree.get_children("group::stock"), ("loco::ls-460-a::ls-460-a",))
 
     def test_settings_check_fills_found_path(self):
         candidate = self.tmp / "Unity 2019.4.40f1" / "Unity.exe"
@@ -127,7 +136,7 @@ class Window(unittest.TestCase):
         original = messagebox.showerror
         messagebox.showerror = lambda *a, **k: shown.append(a[1])
         self.addCleanup(setattr, messagebox, "showerror", original)
-        self.select("Test Loco Mod", "ts-260-a")
+        self.select("ts-260-a", "ts-260-a")
         self.app.convert()
         self.until(lambda: not self.app.worker.busy and self.app.last_run, timeout=120)
         self.assertIn("synthetic review failure", shown[0])
@@ -135,7 +144,7 @@ class Window(unittest.TestCase):
         self.assertIsNotNone(self.app._pump_id)  # the window keeps working
 
     def test_convert_shows_each_stage(self):
-        self.select("Test Loco Mod", "ts-260-a")
+        self.select("ts-260-a", "ts-260-a")
         self.app.convert()
         self.until(lambda: not self.app.worker.busy and self.app.last_run, timeout=120)
         self.root.update()
@@ -146,7 +155,7 @@ class Window(unittest.TestCase):
         self.assertFalse((self.app.last_run / 'build/vehicle-record.json').exists())
 
     def test_convert_with_the_radius_installs_after_the_notice(self):
-        self.select("Test Loco Mod", "ts-260-a")
+        self.select("ts-260-a", "ts-260-a")
         self.app.wheel.set("0.5988")
         asked = []
 
@@ -170,7 +179,7 @@ class Window(unittest.TestCase):
 
     def test_stopped_conversion_keeps_its_run_folder(self):
         # X39: after a failure inside a run, Open run folder works and the error names run.log
-        self.select("Test Loco Mod", "ts-260-a")
+        self.select("ts-260-a", "ts-260-a")
         self.app.convert()
         self.until(lambda: not self.app.worker.busy and self.app.last_run, timeout=120)
         for anim in (self.tmp / "work" / "_cache" / "assetripper").rglob("Drivers.anim"):
@@ -188,10 +197,10 @@ class Window(unittest.TestCase):
         self.assertIn(f"Run log: {self.app.last_run / 'run.log'}", shown[0])
         self.assertEqual(self.app.stage_rows["import"].cget("text"), "\u2717")
 
-    def test_notice_opens_inside_the_app_and_needs_ten_clicks(self):
+    def test_notice_opens_inside_the_app_and_needs_one_click(self):
         import threading
         answer = {"event": threading.Event(), "value": None}
-        self.app._ask("INSERT_MOD_NAME", ["SOURCE_1"], answer)
+        self.app._ask("INSERT_PACK_NAME", ["SOURCE_1"], answer)
         self.root.update()
         top = [w for w in self.root.winfo_children() if isinstance(w, tk.Toplevel)][-1]
         agree = next(b for b in top.winfo_children()[1].winfo_children() if b.cget("text") == "I agree")

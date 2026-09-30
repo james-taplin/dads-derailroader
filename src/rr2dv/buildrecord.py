@@ -15,25 +15,33 @@ Railroader conventions used (checked against our G-29/C-21/S-16 profiles):
 """
 from __future__ import annotations
 
+import json
 import math
 import re
 
 from . import wheels
 from .record import LB_KG, env
 
+# Game test 2026-09-30 (James, stock locos): throttle, cut-off (reverser) and whistle were stiff with too much inertia, the
+# throttle and cut-off had far too many notches, and the whistle must snap back to zero under its spring yet reach full within
+# a second of holding the key. So: 11 throttle and 21 reverser notches; mass, damper and drag cut to a quarter or less; the whistle
+# spring 120 with mass 1.5 and drag 1.5, and its key scroll half the travel. Starting values again (board X42), tuned in game;
+# Rr2dvInteractions.RrControlResponse carries the same numbers for generated levers (tests/test_vanilla_controls.py checks they agree).
+# Earlier values (G-29's accepted profile, James 2026-09-28): throttle 21/50/15/15/10, reverser 41/85/15/30/15, whistle 50/5/5/5.
 # Starting lever joint physics per control role, from the last user-accepted G-29 profile (tooling/locos/g29/profile/
 # G29Config.cs RrLevers). Board X42: accepted builds are evidence, not templates, so these are analogue estimates to be
 # checked in game per loco (CTRL-01); notch counts divide each lever's own measured sweep. Order: notches, spring, damper,
 # mass, drag, angularDrag, scroll, scrollSpring; the whistle's scroll is a quarter of its sweep (scrollAngleFraction).
 G29 = "tooling/locos/g29/profile/G29Config.cs"
 LEVER_PHYSICS = {
-    "throttle": (21, 50, 15, 15, 10, 0, 1, 400, None),
-    "reverser": (41, 85, 15, 30, 15, 0, 1, 200, None),
+    "throttle": (11, 50, 10, 4, 3, 0, 1, 400, None),
+    "reverser": (21, 85, 10, 6, 4, 0, 1, 200, None),
     "trainBrake": (11, 85, 15, 30, 16, 0, 1, 100, None),
     "indBrake": (11, 65, 0, 30, 16, 0, 1, 100, None),
-    "whistle": (0, 50, 5, 5, 5, 0, 1, 100, 0.25),
+    "whistle": (0, 120, 6, 1.5, 1.5, 0, 1, 100, 0.5),
     "toggle": (2, 85, 15, 10, 15, 0, 1, 0, None),
 }
+CONTROL_KINDS = frozenset({"RadialControl", "PrefabControl", "ToggleAnimation", "LoadAnimation", "LoadTarget"})
 # Railroader RadialControl purpose -> (role, DV port, ControlControlsWizard type, toggle, label)
 PURPOSES = {
     "throttle": ("throttle", "throttle.EXT_IN", 0, False, None),
@@ -93,7 +101,7 @@ def control_class(port: str) -> str:
 
 
 # Driving controls a loco needs even when Railroader models no handle for them: a generated backhead lever instead.
-DRIVING = [("Throttle", "throttle.EXT_IN", 0, 21), ("Reverser", "reverser.CONTROL_EXT_IN", 1, 41),
+DRIVING = [("Throttle", "throttle.EXT_IN", 0, 11), ("Reverser", "reverser.CONTROL_EXT_IN", 1, 21),
            ("Train brake", "brake.EXT_IN", 2, 11), ("Independent brake", "indBrake.EXT_IN", 3, 11),
            ("Whistle", "whistle.EXT_IN", 14, 0), ("Cylinder cocks", "cylinderCock.EXT_IN", 22, 2),
            ("Bell", "bellControl.EXT_IN", 15, 2)]
@@ -129,6 +137,13 @@ def _plain(n):
     if isinstance(n, list):
         return [_plain(v) for v in n]
     return n
+
+
+def _rotate(q: list[float], v: list[float]) -> list[float]:
+    """Rotate v by the quaternion q = [x, y, z, w]."""
+    x, y, z, w = q
+    t = [2 * (y * v[2] - z * v[1]), 2 * (z * v[0] - x * v[2]), 2 * (x * v[1] - y * v[0])]
+    return [v[0] + w * t[0] + (y * t[2] - z * t[1]), v[1] + w * t[1] + (z * t[0] - x * t[2]), v[2] + w * t[2] + (x * t[1] - y * t[0])]
 
 
 def _extra(c: dict) -> dict:
@@ -484,6 +499,13 @@ def fitted_positions(points, door, avoid, count) -> tuple[list[tuple[float, floa
     return best, best_tier
 
 
+def _control_anchor(ov: dict, name: str) -> list[float] | None:
+    """A control's own anchor by name (a RadialControl may share its name with a steam or sound component)."""
+    named = [a for a in ov.get("anchors") or [] if a["name"] == name]
+    a = next((a for a in named if a.get("kind") in CONTROL_KINDS), None) or (named[-1] if named else None)
+    return a["position"] if a and a.get("resolved") and a.get("position") else None
+
+
 def _anchor(anchors: dict, name: str) -> list[float] | None:
     a = anchors.get(name)
     return a["position"] if a and a.get("resolved") and a.get("position") else None
@@ -600,7 +622,16 @@ class _Builder:
 
     @staticmethod
     def anchors(v: dict) -> dict:
-        return {a["name"]: a for a in v.get("anchors") or []}
+        """Anchor by component name. Railroader names a control after what it works ('Whistle' the RadialControl beside 'Whistle'
+        the steam component), and the later entry used to win: K-28T's safety-valve and whistle steam were placed at the cab
+        handle (board 2026-09-30: steam out of the cab roof). A control never replaces another kind's anchor of the same name."""
+        out: dict = {}
+        for a in v.get("anchors") or []:
+            old = out.get(a["name"])
+            if old is not None and a.get("kind") in CONTROL_KINDS and old.get("kind") not in CONTROL_KINDS:
+                continue
+            out[a["name"]] = a
+        return out
 
     @staticmethod
     def bound_paths(v: dict, key: str) -> list[str]:
@@ -862,6 +893,7 @@ class _Builder:
         cab_y = seat_at[1] if seat_at else door[1] + 0.5
         cfg["CabLightProbe"] = env(_r([0, cab_y + 1.0, cab_z]), "m", "DV_choice", "1 m above the crew seat; the core raycasts up to the roof")
         cfg["RenderCabLight"] = env(_r([0, cab_y + 1.0, cab_z]), "m", "DV_choice", RENDER)
+        self._ensure_gauges(cfg, comps, lid, back_z)
         gauges = [c["name"] for c in comps if c["kind"] == "Gauge" and _extra(c).get("style") == "BoilerPressure"]
         if gauges:
             cfg["MainPressureGauge"] = gauges[0]
@@ -1221,6 +1253,94 @@ class _Builder:
         self.choose("number plates stay where Custom Car Loader puts them: no road-number decal on each side")
         return []
 
+    GAUGE_SIZE_M = 0.19  # the core's dial diameter at RR scale 1 (CclLocoBuild.BuildInterior)
+
+    def _ensure_gauges(self, cfg: dict, comps: list[dict], lid: str, back_z: float | None = None) -> None:
+        """Every converted loco gets the normal Derail Valley gauges (James, 2026-09-30): boiler pressure, a two-needle brake gauge
+        that reads brake pipe (and cylinder), a main-reservoir gauge and a speedometer. RR's 4-needle Quadruplex becomes DV's
+        main-reservoir/equalizing gauge (the core makes no HUD reading of it); a style the model lacks is generated beside the
+        nearest brake gauge (else the boiler gauge), on the same panel and facing, away from its neighbours. Generated gauges are
+        estimates: check their position in game."""
+        value = cfg["Components"]["value"]
+        gauges = [c for c in value if c["kind"] == "Gauge"]
+        if not gauges:
+            self.choose("no gauge in the definition: none generated (no panel position to place them on)")
+            return
+
+        def style(c):
+            return _extra(c).get("style")
+
+        def put_style(c, new):
+            extra = _extra(c)
+            extra["style"] = new
+            c["extra"] = json.dumps(extra, separators=(",", ":"))
+
+        for c in gauges:
+            if style(c) == "Quadruplex":
+                put_style(c, "DualReservoirMainEq")
+                self.choose(f"gauge '{c['name']}': RR's 4-needle Quadruplex is built as Derail Valley's two-needle main-reservoir/"
+                            "equalizing gauge (brake-pipe and main-reservoir HUD readings)")
+        have = {style(c) for c in gauges}
+        brake = [c for c in gauges if style(c) in ("DualBrakeCylinderLine", "DualReservoirMainEq")]
+        boiler = [c for c in gauges if style(c) == "BoilerPressure"]
+
+
+        def faces_backhead(c):  # the dial looks along the car (toward the crew): a side-facing gauge has no panel to extend
+            return abs(_rotate(_plain(c["rot"]), [0.0, 0.0, 1.0])[2]) > 0.7
+
+        panel = [c for c in gauges if faces_backhead(c)]
+        anchor = next((c for c in brake + boiler + gauges if c in panel), None)
+        for want in ("DualBrakeCylinderLine", "DualReservoirMainEq", "Speedometer100"):
+            if want in have:
+                continue
+            if anchor is None:  # every source gauge faces sideways (K-35): a row on the backhead plate, facing the crew
+                if back_z is None:
+                    self.choose(f"no {want} gauge in the model and no backhead plane to place one on: none generated")
+                    continue
+                plain = [_plain(c["pos"]) for c in value if c["kind"] == "Gauge"]
+                y = round(sum(p[1] for p in plain) / len(plain), 4)
+                size = self.GAUGE_SIZE_M * 0.6
+                others = [(_plain(c["pos"]), self.GAUGE_SIZE_M * _plain(c["scale"])[0]) for c in value if c["kind"] == "Gauge"]
+                row = [[x, y, round(back_z - 0.03, 4)] for x in (0.3, -0.3, 0.55, -0.55, 0.8, -0.8)]
+                pos = next((p for p in row if min(math.dist(p, o) - 0.5 * (size + osz) for o, osz in others) >= 0.02), row[0])
+                evidence = (f"the model's gauges all face sideways, so on the backhead plate (z {round(back_z, 3)} m) at the gauges' mean "
+                            f"height, facing the crew, clear of the others; Derail Valley's normal {want} gauge (the model has none)")
+                synthetic = {"kind": "Gauge", "name": f"rr2dv generated {want}", "parentPath": "",
+                             "extra": json.dumps({"style": want, "enabled": True}, separators=(",", ":")),
+                             "pos": env(pos, "m", "analogue_estimate", evidence), "rot": [0.0, 1.0, 0.0, 0.0], "scale": [0.6, 0.6, 1.0]}
+                value.append(synthetic)
+                cfg["Components"]["basis"] = "derived"
+                cfg["Components"]["evidence"].append(evidence)
+                comps.append(_plain(synthetic))
+                have.add(want)
+                self.choose(f"no {want} gauge in the model and its gauges face sideways: generated one on the backhead plate at {pos} m "
+                            "(estimated position: check it in game)")
+                continue
+            a_pos, a_rot, a_scale = _plain(anchor["pos"]), _plain(anchor["rot"]), _plain(anchor["scale"])
+            scale = list(a_scale)
+            size = self.GAUGE_SIZE_M * scale[0]
+            step = 1.1 * size
+            ax = _rotate(a_rot, [1.0, 0.0, 0.0])
+            others = [(_plain(c["pos"]), self.GAUGE_SIZE_M * _plain(c["scale"])[0]) for c in value if c["kind"] == "Gauge"]
+            options = [[a_pos[i] + k * step * ax[i] * sign for i in range(3)] for k in (1, 2, 3, 4) for sign in (1, -1)]
+
+            def gap(p):  # the smallest clearance between dial edges (negative: the dials overlap)
+                return min(math.dist(p, o) - 0.5 * (size + osz) for o, osz in others)
+
+            best = next((p for p in options if gap(p) >= 0.02), None) or max(options, key=gap)
+            evidence = (f"RR gauge '{anchor['name']}' at {_r(a_pos, 3)} m: same panel and facing, {_r(math.dist(best, a_pos), 3)} m "
+                        f"to the side with the most clearance; Derail Valley's normal {want} gauge (the model has none)")
+            synthetic = {"kind": "Gauge", "name": f"rr2dv generated {want}", "parentPath": anchor.get("parentPath", ""),
+                         "extra": json.dumps({"style": want, "enabled": True}, separators=(",", ":")),
+                         "pos": env(_r(best), "m", "analogue_estimate", evidence), "rot": a_rot, "scale": scale}
+            value.append(synthetic)
+            cfg["Components"]["basis"] = "derived"
+            cfg["Components"]["evidence"].append(evidence)
+            comps.append(_plain(synthetic))
+            have.add(want)
+            self.choose(f"no {want} gauge in the model: generated one beside '{anchor['name']}' at {_r(best, 3)} m "
+                        "(estimated position: check it in game)")
+
     def _cylinder_cocks(self, cfg: dict, comps: list[dict], lid: str) -> None:
         """RR's CylinderCock anchor sits on the centreline and RR spawns the jets at +-radius (G-29 profile note)."""
         env_comps = cfg["Components"]
@@ -1281,7 +1401,7 @@ class _Builder:
                 # Some mods put interaction anchors in car space, separate from the animated handle.
                 # Accept only one animated hierarchy, within that control's source interaction radius.
                 roots = [p for p in bound if p and not any(p.startswith(q + "/") for q in bound if q and q != p)]
-                anchor = _anchor(self.anchors(ov), c["name"])
+                anchor = _control_anchor(ov, c["name"])
                 nodes = self.nodes(ov)
                 reach = e.get("radius")
                 if len(roots) == 1 and anchor and roots[0] in nodes and isinstance(reach, (int, float)) and reach > 0:

@@ -95,7 +95,7 @@ def _export_signature(path: Path) -> str:
 
 def key(inv: dict, exports: dict, car_creator: Path) -> str:
     from .pipeline import fingerprint
-    data = {"version": __version__, "input": fingerprint(inv), "extra": inv.get("extra_files", []),
+    data = {"version": __version__, "input": fingerprint(inv),
             "exports": sorted((k, Path(v["path"]).name, _export_signature(Path(v["path"]))) for k, v in exports.items()),
             "carCreator": sha256_file(car_creator), "scripts": _scripts()}
     return hashlib.sha256(json.dumps(data, sort_keys=True).encode()).hexdigest()[:24]

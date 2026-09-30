@@ -27,15 +27,14 @@ class Logs(unittest.TestCase):
         self.addCleanup(applog.reset)
 
     def test_run_log_tells_the_whole_run_in_order(self):
-        image = {"kind": "CustomImage", "name": "logo", "textureName": "nosuchmod.logo.png"}
         (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [
-            loco("ts-260-a", tender="tt-260-a", parts=[part("Test Loco Mod\\parts", "bell", "bell1")], extra_components=[image]),
+            loco("ts-260-a", tender="tt-260-a", parts=[part("ts-260-a\\parts", "bell", "bell1")]),
             tender("tt-260-a", truck="test-truck-2s")]}))
         out = convert(self.m["mod"], self.machine)
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)
         text = (out.run.path / "run.log").read_text(encoding="utf-8")
         for expected in ("rr2dv ", "Python ", "Railroader: ", "Derail Valley: ", "input: ", "[locate] started",
-                         "[link] done", "warning missing-texture: ts-260-a: image 'nosuchmod.logo.png'", "Unity result: ", "review: WheelRadius", "[build] needs_answer",
+                         "[link] done", "Unity result: ", "review: WheelRadius", "[build] needs_answer",
                          "run incomplete"):
             self.assertIn(expected, text)
         stages = [line.split("[")[1].split("]")[0] for line in text.splitlines() if "] started" in line]

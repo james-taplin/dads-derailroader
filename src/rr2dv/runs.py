@@ -132,10 +132,4 @@ def stage_inputs(run: Run, inventory: dict, index) -> dict:
         for f in rec["files"]:
             src = next(p for p in pack.files.values() if p.name == f["name"])
             copy_checked(src, dest / f["name"], f["sha256"], rec["name"])
-    for rec in inventory.get("extra_files", []):  # optional component groups, images
-        target = run.path / "inputs" / rec["root"] / rec["path"]
-        if target.exists():
-            raise RuntimeError(f"two inputs map to {target}")
-        target.parent.mkdir(parents=True, exist_ok=True)
-        copy_checked(roots[rec["root"]] / rec["path"], target, rec["sha256"], rec["role"])
     return {"files": staged}

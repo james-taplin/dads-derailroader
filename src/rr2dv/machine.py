@@ -1,7 +1,7 @@
 """Per-machine settings (tool locations) and the `doctor` preflight check.
 
 Keys match tooling/machine.local.example.json, so an existing machine.local.json loads unchanged. The app adds
-`workRoot` (where run folders go), `searchRoots` (extra folders to look in for dependencies) and `steamRoots`.
+`workRoot` (where run folders go) and `steamRoots`.
 `railroader` and `game`/`mods` (Derail Valley) are optional: without them both installs are found through Steam.
 """
 from __future__ import annotations
@@ -12,6 +12,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+from . import stock
 from .jsonio import read_json
 
 TOOL_KEYS = ("python", "unity", "unityPySitePackages", "carCreator", "mods", "game", "ilspy", "assetRipper", "railroader")
@@ -60,18 +61,6 @@ class Machine:
     @property
     def work_root(self) -> Path:
         return self.path("workRoot") or default_work_root()
-
-    def search_roots(self) -> list[Path]:
-        """Extra folders from `searchRoots`; the Railroader install's own folders are added by the pipeline."""
-        listed = self.values.get("searchRoots", [])
-        if isinstance(listed, str):
-            listed = [listed]
-        roots = [Path(p) for p in listed if isinstance(p, str) and p.strip()] if isinstance(listed, list) else []
-        unique = []
-        for r in roots:
-            if r not in unique:
-                unique.append(r)
-        return unique
 
 
 def load(path: Path | None = None) -> Machine:
@@ -136,16 +125,18 @@ def doctor(machine: Machine) -> list[Check]:
         try:
             found = find(machine)
             checks.append(Check("ok", f"{name} install", f"{found.root} ({'from settings' if found.source == 'settings' else 'found via Steam'})"))
-            checks.append(Check("ok", f"{name} Mods folder", str(found.mods)))
+            if name == "Railroader":
+                present = [n for n in stock.STEAM if (found.asset_packs / n).is_dir()]
+                checks.append(Check("ok" if len(present) == len(stock.STEAM) else "warn", "Railroader stock locomotives",
+                                    f"{len(present)} of {len(stock.STEAM)} stock steam locomotive packs found in {found.asset_packs}"))
+            else:
+                checks.append(Check("ok", f"{name} Mods folder", str(found.mods)))
             if name == "Derail Valley":
                 has_ccl = installs.ccl_installed(found)
                 checks.append(Check("ok" if has_ccl else "fail", "Custom Car Loader",
                                     f"installed in {found.mods}" if has_ccl else f"{installs.CCL_MOD_ID} not found in {found.mods}; install it"))
         except installs.InstallError as e:
             checks.append(Check("fail", f"{name} install", str(e)))
-
-    for root in machine.search_roots():
-        checks.append(Check("ok" if root.is_dir() else "warn", "search root", str(root)))
 
     work = machine.work_root
     try:

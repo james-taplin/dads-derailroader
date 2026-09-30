@@ -28,7 +28,7 @@ class Import(unittest.TestCase):
                                       "carCreator": str(self.cc), "unity": str(fake_unity(self.tmp / "tools"))})
 
     def convert(self):
-        out = convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        out = convert(self.m["mod"], self.machine)
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)
         return out.run.path, out.run.path / "unity" / "project"
 
@@ -91,7 +91,7 @@ class Import(unittest.TestCase):
             anim.write_text("AnimationClip:\n  - path: path_0xdeadbeef_x\n")
         # both the loco's and the tender's clip maps name Drivers, so the absent-binding rule does not apply (X39)
         with self.assertRaisesRegex(ProjectError, "resolve_clip_paths.*ts-260-a.prefab, PrefabInstance/tt-260-a.prefab name it.*clips-main-diagnosis.json"):
-            convert(self.m["mod"], self.machine, search=[self.m["search"]])
+            convert(self.m["mod"], self.machine)
         run = sorted((self.tmp / "work").glob("2*"))[-1]
         diagnosis = read_json(run / "import" / "clips-main-diagnosis.json")["clips"]["AnimationClip/Drivers.anim"]
         self.assertEqual(diagnosis["bindings"], 1)
@@ -103,7 +103,7 @@ class Import(unittest.TestCase):
     def test_missing_carcreator_is_reported(self):
         self.machine.values["carCreator"] = str(self.tmp / "nope.unitypackage")
         with self.assertRaisesRegex(FileNotFoundError, "carCreator"):
-            convert(self.m["mod"], self.machine, search=[self.m["search"]])
+            convert(self.m["mod"], self.machine)
 
 
 class Pieces(unittest.TestCase):

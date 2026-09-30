@@ -1,6 +1,7 @@
 """Command line: `rr2dv doctor`, `rr2dv list`, `rr2dv scan`, `rr2dv convert`.
 
-Mods are named as they appear in the Railroader Mods folder (W25): `rr2dv scan "Some Loco Mod"`."""
+Locomotives are named by their Railroader asset-pack name: `rr2dv scan ls-282-k28t`. Only the 21 stock steam locomotives
+are accepted (see stock.py)."""
 from __future__ import annotations
 
 import argparse
@@ -8,7 +9,7 @@ import sys
 from pathlib import Path
 
 from . import review
-from . import __version__, applog, installs, machine as machine_mod
+from . import __version__, applog, installs, machine as machine_mod, stock
 from .consent import ConsentError
 from .appmodel import scan_report
 from .jsonio import write_json
@@ -18,11 +19,6 @@ from .rrmod import Index, blocking, inventory
 from .safety import UnsafePath
 
 MARK = {"ok": "ok  ", "warn": "WARN", "fail": "FAIL", "skip": "--  ", "error": "ERROR", "warning": "WARN", "info": "info"}
-
-
-def _search_roots(args, machine, rr: installs.Install) -> list[Path]:
-    extra = [Path(p) for p in args.search] + [r for r in machine.search_roots() if r not in args.search]
-    return extra if args.no_default_search else search_roots(rr, extra)
 
 
 def cmd_doctor(args) -> int:
@@ -47,33 +43,26 @@ def cmd_gui(args) -> int:
 def cmd_list(args) -> int:
     machine = machine_mod.load(args.machine)
     rr = installs.railroader(machine)
-    found = 0
-    packs = sorted(p for p in rr.asset_packs.iterdir() if p.is_dir()) if rr.asset_packs.is_dir() else []
-    for heading, folders in (("Mods", sorted((p for p in rr.mods.iterdir() if p.is_dir()), key=lambda p: p.name.casefold())),
-                             ("Base game (Railroader asset packs; give the full path to convert)", packs)):
-        lines = []
-        for folder in folders:
-            locos = Index(folder).steam_locomotives(input_only=True)
-            if locos:
-                names = ", ".join(f"{o['identifier']} ({(o.get('metadata') or {}).get('name') or '?'})" for _, o in locos)
-                lines.append(f"  {folder.name}: {names}")
-        if lines:
-            print(f"{heading}:\n" + "\n".join(lines))
-            found += len(lines)
-    print(f"\n{found} folder(s) with steam locomotives in {rr.mods} and {rr.asset_packs}" if found
-          else f"No steam locomotives found in {rr.mods} or {rr.asset_packs}")
+    present = 0
+    print(f"Stock steam locomotives (Railroader asset packs in {rr.asset_packs}):")
+    for pack, name in stock.STEAM.items():
+        here = (rr.asset_packs / pack).is_dir()
+        present += here
+        print(f"  {pack}: {name}" + ("" if here else "  (pack not found)"))
+    print("\nNot supported in this release: " + ", ".join(f"{p} ({n})" for p, n in stock.DIESEL.items()))
+    print(f"\n{present} of {len(stock.STEAM)} stock steam locomotives found")
     return 0
 
 
 def cmd_scan(args) -> int:
     machine = machine_mod.load(args.machine)
     rr = installs.railroader(machine)
-    target = installs.mod_in_railroader(rr, args.input)
-    report = _scan(target, _search_roots(args, machine, rr), not args.no_hash)
+    target = installs.stock_pack(rr, args.input)
+    report = _scan(target, search_roots(rr), not args.no_hash)
 
     for issue in report["index_issues"]:
         print(f"[{MARK[issue['severity']]}] {issue['message']}")
-    print(f"{report['packs_indexed']} packs indexed ({len(report['roots']) - 1} search folder(s)).")
+    print(f"{report['packs_indexed']} packs indexed.")
     for other in report["other_locomotives"]:
         print(f"  skipped {other['id']}: {other['kind']} (only steam locomotives are converted)")
     if not report["steam_locomotives"]:
@@ -88,14 +77,10 @@ def cmd_scan(args) -> int:
               f"parts: {len(inv['parts'])}; packs: {', '.join(p['name'] for p in inv['packs'])}")
         purposes = sorted({c['purpose'] for c in inv['controls']['radial'] if c.get('purpose')})
         print(f"  controls: {', '.join(purposes) or 'none'}; toggles: {len(inv['controls']['toggles'])}")
-        print(f"  uses work from: {', '.join(m['id'] for m in inv['mods']) or 'none'}")
-        for dep in inv.get("railroader_only", []):
-            print(f"  uses {dep['id']} in Railroader only ({'installed' if dep['installed'] else 'not found'}); not needed in Derail Valley")
-        for g in inv["optional_groups"]:
-            print(f"  optional group for {g['target']}: {g['group_name']} ({g['file']['path']})")
-        found = sum(1 for tex in inv["textures"] if tex["file"])
-        if inv["textures"]:
-            print(f"  images: {found} of {len(inv['textures'])} found")
+        whistle = inv.get("whistle") or {}
+        if whistle.get("id"):
+            print(f"  whistle: {whistle['id']} ({whistle.get('name') or '?'}), from {whistle['source']}; "
+                  f"{len(whistle.get('options', []))} available: {', '.join(o['id'] for o in whistle.get('options', []))}")
         audio = inv["audio"]
         print(f"  sounds: vanilla {audio['basis'] or '(choose S060 or S282)'} - {audio['rule']}")
         for issue in inv["issues"]:
@@ -109,10 +94,10 @@ def cmd_scan(args) -> int:
 
 def cmd_convert(args) -> int:
     machine = machine_mod.load(args.machine)
-    extra = [Path(p) for p in args.search] + machine.search_roots()
     try:
-        outcome = convert(args.input, machine, args.loco, extra, args.audio, args.livery, args.wheel_radius,
-                          geometry_review=args.geometry_review, prebuild_review=args.review_file or review.cli)
+        outcome = convert(args.input, machine, args.loco, args.audio, args.livery, args.wheel_radius,
+                          geometry_review=args.geometry_review, prebuild_review=args.review_file or review.cli,
+                          whistle=args.whistle)
     except Exception as e:  # stopped inside a run: show how far it got and where its log is, then report the error
         _print_run(getattr(e, "rr2dv_run", None))
         raise
@@ -123,8 +108,7 @@ def cmd_convert(args) -> int:
     if radius:  # the rerun command, with every answer already given, for the user to check and run
         parts = ["rr2dv"] + (["--machine", f'"{args.machine}"'] if args.machine else []) + \
                 ["convert", f'"{args.input}"'] + (["--loco", args.loco] if args.loco else []) + \
-                (["--livery", f'"{args.livery}"'] if args.livery else []) + (["--audio", args.audio] if args.audio else []) + \
-                [f"--search \"{s}\"" for s in args.search] + \
+                (["--livery", f'"{args.livery}"'] if args.livery else []) + (["--audio", args.audio] if args.audio else []) + (["--whistle", args.whistle] if args.whistle else []) + \
                 (["--geometry-review", f'"{args.geometry_review}"'] if args.geometry_review else []) + \
                 ["--wheel-radius", f"{radius['candidate']:.4f}"]
         print("\nAfter checking the candidate against the tyre in the model, convert again with:\n  " + " ".join(parts))
@@ -140,31 +124,27 @@ def _print_run(run) -> None:
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="rr2dv", description="Convert Railroader steam locomotive mods into Derail Valley CCL packs.")
+    parser = argparse.ArgumentParser(prog="rr2dv", description="Convert Railroader's stock steam locomotives into Derail Valley CCL packs.")
     parser.add_argument("--version", action="version", version=f"rr2dv {__version__}")
     parser.add_argument("--machine", type=Path, help=f"settings file (default {machine_mod.default_path()})")
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("doctor", help="check that the tools and both game installs are in place").set_defaults(func=cmd_doctor)
-    sub.add_parser("list", help="list the steam locomotive mods in the Railroader Mods folder").set_defaults(func=cmd_list)
+    sub.add_parser("list", help="list the stock steam locomotives this edition converts").set_defaults(func=cmd_list)
     sub.add_parser("gui", help="open the desktop app").set_defaults(func=cmd_gui)
 
-    def with_search(p, optional_default=True):
-        p.add_argument("--search", action="append", default=[], metavar="DIR", help="extra folder to look in for dependencies (repeatable)")
-        if optional_default:
-            p.add_argument("--no-default-search", action="store_true", help="do not search the Railroader Mods folder and base-game packs")
-
-    scan = sub.add_parser("scan", help="list the steam locomotives in a mod and what each one needs (read-only)")
-    scan.add_argument("input", help="mod folder name in the Railroader Mods folder")
+    scan = sub.add_parser("scan", help="show what a stock steam locomotive needs (read-only)")
+    scan.add_argument("input", help="stock locomotive pack name, e.g. ls-282-k28t")
     scan.add_argument("--json", metavar="FILE", help="also write the full report as JSON")
     scan.add_argument("--no-hash", action="store_true", help="skip file hashes (faster)")
-    with_search(scan)
     scan.set_defaults(func=cmd_scan)
 
-    conv = sub.add_parser("convert", help="convert one steam locomotive into your Derail Valley Mods folder")
-    conv.add_argument("input", help="mod folder name in the Railroader Mods folder (never modified)")
-    conv.add_argument("--loco", help="locomotive identifier, when the mod has more than one")
-    conv.add_argument("--livery", help="livery name to use (default: the mod's first)")
+    conv = sub.add_parser("convert", help="convert one stock steam locomotive into your Derail Valley Mods folder")
+    conv.add_argument("input", help="stock locomotive pack name, e.g. ls-282-k28t (never modified)")
+    conv.add_argument("--loco", help="locomotive identifier (the pack's own; normally not needed)")
+    conv.add_argument("--livery", help="livery name to use (default: the locomotive's first)")
+    conv.add_argument("--whistle", metavar="ID", help="Railroader whistle to place on the locomotive, e.g. wh-3-std "
+                      "(default: the one its definition names, else wh-3-std; `rr2dv scan` lists them)")
     conv.add_argument("--audio", choices=["S060", "S282"],
                       help="vanilla Derail Valley sound set to use instead of the boiler-size rule")
     conv.add_argument("--wheel-radius", type=float, metavar="METRES",
@@ -172,7 +152,6 @@ def build_parser() -> argparse.ArgumentParser:
     conv.add_argument("--geometry-review", type=Path, metavar="FILE",
                       help="reviewed per-car end-beam band JSON, tied to the exact source fingerprint")
     conv.add_argument("--review-file", type=Path, help="saved pre-build answers tied to this source; otherwise review interactively")
-    with_search(conv, optional_default=False)
     conv.set_defaults(func=cmd_convert)
     return parser
 

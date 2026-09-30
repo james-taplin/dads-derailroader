@@ -15,7 +15,7 @@ from typing import Sequence
 
 from typing import Callable
 
-from . import (assetripper, audit, beamreview, build, buildrecord, consent, geometryreview, installs, probeinput, projectcache, publish, record,
+from . import (assetripper, audit, beamreview, build, buildrecord, consent, geometryreview, installs, probeinput, projectcache, publish, record, stock,
                unityproject, unityrun, workspace, rebuild, review)
 from .jsonio import read_json, write_json
 from .machine import Machine, check_work_root
@@ -33,15 +33,17 @@ class Outcome:
     run: Run | None = None
 
 
-def search_roots(rr: installs.Install, extra: Sequence[Path] = ()) -> list[Path]:
-    """Extra folders first, then the Railroader Mods folder and the base-game asset packs."""
-    roots = [Path(p) for p in extra] + [rr.mods, rr.asset_packs]
-    return [r for i, r in enumerate(roots) if r not in roots[:i]]
+def search_roots(rr: installs.Install) -> list[Path]:
+    """Where a stock locomotive's tender, trucks, parts and whistle come from: Railroader's own asset packs, nowhere else."""
+    return [rr.asset_packs]
 
 
 def fingerprint(inv: dict) -> str:
-    """Identity of the exact input bytes a conversion used."""
-    canonical = json.dumps(inv["packs"], sort_keys=True, separators=(",", ":"))
+    """Identity of the exact input bytes a conversion used: each pack's name and its files' names, sizes and hashes.
+    Where a pack was found (which search root, which folder) is not part of it, so a change of settings or layout never
+    invalidates saved reviews; only different bytes or a different set of packs does."""
+    canonical = json.dumps(sorted(({"name": p["name"], "files": p["files"]} for p in inv["packs"]), key=lambda p: p["name"]),
+                           sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode()).hexdigest()
 
 
@@ -78,23 +80,23 @@ def extract(run: Run, inv: dict, machine: Machine) -> dict:
     return exports
 
 
-def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: Sequence[Path] = (),
+def convert(mod: str | Path, machine: Machine, loco: str | None = None,
             audio: str | None = None, livery: str | None = None, wheel_radius: float | None = None,
             ask: Callable = consent.ask, on_progress: Callable[[str | None, str, str], None] | None = None,
-            geometry_review: Path | None = None, prebuild_review=None) -> Outcome:
-    # Both installs (and CCL) first (W25), then the input must be a mod in the Railroader Mods folder.
+            geometry_review: Path | None = None, prebuild_review=None, whistle: str | None = None) -> Outcome:
+    # Both installs (and CCL) first (W25), then the input must be one of the 21 stock steam packs (nothing is read before this).
     rr, dv = _installs(machine)
-    input_path = installs.mod_in_railroader(rr, mod)
+    input_path = installs.stock_pack(rr, mod)
     work_root = machine.work_root.resolve()
     # Refuse bad targets before creating anything: where first (a clearer answer), then Unity's path limit.
-    guard = [("input mod", input_path), ("Railroader install", rr.root), ("Derail Valley install", dv.root)]
+    guard = [("input pack", input_path), ("Railroader install", rr.root), ("Derail Valley install", dv.root)]
     check_write_target(work_root, guard)
     check_work_root(work_root)
-    roots = search_roots(rr, search)
+    roots = search_roots(rr)
 
     request = {"input": str(input_path), "locomotive": loco, "railroader": rr.describe(), "derail_valley": dv.describe(),
                "search_roots": [str(p) for p in roots], "audio": audio, "livery": livery, "wheel_radius": wheel_radius,
-               "geometry_review": str(geometry_review) if geometry_review else None}
+               "geometry_review": str(geometry_review) if geometry_review else None, "whistle": whistle}
     cleanup_warnings = workspace.recover(work_root)
     run = Run.create(work_root, loco or input_path.name, request)
     run.listener = on_progress
@@ -110,7 +112,7 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: 
             + "search: " + ", ".join(str(r) for r in roots))
     try:
         rebuild.capture(run, machine)
-        outcome = _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius, ask, geometry_review, prebuild_review)
+        outcome = _stages(run, input_path, loco, roots, audio, machine, livery, wheel_radius, ask, geometry_review, prebuild_review, whistle)
     except BaseException as e:  # include interruption; stop tools and retain a truthful receipt before cleanup
         current = next((n for n, s in run.record["stages"].items() if s["status"] == "running"), None)
         message = f"{type(e).__name__}: {e}"
@@ -159,7 +161,7 @@ def install_pack(run: Run, machine: Machine, pack_dir: Path, expected: dict[str,
 
 def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path],
             audio: str | None, machine: Machine, livery: str | None = None, wheel_radius: float | None = None,
-            ask: Callable = consent.ask, geometry_review: Path | None = None, prebuild_review=None) -> Outcome:
+            ask: Callable = consent.ask, geometry_review: Path | None = None, prebuild_review=None, whistle: str | None = None) -> Outcome:
     def fail(stage: str, message: str, code: int = EXIT_FAILED) -> Outcome:
         run.finish(stage, "failed", message)
         run.close("failed", message)
@@ -178,15 +180,37 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     run.finish("locate", "done", f"{chosen} ({len(index.packs)} packs indexed)")
 
     run.begin("link")
-    inv = inventory(index, chosen, audio=audio)
+    inv = inventory(index, chosen, audio=audio, whistle=whistle)
     write_json(run.path / "inventory.json", inv)
     errors = blocking(inv)
     run.record["answers"]["audio"] = inv["audio"]
+    run.record["answers"]["whistle"] = {k: inv["whistle"][k] for k in ("id", "source", "model", "audio", "placed")}
     if errors:
         return fail("link", f"{len(errors)} blocking issue(s): " + "; ".join(e["message"] for e in errors))
     for issue in inv["issues"]:
         run.log(f"  {issue['severity']:7} {issue['code']}: {issue['message']}")
     run.record["input_fingerprint"] = fingerprint(inv)
+    tab = stock.entry(chosen)
+    table_matches = False
+    if tab is not None:
+        table_matches, note = stock.build_status(chosen, inv["packs"])
+        run.log(f"  vanilla table: {note}")
+        run.record["answers"]["vanillaTable"] = {"matches": table_matches, "gameBuild": stock.table()["gameBuild"], "note": note}
+    if not geometry_review and table_matches:
+        bands = {vid: b for vid, b in tab["endBeam"].items() if vid != "none"}
+        if bands:  # a band James accepted for this exact pack (board 2026-09-30): same checks as a reviewed-geometry file
+            data = {"schema": 1, "inputFingerprint": run.record["input_fingerprint"], "vehicles": {
+                vid: {"EndBeamProbeHeight": {"value": b["band"], "unit": "m", "basis": "measured",
+                                             "evidence": list(b["evidence"]) + ["applied from the vanilla table: the installed files match it"]}}
+                for vid, b in bands.items()}}
+            cars = {chosen} | ({inv['tender']['id']} if inv.get('tender') else set())
+            try:
+                reviewed = geometryreview.validate(data, run.record['input_fingerprint'], cars)
+            except ValueError as e:
+                return fail('link', f'vanilla table geometry review: {e}')
+            run.record['answers']['geometryReview'] = reviewed
+            write_json(run.path / 'geometry-review.json', reviewed)
+            run.log('reviewed geometry taken from the vanilla table (' + ', '.join(sorted(bands)) + ')')
     if geometry_review:
         cars = {chosen} | ({inv['tender']['id']} if inv.get('tender') else set())
         try:

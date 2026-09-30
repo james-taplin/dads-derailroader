@@ -35,8 +35,10 @@ class Scan(unittest.TestCase):
         self.assertEqual(inv["tender"]["id"], "tt-260-a")
         self.assertEqual([t["id"] for t in inv["trucks"]], ["test-truck-2s"])
         self.assertEqual(inv["trucks"][0]["pack"]["root"], "search1")
-        self.assertEqual([(p["pack"], p["asset"], p["filename"]) for p in inv["parts"]], [("parts", "bell", "bell.prefab")])
-        self.assertEqual([p["name"] for p in inv["packs"]], ["parts", "ts-260-a", "Trucks"])
+        self.assertEqual([(p["pack"], p["asset"], p["filename"]) for p in inv["parts"]],
+                         [("parts", "bell", "bell.prefab"), ("audio.whistles01", "TestChime", "TestChime.prefab")])
+        self.assertEqual((inv["whistle"]["id"], inv["whistle"]["source"], inv["whistle"]["placed"]), ("wh-test", "definition", True))
+        self.assertEqual([p["name"] for p in inv["packs"]], ["parts", "ts-260-a", "Trucks", "audio.whistles01"])
         self.assertEqual((inv["audio"]["basis"], inv["audio"]["replaces"]), ("S060", ["Chuff", "Whistle"]))
         self.assertEqual([c["purpose"] for c in inv["controls"]["radial"]], ["Throttle", "Reverser"])
         bundle = self.m["mod"] / "ts-260-a" / "bundle"
@@ -45,7 +47,7 @@ class Scan(unittest.TestCase):
 
     def test_missing_truck_blocks(self):
         inv = inventory(Index(self.m["mod"]), "ts-260-a")
-        self.assertEqual(codes(inv), ["missing-truck"])
+        self.assertEqual(codes(inv), ["missing-truck", "whistle-left-out"])  # no search folder: no trucks, no whistle pack either
 
     def test_duplicate_identifier_at_same_rank_is_an_error_not_a_first_match(self):
         write_pack(self.m["mod"] / "copy", objects=[tender("tt-260-a")], assets={})
@@ -57,23 +59,6 @@ class Scan(unittest.TestCase):
         inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
         self.assertEqual(blocking(inv), [])
         self.assertEqual(inv["trucks"][0]["pack"]["root"], "input")
-
-    def test_mod_prefix_separates_same_named_packs(self):
-        other = self.tmp / "more"
-        write_pack(other / "Another Mod" / "parts", assets={"bell": {"filename": "other.prefab"}})
-        write_pack(other / "Test Loco Mod" / "parts", assets={"bell": {"filename": "bell.prefab"}})
-        shutil.rmtree(self.m["mod"] / "parts")
-        inv = inventory(Index(self.m["mod"], [self.m["search"], other]), "ts-260-a")
-        self.assertEqual(blocking(inv), [])
-        self.assertEqual(inv["parts"][0]["filename"], "bell.prefab")
-
-    def test_pack_found_under_another_mod_folder_is_a_warning(self):
-        (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [
-            loco("ts-260-a", tender="tt-260-a", parts=[part("Renamed Mod\\parts", "bell", "bell1")]),
-            tender("tt-260-a", truck="test-truck-2s")]}))
-        inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
-        self.assertEqual(blocking(inv), [])
-        self.assertEqual(codes(inv), ["pack-folder-mismatch"])
 
     def test_malformed_objects_do_not_crash(self):
         write_pack(self.m["mod"] / "odd", objects=[{"identifier": "x", "definition": []},
@@ -102,7 +87,7 @@ class Scan(unittest.TestCase):
             tender("tt-260-a", truck="test-truck-2s")]}))
         inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
         self.assertEqual(blocking(inv), [])
-        self.assertEqual([p["asset"] for p in inv["parts"]], ["bell"])
+        self.assertEqual([p["asset"] for p in inv["parts"]], ["bell", "TestChime"])  # TestChime: the whistle mesh
         self.assertEqual((inv["left_out"][0]["asset"], inv["left_out"][0]["anchored"]), ("", ["lamp"]))
         self.assertIn("loses its anchor: lamp", inv["left_out"][0]["effect"])
 
@@ -139,8 +124,9 @@ class Scan(unittest.TestCase):
     def test_same_bytes_give_same_inventory_anywhere(self):
         first = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
         moved = self.tmp / "elsewhere"
-        shutil.copytree(self.m["search"], moved / "Mods")
-        second = inventory(Index(moved / "Mods" / "Test Loco Mod", [moved / "Mods"]), "ts-260-a")
+        moved_packs = moved / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
+        shutil.copytree(self.m["search"], moved_packs)
+        second = inventory(Index(moved_packs / "ts-260-a", [moved_packs]), "ts-260-a")
         self.assertEqual(json.dumps(first, sort_keys=True), json.dumps(second, sort_keys=True))
 
     def test_non_steam_locomotives_are_listed_not_converted(self):
@@ -148,6 +134,49 @@ class Scan(unittest.TestCase):
         index = Index(self.m["mod"], [self.m["search"]])
         self.assertEqual([o["identifier"] for _, o in index.other_locomotives()], ["ds-1"])
         self.assertIn("not-steam", codes(inventory(index, "ds-1")))
+
+    def test_the_whistle_is_the_option_then_the_definition_then_the_default(self):
+        index = Index(self.m["mod"], [self.m["search"]])
+        inv = inventory(index, "ts-260-a")
+        self.assertEqual((inv["whistle"]["id"], inv["whistle"]["source"], inv["whistle"]["model"]), ("wh-test", "definition", "TestChime"))
+        self.assertEqual([o["id"] for o in inv["whistle"]["options"]], ["wh-other", "wh-test"])
+        chosen = inventory(index, "ts-260-a", whistle="wh-other")
+        self.assertEqual((chosen["whistle"]["id"], chosen["whistle"]["source"]), ("wh-other", "option"))
+        self.assertEqual([p["asset"] for p in chosen["parts"] if p.get("whistle")], ["OtherChime"])
+        mesh = next(p for p in chosen["parts"] if p.get("whistle"))
+        self.assertEqual((mesh["component"], mesh["source_component"]), ("Whistle mesh", "Whistle"))
+        # a definition that names none gets the stock default (here absent from the test pack: left out with a warning)
+        (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [
+            loco("ts-260-a", tender="tt-260-a", parts=[part("ts-260-a\\parts", "bell", "bell1")], whistle=None,
+                 extra_components=[{"kind": "Whistle", "defaultWhistleIdentifier": "", "name": "Whistle", "transform": {"position": [0, 3, 0]}}]),
+            tender("tt-260-a", truck="test-truck-2s")]}))
+        plain = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
+        self.assertEqual((plain["whistle"]["id"], plain["whistle"]["source"]), ("wh-3-std", "default"))
+        self.assertIn("whistle-left-out", codes(plain))
+
+    def test_an_unknown_whistle_option_is_an_error_and_a_missing_default_only_a_warning(self):
+        index = Index(self.m["mod"], [self.m["search"]])
+        bad = inventory(index, "ts-260-a", whistle="wh-nope")
+        self.assertIn("unknown-whistle", codes(bad))
+        self.assertTrue(blocking(bad))
+        (self.m["search"] / "audio.whistles01" / "Definitions.json").unlink()
+        gone = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
+        self.assertEqual(blocking(gone), [])
+        self.assertIn("whistle-left-out", codes(gone))
+        self.assertFalse(gone["whistle"]["placed"])
+
+    def test_the_fingerprint_does_not_depend_on_where_a_pack_was_found(self):
+        from rr2dv.pipeline import fingerprint
+        first = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
+        elsewhere = self.tmp / "empty"
+        elsewhere.mkdir()
+        second = inventory(Index(self.m["mod"], [elsewhere, self.m["search"]]), "ts-260-a")  # the packs are now search2
+        self.assertNotEqual({p["root"] for p in first["packs"]}, {p["root"] for p in second["packs"]})
+        self.assertEqual(fingerprint(first), fingerprint(second))
+        bundle = self.m["search"] / "TruckMod" / "Trucks" / "Bundle"
+        bundle.write_bytes(bundle.read_bytes() + b"x")  # different bytes: a different fingerprint
+        third = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
+        self.assertNotEqual(fingerprint(first), fingerprint(third))
 
 
 if __name__ == "__main__":
