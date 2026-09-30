@@ -25,7 +25,7 @@ class TemporaryConversions(unittest.TestCase):
         self.machine = Machine(None, values)
 
     def run_conversion(self, **kwargs):
-        return convert(self.mod['mod'], self.machine, search=[self.mod['search']], **kwargs)
+        return convert(self.mod["mod"], self.machine, **kwargs)
 
     def assert_clean(self, outcome, rerun_project=False):
         run = outcome.run

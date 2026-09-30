@@ -1,6 +1,6 @@
-"""The derailroader desktop app: pick a steam locomotive mod from the Railroader Mods folder, check it, convert it.
+"""The derailroader desktop app: pick one of Railroader's stock steam locomotives, check it, convert it.
 
-Tk/ttk from the standard library. Everything slow (finding installs, listing and scanning mods, converting) runs on a
+Tk/ttk from the standard library. Everything slow (finding installs, listing and scanning locomotives, converting) runs on a
 worker thread; results come back through a queue polled on the Tk thread, so the window never freezes. The
 personal-use notice opens inside the app (consent.build_notice) and the conversion waits for it. The logic lives in
 appmodel.Controller; this module only draws and forwards.
@@ -102,7 +102,7 @@ class App:
         self.worker = Worker(self)
         self.mods = []
         self.report = None
-        self.selected: tuple[str, str] | None = None  # (mod folder, loco id)
+        self.selected: tuple[str, str] | None = None  # (pack folder, loco id)
         self.last_run: Path | None = None
         self._build()
         self._pump_id = self.root.after(100, self._pump)
@@ -162,11 +162,11 @@ class App:
         body = ttk.PanedWindow(root, orient="horizontal")
         body.pack(side="top", fill="both", expand=True, padx=12, pady=(12, 6))
 
-        # left: the mods
+        # left: the locomotives
         left = ttk.Frame(body, padding=(0, 0, 8, 0), width=360)
         body.add(left, weight=1)
-        ttk.Label(left, text="Locomotive mods", style="H2.TLabel").pack(anchor="w")
-        ttk.Label(left, text="From your Railroader Mods folder", style="Muted.TLabel").pack(anchor="w")
+        ttk.Label(left, text="Stock steam locomotives", style="H2.TLabel").pack(anchor="w")
+        ttk.Label(left, text="From your Railroader install", style="Muted.TLabel").pack(anchor="w")
         search_row = ttk.Frame(left)
         search_row.pack(fill="x", pady=(8, 4))
         self.search = tk.StringVar()
@@ -194,7 +194,7 @@ class App:
         titles.pack(side="left", fill="x", expand=True)
         self.loco_title = ttk.Label(titles, text="Choose a locomotive", font=self.fonts["title"])
         self.loco_title.pack(anchor="w")
-        self.loco_sub = ttk.Label(titles, text="Pick a mod and a locomotive on the left.", style="Muted.TLabel")
+        self.loco_sub = ttk.Label(titles, text="Pick a locomotive on the left.", style="Muted.TLabel")
         self.loco_sub.pack(anchor="w")
         act = ttk.Frame(top)
         act.pack(side="right", anchor="ne")
@@ -371,7 +371,7 @@ class App:
             self._stage(stage, status, detail)
         elif kind == "mods-progress":
             i, total = rest
-            self.mods_status.configure(text=f"Reading mods… {i} of {total}")
+            self.mods_status.configure(text=f"Reading locomotives… {i} of {total}")
         elif kind == "review":
             questions, answer = rest
 
@@ -393,7 +393,7 @@ class App:
         self.root.configure(cursor="watch" if busy else "")
         self._update_convert_button(busy)
 
-    # ---- installs and mods ------------------------------------------------------------------------------------------
+    # ---- installs and locomotives ------------------------------------------------------------------------------------------
     def refresh(self) -> None:
         self.c.reload()
         self.mods_status.configure(text="Finding your games…")
@@ -409,7 +409,7 @@ class App:
         missing = self.c.tools_missing()
         states = {"railroader": "ok" if found.railroader else "fail", "derail_valley": "ok" if found.derail_valley else "fail",
                   "ccl": "ok" if found.ccl else "fail", "tools": "warn" if missing else "ok"}
-        tips = {"railroader": found.railroader and f"{found.railroader.root}\nMods: {found.railroader.mods}",
+        tips = {"railroader": found.railroader and f"{found.railroader.root}",
                 "derail_valley": found.derail_valley and f"{found.derail_valley.root}\nMods: {found.derail_valley.mods}",
                 "ccl": "installed" if found.ccl else None,
                 "tools": ("missing: " + ", ".join(missing)) if missing else "Unity, CarCreator, AssetRipper and Python are set"}
@@ -423,31 +423,26 @@ class App:
         if not found.railroader:
             self.mods_status.configure(text="Railroader was not found; set it in Settings.")
             return
-        self.worker.run("Reading mods", lambda: self.c.list_mods(lambda i, n: self.worker.post(("mods-progress", i, n))),
+        self.worker.run("Reading locomotives", lambda: self.c.list_locos(lambda i, n: self.worker.post(("mods-progress", i, n))),
                         self._show_mods)
 
     def _show_mods(self, mods) -> None:
         self.mods = mods
-        applog.get().info("mods: %d with steam locomotives", len(mods))
+        applog.get().info("stock locomotives found: %d", len(mods))
         self._fill_mods()
         count = sum(len(m.locos) for m in mods)
-        base = sum(1 for m in mods if m.base)
-        self.mods_status.configure(text=f"{len(mods) - base} mods" + (f" and {base} base-game packs" if base else "") +
-                                        f", {count} steam locomotives")
+        self.mods_status.configure(text=f"{count} stock steam locomotives")
 
     def _fill_mods(self) -> None:
-        """Locomotives one level down, under 'Base game' (Railroader's own asset packs) and 'Mods'; each shows the
-        folder it comes from."""
+        """Railroader's stock steam locomotives, one row each (name, identifier); the search box filters them."""
         self.tree.delete(*self.tree.get_children())
         needle = self.search.get().strip().casefold()
-        for group, title in (("base", "Base game"), ("mods", "Mods")):
-            rows = [(mod, i, n) for mod in self.mods if mod.base == (group == "base") for i, n in mod.locos
-                    if not needle or needle in f"{mod.label} {i} {n}".casefold()]
-            if not rows:
-                continue
-            node = self.tree.insert("", "end", iid=f"group::{group}", text=f"{title} ({len(rows)})", open=True)
-            for mod, ident, name in sorted(rows, key=lambda r: (r[2].casefold(), r[1])):
-                self.tree.insert(node, "end", iid=f"loco::{mod.folder}::{ident}", text=f"{name}  ({ident})  ·  {mod.label}")
+        rows = [(mod, i, n) for mod in self.mods for i, n in mod.locos if not needle or needle in f"{mod.label} {i} {n}".casefold()]
+        if not rows:
+            return
+        node = self.tree.insert("", "end", iid="group::stock", text=f"Stock steam locomotives ({len(rows)})", open=True)
+        for mod, ident, name in sorted(rows, key=lambda r: (r[2].casefold(), r[1])):
+            self.tree.insert(node, "end", iid=f"loco::{mod.folder}::{ident}", text=f"{name}  ({ident})")
 
     def _on_select(self, _event=None) -> None:
         item = (self.tree.selection() or [""])[0]
@@ -462,7 +457,7 @@ class App:
         self.loco_sub.configure(text=f"{ident} in {Path(folder).name} — checking…")
         if self.report and self.report.get("_folder") == folder:
             self._show_loco()
-        elif not self.worker.run("Checking the mod", lambda: {**self.c.scan(folder), "_folder": folder}, self._got_report):
+        elif not self.worker.run("Checking the locomotive", lambda: {**self.c.scan(folder), "_folder": folder}, self._got_report):
             self.loco_sub.configure(text=f"{ident} in {Path(folder).name} — busy, select again when the current task ends")
 
     def _got_report(self, report) -> None:
@@ -807,7 +802,7 @@ def main(argv=None) -> int:
     import argparse
     parser = argparse.ArgumentParser(prog="rr2dv gui", description="The derailroader desktop app.")
     parser.add_argument("--machine", type=Path, help="settings file")
-    parser.add_argument("--filter", default="", help="initial mod search text")
+    parser.add_argument("--filter", default="", help="initial locomotive search text")
     args = parser.parse_args(argv)
     root = tk.Tk()
     app = App(root, Controller(args.machine))

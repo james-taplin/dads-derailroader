@@ -81,10 +81,10 @@ class Export(unittest.TestCase):
         m = standard_mod(self.tmp / "mods")
         machine = Machine(None, {**m["games"], "keepWorkFiles": True, "workRoot": str(self.tmp / "work"), "assetRipper": str(self.exe),
                                  "unity": str(fake_unity(self.tmp / "tools")), "carCreator": str(fake_carcreator(self.tmp / "tools" / "CarCreator_3.1.9.unitypackage"))})
-        a = convert(m["mod"], machine, search=[m["search"]])
+        a = convert(m["mod"], machine)
         self.assertEqual(a.code, EXIT_INCOMPLETE, a.message)
         self.assertIn("3 bundle(s) exported (0 reused", a.run.record["stages"]["extract"]["detail"])
-        b = convert(m["mod"], machine, search=[m["search"]])
+        b = convert(m["mod"], machine)
         self.assertIn("3 bundle(s) exported (3 reused", b.run.record["stages"]["extract"]["detail"])
         self.assertEqual(self.exports_made(), 3)
 

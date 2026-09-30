@@ -1,5 +1,5 @@
-"""What the desktop app (gui.py) and the command line share: settings, the game installs, the mods to choose from,
-a mod's scan report and a conversion. No widgets here, so all of it is testable without a screen."""
+"""What the desktop app (gui.py) and the command line share: settings, the game installs, the stock locomotives to choose
+from, a locomotive's scan report and a conversion. No widgets here, so all of it is testable without a screen."""
 from __future__ import annotations
 
 import sys
@@ -7,7 +7,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Callable, Sequence
 
-from . import consent, geometryreview, installs, machine as machine_mod
+from . import consent, geometryreview, installs, machine as machine_mod, stock
 from .jsonio import read_json, write_json
 from .pipeline import Outcome, convert, fingerprint, search_roots
 from .record import liveries
@@ -26,7 +26,7 @@ SETTINGS = [
 
 
 def scan_report(root: Path, search: Sequence[Path], hash_files: bool = False) -> dict:
-    """Everything `rr2dv scan` shows for one mod: its steam locos, each one's inventory and liveries."""
+    """Everything `rr2dv scan` shows for one stock locomotive pack: the loco, its inventory and liveries."""
     index = Index(root, search)
     locos = index.steam_locomotives(input_only=True)
     return {
@@ -42,14 +42,13 @@ def scan_report(root: Path, search: Sequence[Path], hash_files: bool = False) ->
 
 
 @dataclass
-class ModEntry:
-    folder: str  # a Mods folder's name, or a base-game asset pack's full path (what `convert` and `scan` take)
+class StockEntry:
+    folder: str  # the pack's folder name in Railroader's asset packs (what `convert` and `scan` take)
     locos: list[tuple[str, str]] = field(default_factory=list)  # (identifier, display name)
-    base: bool = False  # a Railroader base-game asset pack
-    label: str = ""  # the folder's own name, for display
+    label: str = ""  # display label
 
     def __post_init__(self):
-        self.label = self.label or Path(self.folder).name
+        self.label = self.label or self.folder
 
 
 @dataclass
@@ -122,32 +121,30 @@ class Controller:
                 if required and not (key == "python" and getattr(sys, "frozen", False))
                 and not ((p := self.machine.path(key)) and (p.is_file() if kind == "file" else p.is_dir()))]
 
-    def list_mods(self, progress: Callable[[int, int], None] | None = None) -> list[ModEntry]:
-        """Folders in the Railroader Mods folder that contain steam locomotives, then Railroader's own base-game asset
-        packs that do (0.3: every locomotive pack there has its Definitions.json, catalogue and bundle)."""
+    def list_locos(self, progress: Callable[[int, int], None] | None = None) -> list[StockEntry]:
+        """The stock steam locomotives found in Railroader's asset packs, in stock.STEAM order. A pack that is missing or
+        unreadable is left out and never hides the rest."""
         rr = installs.railroader(self.machine)
-        mods = sorted((p for p in rr.mods.iterdir() if p.is_dir()), key=lambda p: p.name.casefold())
-        packs = sorted((p for p in rr.asset_packs.iterdir() if p.is_dir()), key=lambda p: p.name.casefold()) \
-            if rr.asset_packs.is_dir() else []
         out = []
-        for i, folder in enumerate(mods + packs):
+        for i, pack in enumerate(stock.STEAM):
             if progress:
-                progress(i, len(mods) + len(packs))
-            base = i >= len(mods)
+                progress(i, len(stock.STEAM))
+            folder = rr.asset_packs / pack
+            if not folder.is_dir():
+                continue
             try:
                 locos = Index(folder).steam_locomotives(input_only=True)
-            except Exception:  # one unreadable pack never hides the rest
+            except Exception:
                 continue
             if locos:
-                out.append(ModEntry(str(folder) if base else folder.name,
-                                    [(o["identifier"], (o.get("metadata") or {}).get("name") or o["identifier"]) for _, o in locos],
-                                    base=base, label=folder.name))
+                out.append(StockEntry(pack, [(o["identifier"], (o.get("metadata") or {}).get("name") or stock.STEAM[pack])
+                                             for _, o in locos], label=stock.STEAM[pack]))
         return out
 
     def scan(self, folder: str) -> dict:
         rr = installs.railroader(self.machine)
-        mod = installs.mod_in_railroader(rr, folder)
-        return scan_report(mod, search_roots(rr, self.machine.search_roots()))
+        pack = installs.stock_pack(rr, folder)
+        return scan_report(pack, search_roots(rr))
 
     def reports(self) -> Path:
         """Where finished and failed runs keep their compact reports (workspace.finish)."""
@@ -156,13 +153,13 @@ class Controller:
     def geometry_reviews(self, folder: str, loco: str) -> list[dict]:
         """Geometry reviews in the reports folder that this locomotive's current source files would accept."""
         rr = installs.railroader(self.machine)
-        mod = installs.mod_in_railroader(rr, folder)
-        return compatible_reviews(self.reports(), Index(mod, search_roots(rr, self.machine.search_roots())), loco)
+        pack = installs.stock_pack(rr, folder)
+        return compatible_reviews(self.reports(), Index(pack, search_roots(rr)), loco)
 
     def convert(self, folder: str, loco: str, livery: str | None = None, audio: str | None = None,
                 wheel_radius: float | None = None, on_progress=None, ask: Callable = consent.ask,
                 geometry_review: Path | None = None, prebuild_review=None) -> Outcome:
-        return convert(folder, self.machine, loco, self.machine.search_roots(), audio, livery, wheel_radius,
+        return convert(folder, self.machine, loco, audio, livery, wheel_radius,
                        ask=ask, on_progress=on_progress, geometry_review=geometry_review, prebuild_review=prebuild_review)
 
 

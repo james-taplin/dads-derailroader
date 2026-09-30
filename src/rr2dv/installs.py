@@ -1,9 +1,10 @@
-"""Finding the Railroader and Derail Valley installs (W25).
+"""Finding the Railroader and Derail Valley installs (W25; vanilla-flavoured input rule).
 
-rr2dv converts a mod from the user's own Railroader Mods folder and installs the result into their own Derail Valley
-Mods folder, so both installs must be found before anything runs: when checking the machine (`rr2dv doctor`), when a
-conversion starts, and again just before installing. The settings file wins (`railroader`, `game`, `mods`); otherwise
-the Steam libraries are searched (Steam's registry entry or default folder, then steamapps/libraryfolders.vdf).
+rr2dv converts one of Railroader's own stock steam locomotives from the user's own Railroader install and installs the
+result into their own Derail Valley Mods folder, so both installs must be found before anything runs: when checking the
+machine (`rr2dv doctor`), when a conversion starts, and again just before installing. The settings file wins
+(`railroader`, `game`, `mods`); otherwise the Steam libraries are searched (Steam's registry entry or default folder,
+then steamapps/libraryfolders.vdf). Railroader's own Mods folder is never read and need not exist.
 """
 from __future__ import annotations
 
@@ -12,6 +13,8 @@ import re
 import sys
 from dataclasses import dataclass
 from pathlib import Path
+
+from . import stock
 
 RAILROADER = ("Railroader", "Railroader_Data")
 DERAIL_VALLEY = ("Derail Valley", "DerailValley_Data")
@@ -27,7 +30,7 @@ class InstallError(RuntimeError):
 class Install:
     game: str
     root: Path
-    mods: Path
+    mods: Path  # Derail Valley: where packs are installed. Railroader: never read (may not exist)
     source: str  # "settings" or "steam"
 
     def describe(self) -> dict:
@@ -78,7 +81,7 @@ def _valid(root: Path, data_folder: str) -> bool:
     return (root / data_folder).is_dir()
 
 
-def _find(machine, game: tuple[str, str], root_key: str, mods_key: str | None) -> Install:
+def _find(machine, game: tuple[str, str], root_key: str, mods_key: str | None, require_mods: bool = True) -> Install:
     name, data = game
     configured = machine.path(root_key)
     if configured is not None:
@@ -99,14 +102,14 @@ def _find(machine, game: tuple[str, str], root_key: str, mods_key: str | None) -
                                f"set `{root_key}` in the settings file to the one to use")
         root, source = hits[0], "steam"
     mods = (machine.path(mods_key) if mods_key else None) or root / "Mods"
-    if not mods.is_dir():
+    if require_mods and not mods.is_dir():
         raise InstallError(f"{name} has no Mods folder at {mods}" +
                            ("; install Unity Mod Manager and Custom Car Loader first" if name == DERAIL_VALLEY[0] else ""))
     return Install(name, root, mods, source)
 
 
 def railroader(machine) -> Install:
-    return _find(machine, RAILROADER, "railroader", None)
+    return _find(machine, RAILROADER, "railroader", None, require_mods=False)
 
 
 def derail_valley(machine) -> Install:
@@ -124,23 +127,23 @@ def ccl_installed(dv: Install) -> bool:
     return False
 
 
-def mod_in_railroader(rr: Install, given: str | os.PathLike) -> Path:
-    """The input: a folder directly inside the Railroader Mods folder, or (0.3, James) a base-game asset pack directly in
-    Railroader_Data/StreamingAssets/AssetPacks, by name or by path (W25: no zips, nothing from elsewhere). A bare name is
-    looked up in Mods first. A link or junction placed in either folder counts as being in it. Both are only read."""
+def stock_pack(rr: Install, given: str | os.PathLike) -> Path:
+    """The input: one of Railroader's 21 stock steam locomotive packs, a real folder directly in
+    Railroader_Data/StreamingAssets/AssetPacks, by pack name (e.g. "ls-282-k28t") or by path. Nothing from the Mods
+    folder, no other folder, no link (a link placed there could point anywhere), no archive, no diesel. Only read."""
     text = str(given)
     candidate = Path(text)
     if not candidate.is_absolute() and len(candidate.parts) == 1:
-        candidate = rr.mods / text if (rr.mods / text).is_dir() or not (rr.asset_packs / text).is_dir() else rr.asset_packs / text
+        candidate = rr.asset_packs / text
     candidate = Path(os.path.abspath(candidate))
-    parents = {Path(os.path.realpath(rr.mods)), Path(os.path.realpath(rr.asset_packs))}
-    if Path(os.path.realpath(candidate.parent)) not in parents:
-        raise InstallError(f"{given} is not a mod folder in the Railroader Mods folder ({rr.mods}) or a base-game asset pack "
-                           f"in {rr.asset_packs}; rr2dv converts only those (give the folder name, e.g. \"Some Loco Mod\")")
+    if Path(os.path.realpath(candidate.parent)) != Path(os.path.realpath(rr.asset_packs)):
+        raise InstallError(f"{given} is not a pack in Railroader's asset packs folder ({rr.asset_packs}); this edition converts "
+                           "only Railroader's own stock steam locomotives (give the pack name, e.g. \"ls-282-k28t\")")
+    reason = stock.refusal(candidate.name)
+    if reason:
+        raise InstallError(reason)
+    if candidate.is_symlink() or os.path.realpath(candidate) != os.path.abspath(candidate):
+        raise InstallError(f"{candidate} is a link, not a folder in Railroader's own asset packs; rr2dv reads only the real folder")
     if not candidate.is_dir():
-        raise InstallError(f"{candidate} is not a folder; rr2dv converts a mod folder from {rr.mods}, not an archive")
+        raise InstallError(f"{candidate} is not a folder; is the Railroader install complete? (looked in {rr.asset_packs})")
     return candidate
-
-
-def is_base_game(rr: Install, folder: Path) -> bool:
-    return Path(os.path.realpath(Path(folder).parent)) == Path(os.path.realpath(rr.asset_packs))

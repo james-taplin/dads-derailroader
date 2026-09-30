@@ -23,7 +23,7 @@ class Probe(unittest.TestCase):
         self.machine = Machine(None, tool_machine(self.tmp))
 
     def convert(self):
-        return convert(self.m["mod"], self.machine, search=[self.m["search"]])
+        return convert(self.m["mod"], self.machine)
 
     def test_probe_input_describes_every_vehicle_from_data(self):
         out = self.convert()

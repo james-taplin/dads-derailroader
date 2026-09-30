@@ -29,7 +29,7 @@ class Logs(unittest.TestCase):
     def test_run_log_tells_the_whole_run_in_order(self):
         image = {"kind": "CustomImage", "name": "logo", "textureName": "nosuchmod.logo.png"}
         (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [
-            loco("ts-260-a", tender="tt-260-a", parts=[part("Test Loco Mod\\parts", "bell", "bell1")], extra_components=[image]),
+            loco("ts-260-a", tender="tt-260-a", parts=[part("ts-260-a\\parts", "bell", "bell1")], extra_components=[image]),
             tender("tt-260-a", truck="test-truck-2s")]}))
         out = convert(self.m["mod"], self.machine)
         self.assertEqual(out.code, EXIT_INCOMPLETE, out.message)

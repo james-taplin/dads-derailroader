@@ -70,34 +70,47 @@ class Detection(unittest.TestCase):
         shutil.rmtree(dv.mods / "DVCustomCarLoader")
         self.assertFalse(installs.ccl_installed(dv))
 
-    def test_input_must_sit_directly_in_the_railroader_mods_folder(self):
-        rr = installs.railroader(Machine(None, game_installs(self.tmp)))
-        (rr.mods / "Some Mod" / "pack").mkdir(parents=True)
-        self.assertEqual(installs.mod_in_railroader(rr, "Some Mod"), rr.mods / "Some Mod")
-        self.assertEqual(installs.mod_in_railroader(rr, rr.mods / "Some Mod"), rr.mods / "Some Mod")
-        for bad in (rr.mods / "Some Mod" / "pack", self.tmp, "Missing Mod", rr.mods / ".." / "Mods" / "Some Mod" / "pack"):
-            with self.assertRaises(installs.InstallError, msg=str(bad)):
-                installs.mod_in_railroader(rr, bad)
-
-    def test_a_base_game_asset_pack_is_an_input_too(self):
+    def test_input_is_a_stock_steam_pack_directly_in_the_asset_packs_folder(self):
         rr = installs.railroader(Machine(None, game_installs(self.tmp)))
         pack = rr.asset_packs / "ls-282-k28t"
         pack.mkdir(parents=True)
-        self.assertEqual(installs.mod_in_railroader(rr, pack), pack)
-        self.assertEqual(installs.mod_in_railroader(rr, "ls-282-k28t"), pack)  # not in Mods: found in AssetPacks
-        self.assertTrue(installs.is_base_game(rr, pack))
-        (rr.mods / "ls-282-k28t").mkdir()
-        self.assertEqual(installs.mod_in_railroader(rr, "ls-282-k28t"), rr.mods / "ls-282-k28t")  # a bare name: Mods first
+        self.assertEqual(installs.stock_pack(rr, "ls-282-k28t"), pack)
+        self.assertEqual(installs.stock_pack(rr, pack), pack)
+        (rr.asset_packs / "SomeMod").mkdir()
+        (rr.asset_packs / "truck.archbar.diamond").mkdir()
+        (pack / "sub").mkdir()
+        for bad in (pack / "sub", self.tmp, "Missing Mod", "SomeMod", "truck.archbar.diamond", "ls-460-t17",  # not installed
+                    rr.asset_packs.parent, rr.asset_packs / ".." / "AssetPacks" / "SomeMod"):
+            with self.assertRaises(installs.InstallError, msg=str(bad)):
+                installs.stock_pack(rr, bad)
+
+    def test_stock_diesels_are_known_but_refused(self):
+        rr = installs.railroader(Machine(None, game_installs(self.tmp)))
+        (rr.asset_packs / "ld-gp9").mkdir(parents=True)
+        with self.assertRaisesRegex(installs.InstallError, "not supported in this release"):
+            installs.stock_pack(rr, "ld-gp9")
+
+    def test_a_folder_in_a_railroader_mods_folder_is_never_read(self):
+        rr = installs.railroader(Machine(None, game_installs(self.tmp)))
+        (rr.root / "Mods" / "ls-282-k28t").mkdir(parents=True)  # a mod folder carrying a stock name
         with self.assertRaises(installs.InstallError):
-            installs.mod_in_railroader(rr, rr.asset_packs.parent)
+            installs.stock_pack(rr, "ls-282-k28t")  # the asset pack is missing: the Mods folder is not a substitute
+        with self.assertRaises(installs.InstallError):
+            installs.stock_pack(rr, rr.root / "Mods" / "ls-282-k28t")
+
+    def test_railroader_needs_no_mods_folder(self):
+        games = game_installs(self.tmp)
+        self.assertFalse((Path(games["railroader"]) / "Mods").exists())
+        self.assertEqual(installs.railroader(Machine(None, games)).source, "settings")
 
     @unittest.skipIf(sys.platform == "win32", "symlink creation needs privileges on Windows")
-    def test_a_link_placed_in_the_mods_folder_counts(self):
+    def test_a_link_placed_in_the_asset_packs_folder_is_refused(self):
         rr = installs.railroader(Machine(None, game_installs(self.tmp)))
-        real = self.tmp / "elsewhere" / "Linked Mod"
+        real = self.tmp / "elsewhere" / "ls-282-k28t"
         real.mkdir(parents=True)
-        os.symlink(real, rr.mods / "Linked Mod")
-        self.assertEqual(installs.mod_in_railroader(rr, "Linked Mod"), rr.mods / "Linked Mod")
+        os.symlink(real, rr.asset_packs / "ls-282-k28t")
+        with self.assertRaisesRegex(installs.InstallError, "link"):
+            installs.stock_pack(rr, "ls-282-k28t")
 
 
 class Notice(unittest.TestCase):

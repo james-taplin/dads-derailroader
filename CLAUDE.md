@@ -31,6 +31,20 @@ that changes the app (cloud Claude, local Claude, Codex/Astra):
 - One session implements at a time; announce on the board before starting app edits.
 Keep real assets and full logs out of Git.
 
+## vanilla-flavoured branch (James, 2026-09-30) -- read this first when on this branch
+
+`vanilla-flavoured` is a Nexus edition of the app for Railroader's own 24 stock locomotives (21 steam converted, 3 diesel
+known but refused: diesel integration is on `0.3.x`). It overrides the rules below where they conflict:
+- Input is one of the 21 stock steam packs (`stock.py`) directly in `Railroader_Data/StreamingAssets/AssetPacks`; nothing else. Railroader's
+  Mods folder, `searchRoots`, `--search`, the mod list and mod credits are removed from the code (not switched off); a tripwire test
+  (`tests/test_vanilla_scope.py`) reads the source and fails if they return. Removal is by reachability: never remove what measure and build need.
+- Per-loco bespoke rules, reviewed values and checks are allowed here (the "no bespoke rules" principle is lifted on this branch only).
+- Whistles come back as the one exception to "no audio conversion" (whistle mesh + clip, chosen by a vehicle option, default `wh-3-std`); DV whistle behaviour stays.
+- An unknown Railroader build is reported as "unknown", never refused. The personal-use notice stays with one click and wording that says the assets belong to the Railroader developers (needs a new `NOTICE_VERSION`).
+- Board posts as `VF<n>` go to `main` and to this branch (board-only commits on main); all other work stays on this branch. Evidence and plan: `docs/vanilla` if present, else the board posts VF1-VF11.
+- Tests: `PYTHONPATH=src:tests xvfb-run -a python3.12 -m unittest discover -s tests` (Tk for the GUI tests: `apt-get install python3-tk`); `apt-get install mono-mcs` for the C# stub compile check. Two tests fail on the stub compile check (test_csharp_api), known since before this branch.
+- Test fixtures put a stock-named folder in the fake AssetPacks and register the synthetic names in `stock.STEAM` for the test process only (`fixtures.register_stock`).
+
 ## Working preferences
 
 - The conversion work is collaborative (James, Claude and Codex sessions). Refer to it with "we" / "our", never "James's scripts" or "my scripts".

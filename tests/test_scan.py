@@ -58,15 +58,6 @@ class Scan(unittest.TestCase):
         self.assertEqual(blocking(inv), [])
         self.assertEqual(inv["trucks"][0]["pack"]["root"], "input")
 
-    def test_mod_prefix_separates_same_named_packs(self):
-        other = self.tmp / "more"
-        write_pack(other / "Another Mod" / "parts", assets={"bell": {"filename": "other.prefab"}})
-        write_pack(other / "Test Loco Mod" / "parts", assets={"bell": {"filename": "bell.prefab"}})
-        shutil.rmtree(self.m["mod"] / "parts")
-        inv = inventory(Index(self.m["mod"], [self.m["search"], other]), "ts-260-a")
-        self.assertEqual(blocking(inv), [])
-        self.assertEqual(inv["parts"][0]["filename"], "bell.prefab")
-
     def test_pack_found_under_another_mod_folder_is_a_warning(self):
         (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [
             loco("ts-260-a", tender="tt-260-a", parts=[part("Renamed Mod\\parts", "bell", "bell1")]),
@@ -139,8 +130,9 @@ class Scan(unittest.TestCase):
     def test_same_bytes_give_same_inventory_anywhere(self):
         first = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
         moved = self.tmp / "elsewhere"
-        shutil.copytree(self.m["search"], moved / "Mods")
-        second = inventory(Index(moved / "Mods" / "Test Loco Mod", [moved / "Mods"]), "ts-260-a")
+        moved_packs = moved / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
+        shutil.copytree(self.m["search"], moved_packs)
+        second = inventory(Index(moved_packs / "ts-260-a", [moved_packs]), "ts-260-a")
         self.assertEqual(json.dumps(first, sort_keys=True), json.dumps(second, sort_keys=True))
 
     def test_non_steam_locomotives_are_listed_not_converted(self):

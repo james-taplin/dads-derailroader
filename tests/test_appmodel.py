@@ -16,7 +16,7 @@ class ControllerTests(unittest.TestCase):
         self.tmp = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.tmp)
         self.m = standard_mod(self.tmp)
-        write_pack(self.m["search"] / "Another Loco Mod" / "a", objects=[loco("ls-460-a", parts=[part("Nope\\x", "y", "z")])],
+        write_pack(self.m["search"] / "ls-460-a", objects=[loco("ls-460-a", parts=[part("Nope\\x", "y", "z")])],
                    assets={"ls-460-a": {"filename": "a.prefab"}})
         self.settings = self.tmp / "settings" / "machine.json"
         self.settings.parent.mkdir()
@@ -28,38 +28,38 @@ class ControllerTests(unittest.TestCase):
     def test_installs_and_tools(self):
         found = self.c.installs()
         self.assertTrue(found.ready, found.problems)
-        self.assertEqual((found.railroader.mods, found.ccl), (self.m["search"], True))
+        self.assertEqual((found.railroader.asset_packs, found.ccl), (self.m["search"], True))
         self.assertEqual(self.c.tools_missing(), [])
 
-    def test_lists_only_mods_with_steam_locomotives(self):
-        seen = []
-        mods = self.c.list_mods(lambda i, n: seen.append((i, n)))
-        self.assertEqual([(m.folder, m.locos) for m in mods],
-                         [("Another Loco Mod", [("ls-460-a", "Test ls-460-a")]), ("Test Loco Mod", [("ts-260-a", "Test ts-260-a")])])
-        self.assertEqual(seen[-1][1], 3)  # TruckMod was read too, and has no locomotive
-
-    def test_lists_base_game_locomotive_packs_after_the_mods(self):
-        # 0.3 (James): Railroader's own locomotive packs (AssetPacks/<pack>: Bundle, Catalog.json, Definitions.json)
-        packs = self.tmp / "Railroader" / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
+    def test_lists_only_stock_steam_locomotive_packs(self):
+        # vanilla-flavoured: the list is the stock steam list, filtered to the packs that are installed and readable
+        packs = self.m["search"]
         write_pack(packs / "ls-282-k28t", objects=[loco("ls-282-k28t")], assets={"ls-282-k28t": {"filename": "k28t.prefab"}})
-        write_pack(packs / "truck.archbar.diamond", assets={"t": {"filename": "t.prefab"}})
-        mods = self.c.list_mods()
-        base = [m for m in mods if m.base]
-        self.assertEqual([(m.label, m.locos) for m in base], [("ls-282-k28t", [("ls-282-k28t", "Test ls-282-k28t")])])
-        self.assertEqual(Path(base[0].folder), packs / "ls-282-k28t")
-        self.assertFalse(any(m.base for m in mods[:-1]))
-        report = self.c.scan(base[0].folder)  # the full path is what the window hands on
+        write_pack(packs / "truck.archbar.diamond", assets={"t": {"filename": "t.prefab"}})  # not a locomotive, not stock
+        write_pack(packs / "SomeMod", objects=[loco("ls-999-x")], assets={"ls-999-x": {"filename": "x.prefab"}})  # not stock
+        seen = []
+        entries = self.c.list_locos(lambda i, n: seen.append((i, n)))
+        folders = [e.folder for e in entries]
+        self.assertIn("ls-282-k28t", folders)
+        self.assertIn("ts-260-a", folders)
+        self.assertNotIn("SomeMod", folders)
+        self.assertNotIn("truck.archbar.diamond", folders)
+        self.assertEqual(seen[-1][1], len(__import__("rr2dv.stock", fromlist=["STEAM"]).STEAM))
+        report = self.c.scan("ls-282-k28t")
         self.assertEqual([l["id"] for l in report["steam_locomotives"]], ["ls-282-k28t"])
+        for refused in ("SomeMod", "truck.archbar.diamond", "ld-gp9"):
+            with self.assertRaises(__import__("rr2dv.installs", fromlist=["InstallError"]).InstallError):
+                self.c.scan(refused)
 
     def test_scan_gives_liveries_and_blockers(self):
-        report = self.c.scan("Test Loco Mod")
+        report = self.c.scan("ts-260-a")
         self.assertEqual(report["steam_locomotives"][0]["liveries"], [])
         self.assertEqual(blocking_issues(report, "ts-260-a"), [])
-        self.assertEqual([i["code"] for i in blocking_issues(self.c.scan("Another Loco Mod"), "ls-460-a")], ["missing-part-pack"])
+        self.assertEqual([i["code"] for i in blocking_issues(self.c.scan("ls-460-a"), "ls-460-a")], ["missing-part-pack"])
 
     def test_convert_reports_every_stage(self):
         events = []
-        outcome = self.c.convert("Test Loco Mod", "ts-260-a", on_progress=lambda *e: events.append(e))
+        outcome = self.c.convert("ts-260-a", "ts-260-a", on_progress=lambda *e: events.append(e))
         self.assertEqual(outcome.code, EXIT_INCOMPLETE, outcome.message)
         self.assertEqual([e[0] for e in events if e[1] == "running"],
                          ["locate", "link", "stage", "extract", "import", "probe", "record", "build"])
@@ -71,7 +71,7 @@ class ControllerTests(unittest.TestCase):
         from rr2dv.pipeline import fingerprint, search_roots
         from rr2dv.rrmod import Index, inventory
         rr = installs.railroader(self.c.machine)
-        index = Index(installs.mod_in_railroader(rr, "Test Loco Mod"), search_roots(rr, self.c.machine.search_roots()))
+        index = Index(installs.stock_pack(rr, "ts-260-a"), search_roots(rr))
         fp = fingerprint(inventory(index, "ts-260-a"))
 
         def review(run, name, band, fprint=fp, vid="ts-260-a"):
@@ -80,13 +80,13 @@ class ControllerTests(unittest.TestCase):
             path.write_text(json.dumps({"schema": 1, "inputFingerprint": fprint, "vehicles": {vid: {"EndBeamProbeHeight": {
                 "value": band, "unit": "m", "basis": "measured", "evidence": ["survey"]}}}}))
             return str(path)
-        self.assertEqual(self.c.geometry_reviews("Test Loco Mod", "ts-260-a"), [])
+        self.assertEqual(self.c.geometry_reviews("ts-260-a", "ts-260-a"), [])
         old = review("20260929-190000-ts", "geometry-review-proposed.json", [1.4, 1.6])
         review("20260929-191000-ts", "geometry-review.json", [1.4, 1.6])  # the same band used again: listed once
         new = review("20260929-192000-ts", "geometry-review-proposed.json", [1.0, 1.2])
         review("20260929-193000-ts", "geometry-review-proposed.json", [1.0, 1.2], fprint="other source")
         review("20260929-194000-ts", "geometry-review-proposed.json", [1.0, 1.2], vid="another-loco")
-        found = self.c.geometry_reviews("Test Loco Mod", "ts-260-a")
+        found = self.c.geometry_reviews("ts-260-a", "ts-260-a")
         self.assertEqual([r["path"] for r in found], [new, review("20260929-191000-ts", "geometry-review.json", [1.4, 1.6])])
         self.assertIn("loco 1.00..1.20 m", found[0]["label"])
         self.assertNotIn(old, [r["path"] for r in found])  # older copy of the same band

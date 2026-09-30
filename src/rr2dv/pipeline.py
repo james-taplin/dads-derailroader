@@ -33,10 +33,9 @@ class Outcome:
     run: Run | None = None
 
 
-def search_roots(rr: installs.Install, extra: Sequence[Path] = ()) -> list[Path]:
-    """Extra folders first, then the Railroader Mods folder and the base-game asset packs."""
-    roots = [Path(p) for p in extra] + [rr.mods, rr.asset_packs]
-    return [r for i, r in enumerate(roots) if r not in roots[:i]]
+def search_roots(rr: installs.Install) -> list[Path]:
+    """Where a stock locomotive's tender, trucks, parts and whistle come from: Railroader's own asset packs, nowhere else."""
+    return [rr.asset_packs]
 
 
 def fingerprint(inv: dict) -> str:
@@ -78,19 +77,19 @@ def extract(run: Run, inv: dict, machine: Machine) -> dict:
     return exports
 
 
-def convert(mod: str | Path, machine: Machine, loco: str | None = None, search: Sequence[Path] = (),
+def convert(mod: str | Path, machine: Machine, loco: str | None = None,
             audio: str | None = None, livery: str | None = None, wheel_radius: float | None = None,
             ask: Callable = consent.ask, on_progress: Callable[[str | None, str, str], None] | None = None,
             geometry_review: Path | None = None, prebuild_review=None) -> Outcome:
-    # Both installs (and CCL) first (W25), then the input must be a mod in the Railroader Mods folder.
+    # Both installs (and CCL) first (W25), then the input must be one of the 21 stock steam packs (nothing is read before this).
     rr, dv = _installs(machine)
-    input_path = installs.mod_in_railroader(rr, mod)
+    input_path = installs.stock_pack(rr, mod)
     work_root = machine.work_root.resolve()
     # Refuse bad targets before creating anything: where first (a clearer answer), then Unity's path limit.
-    guard = [("input mod", input_path), ("Railroader install", rr.root), ("Derail Valley install", dv.root)]
+    guard = [("input pack", input_path), ("Railroader install", rr.root), ("Derail Valley install", dv.root)]
     check_write_target(work_root, guard)
     check_work_root(work_root)
-    roots = search_roots(rr, search)
+    roots = search_roots(rr)
 
     request = {"input": str(input_path), "locomotive": loco, "railroader": rr.describe(), "derail_valley": dv.describe(),
                "search_roots": [str(p) for p in roots], "audio": audio, "livery": livery, "wheel_radius": wheel_radius,
