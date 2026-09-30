@@ -1,0 +1,1785 @@
+{
+ "gameBuild": "20238526",
+ "locos": {
+  "ls-060-s23": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -3.341,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 14.7,
+    "floorConfinedToCab": false,
+    "floorFromCollisionHullM": 1.98,
+    "otherLevelsM": []
+   },
+   "conversion": {
+    "audit": "passed",
+    "notes": [
+     "LOD meshes (LOD0-3) counted as geometry: main rod found as the LOD2 copy, small end blocked by Cab_1_LOD3 (fixed by the LOD scope, untested)",
+     "tender brake release: no seat found (10 warnings), rod left pointing sideways (LOD scope should help; untested)",
+     "right-hand number plate: no supported surface, left at the source decal"
+    ],
+    "oilCupPairs": 1,
+    "status": "converted"
+   },
+   "displayName": "S-23 Switcher",
+   "driver": {
+    "axles": 3,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 39..40 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     39,
+     40
+    ],
+    "mainDriverIndex": 0,
+    "radiusM": 0.6477
+   },
+   "endBeam": {
+    "none": "not needed in any run so far (builds without a review)"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [],
+   "lodMeshes": true,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 180.0,
+    "pistonDiameterInches": 18.0,
+    "pistonStrokeInches": 24.0,
+    "totalHeatingSurface": 1278.0,
+    "weightEmpty": 130500,
+    "weightOnDrivers": 130500.0
+   },
+   "sourceSha256": {
+    "Bundle": "a3e4f7259249dd0b3e0c7777ef6bd472d4d9c8e54cf4440b3dbb92eb7930cf74",
+    "Catalog.json": "e44a0ec95d9f099ce0b365cb02e09cbba93325a22b91381129f67aa5450d5bed",
+    "Definitions.json": "a33449a21a85a3aae85e3aca8716401b9185302492a2a57cf85f55f76dc1a7e2"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-060-s23",
+    "lengthM": 7.65,
+    "truckPack": "truck.andrews.type-a"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "0-6-0"
+  },
+  "ls-080-s51": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -4.671,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 2.6,
+    "floorConfinedToCab": true,
+    "floorFromCollisionHullM": 1.64,
+    "otherLevelsM": [
+     2.04
+    ]
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "S-51 Switcher",
+   "driver": {
+    "axles": 4,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 21..21 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     21,
+     21
+    ],
+    "mainDriverIndex": 0,
+    "radiusM": 0.6477
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [
+    "engine/Cab.021: extreme scale"
+   ],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 175.0,
+    "pistonDiameterInches": 25.0,
+    "pistonStrokeInches": 28.0,
+    "totalHeatingSurface": 2781.0,
+    "weightEmpty": 220000,
+    "weightOnDrivers": 220000.0
+   },
+   "sourceSha256": {
+    "Bundle": "db31c7e13718724e90287bee80f255ff113f1d639524cb5dd9dba8cc8a36f2c6",
+    "Catalog.json": "6fab12970d52afbc7620a96302d2e5035d59b867f88744a7ac4d85ab2b59a9b0",
+    "Definitions.json": "db6c4bdf0b8b018246b63ba2de55a93b00d57f5aa5a3f27ce8ea5c6b367643e5"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-080-s51",
+    "lengthM": 8.503003,
+    "truckPack": "truck.bettendorf.sm"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "0-8-0"
+  },
+  "ls-2100-d46": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -4.549,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 19.0,
+    "floorConfinedToCab": false,
+    "floorFromCollisionHullM": 2.12,
+    "otherLevelsM": [
+     1.88
+    ]
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "D-46 Decapod",
+   "driver": {
+    "axles": 5,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 1..25 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     1,
+     25
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.71
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 190.0,
+    "pistonDiameterInches": 24.0,
+    "pistonStrokeInches": 28.0,
+    "totalHeatingSurface": 2896.0,
+    "weightEmpty": 212000,
+    "weightOnDrivers": 190000.0
+   },
+   "sourceSha256": {
+    "Bundle": "f6a14ec344fc440836f98aaf6177aa1c4ae7b7a1ae1df02790982ad6968f255a",
+    "Catalog.json": "31a61f4480979ec066465246b72d598b093d996dad469a3b5043a0a05b053e73",
+    "Definitions.json": "6274670cb93adeff896dc52bb6512b16ffec32101ae958212fa0d5f507f911d8"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-2100-d46",
+    "lengthM": 8.77195,
+    "truckPack": "truck.archbar.diamond"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "2-10-0"
+  },
+  "ls-2102-f71": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -7.234,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 2.7,
+    "floorConfinedToCab": true,
+    "floorFromCollisionHullM": 1.88,
+    "otherLevelsM": [
+     2.04
+    ]
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "F-71 Santa Fe",
+   "driver": {
+    "axles": 5,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 24..25 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     24,
+     25
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.725
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [
+    "engine/Cab_2_LOD0: extreme scale"
+   ],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 200.0,
+    "pistonDiameterInches": 28.0,
+    "pistonStrokeInches": 32.0,
+    "totalHeatingSurface": 6575.0,
+    "weightEmpty": 370600,
+    "weightOnDrivers": 294400.0
+   },
+   "sourceSha256": {
+    "Bundle": "dbabc8f9eaf29b47d24ed0ed16dd02584831f60ab12d1a5394483961580b6167",
+    "Catalog.json": "5b1fa582b40fa3ef305fda6892ebd0aff9a8b6ea32ec7640a27e6d2dfd5e24a6",
+    "Definitions.json": "47503868eabf6397b37c18bb208e974724a7289347a55313e40893eaed7eb6e6"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-2102-f71",
+    "lengthM": 9.0,
+    "truckPack": "truck.andrews.type-a"
+   },
+   "whistle": {
+    "basis": "definition",
+    "built": "wh-3-sou-lb",
+    "definitionId": "wh-3-sou-lb",
+    "model": "3ChimeD"
+   },
+   "whyte": "2-10-2"
+  },
+  "ls-260-g16": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -3.291,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 15.2,
+    "floorConfinedToCab": false,
+    "floorFromCollisionHullM": 1.64,
+    "otherLevelsM": [
+     1.2
+    ]
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "G-16 Mogul",
+   "driver": {
+    "axles": 3,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 34..34 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     34,
+     34
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.635
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 170.0,
+    "pistonDiameterInches": 16.0,
+    "pistonStrokeInches": 22.0,
+    "totalHeatingSurface": 832.0,
+    "weightEmpty": 82000,
+    "weightOnDrivers": 72000.0
+   },
+   "sourceSha256": {
+    "Bundle": "4e8213c63a9a1c0d8c9bdbac34f0bae86885522b3d53343602ec82d2f1d6bc12",
+    "Catalog.json": "b0bf44728a07610ccd2e4009fd48a9d8f5c8d0be8a7365ea147a6155309261f2",
+    "Definitions.json": "fd9dd62b9b19e0678a5facc9837a56f5d5a37d835091aab48c9027f2cbcc56a6"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-260-g16",
+    "lengthM": 6.7,
+    "truckPack": "truck.archbar.diamond"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "2-6-0"
+  },
+  "ls-260-g25": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -3.496,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 4.6,
+    "floorConfinedToCab": false,
+    "floorFromCollisionHullM": 1.8,
+    "otherLevelsM": []
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "G-25 Mogul",
+   "driver": {
+    "axles": 3,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 29..29 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     29,
+     29
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.7112
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq",
+     "Speedometer100"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 180.0,
+    "pistonDiameterInches": 19.0,
+    "pistonStrokeInches": 26.0,
+    "totalHeatingSurface": 1349.0,
+    "weightEmpty": 142500,
+    "weightOnDrivers": 125000.0
+   },
+   "sourceSha256": {
+    "Bundle": "177c5adc89534caa3f4a20935a6cddd51e0a109572fd80a0af46ec969ed7dd1d",
+    "Catalog.json": "cf95f7d56d1ec0f73f248df2312f4cc745c2e5dfdf24e769227836e3cff1c44d",
+    "Definitions.json": "3301e3473069446f6d27e8acb361ff311a5fbc2e0425b7bc09638d622db30533"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-260-g25",
+    "lengthM": 7.55,
+    "truckPack": "truck.andrews.type-a"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "2-6-0"
+  },
+  "ls-280-c25": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -2.105,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 0.8,
+    "floorConfinedToCab": true,
+    "floorFromCollisionHullM": 1.28,
+    "otherLevelsM": [
+     1.68,
+     1.7
+    ]
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "C-25 Consolidation",
+   "driver": {
+    "axles": 4,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is -2..31 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     -2,
+     31
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.65
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "DualReservoirMainEq",
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [
+    "engine/Drivers/Drivers.001/Rods_Left.left.001: zero scale"
+   ],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 175.0,
+    "pistonDiameterInches": 19.0,
+    "pistonStrokeInches": 24.0,
+    "totalHeatingSurface": 1350.0,
+    "weightEmpty": 123600,
+    "weightOnDrivers": 108550.0
+   },
+   "sourceSha256": {
+    "Bundle": "8d40fa871258350a027df1e6bf27c0c0649d48de75fe4bb6e7899d1acc814841",
+    "Catalog.json": "9ea117c0b6f7384943009d0bbba8032a9f94c760dd35ea9147d151e13e805024",
+    "Definitions.json": "c30dcfa8cc299a3497fc671240f5a918fec62dbb2ca1f5d7f5fd2c9a0b52396e"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-280-c25",
+    "lengthM": 6.8,
+    "truckPack": "truck.archbar.diamond"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "2-8-0"
+  },
+  "ls-280-c46": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -3.897,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 0.7,
+    "floorConfinedToCab": true,
+    "floorFromCollisionHullM": 1.78,
+    "otherLevelsM": [
+     2.1
+    ]
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "C-46 Consolidation",
+   "driver": {
+    "axles": 4,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 23..23 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     23,
+     23
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.71
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "DualBrakeCylinderLine",
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "Quadruplex"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 190.0,
+    "pistonDiameterInches": 24.0,
+    "pistonStrokeInches": 30.0,
+    "totalHeatingSurface": 3102.0,
+    "weightEmpty": 284500,
+    "weightOnDrivers": 189000.0
+   },
+   "sourceSha256": {
+    "Bundle": "be78df48f279e14299a10f2a53e135d8a842523b971aa2b37aa2d163bec18c5c",
+    "Catalog.json": "b07ee7ea1cf7d62b826cb92860d827191c434eedc2d54ce9f844d254f2d3ffd4",
+    "Definitions.json": "fe42f7c5ce8a61efc47cca8ee0905c99010aa6a099d62727d41c36329952625d"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-280-c46",
+    "lengthM": 8.5,
+    "truckPack": "truck.bettendorf.sm"
+   },
+   "whistle": {
+    "basis": "definition",
+    "built": "wh-3-sou-lb",
+    "definitionId": "wh-3-sou-lb",
+    "model": "3ChimeD"
+   },
+   "whyte": "2-8-0"
+  },
+  "ls-280-c55": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -4.188,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 2.0,
+    "floorConfinedToCab": true,
+    "floorFromCollisionHullM": 2.02,
+    "otherLevelsM": [
+     2.38
+    ]
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "C-55 Consolidation",
+   "driver": {
+    "axles": 4,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 29..29 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     29,
+     29
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.6965
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 185.0,
+    "pistonDiameterInches": 26.0,
+    "pistonStrokeInches": 30.0,
+    "totalHeatingSurface": 4465.0,
+    "weightEmpty": 268000,
+    "weightOnDrivers": 238000.0
+   },
+   "sourceSha256": {
+    "Bundle": "c0a460ba179427c912fbbf7dc6c4dbb152e73340c855485dd6df7f6a77bf2179",
+    "Catalog.json": "d324fb6bb5cef3e631a219c5f01acb83bfc8337274827bf3314feba122e2ef38",
+    "Definitions.json": "52b39626b491df8eecce6adcd637be8b37b3657498e2624dd0a412f3770af744"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-280-c55",
+    "lengthM": 8.925,
+    "truckPack": "truck.andrews.type-a"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "2-8-0"
+  },
+  "ls-282-k28t": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -2.656,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 5.5,
+    "floorConfinedToCab": true,
+    "floorFromCollisionHullM": 1.66,
+    "otherLevelsM": []
+   },
+   "conversion": {
+    "audit": "passed",
+    "notes": [
+     "big-end pair placed; small-end pair dropped (something visible above the crosshead end)",
+     "5 gauges placed next to model parts (nearest part 0.04-0.08 m)",
+     "17 generated backhead controls"
+    ],
+    "oilCupPairs": 1,
+    "status": "converted"
+   },
+   "displayName": "K-28T Logging Tank Mikado",
+   "driver": {
+    "axles": 4,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 19..19 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     19,
+     19
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.559
+   },
+   "endBeam": {
+    "none": "not needed in any run so far (builds without a review)"
+   },
+   "gauges": {
+    "generated": [],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq",
+     "Speedometer100"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [
+    "engine/Coal/Bone.001: extreme scale",
+    "engine/Coal/Bone.001/Plane.003: extreme scale"
+   ],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 190.0,
+    "pistonDiameterInches": 18.0,
+    "pistonStrokeInches": 24.0,
+    "totalHeatingSurface": 1485.0,
+    "weightEmpty": 168000,
+    "weightOnDrivers": 120500.0
+   },
+   "sourceSha256": {
+    "Bundle": "ade334e645b47672c9bc5b901aabec57498871c3f362f04b374749bcdf19b632",
+    "Catalog.json": "c4c5fc13ee4a13ce11894c68eada42d05fecb513dc7a76fe65fdfc904827f2c5",
+    "Definitions.json": "9085951b6ad507e9edfdcaf9fb81d8d6301d4923a4a7742bb22282365253e23f"
+   },
+   "tank": true,
+   "tender": null,
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "2-8-2"
+  },
+  "ls-282-k35": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -4.706,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 1.9,
+    "floorConfinedToCab": true,
+    "floorFromCollisionHullM": 1.56,
+    "otherLevelsM": [
+     1.98
+    ]
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "K-35 Logging Mikado",
+   "driver": {
+    "axles": 4,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 32..32 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     32,
+     32
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.6096
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq",
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [
+    "engine/Brake Rigging/Bone.006/Brake hanger : name has leading or trailing space",
+    "engine/Drivers/Bone.001/Bone.002/Cube.063: extreme scale",
+    "engine/Drivers/rods_015_L/Cylinder.024: extreme scale"
+   ],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 175.0,
+    "pistonDiameterInches": 20.5,
+    "pistonStrokeInches": 28.0,
+    "totalHeatingSurface": 2994.0,
+    "weightEmpty": 179000,
+    "weightOnDrivers": 141500.0
+   },
+   "sourceSha256": {
+    "Bundle": "cdc3690c2367cb098062d51c67a1f6c002ea07ff982edaaef0af3567b316db2e",
+    "Catalog.json": "8f2aad5c2f25240100b812c5a1e9a4f210f2ceec0de2f902f9d8c0b203d29f08",
+    "Definitions.json": "aa33192c33bd6322a3de632be84c23b87ae505963f9371d569d811d94e24fa28"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-282-k35",
+    "lengthM": 7.55,
+    "truckPack": "truck.archbar.tatum"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "2-8-2"
+  },
+  "ls-284-b65": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -7.652,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 9.6,
+    "floorConfinedToCab": false,
+    "floorFromCollisionHullM": 2.1,
+    "otherLevelsM": []
+   },
+   "conversion": {
+    "audit": "passed",
+    "notes": [
+     "first run stopped at the tender end beam (ambiguous); James accepted the proposed band 1.00..1.20 m",
+     "loco and tender bodies overlap in 38 cells (worst -204 mm): check the join in game",
+     "tender brake release seated"
+    ],
+    "oilCupPairs": 1,
+    "status": "converted"
+   },
+   "displayName": "B-65 Berkshire",
+   "driver": {
+    "axles": 4,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 25..25 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     25,
+     25
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.875
+   },
+   "endBeam": {
+    "lt-284-b65": {
+     "band": [
+      1.0,
+      1.2
+     ],
+     "evidence": [
+      "rr2dv end-beam survey, run 20260930-210241-ls-284-b65-540f18: rear, band 1.00..1.20 m, 31/65 rays on one face at z -6.936 (4 left / 4 right of 0.3 m; Tender_LOD0), +0.064 m from the source car end -7.000; the same plane at 1.20..1.40 m: z -6.936, 7 rays",
+      "the broader face at z -6.858 (48 rays, 24 left / 24 right) lies 8 cm further in; accepted by James 2026-09-30 after the first run stopped"
+     ]
+    }
+   },
+   "gauges": {
+    "generated": [],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq",
+     "Quadruplex",
+     "Speedometer100"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [
+    "engine/Drivers/Bone.016/Radius Guide Link L: zero scale",
+    "engine/Drivers/Dad : name has leading or trailing space"
+   ],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 265.0,
+    "pistonDiameterInches": 25.0,
+    "pistonStrokeInches": 32.0,
+    "totalHeatingSurface": 6579.0,
+    "weightEmpty": 447200,
+    "weightOnDrivers": 268200.0
+   },
+   "sourceSha256": {
+    "Bundle": "a1974bb935c076dc4f1c15937e9ab7c81aada79d39dc3b0322f0b8f1afc4700a",
+    "Catalog.json": "5853e71d016bde58a230f2176fc5158cce612b45e0d65298792a727509d0296c",
+    "Definitions.json": "7a1d620107193c2733d77c47c53eda6704d3c723e7b1b69c3624c8d6f1cdf09e"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-284-b65",
+    "lengthM": 14.0,
+    "truckPack": "truck.buckeye.conventional"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "2-8-4"
+  },
+  "ls-440-a23": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -3.272,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 5.0,
+    "floorConfinedToCab": false,
+    "floorFromCollisionHullM": 1.82,
+    "otherLevelsM": [
+     1.46
+    ]
+   },
+   "conversion": {
+    "audit": "passed",
+    "notes": [
+     "no LOD meshes; small-end pair blocked by real geometry (Driversnstuff_003_low)",
+     "throttle and whistle handles do not move their own part: generated levers",
+     "gauges report no nearest model part (dials are part of one large mesh)"
+    ],
+    "oilCupPairs": 1,
+    "status": "converted"
+   },
+   "displayName": "A-23 American",
+   "driver": {
+    "axles": 2,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 19..19 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     19,
+     19
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.775
+   },
+   "endBeam": {
+    "none": "not needed in any run so far (builds without a review)"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 190.0,
+    "pistonDiameterInches": 19.0,
+    "pistonStrokeInches": 26.0,
+    "totalHeatingSurface": 2194.0,
+    "weightEmpty": 144950,
+    "weightOnDrivers": 97350.0
+   },
+   "sourceSha256": {
+    "Bundle": "11ca0aaf08909948eedab7fc330c8908ca2f49c9e733c90fd3957f55d6798045",
+    "Catalog.json": "385f096740520caf87df644118f9a42ddef8fcfed057c797e114b20cd90817f5",
+    "Definitions.json": "5df700dd574fcb7b53ac7457996982a51539e22ec96a26d498f2515f61d663fb"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-440-a23",
+    "lengthM": 7.4,
+    "truckPack": "truck.archbar.tatum"
+   },
+   "whistle": {
+    "basis": "definition",
+    "built": "wh-3-std",
+    "definitionId": "wh-3-std",
+    "model": "3ChimeA"
+   },
+   "whyte": "4-4-0"
+  },
+  "ls-442-a26": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -5.191,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 0.7,
+    "floorConfinedToCab": true,
+    "floorFromCollisionHullM": 1.72,
+    "otherLevelsM": [
+     2.0
+    ]
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "A-26 Atlantic",
+   "driver": {
+    "axles": 2,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 35..35 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     35,
+     35
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.89
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [],
+   "lodMeshes": true,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 185.0,
+    "pistonDiameterInches": 21.0,
+    "pistonStrokeInches": 26.0,
+    "totalHeatingSurface": 2605.0,
+    "weightEmpty": 195000,
+    "weightOnDrivers": 105800.0
+   },
+   "sourceSha256": {
+    "Bundle": "c66bb6a183d97fb28a8b1f37a13c4c06f248ec1b99b09f1a4a7019164c8fa18a",
+    "Catalog.json": "5bb569ea2afb50f097703a963d63d5ed8364198f10ce74c5d8de0f00cd9c83b2",
+    "Definitions.json": "94a8620e0c0daca2751bad1b20bb712f335c54ca58bb4a99378b6aef1507da3a"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-442-a26",
+    "lengthM": 8.647991,
+    "truckPack": "truck.bettendorf.sm"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "4-4-2"
+  },
+  "ls-460-t17": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -1.955,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 20.0,
+    "floorConfinedToCab": false,
+    "floorFromCollisionHullM": 1.66,
+    "otherLevelsM": []
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "T-17 Ten Wheeler",
+   "driver": {
+    "axles": 3,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 1..24 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     1,
+     24
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.71
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 160.0,
+    "pistonDiameterInches": 17.0,
+    "pistonStrokeInches": 24.0,
+    "totalHeatingSurface": 1662.0,
+    "weightEmpty": 87250,
+    "weightOnDrivers": 72000.0
+   },
+   "sourceSha256": {
+    "Bundle": "a04342b44b863d8d0c1c1c59d461df01578b7de1102f30849f7f178d8a866e6f",
+    "Catalog.json": "52a1e6a6ba00565d607ff0c6cb051c1f0221f3aaf64396eeb0f0147f86e72b61",
+    "Definitions.json": "45f83e13968a434cabce39a269c9fe8a585cf06cd8acebe32717fc188683550e"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-460-t17",
+    "lengthM": 6.9,
+    "truckPack": "truck.archbar.tatum"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "4-6-0"
+  },
+  "ls-460-t21": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -0.463,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 22.9,
+    "floorConfinedToCab": false,
+    "floorFromCollisionHullM": 1.94,
+    "otherLevelsM": []
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "T-21 Ten Wheeler",
+   "driver": {
+    "axles": 3,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 39..39 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     39,
+     39
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.875
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [
+    "engine/Drivers/Drivers 2/ValveGear_003_R: zero scale",
+    "engine/Drivers/Drivers 2/ValveGear_004_R: zero scale",
+    "engine/Drivers/ValveGear_026_L: extreme scale"
+   ],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 180.0,
+    "pistonDiameterInches": 19.5,
+    "pistonStrokeInches": 26.0,
+    "totalHeatingSurface": 2032.0,
+    "weightEmpty": 88000,
+    "weightOnDrivers": 116800.0
+   },
+   "sourceSha256": {
+    "Bundle": "5616a4a5b718ddcd9c04d9433afb0244a457f6d9b42ac39e28f9fbc9c1eb936a",
+    "Catalog.json": "a76af8e6ab7257be1e0060eb09dec6a47d45bb82bd899f7e39155df214eecd44",
+    "Definitions.json": "fde2df058b0e5e60a79658a302809ed87f73cb1c4b751c1d7c4dd9e8e3c0166a"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-460-t21",
+    "lengthM": 7.3,
+    "truckPack": "truck.archbar.diamond"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "4-6-0"
+  },
+  "ls-460-t22": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -2.89,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 9.8,
+    "floorConfinedToCab": false,
+    "floorFromCollisionHullM": 1.92,
+    "otherLevelsM": [
+     1.7
+    ]
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "T-22 Ten Wheeler",
+   "driver": {
+    "axles": 3,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 20..20 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     20,
+     20
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.815
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [
+    "engine/Left Door/Bone/Cab_006_LOD0: extreme scale",
+    "engine/Right Door/Bone/Cab_007_LOD0: extreme scale",
+    "engine/Right Door/Bone/Right Door Window : name has leading or trailing space"
+   ],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 175.0,
+    "pistonDiameterInches": 20.0,
+    "pistonStrokeInches": 24.0,
+    "totalHeatingSurface": 1815.0,
+    "weightEmpty": 135000,
+    "weightOnDrivers": 107000.0
+   },
+   "sourceSha256": {
+    "Bundle": "a49d1bdb116988935f4807a98afdaf9e25e1dce642003a738b2c1069b4d9bdc0",
+    "Catalog.json": "7a85001d264f6683d7a3aa258560354564a379f5bde3c31d98ccfed7b2f82b8b",
+    "Definitions.json": "4f1149571d4b5ac11bb448dc4cbce8958f7ca3d902ef2e8ffee33482352328b2"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-460-t22",
+    "lengthM": 7.2,
+    "truckPack": "truck.andrews.type-a"
+   },
+   "whistle": {
+    "basis": "definition",
+    "built": "wh-3-sou-lb",
+    "definitionId": "wh-3-sou-lb",
+    "model": "3ChimeD"
+   },
+   "whyte": "4-6-0"
+  },
+  "ls-462-p18": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -3.546,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 20.2,
+    "floorConfinedToCab": false,
+    "floorFromCollisionHullM": 1.72,
+    "otherLevelsM": [
+     1.04
+    ]
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "P-18 Pacific",
+   "driver": {
+    "axles": 3,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 2..28 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     2,
+     28
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.595
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [
+    "engine/Trailing : name has leading or trailing space"
+   ],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 200.0,
+    "pistonDiameterInches": 16.0,
+    "pistonStrokeInches": 22.0,
+    "totalHeatingSurface": 1662.0,
+    "weightEmpty": 109000,
+    "weightOnDrivers": 72000.0
+   },
+   "sourceSha256": {
+    "Bundle": "cf791a8adef86650ea62d2d03282d8d3eff929cca661f2fd2c590d5284bcdb94",
+    "Catalog.json": "fede7e5504bb94e91e3bfedbac259f64c28515a72ece64bcf0ba4f6d708df700",
+    "Definitions.json": "eabaa4606c665d6bc74ffd64f64ef9b81b49475de58c879ae679ae4a4d44fcdd"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-462-p18",
+    "lengthM": 7.25,
+    "truckPack": "truck.archbar.diamond"
+   },
+   "whistle": {
+    "basis": "James 2026-09-30: wh-3-std when the definition names none",
+    "built": "wh-3-std",
+    "definitionId": "",
+    "model": "3ChimeA"
+   },
+   "whyte": "4-6-2"
+  },
+  "ls-462-p43": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -6.316,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 1.3,
+    "floorConfinedToCab": true,
+    "floorFromCollisionHullM": 1.96,
+    "otherLevelsM": [
+     2.04
+    ]
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "P-43 Pacific",
+   "driver": {
+    "axles": 3,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 21..21 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     21,
+     21
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 1.0033
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "DualBrakeCylinderLine"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "Quadruplex",
+     "Speedometer100"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [
+    "engine/Reverser : name has leading or trailing space",
+    "engine/Whistle: extreme scale",
+    "engine/Whistle/Bone: extreme scale",
+    "engine/Whistle/Bone/Bone.001: extreme scale",
+    "engine/Whistle/Bone/Bone.002: extreme scale",
+    "engine/Whistle/Bone.006: extreme scale",
+    "engine/Whistle/Bone.006/Bone.004: extreme scale"
+   ],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 200.0,
+    "pistonDiameterInches": 27.0,
+    "pistonStrokeInches": 28.0,
+    "totalHeatingSurface": 4688.0,
+    "weightEmpty": 323000,
+    "weightOnDrivers": 197000.0
+   },
+   "sourceSha256": {
+    "Bundle": "223cd724c03645f5a08e6ef2178d0e760d030ba6bdb49d2d83d83829e30f50df",
+    "Catalog.json": "5d69954922f1c7816b6219cef86d856c0b52e3e589a016e166f836a5e564a74e",
+    "Definitions.json": "8903c679cabc23c4e5cea8378be6ab125106697ec125e96867a325bf74961188"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-462-p43",
+    "lengthM": 9.488968,
+    "truckPack": "truck.usra.2axle"
+   },
+   "whistle": {
+    "basis": "definition",
+    "built": "wh-6-nathan",
+    "definitionId": "wh-6-nathan",
+    "model": "6ChimeA"
+   },
+   "whyte": "4-6-2"
+  },
+  "ls-462-p48": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -5.856,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 4.5,
+    "floorConfinedToCab": false,
+    "floorFromCollisionHullM": 1.92,
+    "otherLevelsM": [
+     2.14
+    ]
+   },
+   "conversion": {
+    "audit": "passed",
+    "notes": [
+     "big end: no level spot on the rod; small end blocked; one running-board pair placed instead",
+     "Quadruplex brake gauge had no HUD reading (now built as DV's main-reservoir/equalizing gauge plus a generated brake-cylinder gauge; untested)",
+     "front doors left out (overlap another moving assembly)",
+     "tender brake release: no seat found",
+     "coupling: no draw-gear part meets the other car (96 mm)"
+    ],
+    "oilCupPairs": 1,
+    "status": "converted"
+   },
+   "displayName": "P-48 Pacific",
+   "driver": {
+    "axles": 3,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 23..23 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     23,
+     23
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.925
+   },
+   "endBeam": {
+    "none": "not needed in any run so far (builds without a review)"
+   },
+   "gauges": {
+    "generated": [
+     "DualBrakeCylinderLine"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "Quadruplex",
+     "Speedometer100"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 200.0,
+    "pistonDiameterInches": 27.0,
+    "pistonStrokeInches": 28.0,
+    "totalHeatingSurface": 3613.0,
+    "weightEmpty": 277000,
+    "weightOnDrivers": 182000.0
+   },
+   "sourceSha256": {
+    "Bundle": "501d65151f46561b0d07be7e602e3fe3b1594e2116fcd1801d767b3e6a083c45",
+    "Catalog.json": "53163e07244a66bf3b847687f99f97d8d9de0ab16ec222079c2710e957b2c07f",
+    "Definitions.json": "1766908ecfc2f4e01691dcab8f82ecc8f6dc61fc9c21f35e0142e52601856315"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-462-p48",
+    "lengthM": 12.3,
+    "truckPack": "truck.commonwealth.conventional"
+   },
+   "whistle": {
+    "basis": "definition",
+    "built": "wh-3-hancock-lb",
+    "definitionId": "wh-3-hancock-lb",
+    "model": "3ChimeB"
+   },
+   "whyte": "4-6-2"
+  },
+  "ls-480-c40": {
+   "answers": {
+    "basis": "James 2026-09-30 (coal, hand-fired, no auto-stoking, dynamo on every loco); physics/brake/spawn are the app's defaults",
+    "cylinders": 2,
+    "cylindersBasis": "James 2026-09-30: all stock locomotives are two-cylinder; a compound is simulated as a simple engine",
+    "dynamo": "yes",
+    "firing": "hand-fired",
+    "physics": "legacy-equivalent",
+    "spawnMode": "radio-only",
+    "trainBrake": "manual-lap"
+   },
+   "cab": {
+    "backheadZ": -4.143,
+    "basis": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md), M14 collision-hull flat levels; evidence for checks, not read by the build",
+    "floorAreaM2": 0.9,
+    "floorConfinedToCab": true,
+    "floorFromCollisionHullM": 1.66,
+    "otherLevelsM": []
+   },
+   "conversion": {
+    "notes": [],
+    "status": "untested"
+   },
+   "displayName": "C-40 Mastodon",
+   "driver": {
+    "axles": 4,
+    "basis": "source",
+    "clip": "Drivers",
+    "evidence": "definition driver diameter / 2 is the tread: Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md): the highest point of every rail-touching driving wheel is 19..19 mm above it (flange), level with it on blind drivers",
+    "flangeTipAboveTreadMm": [
+     19,
+     19
+    ],
+    "mainDriverIndex": 1,
+    "radiusM": 0.71
+   },
+   "endBeam": {
+    "none": "untested"
+   },
+   "gauges": {
+    "generated": [
+     "Speedometer100"
+    ],
+    "inModel": [
+     "BoilerPressure",
+     "DualBrakeCylinderLine",
+     "DualReservoirMainEq"
+    ],
+    "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
+   },
+   "knownOddities": [],
+   "lodMeshes": false,
+   "source": {
+    "brakeValveType": "",
+    "maximumBoilerPressure": 200.0,
+    "pistonDiameterInches": 21.0,
+    "pistonStrokeInches": 30.0,
+    "totalHeatingSurface": 2940.0,
+    "weightEmpty": 206200,
+    "weightOnDrivers": 169800.0
+   },
+   "sourceSha256": {
+    "Bundle": "4f05aa200ea150d948fa1c4fe5b852ab732214bb9853d8e23db8b170987a8205",
+    "Catalog.json": "a083037f1ebdc034cc1a74f8952c301613a15dd20ec5b760396e19c2613fc472",
+    "Definitions.json": "753b5052dbbab19c306c46937dd55f1f02f757134584baa14b3655f453bf9f2f"
+   },
+   "tank": false,
+   "tender": {
+    "id": "lt-480-c40",
+    "lengthM": 9.4,
+    "truckPack": "truck.commonwealth.fwtt"
+   },
+   "whistle": {
+    "basis": "definition",
+    "built": "wh-3-std",
+    "definitionId": "wh-3-std",
+    "model": "3ChimeA"
+   },
+   "whyte": "4-8-2"
+  }
+ },
+ "measured": "Codex bulk measurement run 2026-09-30 (docs/vanilla/bulk-findings.md)",
+ "schema": 1
+}

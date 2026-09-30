@@ -32,6 +32,8 @@ STEAM: dict[str, str] = {
     "ls-480-c40": "C-40 Mastodon",
 }
 
+REAL_STEAM = frozenset(STEAM)  # the 21, as shipped (tests add synthetic names to STEAM for their own process)
+
 DIESEL: dict[str, str] = {
     "ld-gp9": "EMD GP9",
     "ld-sd7": "EMD SD7",
@@ -54,3 +56,79 @@ def refusal(pack_name: str) -> str | None:
                 "(diesel integration is on the 0.3.x branch)")
     return (f"{pack_name} is not one of Railroader's 21 stock steam locomotives; this edition converts only those "
             f"({', '.join(sorted(STEAM))})")
+
+
+# ---------------------------------------------------------------------------------------------------------------------
+# The per-locomotive table (stock_locos.json, built by tools/vanilla/make_table.py): every fact the conversion relies on
+# for each of the 21 locomotives, with its basis, so nothing is left to inference at conversion time (James, 2026-09-30).
+import json  # noqa: E402
+from functools import lru_cache  # noqa: E402
+from pathlib import Path  # noqa: E402
+
+TABLE_FILE = Path(__file__).with_name("stock_locos.json")
+REQUIRED = ("displayName", "whyte", "tank", "tender", "source", "driver", "answers", "whistle", "gauges", "cab", "endBeam",
+            "lodMeshes", "knownOddities", "conversion", "sourceSha256")
+HASHED_FILES = ("Bundle", "Catalog.json", "Definitions.json")
+
+
+@lru_cache(maxsize=1)
+def table() -> dict:
+    return json.loads(TABLE_FILE.read_text(encoding="utf-8"))
+
+
+def entry(pack_name: str) -> dict | None:
+    """The table's entry for a stock steam pack, or None for a name the table does not know (only test packs)."""
+    return table()["locos"].get(pack_name)
+
+
+def validate_table(data: dict | None = None) -> list[str]:
+    """Every problem that would leave a conversion fact ambiguous: a missing pack, field, basis or hash."""
+    data = table() if data is None else data
+    problems = []
+    if not isinstance(data.get("gameBuild"), str) or not data["gameBuild"]:
+        problems.append("the table does not say which game build it describes")
+    locos = data.get("locos", {})
+    if set(locos) != set(REAL_STEAM):
+        problems.append(f"the table's locomotives differ from the stock list: {sorted(set(locos) ^ set(REAL_STEAM))}")
+    for name, e in sorted(locos.items()):
+        for key in REQUIRED:
+            if key not in e or e[key] is None and key != "tender":
+                problems.append(f"{name}: '{key}' is missing")
+        if e.get("tender") is None and not e.get("tank"):
+            problems.append(f"{name}: no tender but not marked as a tank locomotive")
+        drv = e.get("driver", {})
+        if not (isinstance(drv.get("radiusM"), (int, float)) and .1 <= drv["radiusM"] <= 1.5 and drv.get("basis") and drv.get("evidence")):
+            problems.append(f"{name}: the driver radius needs a value in 0.1..1.5 m, a basis and evidence")
+        ans = e.get("answers", {})
+        if ans.get("cylinders") != 2 or ans.get("firing") != "hand-fired" or ans.get("dynamo") != "yes" or not ans.get("basis"):
+            problems.append(f"{name}: answers must be 2 cylinders, hand-fired, dynamo yes, with a basis")
+        if set(e.get("sourceSha256", {})) != set(HASHED_FILES) or any(len(str(v)) != 64 for v in e.get("sourceSha256", {}).values()):
+            problems.append(f"{name}: sourceSha256 must hold a 64-digit hash for {HASHED_FILES}")
+        eb = e.get("endBeam", {})
+        if not eb:
+            problems.append(f"{name}: endBeam must be a band per tender or a note saying none is needed")
+        for vid, band in eb.items():
+            if vid == "none":
+                continue
+            if not band.get("evidence") or len(band.get("band", [])) != 2:
+                problems.append(f"{name}: end-beam band for {vid} needs two heights and evidence")
+        if e.get("conversion", {}).get("status") not in ("untested", "converted"):
+            problems.append(f"{name}: conversion status must be 'untested' or 'converted'")
+    return problems
+
+
+def build_status(pack_name: str, inventory_packs: list[dict]) -> tuple[bool, str]:
+    """(matches, text): does the installed pack carry the exact files the table describes? An unknown build is reported,
+    never refused (James, 2026-09-30: Railroader is splitting legacy and beta on Steam)."""
+    e = entry(pack_name)
+    if e is None:
+        return False, f"{pack_name} is not in the vanilla table"
+    pack = next((p for p in inventory_packs if p.get("name") == pack_name), None)
+    if pack is None:
+        return False, "the pack's files were not inventoried"
+    have = {f["name"]: f["sha256"] for f in pack.get("files", [])}
+    differ = [n for n in HASHED_FILES if have.get(n) != e["sourceSha256"][n]]
+    if differ:
+        return False, (f"unknown game build: {', '.join(differ)} differ from the vanilla table (recorded for Railroader build "
+                       f"{table()['gameBuild']}); table values are used only where the definition agrees")
+    return True, f"matches the vanilla table (Railroader build {table()['gameBuild']})"

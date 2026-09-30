@@ -15,7 +15,7 @@ from typing import Sequence
 
 from typing import Callable
 
-from . import (assetripper, audit, beamreview, build, buildrecord, consent, geometryreview, installs, probeinput, projectcache, publish, record,
+from . import (assetripper, audit, beamreview, build, buildrecord, consent, geometryreview, installs, probeinput, projectcache, publish, record, stock,
                unityproject, unityrun, workspace, rebuild, review)
 from .jsonio import read_json, write_json
 from .machine import Machine, check_work_root
@@ -190,6 +190,27 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     for issue in inv["issues"]:
         run.log(f"  {issue['severity']:7} {issue['code']}: {issue['message']}")
     run.record["input_fingerprint"] = fingerprint(inv)
+    tab = stock.entry(chosen)
+    table_matches = False
+    if tab is not None:
+        table_matches, note = stock.build_status(chosen, inv["packs"])
+        run.log(f"  vanilla table: {note}")
+        run.record["answers"]["vanillaTable"] = {"matches": table_matches, "gameBuild": stock.table()["gameBuild"], "note": note}
+    if not geometry_review and table_matches:
+        bands = {vid: b for vid, b in tab["endBeam"].items() if vid != "none"}
+        if bands:  # a band James accepted for this exact pack (board 2026-09-30): same checks as a reviewed-geometry file
+            data = {"schema": 1, "inputFingerprint": run.record["input_fingerprint"], "vehicles": {
+                vid: {"EndBeamProbeHeight": {"value": b["band"], "unit": "m", "basis": "measured",
+                                             "evidence": list(b["evidence"]) + ["applied from the vanilla table: the installed files match it"]}}
+                for vid, b in bands.items()}}
+            cars = {chosen} | ({inv['tender']['id']} if inv.get('tender') else set())
+            try:
+                reviewed = geometryreview.validate(data, run.record['input_fingerprint'], cars)
+            except ValueError as e:
+                return fail('link', f'vanilla table geometry review: {e}')
+            run.record['answers']['geometryReview'] = reviewed
+            write_json(run.path / 'geometry-review.json', reviewed)
+            run.log('reviewed geometry taken from the vanilla table (' + ', '.join(sorted(bands)) + ')')
     if geometry_review:
         cars = {chosen} | ({inv['tender']['id']} if inv.get('tender') else set())
         try:

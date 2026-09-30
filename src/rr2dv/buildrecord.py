@@ -15,6 +15,7 @@ Railroader conventions used (checked against our G-29/C-21/S-16 profiles):
 """
 from __future__ import annotations
 
+import json
 import math
 import re
 
@@ -129,6 +130,13 @@ def _plain(n):
     if isinstance(n, list):
         return [_plain(v) for v in n]
     return n
+
+
+def _rotate(q: list[float], v: list[float]) -> list[float]:
+    """Rotate v by the quaternion q = [x, y, z, w]."""
+    x, y, z, w = q
+    t = [2 * (y * v[2] - z * v[1]), 2 * (z * v[0] - x * v[2]), 2 * (x * v[1] - y * v[0])]
+    return [v[0] + w * t[0] + (y * t[2] - z * t[1]), v[1] + w * t[1] + (z * t[0] - x * t[2]), v[2] + w * t[2] + (x * t[1] - y * t[0])]
 
 
 def _extra(c: dict) -> dict:
@@ -816,6 +824,7 @@ class _Builder:
         # ---------------- anchors
         chuff = next((c["name"] for c in comps if c["kind"] == "Chuff"), None)
         whistle = next((c["name"] for c in comps if c["kind"] == "Whistle"), None)
+        self._ensure_gauges(cfg, comps, lid)
         cocks, fallback_cock = self._ensure_cylinder_cock(cfg, comps, drivers, bmin, bmax, radius)
         for what, val in (("Chuff (chimney)", chuff), ("Whistle", whistle)):
             if not val:
@@ -1220,6 +1229,65 @@ class _Builder:
             return [["[car plate anchor1]", left[0][0]], ["[car plate anchor2]", right[0][0]]]
         self.choose("number plates stay where Custom Car Loader puts them: no road-number decal on each side")
         return []
+
+    GAUGE_SIZE_M = 0.19  # the core's dial diameter at RR scale 1 (CclLocoBuild.BuildInterior)
+
+    def _ensure_gauges(self, cfg: dict, comps: list[dict], lid: str) -> None:
+        """Every converted loco gets the normal Derail Valley gauges (James, 2026-09-30): boiler pressure, a two-needle brake gauge
+        that reads brake pipe (and cylinder), a main-reservoir gauge and a speedometer. RR's 4-needle Quadruplex becomes DV's
+        main-reservoir/equalizing gauge (the core makes no HUD reading of it); a style the model lacks is generated beside the
+        nearest brake gauge (else the boiler gauge), on the same panel and facing, away from its neighbours. Generated gauges are
+        estimates: check their position in game."""
+        value = cfg["Components"]["value"]
+        gauges = [c for c in value if c["kind"] == "Gauge"]
+        if not gauges:
+            self.choose("no gauge in the definition: none generated (no panel position to place them on)")
+            return
+
+        def style(c):
+            return _extra(c).get("style")
+
+        def put_style(c, new):
+            extra = _extra(c)
+            extra["style"] = new
+            c["extra"] = json.dumps(extra, separators=(",", ":"))
+
+        for c in gauges:
+            if style(c) == "Quadruplex":
+                put_style(c, "DualReservoirMainEq")
+                self.choose(f"gauge '{c['name']}': RR's 4-needle Quadruplex is built as Derail Valley's two-needle main-reservoir/"
+                            "equalizing gauge (brake-pipe and main-reservoir HUD readings)")
+        have = {style(c) for c in gauges}
+        brake = [c for c in gauges if style(c) in ("DualBrakeCylinderLine", "DualReservoirMainEq")]
+        boiler = [c for c in gauges if style(c) == "BoilerPressure"]
+        anchor = (brake or boiler or gauges)[0]
+        for want in ("DualBrakeCylinderLine", "DualReservoirMainEq", "Speedometer100"):
+            if want in have:
+                continue
+            a_pos, a_rot, a_scale = _plain(anchor["pos"]), _plain(anchor["rot"]), _plain(anchor["scale"])
+            scale = list(a_scale)
+            size = self.GAUGE_SIZE_M * scale[0]
+            step = 1.1 * size
+            ax = _rotate(a_rot, [1.0, 0.0, 0.0])
+            others = [(_plain(c["pos"]), self.GAUGE_SIZE_M * _plain(c["scale"])[0]) for c in value if c["kind"] == "Gauge"]
+            options = [[a_pos[i] + k * step * ax[i] * sign for i in range(3)] for k in (1, 2, 3, 4) for sign in (1, -1)]
+
+            def gap(p):  # the smallest clearance between dial edges (negative: the dials overlap)
+                return min(math.dist(p, o) - 0.5 * (size + osz) for o, osz in others)
+
+            best = next((p for p in options if gap(p) >= 0.02), None) or max(options, key=gap)
+            evidence = (f"RR gauge '{anchor['name']}' at {_r(a_pos, 3)} m: same panel and facing, {_r(math.dist(best, a_pos), 3)} m "
+                        f"to the side with the most clearance; Derail Valley's normal {want} gauge (the model has none)")
+            synthetic = {"kind": "Gauge", "name": f"rr2dv generated {want}", "parentPath": anchor.get("parentPath", ""),
+                         "extra": json.dumps({"style": want, "enabled": True}, separators=(",", ":")),
+                         "pos": env(_r(best), "m", "analogue_estimate", evidence), "rot": a_rot, "scale": scale}
+            value.append(synthetic)
+            cfg["Components"]["basis"] = "derived"
+            cfg["Components"]["evidence"].append(evidence)
+            comps.append(_plain(synthetic))
+            have.add(want)
+            self.choose(f"no {want} gauge in the model: generated one beside '{anchor['name']}' at {_r(best, 3)} m "
+                        "(estimated position: check it in game)")
 
     def _cylinder_cocks(self, cfg: dict, comps: list[dict], lid: str) -> None:
         """RR's CylinderCock anchor sits on the centreline and RR spawns the jets at +-radius (G-29 profile note)."""

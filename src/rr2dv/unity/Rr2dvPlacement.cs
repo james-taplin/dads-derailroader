@@ -164,6 +164,7 @@ public static partial class CclLocoBuild
 
     static float Rr2dvReleaseSkinDepth(Vector3 pos, Vector3 dir)
     {
+        using (new Rr2dvLodScope(RefBody))
         using (var vh = new VisualHits(RefBody))
             return vh.Ray(pos + dir * 1.5f, -dir, 3f, out var hit) ? Vector3.Dot(hit.point - pos, dir) : float.NaN;
     }
@@ -203,6 +204,7 @@ public static partial class CclLocoBuild
         if (rs.Length == 0) return;
         var bounds = rs[0].bounds; foreach (var r in rs) bounds.Encapsulate(r.bounds);
         float top = bounds.max.y + 1f;
+        using (new Rr2dvLodScope(RefBody))
         using (var vh = new VisualHits(RefBody))
         {
             float Surface(float x, float z) => vh.Ray(new Vector3(x, top, z), Vector3.down, top + 1f, out var h) ? h.point.y : float.NaN;
@@ -543,6 +545,7 @@ public static partial class CclLocoBuild
         if (Cfg.BrakeRelease == null || Cfg.BrakeReleaseExact) return;
         var (hint, euler) = Cfg.BrakeRelease(RefBody);
         var probe = new GameObject("rr2dv release probe").transform;
+        using (new Rr2dvLodScope(RefBody))   // the core's fitter reads every enabled mesh: only each part's LOD0 counts
         try
         {
             foreach (int step in new[] { 0, 1, 2, 3, 4, 5, 6, -1, -2 })  // forward first: the hint is at the loco's rear
@@ -664,6 +667,37 @@ public static partial class CclLocoBuild
         if (!success || !saved) throw new InvalidOperationException("Could not save measured placement: " + path);
     }
 
+    // Stock models carry two to four detail levels of most parts (Cab_1_LOD0..LOD3), all enabled in the built car. The core's
+    // VisualHits and our own queries read every enabled mesh, so a coarse LOD shell counted as geometry in a cup's space or
+    // under a brake release, and a main rod could be the LOD2 copy (S-23, P-48, board 2026-09-30). Only each part's LOD0 counts:
+    // the lower levels are switched off for the length of one query and restored afterwards (the saved prefab is untouched).
+    static System.Collections.Generic.HashSet<Renderer> Rr2dvLowerLodRenderers(Transform root)
+    {
+        var lower = new System.Collections.Generic.HashSet<Renderer>();
+        var top = new System.Collections.Generic.HashSet<Renderer>();
+        foreach (var group in root.GetComponentsInChildren<LODGroup>(true))
+        {
+            var levels = group.GetLODs();
+            for (int i = 0; i < levels.Length; i++)
+                foreach (var r in levels[i].renderers)
+                    if (r) (i == 0 ? top : lower).Add(r);
+        }
+        foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+            if (System.Text.RegularExpressions.Regex.IsMatch(r.gameObject.name, @"(?i)lod[1-9]\d*$")) lower.Add(r);
+        lower.ExceptWith(top);
+        return lower;
+    }
+
+    sealed class Rr2dvLodScope : IDisposable
+    {
+        readonly System.Collections.Generic.List<Renderer> off = new System.Collections.Generic.List<Renderer>();
+        public Rr2dvLodScope(Transform root)
+        {
+            foreach (var r in Rr2dvLowerLodRenderers(root)) if (r.enabled) { r.enabled = false; off.Add(r); }
+        }
+        public void Dispose() { foreach (var r in off) if (r) r.enabled = true; }
+    }
+
     // The record's axle pairs are provisional. Modelled big-end nubs define the oiling
     // layout when present; a board is only a fallback for a missing nub or a model
     // without detectable nubs. A pair with no seat on either surface is omitted.
@@ -682,6 +716,7 @@ public static partial class CclLocoBuild
             var placed = new System.Collections.Generic.List<(string tag, Vector3 pos, Transform rod, string seat)>();
             Rr2dvMotion = Rr2dvGearMotion(body);
             int mainRods = 0;
+            using (new Rr2dvLodScope(body))
             using (var hits = new VisualHits(body))
             {
                 Rr2dvCupSpacing.Clear();
@@ -794,8 +829,10 @@ public static partial class CclLocoBuild
         const int N = 16;
         var animators = Rr2dvGearAnimators(body);
         var found = new System.Collections.Generic.List<Rr2dvMainRod>();
+        var lower = Rr2dvLowerLodRenderers(body);
         var candidates = body.GetComponentsInChildren<MeshFilter>(true).Where(m => m.sharedMesh && m.sharedMesh.vertexCount > 0 &&
             m.GetComponent<MeshRenderer>() && m.GetComponent<MeshRenderer>().enabled && m.gameObject.activeInHierarchy &&
+            !lower.Contains(m.GetComponent<MeshRenderer>()) &&
             (Rr2dvIsRod(m.name) || Rr2dvTravels(m.transform))).ToList();
         try
         {
@@ -1093,6 +1130,7 @@ public static partial class CclLocoBuild
             var renderers = body.GetComponentsInChildren<Renderer>().Where(r => r.enabled).ToArray();
             if (renderers.Length == 0) return;
             var extent = renderers[0].bounds; foreach (var r in renderers) extent.Encapsulate(r.bounds);
+            using (new Rr2dvLodScope(body))
             using (var hits = new VisualHits(body))
             foreach (var anchor in new[] { a, b })
             {
@@ -1126,6 +1164,7 @@ public static partial class CclLocoBuild
         {
             var body = root.transform.Find("Model/" + Cfg.BodyName);
             if (!body) throw new InvalidOperationException("Missing built body for plate measurement");
+            using (new Rr2dvLodScope(body))
             using (var hits = new VisualHits(body))
             foreach (var pair in Cfg.PlateDecals)
             {
@@ -1199,6 +1238,7 @@ public static partial class CclLocoBuild
         var root = PrefabUtility.LoadPrefabContents(path);
         try
         {
+            using (new Rr2dvLodScope(RefBody))
             using (var hits = new VisualHits(RefBody))
             foreach (var spec in Cfg.Placed)
             {
