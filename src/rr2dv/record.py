@@ -189,7 +189,8 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
         found = (f"probe candidate {main['tread']:.6f} m, {main['confidence']} confidence"
                  if main and main["tread"] else "no probe candidate")
         pending.append(f"WheelRadius: review the tread candidates in metadata.wheelCandidates ({found}; source nominal "
-                       f"radius {main_ws.get('diameter', 0) / 2:g} m is not the tread), then pass --wheel-radius")
+                       f"radius {main_ws.get('diameter', 0) / 2:g} m; on Railroader's own locomotives it is the tread, checked on all 21), "
+                       "then confirm it in the pre-build review or pass --wheel-radius")
 
     needed = [f for f in ("maximumBoilerPressure", "pistonDiameterInches", "pistonStrokeInches", "wheelsets")
               if not d.get(f)]
