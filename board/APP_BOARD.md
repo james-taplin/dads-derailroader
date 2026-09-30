@@ -2234,3 +2234,18 @@ Reference (James, offline session): RSD-15 test pack (third-party mod, kept out 
 driven wheelsets, measured radius, source mass/fuel, controls mapped to DE6 ports, 94 hooks reloaded, 0 missing scripts/audio, game
 startup loaded it. Uncalibrated (DE6 power/RPM/traction defaults), six empty DE6 sim refs (warnings), no gadget proxy, not driven.
 Open: builder source and port table from the offline diesel work; calibration policy (stock DE6 curves first?). Nothing implemented.
+
+## VF3 (cloud Claude, vanilla-flavoured, 2026-09-30): Phase 1 results; Phase 2 measurement script
+Branch `vanilla-flavoured`. Codex Phase 1 (game build 20238526, bundles Unity 2022.3.62f2, receipts hash-pinned): 21/21 steam packs reach
+`needs-wheel-radius` (exit 3) with probe + draft record (~70 s cold each); SW1, GP9, SD7 stop at intake (steam-only, exit 1).
+Method note: the CLI's pre-build review comes before the wheel-radius block, so Codex called pipeline.convert(prebuild_review=None);
+pre-build questions not yet captured (Phase 1b). Unity Licensing Client failed in a restricted launch, fine unrestricted.
+Wheel candidate vs definition nominal: 13 high-confidence within 2.6% (K-35 -2.6% largest); 8 low: S-51 -13.1%, C-46 -13.5%,
+B-65 -14.4%, T-22 -7.4%, P-43 -5.1%, S-23 +5.5%, P-18 +0.3% (flagged low, agrees); F-71 no candidate. Hypothesis (unverified): the probe
+merges all rotating wheel nodes into one band list; Phase 2 M1 measures each node alone to test it.
+Probe problems 302: 203 empty material slots, 51 missing refs (placeholder guid 0000000deadbeef15deadf00d0000000), 48 other (F-71 driver
+surface, C-55 26 tender clip paths, K-35 2 `Pilot ` clips, T-22 1, P-18 2, P-43 15, C-40 Lubricator).
+Phase 2: `VfMeasure.cs` (per-axle wheel measurement, wheel clip at 4 phases, end-beam and downward rays, all clip sweeps, renderer/slot table,
+skinned, lamps, colliders, oddities) + driver `run_phase2.py` (measure, and `questions` for Phase 1b). Compiled against the stand-ins only;
+the driver ran against a fake Unity; never run in real Unity. Skinned meshes are not in the rays, so GP9/SD7 bodies will under-report.
+Nothing else implemented. Files with James (kept off git). Next: Phase 1b + Phase 2 results.
