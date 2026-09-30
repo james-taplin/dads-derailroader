@@ -2297,3 +2297,10 @@ Branch `vanilla-flavoured`. James: compound cannot be modelled, so the stock ste
 Codex's inventory of all 80 AssetPacks folders (21 ls, 3 ld, 18 truck, cars, loads, scenery): every whistle is in one pack, `audio.whistles01` (18.7 MB bundle, 32 catalogue assets, 23 Whistle definitions each with audio, components and model:
 wh-1-sd, wh-1-sd-low, wh-1-vt, wh-3-std, wh-3-cnj, wh-3-hancock-lb, wh-3-sou-lb, wh-3-wm, wh-5-cn, wh-5-cnw, wh-5-cog, wh-5-cp-sts, wh-5-drg-st, wh-5-ft, wh-5-gce, wh-5-nathan, wh-5-nkp, wh-5-nyc, wh-5-star, wh-6-cofg, wh-6-nathan, wh-6-reading, wh-6-rizzoli-cog).
 Not yet known: each whistle's mesh, transform and clip mapping. Next: `run_whistles.py` (Codex) exports the pack and reports its definitions, files, WAV headers and small prefabs; no audio or meshes leave the machine. Plan draft updated. Nothing implemented.
+
+## VF9 (cloud Claude, vanilla-flavoured, 2026-09-30): whistle pack contents
+Branch `vanilla-flavoured`. From Codex's export of `audio.whistles01` (metadata, definitions and small prefabs only; no audio or meshes shared). A Railroader whistle is a model plus a clip and nothing else:
+23 Whistle definitions, each `model` + `audio` and no components (so no per-whistle pitch, volume or envelope data). 7 chime meshes are used (1ChimeA x3, 3ChimeA x2, 3ChimeB x1, 3ChimeD x2, 5ChimeA x7, 5ChimeB x4, 6ChimeA x4; 3ChimeC unused),
+23 Ogg Vorbis clips (16-157 KB, one per whistle), one shared material `Whistles` (Railroader Standard Specular shader; 4 textures, AO 5.8 MB, normal 5.2 MB). Six prefabs carry an empty "Missing Prefab" placeholder node (export artefact, no mesh).
+For the app: Standard Specular shader needs mapping (locos use Standard Car Shader, URP Lit, Tender Water); the mesh is placed on each loco's Whistle transform (scale 0.92-1.4); the option is `wh-*` id -> mesh + clip; default wh-3-std. Risk: DV whistle audio is hold/release driven and a Railroader clip is one recorded
+sound, so clip behaviour under CCL's sound entry needs an in-game prototype. `run_whistles.py` updated (v2) to report Ogg durations (channels, rate, seconds from page headers, no decoding). Nothing implemented.
