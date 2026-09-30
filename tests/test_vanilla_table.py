@@ -39,6 +39,11 @@ class Table(unittest.TestCase):
         self.assertFalse(ok)
         self.assertIn("unknown game build: Definitions.json", text)
 
+    def test_a_hidden_mesh_without_a_reason_is_reported(self):
+        data = json.loads(json.dumps(stock.table()))
+        data["locos"]["ls-282-k35"]["hide"][0]["why"] = ""
+        self.assertIn("every hidden mesh needs a path and a reason", "\n".join(stock.validate_table(data)))
+
     def test_the_b65_tender_band_james_accepted_is_in_the_table(self):
         band = stock.entry("ls-284-b65")["endBeam"]["lt-284-b65"]
         self.assertEqual(band["band"], [1.0, 1.2])
@@ -87,6 +92,18 @@ class PipelineUsesTheTable(unittest.TestCase):
         out = self.run_to_link(matches=False)
         self.assertFalse((out.run.path / "geometry-review.json").exists())
         self.assertFalse(out.run.record["answers"]["vanillaTable"]["matches"])
+
+    def test_meshes_the_table_hides_go_into_the_build_input_with_their_prefab(self):
+        self.entry["hide"] = [{"path": "engine/Plane.010", "why": "synthetic cord"}]
+        out = self.run_to_link()
+        data = read_json(next(out.run.path.glob("unity/project/Assets/Rr2dv/BuildInput.json")))
+        self.assertEqual([(h["path"], h["why"]) for h in data["hide"]], [("engine/Plane.010", "synthetic cord")])
+        self.assertTrue(data["hide"][0]["prefab"].startswith("Assets/"))
+
+    def test_a_loco_without_hidden_meshes_has_an_empty_list(self):
+        out = self.run_to_link()
+        data = read_json(next(out.run.path.glob("unity/project/Assets/Rr2dv/BuildInput.json")))
+        self.assertEqual(data["hide"], [])
 
     def test_the_users_own_review_file_wins_over_the_table(self):
         first = self.run_to_link(matches=False)

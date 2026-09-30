@@ -58,6 +58,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [],
    "lodMeshes": true,
    "source": {
@@ -140,6 +141,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [
     "engine/Cab.021: extreme scale"
    ],
@@ -224,6 +226,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [],
    "lodMeshes": false,
    "source": {
@@ -306,6 +309,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [
     "engine/Cab_2_LOD0: extreme scale"
    ],
@@ -390,6 +394,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [],
    "lodMeshes": false,
    "source": {
@@ -469,6 +474,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [],
    "lodMeshes": false,
    "source": {
@@ -552,6 +558,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [
     "engine/Drivers/Drivers.001/Rods_Left.left.001: zero scale"
    ],
@@ -636,6 +643,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [],
    "lodMeshes": false,
    "source": {
@@ -718,6 +726,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [],
    "lodMeshes": false,
    "source": {
@@ -803,6 +812,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [
     "engine/Coal/Bone.001: extreme scale",
     "engine/Coal/Bone.001/Plane.003: extreme scale"
@@ -891,6 +901,20 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [
+    {
+     "path": "engine/Plane.010",
+     "why": "bell cord (skinned, bone chain Bone.013): stretched to infinity in game"
+    },
+    {
+     "path": "engine/Plane.024",
+     "why": "bell cord (skinned, bone chain Bone.013): stretched to infinity in game"
+    },
+    {
+     "path": "engine/Plane.017",
+     "why": "bell cord (skinned, bone chain Bone.013): stretched to infinity in game"
+    }
+   ],
    "knownOddities": [
     "engine/Brake Rigging/Bone.006/Brake hanger : name has leading or trailing space",
     "engine/Drivers/Bone.001/Bone.002/Cube.063: extreme scale",
@@ -990,6 +1014,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [
     "engine/Drivers/Bone.016/Radius Guide Link L: zero scale",
     "engine/Drivers/Dad : name has leading or trailing space"
@@ -1081,6 +1106,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [],
    "lodMeshes": false,
    "source": {
@@ -1163,6 +1189,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [],
    "lodMeshes": true,
    "source": {
@@ -1243,6 +1270,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [],
    "lodMeshes": false,
    "source": {
@@ -1323,6 +1351,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [
     "engine/Drivers/Drivers 2/ValveGear_003_R: zero scale",
     "engine/Drivers/Drivers 2/ValveGear_004_R: zero scale",
@@ -1409,6 +1438,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [
     "engine/Left Door/Bone/Cab_006_LOD0: extreme scale",
     "engine/Right Door/Bone/Cab_007_LOD0: extreme scale",
@@ -1495,6 +1525,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [
     "engine/Trailing : name has leading or trailing space"
    ],
@@ -1579,6 +1610,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [
     "engine/Reverser : name has leading or trailing space",
     "engine/Whistle: extreme scale",
@@ -1677,6 +1709,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [],
    "lodMeshes": false,
    "source": {
@@ -1757,6 +1790,7 @@
     ],
     "rule": "Quadruplex is built as DualReservoirMainEq; missing normal DV gauges are generated beside the nearest brake (else boiler) gauge (James 2026-09-30)"
    },
+   "hide": [],
    "knownOddities": [],
    "lodMeshes": false,
    "source": {

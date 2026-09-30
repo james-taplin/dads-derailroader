@@ -96,6 +96,7 @@ public static partial class CclLocoBuild
         FinishRr2dvMaterialSlots();
         if (!c.IsTender) AimRr2dvJets();
         StripRr2dvModelLights();
+        Rr2dvSkinCheck();
         PassRr2dvGrabRays();
         if (!c.IsTender && Rr2dvNoDynamo) StripRr2dvDynamoHud();
         if (!c.IsTender) CloseRr2dvWhistle();
@@ -714,6 +715,41 @@ public static partial class CclLocoBuild
             foreach (var r in Rr2dvLowerLodRenderers(root)) if (r.enabled) { r.enabled = false; off.Add(r); }
         }
         public void Dispose() { foreach (var r in off) if (r) r.enabled = true; }
+    }
+
+    // Diagnostic (K-35's bell cords ran out to infinity in game, 2026-09-30; 10 stock locos have skinned cords): every skinned mesh
+    // baked with the loco's animator groups at their first frame, the baked size compared with the mesh's own bounds. A stretched
+    // cord shows here in the build report without a game test. BakeMesh's scale handling is unverified, so it only reports.
+    static void Rr2dvSkinCheck()
+    {
+        var skinned = RefBody.GetComponentsInChildren<SkinnedMeshRenderer>(true).Where(s => s.sharedMesh).ToArray();
+        if (skinned.Length == 0) return;
+        foreach (var a in RefBody.GetComponentsInChildren<Animator>(true))
+        {
+            var clip = a.runtimeAnimatorController ? a.runtimeAnimatorController.animationClips.FirstOrDefault() : null;
+            if (clip) clip.SampleAnimation(a.gameObject, 0f);
+        }
+        foreach (var s in skinned)
+        {
+            var baked = new Mesh();
+            s.BakeMesh(baked);
+            var vs = baked.vertices;
+            var lo = new Vector3(1e9f, 1e9f, 1e9f); var hi = new Vector3(-1e9f, -1e9f, -1e9f); bool finite = true;
+            foreach (var v in vs)
+            {
+                if (float.IsNaN(v.x + v.y + v.z) || float.IsInfinity(v.x + v.y + v.z)) { finite = false; continue; }
+                lo = Vector3.Min(lo, v); hi = Vector3.Max(hi, v);
+            }
+            var size = finite && vs.Length > 0 ? hi - lo : Vector3.zero;
+            var own = s.sharedMesh.bounds.size;
+            float bigOwn = Mathf.Max(own.x, Mathf.Max(own.y, own.z)), bigBaked = Mathf.Max(size.x, Mathf.Max(size.y, size.z));
+            string path = AnimationUtility.CalculateTransformPath(s.transform, RefBody);
+            Line($"rr2dv skinned {path}: {s.bones.Length} bones, root bone {(s.rootBone ? s.rootBone.name : "none")}, mesh bounds {V(own)}, baked bounds {V(size)}");
+            if (!finite || bigBaked > bigOwn * 2f + 0.5f)
+                Warn($"rr2dv skinned {path}: the baked mesh is {(finite ? $"{bigBaked:F2} m long against the mesh's own {bigOwn:F2} m" : "not finite")} at the animation's first frame (a stretched cord?)");
+            Object.DestroyImmediate(baked);
+        }
+        foreach (var a in RefBody.GetComponentsInChildren<Animator>(true)) { }
     }
 
     // The record's axle pairs are provisional. Modelled big-end nubs define the oiling

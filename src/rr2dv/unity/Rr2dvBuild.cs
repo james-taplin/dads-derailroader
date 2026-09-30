@@ -23,14 +23,17 @@ public static class Rr2dvBuild
     [Serializable] public class Part { public string name, parentPath, prefab; public float[] position, rotation, scale; }
     [Serializable] public class Composite { public string vehicle, source, target; public Part[] parts; }
     [Serializable] public class TruckWheels { public string prefab, prefix; public string[] nodes; }
-    [Serializable] public class Input { public int schema; public Absent[] absentBindings; public string[] audioStrip; public Composite[] composites; public TruckWheels[] truckWheels; public ReversedClip[] reversedClips; public bool noDynamo; }
+    [Serializable] public class Input { public int schema; public Absent[] absentBindings; public string[] audioStrip; public Hide[] hide; public Composite[] composites; public TruckWheels[] truckWheels; public ReversedClip[] reversedClips; public bool noDynamo; }
     [Serializable] public class ReversedClip { public string from, to; }
+    // A mesh the vanilla table leaves out of a loco (bespoke, James 2026-09-30): its renderers come off the source prefab before
+    // the composite is made. A path that is not found stops the build, never passes silently.
+    [Serializable] public class Hide { public string prefab, path, why; }
 
     [Serializable] public class Removed { public string clip, hash; public int bindings; }
     [Serializable] public class MissingScript { public string path; public int count; }
     [Serializable] public class Stripped { public string prefab; public int audioSources, physics2d; public MissingScript[] missingScripts; }
     [Serializable] public class Placed { public string vehicle, target, part, parent; }
-    [Serializable] public class Prep { public int schema = 1; public Removed[] removedBindings; public Stripped[] audioStripped; public Placed[] parts; public string error; }
+    [Serializable] public class Prep { public int schema = 1; public string[] hidden; public Removed[] removedBindings; public Stripped[] audioStripped; public Placed[] parts; public string error; }
 
     const string InputAsset = "Assets/Rr2dv/BuildInput.json";
 
@@ -53,6 +56,7 @@ public static class Rr2dvBuild
                 if (entry.audioSources > 0 || entry.physics2d > 0 || entry.missingScripts.Length > 0) stripped.Add(entry);
                 prep.audioStripped = stripped.ToArray();
             }
+            prep.hidden = (input.hide ?? new Hide[0]).Select(h => HideRenderers(h)).ToArray();
             foreach (var truck in input.truckWheels ?? new TruckWheels[0]) RenameTruckWheels(truck);
             foreach (var reversed in input.reversedClips ?? new ReversedClip[0]) ReverseClip(reversed);
             Environment.SetEnvironmentVariable("RR2DV_NO_DYNAMO", input.noDynamo ? "1" : null);  // read by the builder partials (Rr2dvPlacement)
@@ -123,6 +127,23 @@ public static class Rr2dvBuild
         var missing = counts.Where(kv => kv.Value == 0).Select(kv => kv.Key).ToArray();
         if (missing.Length > 0) throw new InvalidOperationException(a.clip + ": listed absent bindings not found in the clip: " + string.Join(", ", missing));
         return counts.OrderBy(kv => kv.Key, StringComparer.Ordinal).Select(kv => new Removed { clip = a.clip, hash = kv.Key, bindings = kv.Value }).ToList();
+    }
+
+    static string HideRenderers(Hide h)
+    {
+        if (!AssetDatabase.LoadAssetAtPath<GameObject>(h.prefab)) throw new InvalidOperationException("prefab not found: " + h.prefab);
+        var root = PrefabUtility.LoadPrefabContents(h.prefab);
+        try
+        {
+            var t = root.transform.Find(h.path);
+            if (!t) throw new InvalidOperationException($"hidden mesh {h.path} not found in {h.prefab} ({h.why})");
+            var renderers = t.GetComponents<Renderer>();
+            if (renderers.Length == 0) throw new InvalidOperationException($"hidden mesh {h.path} has no renderer ({h.why})");
+            foreach (var r in renderers) Object.DestroyImmediate(r);
+            SaveChecked(root, h.prefab);
+            return h.path;
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
     static Stripped StripAudio(string prefabPath)

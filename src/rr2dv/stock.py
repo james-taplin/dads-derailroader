@@ -67,7 +67,7 @@ from pathlib import Path  # noqa: E402
 
 TABLE_FILE = Path(__file__).with_name("stock_locos.json")
 REQUIRED = ("displayName", "whyte", "tank", "tender", "source", "driver", "answers", "whistle", "gauges", "cab", "endBeam",
-            "lodMeshes", "knownOddities", "conversion", "sourceSha256")
+            "lodMeshes", "knownOddities", "hide", "conversion", "sourceSha256")
 HASHED_FILES = ("Bundle", "Catalog.json", "Definitions.json")
 
 
@@ -112,6 +112,9 @@ def validate_table(data: dict | None = None) -> list[str]:
                 continue
             if not band.get("evidence") or len(band.get("band", [])) != 2:
                 problems.append(f"{name}: end-beam band for {vid} needs two heights and evidence")
+        for h in e.get("hide", []):
+            if not h.get("path") or not h.get("why"):
+                problems.append(f"{name}: every hidden mesh needs a path and a reason")
         if e.get("conversion", {}).get("status") not in ("untested", "converted"):
             problems.append(f"{name}: conversion status must be 'untested' or 'converted'")
     return problems

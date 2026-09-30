@@ -17,6 +17,7 @@ namespace UnityEngine
     public class Component : Object
     {
         public Transform transform; public GameObject gameObject;
+        public T[] GetComponents<T>() => null;
         public T GetComponent<T>() => default(T);
         public T[] GetComponentsInChildren<T>(bool includeInactive) => null;
         public T[] GetComponentsInChildren<T>() => null;

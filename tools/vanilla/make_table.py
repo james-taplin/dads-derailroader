@@ -59,6 +59,16 @@ END_BEAM = {
 }
 
 
+# Meshes left out of the pack (bespoke, James 2026-09-30). K-35's bell cords are skinned planes that ran out to infinity in game
+# (three planes on one 20-bone chain); the bell itself, its lever and its sound are unaffected. Temporary: the build report's
+# "rr2dv skinned" lines measure every skinned mesh so the cause can be found and the cords restored.
+HIDE = {
+    "ls-282-k35": [{"path": "engine/Plane.010", "why": "bell cord (skinned, bone chain Bone.013): stretched to infinity in game"},
+                   {"path": "engine/Plane.024", "why": "bell cord (skinned, bone chain Bone.013): stretched to infinity in game"},
+                   {"path": "engine/Plane.017", "why": "bell cord (skinned, bone chain Bone.013): stretched to infinity in game"}],
+}
+
+
 def load_definitions(packs: Path, name: str) -> dict:
     raw = re.sub(r",(\s*[}\]])", r"\1", (packs / name / "Definitions.json").read_text(encoding="utf-8-sig"))
     return {o["identifier"]: o for o in json.loads(raw)["objects"]}
@@ -138,6 +148,7 @@ def main() -> int:
             "endBeam": END_BEAM.get(pack) or {"none": "not needed in any run so far (builds without a review)" if pack in OBSERVED else "untested"},
             "lodMeshes": any(re.search(r"(?i)lod[1-9]\d*$", n) for n in names),
             "knownOddities": oddities,
+            "hide": HIDE.get(pack, []),
             "conversion": OBSERVED.get(pack, {"status": "untested", "notes": []}),
             "sourceSha256": {"Bundle": files["Bundle"], "Catalog.json": files["Catalog.json"], "Definitions.json": files["Definitions.json"]},
         }

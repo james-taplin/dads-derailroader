@@ -15,6 +15,7 @@ and there is as little room for bugs as possible. The table has one entry per st
 | `cab` | backhead z, floor from the collision hull (candidate), other levels | evidence only, not read by the build |
 | `endBeam` | a measured sampling band (with evidence and who accepted it) per tender that needs one, else a note | pipeline (applied only when the installed files match) |
 | `lodMeshes`, `knownOddities` | uses LOD0-3 meshes; zero/extreme scales, names with spaces | LOD scope, per-loco notes |
+| `hide` | meshes left out of this loco's pack, each with a reason (K-35's three bell-cord planes, which ran out to infinity in game); `Rr2dvBuild` removes their renderers from the source prefab and stops the build if one is not found | build input (`hide`) |
 | `conversion` | `untested` or `converted`, audit result, what the build reported | history |
 | `sourceSha256` | hashes of the pack's `Bundle`, `Catalog.json`, `Definitions.json` for Railroader build 20238526 | unknown-build report, band guard |
 

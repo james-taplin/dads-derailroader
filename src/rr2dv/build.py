@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import buildrecord, recordcheck, unityrun
+from . import buildrecord, recordcheck, stock, unityrun
 from .jsonio import read_json, read_json_lenient, sha256_file, write_json
 from .rrmod import components, definition
 
@@ -102,8 +102,13 @@ def prepare(run_path: Path, inv: dict, probe_in: dict, probe_out: dict | None, p
     for a in absent:
         asset = f"Assets/{a['clip']}" if a["export"] == "main" else f"Assets/{a['export']}/{a['clip']}"
         clips.append({"clip": asset, "hashes": a["absent"]})
+    tab = stock.entry(draft["vehicleId"])
+    hide = []
+    if tab and tab.get("hide"):  # meshes the vanilla table leaves out of this loco (bespoke); the build fails if one is not found
+        loco_prefab = next(v["unity_prefab"] for v in project["vehicles"] if v["id"] == draft["vehicleId"])
+        hide = [{"prefab": loco_prefab, "path": h["path"], "why": h["why"]} for h in tab["hide"]]
     wheel_nodes = (rec.get("tender") or {}).get("metadata", {}).get("truckWheelNodes")
-    data = {"schema": 1, "absentBindings": clips, "audioStrip": prefabs, "composites": specs, "review": answers.get("prebuildReview", {}).get("values"),
+    data = {"schema": 1, "absentBindings": clips, "audioStrip": prefabs, "hide": hide, "composites": specs, "review": answers.get("prebuildReview", {}).get("values"),
             "truckWheels": [wheel_nodes] if wheel_nodes else [],
             "reversedClips": rec["metadata"].get("reversedClips") or [],
             "noDynamo": bool(rec["metadata"].get("noDynamo")),
