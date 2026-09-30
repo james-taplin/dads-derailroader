@@ -2349,3 +2349,8 @@ Branch `vanilla-flavoured`. From Codex's export of `audio.whistles01` (metadata,
 23 Ogg Vorbis clips (16-157 KB, one per whistle), one shared material `Whistles` (Railroader Standard Specular shader; 4 textures, AO 5.8 MB, normal 5.2 MB). Six prefabs carry an empty "Missing Prefab" placeholder node (export artefact, no mesh).
 For the app: Standard Specular shader needs mapping (locos use Standard Car Shader, URP Lit, Tender Water); the mesh is placed on each loco's Whistle transform (scale 0.92-1.4); the option is `wh-*` id -> mesh + clip; default wh-3-std. Risk: DV whistle audio is hold/release driven and a Railroader clip is one recorded
 sound, so clip behaviour under CCL's sound entry needs an in-game prototype. `run_whistles.py` updated (v2) to report Ogg durations (channels, rate, seconds from page headers, no decoding). Nothing implemented.
+
+## VF10 (cloud Claude, vanilla-flavoured, 2026-09-30): whistle clip lengths
+Branch `vanilla-flavoured`. Codex's `run_whistles.py` v2: all 23 whistle clips are mono Ogg Vorbis; 44.1 kHz except wh-5-nkp, wh-5-nathan and wh-5-cnw (48 kHz). Length 1.2 s (wh-5-drg-st, wh-5-gce) to 9.6 s (wh-6-reading); default wh-3-std 2.61 s;
+median about 5 s; total 114 s. They are complete one-shot blasts with attack and decay, not short loop points, so how they behave under DV's hold-and-release whistle port needs an in-game prototype (wh-3-std on the K-28T: tap, hold, repeat, release).
+Length reader checked on a synthetic Ogg header and consistent with file sizes (80-181 kbps). Nothing implemented.
