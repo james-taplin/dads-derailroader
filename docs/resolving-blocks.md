@@ -259,17 +259,19 @@ Number plates: Derail Valley's info plate goes on the nearest flat (or gently cu
 whole footprint. Where the full size would overhang, it may shrink to 90 % or at most 80 % (`rr2dv visible plate …
 scaled to 80 %`); if nothing holds even that, it stays at the source decal with a warning.
 
-Oil cups: the driving groups' own clips are played through a revolution; a part whose middle travels is a rod (a cup
-on it rides with it), a part that turns in place is a wheel, axle or crank (no cup on it), whatever the parts are called
-(`rr2dv oil running gear by motion` in `build_report.txt`). At most one left/right pair per driving axle and 12 cups in
-all: each driving axle takes the rod nub pair nearest it (within 0.6 m); an axle with none near it gets its cups on the
-running gear's flat tops or the running board beside it instead (the GN A-18's only nubs were at the crossheads); spare
-nubs are dropped (`rr2dv oil budget` in `build_report.txt`). Every cup needs its own space: nothing visible may be inside
-a 3.5 cm radius, 9 cm tall cylinder above its base (except what it stands on) at four points of the wheels' turn, and
-cups stay 12 cm apart (`rr2dv oil nub … rejected`, `rr2dv oil clearance`). Running-gear seats are searched from
-crank-pin height upward, rods first, so big ends win over high linkages. If no driving axle has any usable seat, the loco needs no
-manual oiling: its oiling system keeps one internal point that never drains (no cup, no oil lamp, no wear), reported as
-`rr2dv oil: … no manual oiling` in `build_report.txt` and as an audit note.
+Oil cups (James, 2026-09-30): only at the two ends of the main rods, and always as a left/right pair on the same end,
+or not at all. A main rod is found by how it moves, whatever it is called: one end runs on a straight line (the
+crosshead) and the other on a circle (the crank pin); a valve-gear rod beside it with a smaller circle is not one
+(`rr2dv oil main rod …` in `build_report.txt`). The sides' cranks are set at right angles, so at rest one main rod lies
+level and the other is pitched; each rod is therefore measured in its own level position in the wheel's turn, on its own
+surface only: the highest level spot within 0.3 m of the end (a boss, a nub or just the flat of the rod) with a 4 x 3 cm
+level footprint. The cup is fixed to the rod and rides with it. Every cup needs its own space: nothing visible may be
+inside a 3.5 cm radius, 9 cm tall cylinder above its base at eight points of the wheels' turn, and cups stay 12 cm apart.
+A pair where either side fails is left out, with the reason for each side (`rr2dv oil main rod … pair … omitted`). Only
+when no main-rod pair fits do the cups go on the running boards, again as a matched pair at each driving axle; the
+running gear's other parts are never used. At most 12 cups. If nothing fits, the loco needs no manual oiling: its oiling
+system keeps one internal point that never drains (no cup, no oil lamp, no wear), reported as `rr2dv oil: … no manual
+oiling` in `build_report.txt` and as an audit note.
 
 HUD: besides CCL's steam layout, the HUD shows the whistle, tender coal, the sander and the sand level.
 
@@ -339,9 +341,8 @@ Brake release: hinted 0.5 m inside the loco's rear end, under the cab, where the
 gear; when the fitted seat at the hint is below the 0.30 m clearance floor (a low frame, Reading B8a
 camelback), the hint moves along the frame in 0.4 m steps to the first seat that clears it (`rr2dv brake release: … moved`).
 
-Oil cups are seated, per side and axle, on a rod big-end nub (islands of 20+ triangles), else on a flat top of the
-running gear (big ends, crossheads, axlebox tops; a cup on a moving part rides with it), else on the running board. A
-pair with no seat on either side is left out (`rr2dv oil pair … omitted`).
+Oil cups go in matched left/right pairs at the main rods' ends, else on the running boards (see "Oil cups" above); a
+pair is never split between a rod and a board.
 
 Dynamo (Vehicle choices): suggested from the Railroader definition (a `Dynamo` component or not). With "no", the pack
 has no electric lamps, cab light, or Dynamo/Cab light/Headlights backhead controls, and the HUD has no dynamo or

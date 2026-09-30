@@ -681,26 +681,49 @@ public static partial class CclLocoBuild
             if (!body) throw new InvalidOperationException("Missing built body for oil-cup placement");
             var placed = new System.Collections.Generic.List<(string tag, Vector3 pos, Transform rod, string seat)>();
             Rr2dvMotion = Rr2dvGearMotion(body);
-            var nubs = Rr2dvRodNubs(body);
+            int mainRods = 0;
             using (var hits = new VisualHits(body))
             {
                 Rr2dvCupSpacing.Clear();
-                int before = nubs.Count;
-                nubs = nubs.Where(n => Rr2dvCupClear(hits, body, n.pos, n.rod, out var why) || Rr2dvNubRejected(n, why)).ToList();
-                if (nubs.Count < before) Line($"rr2dv oil clearance: {before - nubs.Count} of {before} rod nub(s) rejected (something visible inside the cup's space at some wheel phase)");
-                var remaining = nubs.Where(n => n.pos.x > 0).ToList();
-                var pairs = new System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)>();
-                foreach (var left in nubs.Where(n => n.pos.x < 0))
-                {
-                    var right = remaining.OrderBy(n => Mathf.Abs(n.pos.z - left.pos.z)).FirstOrDefault();
-                    if (right.rod && Mathf.Abs(right.pos.z - left.pos.z) <= .45f) remaining.Remove(right);
-                    else right = (null, Vector3.zero);
-                    pairs.Add(((left.rod, left.pos), (right.rod, right.pos), (left.pos.z + (right.rod ? right.pos.z : left.pos.z)) / 2));
-                }
-                foreach (var right in remaining) pairs.Add(((null, Vector3.zero), (right.rod, right.pos), right.pos.z));
-                pairs = Rr2dvOilBudget(pairs, hints);
+                var rods = Rr2dvMainRods(body);
+                mainRods = rods.Count;
                 int pair = 0;
-                foreach (var p in pairs) Rr2dvAddOilPair(placed, hits, body, ++pair, p.l, p.r, p.z);
+                // cups only at the ends of the main rods, the same end on both sides or neither (James, 2026-09-30)
+                foreach (var (l, r) in Rr2dvPairRods(rods))
+                    foreach (bool crankEnd in new[] { true, false })
+                    {
+                        if (pair >= Rr2dvOilPairsMax) break;
+                        string end = crankEnd ? "big end" : "small end";
+                        if (!Rr2dvRodEndSeat(hits, body, l, crankEnd, out var lp, out var lwhy) | !Rr2dvRodEndSeat(hits, body, r, crankEnd, out var rp, out var rwhy))
+                        {
+                            Line($"rr2dv oil main rod {end} pair ({l.rod.name} / {r.rod.name}) omitted: left {lwhy ?? "seat found"}; right {rwhy ?? "seat found"}");
+                            continue;
+                        }
+                        Rr2dvCupSpacing.Add(lp); Rr2dvCupSpacing.Add(rp);
+                        pair++;
+                        placed.Add(($"oil_{pair}L", lp, l.rod, "main rod " + end));
+                        placed.Add(($"oil_{pair}R", rp, r.rod, "main rod " + end));
+                    }
+                if (placed.Count == 0)
+                {
+                    // no main-rod pair: the running boards, the same axle on both sides or neither (never mixed with rods)
+                    Line($"rr2dv oil: no main-rod end pair ({mainRods} main rod(s) found); running-board pairs at the driving axles instead");
+                    for (int i = 0; i < hints.Length / 2 && pair < Rr2dvOilPairsMax; i++)
+                    {
+                        float z = (hints[2 * i].Item2.z + hints[2 * i + 1].Item2.z) / 2;
+                        var a = Rr2dvBoardSeat(hits, body, -1, z);
+                        var b = a.found ? Rr2dvBoardSeat(hits, body, 1, a.pos.z) : a;
+                        if (!a.found || !b.found || Mathf.Abs(a.pos.z - b.pos.z) > .1f)
+                        {
+                            Line($"rr2dv oil board pair at axle z {z:F3} omitted: no matching running-board seat on {(a.found ? "the right" : "the left")}");
+                            continue;
+                        }
+                        Rr2dvCupSpacing.Add(a.pos); Rr2dvCupSpacing.Add(b.pos);
+                        pair++;
+                        placed.Add(($"oil_{pair}L", a.pos, null, a.seat));
+                        placed.Add(($"oil_{pair}R", b.pos, null, b.seat));
+                    }
+                }
             }
             var old = body.Find("[oiling points]");
             if (old) Object.DestroyImmediate(old.gameObject);
@@ -732,74 +755,142 @@ public static partial class CclLocoBuild
                 Warn("rr2dv oil: no accessible seat at any driving axle: no manual oiling (one internal oiling point that never drains, no cup)");
             }
             oilDefinition.GetType().GetMethod("OnValidate", BF)?.Invoke(oilDefinition, null);
-            Line($"rr2dv oil layout: {placed.Count} cups ({nubs.Count} rod-nub candidates, {hints.Length} provisional axle hints)");
+            Line($"rr2dv oil layout: {placed.Count} cups ({mainRods} main rod(s), {hints.Length} provisional axle hints)");
             Line($"rr2dv oil simulation count: {points.Length}");
             SaveRr2dvPrefab(root, path);
         }
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
-    // Oil-cup budget (James, 2026-09-29): one left/right pair per driving axle, 10 cups at most on a large loco. Every
-    // rod nub became a pair before, so a model rich in nubs got cups on every surface (C&O T1: 28 cups, 8 pairs bunched
-    // around the cylinders and crossheads; James raised the cap from 10 to 12 cups for x-4-4-x articulateds). Each driving axle (the provisional axle hints) takes the nub pair nearest its z
-    // within 0.6 m (a crank throw and margin), else the running gear's tops or the running board at the axle; at most 6
-    // pairs, nub-matched axles first; unused nubs are dropped and listed.
-    const int Rr2dvOilPairsMax = 6;  // 12 cups: an x-4-4-x articulated (James, 2026-09-29)
+    // Oil cups (James, 2026-09-30): only at the ends of the main rods, as a left/right pair on the same end or not at all;
+    // the running boards only when no main-rod pair fits, and then on both sides. At most 6 pairs (12 cups: x-4-4-x).
+    // The sides' cranks are quartered, so at rest one main rod lies level and the other is pitched: a seat found in the
+    // rest pose differed side to side (a nub on one, the board on the other). Each rod is measured in its own level pose
+    // (the wheel phase where it lies flattest), against its own mesh only; the seat is then fixed on the rod, and its
+    // clearance checked through a whole turn (Rr2dvCupClear).
+    const int Rr2dvOilPairsMax = 6;
 
-    static System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)> Rr2dvOilBudget(
-        System.Collections.Generic.List<((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z)> pairs,
-        (string, Vector3)[] hints)
+    class Rr2dvMainRod { public Transform rod; public Vector3 crankEnd, crossEnd; public float side, throwM, crossZ, levelPhase; }
+
+    static System.Collections.Generic.List<Animator> Rr2dvGearAnimators(Transform body) =>
+        Cfg.EngineUnits.SelectMany(u => body.GetComponentsInChildren<Animator>(true)
+            .Where(a => a.name == $"[anim] {u.GroupName}" || a.name.StartsWith($"[anim] {u.GroupName} "))).Distinct().ToList();
+
+    static void Rr2dvSampleGear(System.Collections.Generic.List<Animator> animators, float phase)
     {
-        var none = ((Transform)null, Vector3.zero);
-        var axles = Enumerable.Range(0, hints.Length / 2).Select(i => (hints[2 * i].Item2.z + hints[2 * i + 1].Item2.z) / 2).ToArray();
-        var free = pairs.ToList();
-        var chosen = new System.Collections.Generic.List<(int axle, ((Transform rod, Vector3 pos) l, (Transform rod, Vector3 pos) r, float z) pair, float dz)>();
-        for (int i = 0; i < axles.Length; i++)
+        foreach (var a in animators)
         {
-            float az = axles[i];
-            var near = free.Where(p => Mathf.Abs(p.z - az) <= .6f).OrderBy(p => Mathf.Abs(p.z - az)).ToList();
-            if (near.Count > 0) { free.Remove(near[0]); chosen.Add((i, near[0], Mathf.Abs(near[0].z - az))); continue; }
-            // no rod nub near this axle (GN A-18: its only nubs were at the crossheads, 2026-09-29): the running gear's
-            // flat tops, then the running board, at the axle (Rr2dvAddOilPair with no rod)
-            Line($"rr2dv oil budget: driving axle z {az:F3} has no rod nub pair within 0.6 m; running gear top or board there instead");
-            chosen.Add((i, (none, none, az), float.MaxValue));
+            var clip = a.runtimeAnimatorController ? a.runtimeAnimatorController.animationClips.FirstOrDefault() : null;
+            if (clip) clip.SampleAnimation(a.gameObject, phase * clip.length);
         }
-        var keep = chosen.OrderBy(c => c.dz).Take(Rr2dvOilPairsMax).OrderBy(c => c.axle).Select(c => c.pair).ToList();
-        foreach (var p in pairs.Where(p => !keep.Contains(p)))
-            Line($"rr2dv oil budget: nub pair at z {p.z:F3} dropped (one pair per driving axle, at most {Rr2dvOilPairsMax * 2} cups)");
-        Line($"rr2dv oil budget: {pairs.Count} nub pairs -> {keep.Count(p => p.l.rod || p.r.rod)} kept, {keep.Count(p => !p.l.rod && !p.r.rod)} " +
-             $"axle(s) on running gear or boards ({axles.Length} driving axle(s), at most {Rr2dvOilPairsMax * 2} cups)");
-        return keep;
+        Physics.SyncTransforms();
     }
 
-    static void Rr2dvAddOilPair(System.Collections.Generic.List<(string tag, Vector3 pos, Transform rod, string seat)> placed,
-        VisualHits hits, Transform body, int pair, (Transform rod, Vector3 pos) left, (Transform rod, Vector3 pos) right, float z)
+    // A main rod by how it moves, not what it is called: one end runs on a straight line (the crosshead), the other on a
+    // circle (the crank pin). Coupling rods have two circling ends; valve-gear rods are kept out by taking, per side and
+    // cylinder, the rod with the largest circle (the crank throw, not an eccentric's).
+    static System.Collections.Generic.List<Rr2dvMainRod> Rr2dvMainRods(Transform body)
     {
-        var a = left.rod && Rr2dvRodSeatAccessible(hits, body, left.pos) && Rr2dvCupSpaced(left.pos)
-            ? (true, left.pos, left.rod, "rod big end") : Rr2dvGearTopSeat(hits, body, -1, z);
-        if (!a.Item1) a = Rr2dvBoardSeat(hits, body, -1, z);
-        if (a.Item1) Rr2dvCupSpacing.Add(a.Item2);
-        var b = right.rod && Rr2dvRodSeatAccessible(hits, body, right.pos) && Rr2dvCupSpaced(right.pos)
-            ? (true, right.pos, right.rod, "rod big end") : Rr2dvGearTopSeat(hits, body, 1, z);
-        if (!b.Item1) b = Rr2dvBoardSeat(hits, body, 1, z);
-        if (b.Item1) Rr2dvCupSpacing.Add(b.Item2);
-        if (!a.Item1 || !b.Item1)
+        const int N = 16;
+        var animators = Rr2dvGearAnimators(body);
+        var found = new System.Collections.Generic.List<Rr2dvMainRod>();
+        var candidates = body.GetComponentsInChildren<MeshFilter>(true).Where(m => m.sharedMesh && m.sharedMesh.vertexCount > 0 &&
+            m.GetComponent<MeshRenderer>() && m.GetComponent<MeshRenderer>().enabled && m.gameObject.activeInHierarchy &&
+            (Rr2dvIsRod(m.name) || Rr2dvTravels(m.transform))).ToList();
+        try
         {
-            Line($"rr2dv oil pair {pair} omitted: no accessible {(a.Item1 ? "right" : b.Item1 ? "left" : "left or right")} rod, running-gear or board seat");
-            return;
+            foreach (var mf in candidates)
+            {
+                var v = mf.sharedMesh.vertices;
+                var c = v.Aggregate(Vector3.zero, (a, b) => a + b) / v.Length;
+                var (axes, ext) = Rr2dvPrincipal(v, c);
+                if (ext[0] < .8f) continue;   // a main rod is longer than a crank throw and a crosshead
+                var wx = v.Select(q => mf.transform.TransformPoint(q).x).ToArray();
+                if (wx.Max() - wx.Min() > .4f || Mathf.Abs(wx.Average()) < .3f) continue;   // one side's rod, outside the frames
+                var e0 = c + axes[0] * v.Min(p => Vector3.Dot(p - c, axes[0]));
+                var e1 = c + axes[0] * v.Max(p => Vector3.Dot(p - c, axes[0]));
+                var p0 = new Vector3[N]; var p1 = new Vector3[N]; var tilt = new float[N];
+                for (int k = 0; k < N; k++)
+                {
+                    Rr2dvSampleGear(animators, k / (float)N);
+                    p0[k] = mf.transform.TransformPoint(e0); p1[k] = mf.transform.TransformPoint(e1);
+                    tilt[k] = Mathf.Abs((p1[k] - p0[k]).normalized.y);
+                }
+                float Ry(Vector3[] p) => p.Max(q => q.y) - p.Min(q => q.y);
+                float Rz(Vector3[] p) => p.Max(q => q.z) - p.Min(q => q.z);
+                bool Circle(Vector3[] p) => Ry(p) > .1f && Rz(p) > .1f;
+                bool Line_(Vector3[] p) => Ry(p) < .03f && Rz(p) > .1f;
+                bool crank0 = Circle(p0) && Line_(p1), crank1 = Circle(p1) && Line_(p0);
+                if (!crank0 && !crank1) continue;
+                var cross = crank0 ? p1 : p0;
+                int level = Enumerable.Range(0, N).OrderBy(k => tilt[k]).First();
+                found.Add(new Rr2dvMainRod { rod = mf.transform, crankEnd = crank0 ? e0 : e1, crossEnd = crank0 ? e1 : e0,
+                    side = Mathf.Sign(mf.transform.TransformPoint(c).x), throwM = Ry(crank0 ? p0 : p1) / 2,
+                    crossZ = cross.Average(q => q.z), levelPhase = level / (float)N });
+            }
         }
-        placed.Add(($"oil_{pair}L", a.Item2, a.Item3, a.Item4));
-        placed.Add(($"oil_{pair}R", b.Item2, b.Item3, b.Item4));
+        finally { Rr2dvSampleGear(animators, 0); }
+        // one per side and cylinder (crosshead within 0.5 m): the biggest circle is the crank, a smaller one an eccentric
+        var kept = found.GroupBy(m => (m.side, Mathf.Round(m.crossZ / .5f))).Select(g => g.OrderByDescending(m => m.throwM).First()).ToList();
+        foreach (var m in kept)
+            Line($"rr2dv oil main rod {m.rod.name}: {(m.side < 0 ? "left" : "right")}, crank throw {m.throwM:F3} m, crosshead z {m.crossZ:F3}, level at phase {m.levelPhase:F3}");
+        foreach (var m in found.Except(kept)) Line($"rr2dv oil rod {m.rod.name}: not a main rod (smaller circle {m.throwM:F3} m beside a main rod)");
+        return kept;
     }
 
-    static bool Rr2dvRodSeatAccessible(VisualHits hits, Transform body, Vector3 pos)
+    // left/right main rods of the same cylinder (crossheads within 0.3 m along the car); a rod with no partner gets no cup
+    static System.Collections.Generic.List<(Rr2dvMainRod l, Rr2dvMainRod r)> Rr2dvPairRods(System.Collections.Generic.List<Rr2dvMainRod> rods)
     {
-        float side = Mathf.Sign(pos.x);
-        // A rod can have a moving eccentric outside the big end. The cup remains
-        // usable when it has a clear approach from above even if that side ray
-        // meets the linkage at one sampled wheel phase.
-        return !hits.Ray(pos + Vector3.up * .08f, Vector3.up, .12f, out var overhead, body) ||
-            !hits.Ray(pos + Vector3.up * .08f, Vector3.right * side, .6f, out var sideHit, body);
+        var pairs = new System.Collections.Generic.List<(Rr2dvMainRod, Rr2dvMainRod)>();
+        var right = rods.Where(m => m.side > 0).ToList();
+        foreach (var l in rods.Where(m => m.side < 0).OrderByDescending(m => m.crossZ))
+        {
+            var r = right.OrderBy(m => Mathf.Abs(m.crossZ - l.crossZ)).FirstOrDefault();
+            if (r == null || Mathf.Abs(r.crossZ - l.crossZ) > .3f) { Line($"rr2dv oil main rod {l.rod.name}: no right-hand partner, no cup"); continue; }
+            right.Remove(r);
+            pairs.Add((l, r));
+        }
+        foreach (var r in right) Line($"rr2dv oil main rod {r.rod.name}: no left-hand partner, no cup");
+        return pairs;
+    }
+
+    // The seat at one end of a main rod, in the rod's own level pose, on the rod's own surface: the highest level spot
+    // within 0.3 m of the end (a boss, a nub or the flat of the rod: any space at all), with a 4 x 3 cm level footprint.
+    // Returned where it is at rest (the cup is parented to the rod, so it rides with it), after the clearance check.
+    static bool Rr2dvRodEndSeat(VisualHits hits, Transform body, Rr2dvMainRod m, bool crankEnd, out Vector3 pos, out string why)
+    {
+        pos = Vector3.zero; why = null;
+        var animators = Rr2dvGearAnimators(body);
+        Vector3 local = Vector3.zero; bool ok = false;
+        try
+        {
+            Rr2dvSampleGear(animators, m.levelPhase);
+            var e = m.rod.TransformPoint(crankEnd ? m.crankEnd : m.crossEnd);
+            var o = m.rod.TransformPoint(crankEnd ? m.crossEnd : m.crankEnd);
+            var inward = new Vector3(o.x - e.x, 0, o.z - e.z).normalized;
+            var across = Vector3.Cross(Vector3.up, inward).normalized;
+            float best = float.MinValue;
+            for (float t = 0; t <= .3f; t += .01f)
+                for (float u = -.06f; u <= .061f; u += .01f)
+                {
+                    var origin = e + inward * t + across * u + Vector3.up * .5f;
+                    if (!hits.Ray(origin, Vector3.down, 1f, out var hit, m.rod) || hit.normal.y < .9f || hit.point.y <= best) continue;
+                    bool footprint = true;
+                    foreach (var d in new[] { inward * .02f, -inward * .02f, across * .015f, -across * .015f })
+                        if (!hits.Ray(origin + d, Vector3.down, 1f, out var edge, m.rod) || edge.normal.y < .9f || Mathf.Abs(edge.point.y - hit.point.y) > .006f)
+                            footprint = false;
+                    if (!footprint) continue;
+                    best = hit.point.y;
+                    local = m.rod.InverseTransformPoint(hit.point + Vector3.up * (CupPivotAboveBase - CupSeatSink));
+                    ok = true;
+                }
+        }
+        finally { Rr2dvSampleGear(animators, 0); }
+        if (!ok) { why = "no level spot on the rod within 0.3 m of the end"; return false; }
+        pos = m.rod.TransformPoint(local);
+        if (!Rr2dvCupSpaced(pos)) { why = "too close to another cup"; return false; }
+        if (!Rr2dvCupClear(hits, body, pos, m.rod, out var clash)) { why = "something visible in the cup's space: " + clash; return false; }
+        return true;
     }
 
     static (bool found, Vector3 pos, Transform rod, string seat) Rr2dvBoardSeat(VisualHits hits, Transform body, float side, float zHint)
@@ -827,48 +918,6 @@ public static partial class CclLocoBuild
         return (false, Vector3.zero, null, null);
     }
 
-    // A big-end nub can be a small island (L-27's were rejected at under 35 triangles; James, 2026-09-28: slightly lower).
-    const int Rr2dvMinNubTriangles = 20;
-
-    // Flat tops on the running gear itself, before falling back to the running boards (James, 2026-09-28: the H9's
-    // big ends, crossheads and axlebox tops look better than the boards). Bottom up (James, 2026-09-29: searched from the
-    // top down, cups landed on small high linkages and in visible geometry): in the rod plane outside the frames, near the
-    // axle, level spots at least 5 cm across are collected from crank-pin height upward, and the lowest on a travelling
-    // rod wins, else the lowest on any other part but a wheel; each must pass the cup clearance (Rr2dvCupClear) and
-    // spacing. A cup on a moving part rides with it.
-    static (bool found, Vector3 pos, Transform rod, string seat) Rr2dvGearTopSeat(VisualHits hits, Transform body, float side, float zHint)
-    {
-        float top = 2 * WheelRadius + .1f, low = WheelRadius * .6f;
-        var found = new System.Collections.Generic.List<(Vector3 pos, Transform part, bool moving, float dz)>();
-        for (int dz = 0; dz < 17; dz++)
-        for (float x = .7f; x <= 1.45f; x += .025f)
-        for (float h = low + .1f; h <= top + .1f; h += .05f)   // a short ray from each height: every level, not only the top one
-        {
-            float z = zHint + (dz == 0 ? 0 : (dz % 2 == 0 ? -1 : 1) * ((dz + 1) / 2) * .05f);
-            var origin = new Vector3(side * x, h, z);
-            if (!hits.Ray(origin, Vector3.down, .05f, out var hit, body) || hit.normal.y < .95f || hit.point.y < low) continue;
-            var part = hit.collider.transform.parent;
-            if (part.name.ToLowerInvariant().Contains("wheel") || Rr2dvSpins(part)) continue;
-            bool footprint = true;
-            foreach (var offset in new[] { new Vector3(.025f, 0, 0), new Vector3(-.025f, 0, 0), new Vector3(0, 0, .025f), new Vector3(0, 0, -.025f) })
-                if (!hits.Ray(origin + offset, Vector3.down, .06f, out var edge, body) || edge.normal.y < .95f ||
-                    edge.collider != hit.collider || Mathf.Abs(edge.point.y - hit.point.y) > .006f) footprint = false;
-            if (!footprint) continue;
-            var pos = hit.point + Vector3.up * (CupPivotAboveBase - CupSeatSink);
-            if (found.Any(f => Vector3.Distance(f.pos, pos) < .02f)) continue;
-            bool moving = Rr2dvIsRod(part.name) || part.name.ToLowerInvariant().Contains("crosshead") || Rr2dvTravels(part);
-            found.Add((pos, part, moving, Mathf.Abs(z - zHint)));
-        }
-        foreach (var f in found.OrderByDescending(f => f.moving).ThenBy(f => f.pos.y).ThenBy(f => f.dz))
-        {
-            if (!Rr2dvCupSpaced(f.pos)) continue;
-            if (hits.Ray(f.pos + Vector3.up * .08f, Vector3.right * side, .6f, out var sideHit, body)) continue;   // reachable from outside
-            if (!Rr2dvCupClear(hits, body, f.pos, f.moving ? f.part : null, out _)) continue;
-            return (true, f.pos, f.moving ? f.part : null, "running gear " + (f.moving ? "rod" : "part") + " top on " + f.part.name);
-        }
-        return (false, Vector3.zero, null, null);
-    }
-
     // The oil cup's own space, which nothing visible may enter except the surface it stands on (James, 2026-09-29: cups
     // clipped into rods and linkages, or had rods through them): a 3.5 cm radius, 9 cm tall above its base. Checked with
     // short rays across and up through that space, at four phases of the driving wheels' turn (a rod swinging through it
@@ -876,12 +925,6 @@ public static partial class CclLocoBuild
     const float CupClearRadius = .035f, CupClearHeight = .09f, CupSpacing = .12f;
     static readonly System.Collections.Generic.List<Vector3> Rr2dvCupSpacing = new System.Collections.Generic.List<Vector3>();
     static bool Rr2dvCupSpaced(Vector3 pos) => Rr2dvCupSpacing.All(p => Vector3.Distance(p, pos) >= CupSpacing);
-
-    static bool Rr2dvNubRejected((Transform rod, Vector3 pos) nub, string why)
-    {
-        Line($"rr2dv oil nub on {nub.rod.name} at {V(nub.pos)} rejected: {why}");
-        return false;
-    }
 
     static bool Rr2dvCupClear(VisualHits hits, Transform body, Vector3 pos, Transform rider, out string why)
     {
@@ -891,7 +934,7 @@ public static partial class CclLocoBuild
             .Where(a => a.name == $"[anim] {u.GroupName}" || a.name.StartsWith($"[anim] {u.GroupName} "))).Distinct().ToList();
         try
         {
-            foreach (var phase in new[] { 0f, .25f, .5f, .75f })
+            foreach (var phase in new[] { 0f, .125f, .25f, .375f, .5f, .625f, .75f, .875f })
             {
                 foreach (var a in animators)
                 {
@@ -976,62 +1019,6 @@ public static partial class CclLocoBuild
         string n = name.ToLowerInvariant().Replace(" ", "").Replace("_", "");
         return n.Contains("mainrod") || n.Contains("siderod") || n.Contains("connectingrod") ||
             n.Contains("couplingrod") || n.Contains("driverod") || n.Contains("conrod");
-    }
-
-    static System.Collections.Generic.List<(Transform rod, Vector3 pos)> Rr2dvRodNubs(Transform body)
-    {
-        var result = new System.Collections.Generic.List<(Transform rod, Vector3 pos)>();
-        foreach (var mf in body.GetComponentsInChildren<MeshFilter>(true).Where(m => Rr2dvIsRod(m.name) || Rr2dvTravels(m.transform)))
-        {
-            var mesh = mf.sharedMesh;
-            var renderer = mf.GetComponent<MeshRenderer>();
-            if (!mesh || !renderer || !renderer.enabled || !mf.gameObject.activeInHierarchy) continue;
-            var world = mesh.vertices.Select(mf.transform.TransformPoint).ToArray();
-            if (world.Length == 0) continue;
-            var whole = new Bounds(world[0], Vector3.zero);
-            foreach (var v in world) whole.Encapsulate(v);
-            if (Mathf.Max(whole.size.y, whole.size.z) < .5f) { Line($"rr2dv oil rod {mf.name}: shorter than 0.5 m, no nub search"); continue; }
-            int small = 0, wrongSize = 0, notEnd = 0, noTop = 0, found = 0;
-            var groups = Islands(mesh);
-            for (int sub = 0; sub < mesh.subMeshCount; sub++)
-            {
-                var triangles = mesh.GetTriangles(sub);
-                groups.Add(Enumerable.Range(0, triangles.Length / 3).Select(i =>
-                    (sub, triangles[3 * i], triangles[3 * i + 1], triangles[3 * i + 2])).ToList());
-            }
-            foreach (var group in groups)
-            {
-                if (group.Count < Rr2dvMinNubTriangles) { small++; continue; }
-                var box = new Bounds(world[group[0].a], Vector3.zero);
-                foreach (var t in group) { box.Encapsulate(world[t.a]); box.Encapsulate(world[t.b]); box.Encapsulate(world[t.c]); }
-                var size = box.size;
-                if (size.x < .035f || size.z < .035f || size.y < .035f ||
-                    size.x > .3f || size.z > .3f || size.y > .3f) { wrongSize++; continue; }
-                int axis = whole.size.z >= whole.size.y ? 2 : 1;
-                if (Mathf.Min(Mathf.Abs(box.center[axis] - whole.min[axis]),
-                    Mathf.Abs(box.center[axis] - whole.max[axis])) > .35f) { notEnd++; continue; }
-                Vector3 top = Vector3.zero; float area = 0;
-                foreach (var t in group)
-                {
-                    var a = world[t.a]; var b = world[t.b]; var c = world[t.c];
-                    var normal = Vector3.Cross(b - a, c - a);
-                    if (normal.magnitude < 1e-8f || normal.normalized.y < .75f ||
-                        Mathf.Min(a.y, b.y, c.y) < box.max.y - .03f) continue;
-                    float weight = normal.magnitude / 2;
-                    top += (a + b + c) / 3 * weight;
-                    area += weight;
-                }
-                if (area < .0003f) { noTop++; continue; }
-                var pos = top / area + Vector3.up * (CupPivotAboveBase - CupSeatSink);
-                if (Mathf.Abs(pos.x) < .3f || result.Any(p => p.rod == mf.transform && Vector3.Distance(p.pos, pos) < .08f)) continue;
-                result.Add((mf.transform, pos));
-                found++;
-            }
-            // Why a rod gave no nub is otherwise invisible (L-27: 0 candidates on rods with visible big-end bosses).
-            Line($"rr2dv oil rod {mf.name}: {found} nub(s); islands rejected: {small} under {Rr2dvMinNubTriangles} triangles, {wrongSize} outside 3.5-30 cm, " +
-                 $"{notEnd} not within 0.35 m of a rod end, {noTop} without an upward face");
-        }
-        return result.OrderByDescending(p => p.pos.z).ThenBy(p => p.pos.x).ToList();
     }
 
     static void AlignRr2dvBogieSupports()
