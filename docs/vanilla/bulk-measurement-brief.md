@@ -14,9 +14,10 @@ no file in either game folder is written. The run is long (about 1-2 hours), so 
 ## Before you start (once)
 1. `git pull` on `vanilla-flavoured`; `git log -1` must show `bf8fcfa` or later.
 2. Close every Unity editor and AssetRipper. Do not open Unity while the run works.
-3. The settings file (the app's default, or the one you pass with `--machine`) must have `"keepWorkFiles": true`, a short
-   `"workRoot"` (for example `C:\rr2dv`), and valid `unity` (2019.4.40f1) and `assetRipper` paths. `doctor` shows them:
-   `set PYTHONPATH=src` then `python -m rr2dv doctor`.
+3. The settings file (the app's default, or the one you pass with `--machine`) needs a short `"workRoot"` (for example
+   `C:\rr2dv`) and valid `unity` (2019.4.40f1) and `assetRipper` paths. `doctor` shows them:
+   `set PYTHONPATH=src` then `python -m rr2dv doctor`. Leave `keepWorkFiles` as it is: the runner switches it on in
+   memory for its own run only and never edits the settings file.
 4. Run in a normal, unrestricted terminal (the first Unity launch failed inside a sandbox before: Licensing Client IPC).
 5. At least 25 GB free on the work drive and on the output drive (the script checks).
 

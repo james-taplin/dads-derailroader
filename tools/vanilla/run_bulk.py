@@ -72,7 +72,8 @@ def preflight(machine, rr, out_dir: Path) -> tuple[list[str], list[str]]:
     if not SCRIPT.is_file():
         problems.append(f"{SCRIPT} is missing: pull the vanilla-flavoured branch again")
     if machine.values.get("keepWorkFiles") is not True:
-        problems.append('the settings file needs "keepWorkFiles": true (the Unity projects are deleted otherwise)')
+        machine.values["keepWorkFiles"] = True  # this run only, in memory: the settings file is never edited
+        notes.append('"keepWorkFiles" is off in the settings; it is switched on for this run only (the file is not changed)')
     unity = machine.path("unity")
     if not unity or not Path(unity).is_file():
         problems.append("Unity 2019.4.40f1 is not set up: add `unity` to the settings file (see `python -m rr2dv doctor`)")

@@ -61,12 +61,10 @@ class BulkRun(unittest.TestCase):
 
     def test_preflight_names_every_problem_and_runs_nothing(self):
         values = json.loads(self.settings.read_text())
-        values["keepWorkFiles"] = False
         values["unity"] = str(self.tmp / "no-such-unity.exe")
         self.settings.write_text(json.dumps(values))
         code, text = self.run_tool()
         self.assertEqual(code, 2)
-        self.assertIn("keepWorkFiles", text)
         self.assertIn("Unity 2019.4.40f1 is not set up", text)
         self.assertIn("nothing was run", text)
         self.assertFalse((self.out / "vf_bulk.zip").exists())
@@ -98,6 +96,16 @@ class BulkRun(unittest.TestCase):
         code, text = self.run_tool()
         self.assertEqual(code, 0, text)
         self.assertNotIn("already measured", text)
+
+    def test_keep_work_files_is_forced_on_in_memory_and_the_settings_file_is_untouched(self):
+        values = json.loads(self.settings.read_text())
+        values["keepWorkFiles"] = False
+        self.settings.write_text(json.dumps(values))
+        before = self.settings.read_bytes()
+        code, text = self.run_tool()
+        self.assertEqual(code, 0, text)
+        self.assertIn("switched on for this run only", text)
+        self.assertEqual(self.settings.read_bytes(), before)
 
     def test_only_stock_steam_packs_can_be_named(self):
         with self.assertRaises(SystemExit):
