@@ -6,8 +6,13 @@
    40
   ],
   "backheadZ": -3.34,
-  "cabFloorCandidatesM": null,
-  "seatYFromDefinition": null
+  "cabFloorFromRaysM": null,
+  "cabFloorFromCollisionHullM": {
+   "best": 1.98,
+   "areaM2": 14.7,
+   "cabConfined": false,
+   "otherLevels": []
+  }
  },
  "ls-080-s51": {
   "driverNominalRadiusM": 0.6477000117301941,
@@ -15,10 +20,17 @@
    21
   ],
   "backheadZ": -4.67,
-  "cabFloorCandidatesM": [
+  "cabFloorFromRaysM": [
    1.6
   ],
-  "seatYFromDefinition": null
+  "cabFloorFromCollisionHullM": {
+   "best": 1.64,
+   "areaM2": 2.6,
+   "cabConfined": true,
+   "otherLevels": [
+    2.04
+   ]
+  }
  },
  "ls-2100-d46": {
   "driverNominalRadiusM": 0.7099999785423279,
@@ -27,10 +39,17 @@
    25
   ],
   "backheadZ": -4.55,
-  "cabFloorCandidatesM": [
+  "cabFloorFromRaysM": [
    1.9
   ],
-  "seatYFromDefinition": null
+  "cabFloorFromCollisionHullM": {
+   "best": 2.12,
+   "areaM2": 19.0,
+   "cabConfined": false,
+   "otherLevels": [
+    1.88
+   ]
+  }
  },
  "ls-2102-f71": {
   "driverNominalRadiusM": 0.7250000238418579,
@@ -39,11 +58,18 @@
    25
   ],
   "backheadZ": -7.23,
-  "cabFloorCandidatesM": [
+  "cabFloorFromRaysM": [
    1.8,
    1.9
   ],
-  "seatYFromDefinition": null
+  "cabFloorFromCollisionHullM": {
+   "best": 1.88,
+   "areaM2": 2.7,
+   "cabConfined": true,
+   "otherLevels": [
+    2.04
+   ]
+  }
  },
  "ls-260-g16": {
   "driverNominalRadiusM": 0.6349999904632568,
@@ -51,8 +77,15 @@
    34
   ],
   "backheadZ": -3.29,
-  "cabFloorCandidatesM": null,
-  "seatYFromDefinition": null
+  "cabFloorFromRaysM": null,
+  "cabFloorFromCollisionHullM": {
+   "best": 1.64,
+   "areaM2": 15.2,
+   "cabConfined": false,
+   "otherLevels": [
+    1.2
+   ]
+  }
  },
  "ls-260-g25": {
   "driverNominalRadiusM": 0.7111999988555908,
@@ -60,8 +93,13 @@
    29
   ],
   "backheadZ": -3.5,
-  "cabFloorCandidatesM": null,
-  "seatYFromDefinition": null
+  "cabFloorFromRaysM": null,
+  "cabFloorFromCollisionHullM": {
+   "best": 1.8,
+   "areaM2": 4.6,
+   "cabConfined": false,
+   "otherLevels": []
+  }
  },
  "ls-280-c25": {
   "driverNominalRadiusM": 0.6499999761581421,
@@ -70,10 +108,18 @@
    31
   ],
   "backheadZ": -2.1,
-  "cabFloorCandidatesM": [
+  "cabFloorFromRaysM": [
    1.5
   ],
-  "seatYFromDefinition": null
+  "cabFloorFromCollisionHullM": {
+   "best": 1.28,
+   "areaM2": 0.8,
+   "cabConfined": true,
+   "otherLevels": [
+    1.68,
+    1.7
+   ]
+  }
  },
  "ls-280-c46": {
   "driverNominalRadiusM": 0.7099999785423279,
@@ -81,10 +127,17 @@
    23
   ],
   "backheadZ": -3.9,
-  "cabFloorCandidatesM": [
+  "cabFloorFromRaysM": [
    1.8
   ],
-  "seatYFromDefinition": null
+  "cabFloorFromCollisionHullM": {
+   "best": 1.78,
+   "areaM2": 0.7,
+   "cabConfined": true,
+   "otherLevels": [
+    2.1
+   ]
+  }
  },
  "ls-280-c55": {
   "driverNominalRadiusM": 0.6965000033378601,
@@ -92,8 +145,15 @@
    29
   ],
   "backheadZ": -4.19,
-  "cabFloorCandidatesM": null,
-  "seatYFromDefinition": null
+  "cabFloorFromRaysM": null,
+  "cabFloorFromCollisionHullM": {
+   "best": 2.02,
+   "areaM2": 2.0,
+   "cabConfined": true,
+   "otherLevels": [
+    2.38
+   ]
+  }
  },
  "ls-282-k28t": {
   "driverNominalRadiusM": 0.5590000152587891,
@@ -101,10 +161,15 @@
    19
   ],
   "backheadZ": -2.66,
-  "cabFloorCandidatesM": [
+  "cabFloorFromRaysM": [
    1.7
   ],
-  "seatYFromDefinition": null
+  "cabFloorFromCollisionHullM": {
+   "best": 1.66,
+   "areaM2": 5.5,
+   "cabConfined": true,
+   "otherLevels": []
+  }
  },
  "ls-282-k35": {
   "driverNominalRadiusM": 0.6096000075340271,
@@ -112,11 +177,18 @@
    32
   ],
   "backheadZ": -4.71,
-  "cabFloorCandidatesM": [
+  "cabFloorFromRaysM": [
    1.0,
    1.6
   ],
-  "seatYFromDefinition": null
+  "cabFloorFromCollisionHullM": {
+   "best": 1.56,
+   "areaM2": 1.9,
+   "cabConfined": true,
+   "otherLevels": [
+    1.98
+   ]
+  }
  },
  "ls-284-b65": {
   "driverNominalRadiusM": 0.875,
@@ -124,10 +196,15 @@
    25
   ],
   "backheadZ": -7.65,
-  "cabFloorCandidatesM": [
+  "cabFloorFromRaysM": [
    2.1
   ],
-  "seatYFromDefinition": null
+  "cabFloorFromCollisionHullM": {
+   "best": 2.1,
+   "areaM2": 9.6,
+   "cabConfined": false,
+   "otherLevels": []
+  }
  },
  "ls-440-a23": {
   "driverNominalRadiusM": 0.7749999761581421,
@@ -135,8 +212,15 @@
    19
   ],
   "backheadZ": -3.27,
-  "cabFloorCandidatesM": null,
-  "seatYFromDefinition": null
+  "cabFloorFromRaysM": null,
+  "cabFloorFromCollisionHullM": {
+   "best": 1.82,
+   "areaM2": 5.0,
+   "cabConfined": false,
+   "otherLevels": [
+    1.46
+   ]
+  }
  },
  "ls-442-a26": {
   "driverNominalRadiusM": 0.8899999856948853,
@@ -144,8 +228,15 @@
    35
   ],
   "backheadZ": -5.19,
-  "cabFloorCandidatesM": null,
-  "seatYFromDefinition": null
+  "cabFloorFromRaysM": null,
+  "cabFloorFromCollisionHullM": {
+   "best": 1.72,
+   "areaM2": 0.7,
+   "cabConfined": true,
+   "otherLevels": [
+    2.0
+   ]
+  }
  },
  "ls-460-t17": {
   "driverNominalRadiusM": 0.7099999785423279,
@@ -154,10 +245,15 @@
    24
   ],
   "backheadZ": -1.96,
-  "cabFloorCandidatesM": [
+  "cabFloorFromRaysM": [
    1.2
   ],
-  "seatYFromDefinition": null
+  "cabFloorFromCollisionHullM": {
+   "best": 1.66,
+   "areaM2": 20.0,
+   "cabConfined": false,
+   "otherLevels": []
+  }
  },
  "ls-460-t21": {
   "driverNominalRadiusM": 0.875,
@@ -165,10 +261,15 @@
    39
   ],
   "backheadZ": -0.46,
-  "cabFloorCandidatesM": [
+  "cabFloorFromRaysM": [
    1.4
   ],
-  "seatYFromDefinition": null
+  "cabFloorFromCollisionHullM": {
+   "best": 1.94,
+   "areaM2": 22.9,
+   "cabConfined": false,
+   "otherLevels": []
+  }
  },
  "ls-460-t22": {
   "driverNominalRadiusM": 0.8149999976158142,
@@ -176,8 +277,15 @@
    20
   ],
   "backheadZ": -2.89,
-  "cabFloorCandidatesM": null,
-  "seatYFromDefinition": null
+  "cabFloorFromRaysM": null,
+  "cabFloorFromCollisionHullM": {
+   "best": 1.92,
+   "areaM2": 9.8,
+   "cabConfined": false,
+   "otherLevels": [
+    1.7
+   ]
+  }
  },
  "ls-462-p18": {
   "driverNominalRadiusM": 0.5950000286102295,
@@ -186,10 +294,17 @@
    28
   ],
   "backheadZ": -3.55,
-  "cabFloorCandidatesM": [
+  "cabFloorFromRaysM": [
    1.0
   ],
-  "seatYFromDefinition": null
+  "cabFloorFromCollisionHullM": {
+   "best": 1.72,
+   "areaM2": 20.2,
+   "cabConfined": false,
+   "otherLevels": [
+    1.04
+   ]
+  }
  },
  "ls-462-p43": {
   "driverNominalRadiusM": 1.0032999515533447,
@@ -197,8 +312,15 @@
    21
   ],
   "backheadZ": -6.32,
-  "cabFloorCandidatesM": null,
-  "seatYFromDefinition": null
+  "cabFloorFromRaysM": null,
+  "cabFloorFromCollisionHullM": {
+   "best": 1.96,
+   "areaM2": 1.3,
+   "cabConfined": true,
+   "otherLevels": [
+    2.04
+   ]
+  }
  },
  "ls-462-p48": {
   "driverNominalRadiusM": 0.925000011920929,
@@ -206,8 +328,15 @@
    23
   ],
   "backheadZ": -5.86,
-  "cabFloorCandidatesM": null,
-  "seatYFromDefinition": null
+  "cabFloorFromRaysM": null,
+  "cabFloorFromCollisionHullM": {
+   "best": 1.92,
+   "areaM2": 4.5,
+   "cabConfined": false,
+   "otherLevels": [
+    2.14
+   ]
+  }
  },
  "ls-480-c40": {
   "driverNominalRadiusM": 0.7099999785423279,
@@ -215,7 +344,12 @@
    19
   ],
   "backheadZ": -4.14,
-  "cabFloorCandidatesM": null,
-  "seatYFromDefinition": null
+  "cabFloorFromRaysM": null,
+  "cabFloorFromCollisionHullM": {
+   "best": 1.66,
+   "areaM2": 0.9,
+   "cabConfined": true,
+   "otherLevels": []
+  }
  }
 }
