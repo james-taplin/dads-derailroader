@@ -2221,3 +2221,16 @@ Codex survey (35 packs, 533/533 clips with the scalar-preserving resolver) read;
 (Phase 1 our pipeline on all 24 to the wheel-radius stop, Phase 2 new measurements M1-M13, Phase 3 James in game) plus a
 Phase 1 driver script. Not committed (James: push only the board); handed to James as files. Nothing implemented, nothing tested
 beyond the driver parsing. Next: Codex Phase 1 results, then a plan.
+
+## VF2 (cloud Claude, vanilla-flavoured, 2026-09-30): Phase 1 status; diesel scope; RSD-15 reference
+Branch `vanilla-flavoured`. Codex Phase 1 (pilot + fleet, unfinished): K-28T, S-23, S-51, D-46 reach the expected stop (pre-build
+review `needs_answer`, then `needs-wheel-radius`, both exit 3) with probe and draft record; VF1 driver assumed only the wheel-radius stop
+(fixed: it now also collects review-questions.json). Unity licensing failed in a restricted launch context, passed unrestricted.
+Finding: the app is steam-only. `rrmod.py` hard-codes SteamLocomotive; SW1, GP9, SD7 stop at intake with `not-steam`. Diesel is a
+separate work package (intake, diesel-electric record and adapter, Colorizer/livery, fuel LoadTarget/pump cap, horn/bell/compressor/
+exhaust, controls, truck packs, exceptions SW1 leading-space names and GP9 collision scale 100, per-loco audit and tests). Survey data:
+SW1 12.2 m 196,000 lb aar.a; GP9 16.0 m 259,500 lb blombergb; SD7 17.4 m 360,000 lb flexcoil; no wheelsets in any definition.
+Reference (James, offline session): RSD-15 test pack (third-party mod, kept out of git) built as a DE6-based diesel-electric CCL car: six
+driven wheelsets, measured radius, source mass/fuel, controls mapped to DE6 ports, 94 hooks reloaded, 0 missing scripts/audio, game
+startup loaded it. Uncalibrated (DE6 power/RPM/traction defaults), six empty DE6 sim refs (warnings), no gadget proxy, not driven.
+Open: builder source and port table from the offline diesel work; calibration policy (stock DE6 curves first?). Nothing implemented.
