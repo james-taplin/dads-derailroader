@@ -2291,3 +2291,9 @@ Mod removal must keep everything the measure and build stages need (removal by r
 Evidence (definitions): gauge styles across 21 steam locos: BoilerPressure 35 (every loco has one), DualReservoirMainEq 16 (missing on C-25, C-46, K-35, P-43, P-48), DualBrakeCylinderLine 19, Speedometer100 only 5 (G-25, K-28T, B-65, P-43, P-48), Quadruplex 4.
 Today the app maps only the boiler pressure gauge; 16 locos need a generated speedometer. Whistles: 7 definitions name a whistle id (wh-3-sou-lb F-71/C-46/T-22, wh-3-std A-23/C-40, wh-6-nathan P-43, wh-3-hancock-lb P-48), 14 leave it empty; the whistle packs were not in
 the survey scope: new inventory script `run_inventory.py` lists every AssetPacks folder (metadata only). Plan draft updated. Open: what "compound" means for the DV sim, default whistle, whistle audio handling. Nothing implemented.
+
+## VF8 (cloud Claude, vanilla-flavoured, 2026-09-30): whistle pack found; James's follow-ups
+Branch `vanilla-flavoured`. James: compound cannot be modelled, so the stock steam locos are simple 2-cylinder in the sim; default whistle `wh-3-std` when a definition leaves it empty; gauges generated at first, tuned per loco after testing.
+Codex's inventory of all 80 AssetPacks folders (21 ls, 3 ld, 18 truck, cars, loads, scenery): every whistle is in one pack, `audio.whistles01` (18.7 MB bundle, 32 catalogue assets, 23 Whistle definitions each with audio, components and model:
+wh-1-sd, wh-1-sd-low, wh-1-vt, wh-3-std, wh-3-cnj, wh-3-hancock-lb, wh-3-sou-lb, wh-3-wm, wh-5-cn, wh-5-cnw, wh-5-cog, wh-5-cp-sts, wh-5-drg-st, wh-5-ft, wh-5-gce, wh-5-nathan, wh-5-nkp, wh-5-nyc, wh-5-star, wh-6-cofg, wh-6-nathan, wh-6-reading, wh-6-rizzoli-cog).
+Not yet known: each whistle's mesh, transform and clip mapping. Next: `run_whistles.py` (Codex) exports the pack and reports its definitions, files, WAV headers and small prefabs; no audio or meshes leave the machine. Plan draft updated. Nothing implemented.
