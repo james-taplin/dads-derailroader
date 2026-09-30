@@ -2322,3 +2322,9 @@ request to Codex (James: Codex owns it): builder-core diesel gating in the LOCAL
 7. snapshot: fold in X51's end-beam patch (6f2746b, in `repo:tooling/` but not yet in local tooling, CLAUDE.md open item) or the refresh drops it. then replace `repo:tooling/` on `0.3.X-exp`, regenerate MANIFEST.sha256, commit `tooling: snapshot refresh (diesel gating)`, push, post X#.
 app side does (not the core): diesel intake and kind gate, drivetrain+basis review answer, diesel control map (fuses x3, starter, engine stop, dynamic brake, horn, bell, sander, headlights F/R, cab light), gauges (rpm, amps, fuel, oil, sand, TM temp), DE6 HUD/licence/audio, audit.
 untested: everything; nothing implemented yet.
+
+## VF8 (cloud Claude, vanilla-flavoured, 2026-09-30): whistle pack found; James's follow-ups
+Branch `vanilla-flavoured`. James: compound cannot be modelled, so the stock steam locos are simple 2-cylinder in the sim; default whistle `wh-3-std` when a definition leaves it empty; gauges generated at first, tuned per loco after testing.
+Codex's inventory of all 80 AssetPacks folders (21 ls, 3 ld, 18 truck, cars, loads, scenery): every whistle is in one pack, `audio.whistles01` (18.7 MB bundle, 32 catalogue assets, 23 Whistle definitions each with audio, components and model:
+wh-1-sd, wh-1-sd-low, wh-1-vt, wh-3-std, wh-3-cnj, wh-3-hancock-lb, wh-3-sou-lb, wh-3-wm, wh-5-cn, wh-5-cnw, wh-5-cog, wh-5-cp-sts, wh-5-drg-st, wh-5-ft, wh-5-gce, wh-5-nathan, wh-5-nkp, wh-5-nyc, wh-5-star, wh-6-cofg, wh-6-nathan, wh-6-reading, wh-6-rizzoli-cog).
+Not yet known: each whistle's mesh, transform and clip mapping. Next: `run_whistles.py` (Codex) exports the pack and reports its definitions, files, WAV headers and small prefabs; no audio or meshes leave the machine. Plan draft updated. Nothing implemented.
