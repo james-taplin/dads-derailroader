@@ -49,6 +49,9 @@ class NoModdedLocomotiveSupport(unittest.TestCase):
         r"\brr\.mods\b|\brailroader\.mods\b": "Railroader's Mods folder",
         r"\blist_mods\b": "the mod list",
         r"\bsearch_roots\(\s*rr\s*,": "extra search roots",
+        r"\bcodemods\b|\bcode_mods\b|\bcodeMods\b|LegosBetterSteam": "code-mod handling",
+        r"\brailroader_only\b|\boptional_groups\b|\bbulkAdds\b|\bGroupFile\b": "mod component groups",
+        r"\bfind_mod\b|\bfind_texture\b|\bextra_files\b": "mod lookups",
     }
 
     def test_source_has_none_of_the_removed_entry_points(self):

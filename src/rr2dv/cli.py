@@ -77,14 +77,6 @@ def cmd_scan(args) -> int:
               f"parts: {len(inv['parts'])}; packs: {', '.join(p['name'] for p in inv['packs'])}")
         purposes = sorted({c['purpose'] for c in inv['controls']['radial'] if c.get('purpose')})
         print(f"  controls: {', '.join(purposes) or 'none'}; toggles: {len(inv['controls']['toggles'])}")
-        print(f"  uses work from: {', '.join(m['id'] for m in inv['mods']) or 'none'}")
-        for dep in inv.get("railroader_only", []):
-            print(f"  uses {dep['id']} in Railroader only ({'installed' if dep['installed'] else 'not found'}); not needed in Derail Valley")
-        for g in inv["optional_groups"]:
-            print(f"  optional group for {g['target']}: {g['group_name']} ({g['file']['path']})")
-        found = sum(1 for tex in inv["textures"] if tex["file"])
-        if inv["textures"]:
-            print(f"  images: {found} of {len(inv['textures'])} found")
         audio = inv["audio"]
         print(f"  sounds: vanilla {audio['basis'] or '(choose S060 or S282)'} - {audio['rule']}")
         for issue in inv["issues"]:

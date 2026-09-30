@@ -40,7 +40,6 @@ def save(run):
         for file in pack.get('files', []):
             files.append({'root': pack['root'], 'path': str(Path(pack['path'] or pack['name']) / file['name']),
                           'sha256': file.get('sha256')})
-    files.extend({k: f.get(k) for k in ('root', 'path', 'sha256')} for f in inv.get('extra_files', []))
     recipe = {
         'schema': 1, 'seed': None,
         'reproduction': 'Same source bytes, code, tools and answers required; byte-identical bundles not verified.',

@@ -58,14 +58,6 @@ class Scan(unittest.TestCase):
         self.assertEqual(blocking(inv), [])
         self.assertEqual(inv["trucks"][0]["pack"]["root"], "input")
 
-    def test_pack_found_under_another_mod_folder_is_a_warning(self):
-        (self.m["mod"] / "ts-260-a" / "Definitions.json").write_text(json.dumps({"objects": [
-            loco("ts-260-a", tender="tt-260-a", parts=[part("Renamed Mod\\parts", "bell", "bell1")]),
-            tender("tt-260-a", truck="test-truck-2s")]}))
-        inv = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
-        self.assertEqual(blocking(inv), [])
-        self.assertEqual(codes(inv), ["pack-folder-mismatch"])
-
     def test_malformed_objects_do_not_crash(self):
         write_pack(self.m["mod"] / "odd", objects=[{"identifier": "x", "definition": []},
                                                   {"identifier": "y", "definition": {"kind": "SteamLocomotive",

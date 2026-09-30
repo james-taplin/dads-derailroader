@@ -47,21 +47,6 @@ class Dependencies(Base):
             loco("ts-260-a", tender="tt-260-a", parts=[part("Test Loco Mod\\parts", "bell", "bell1"), part("PartsMod\\extras", "horn", "horn1")]),
             tender("tt-260-a", truck="test-truck-2s")]}))
 
-    def test_licence_files_are_not_read(self):
-        (self.m["mod"] / "LICENSE.txt").write_text(STRICT)
-        (self.m["mod"] / "LICENSE.pdf").write_bytes(b"%PDF-1.4")
-        inv = self.inv()
-        self.assertEqual(blocking(inv), [])
-        self.assertFalse([i for i in inv["issues"] if "licen" in i["code"] or "licen" in i["message"].casefold()])
-        self.assertTrue(all("licences" not in m for m in inv["mods"]))
-
-    def test_parts_from_other_installed_mods_are_used(self):
-        self.parts_mod()
-        (self.m["search"] / "PartsMod" / "LICENSE").write_text(STRICT)
-        inv = self.inv()
-        self.assertEqual(([p["asset"] for p in inv["parts"]], inv["left_out"]), (["bell", "horn"], []))
-        self.assertIn("PartsMod", [m["id"] for m in inv["mods"]])
-
     def test_railroader_game_parts_are_used(self):
         game = self.tmp / "Railroader" / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
         self.parts_mod(where=game / "PartsMod")
@@ -97,11 +82,6 @@ class Dependencies(Base):
         self.assertTrue(record.left_out_component(c, "ts-260-a", left))
         self.assertFalse(record.left_out_component(c, "tt-260-a", left))
 
-    def test_mods_list_names_whose_work_is_used(self):
-        (self.m["search"] / "TruckMod" / "info.json").write_text('{"Id": "TruckMod"}')
-        inv = self.inv()
-        self.assertEqual(sorted(m["id"] for m in inv["mods"]), ["TruckMod"])  # the input is Railroader's own pack, never a mod
-
     def test_sources_credit_railroader_only(self):
         # vanilla-flavoured: everything used comes from Railroader's own asset packs, credited once as the base game
         objects = [loco("ts-260-a", tender="tt-260-a", parts=[part("ts-260-a\\parts", "bell", "bell1")]),
@@ -117,31 +97,6 @@ class Dependencies(Base):
         self.assertIn("ts-260-a", inv["sources"][0]["packs"])
 
 
-class GroupsAndImages(Base):
-    def add_group(self, name="Herald 1912", texture="Test Loco Mod.herald-1912.png"):
-        group = {"identifier": "tt-260-a", "clone": False, "MakeComponentGroup": True, "GroupName": name,
-                 "GroupID": "tt-260-a-" + name.replace(" ", ""),
-                 "bulkAdds": [{"kind": "CustomImage", "textureName": texture, "name": "Herald", "enabled": True}]}
-        (self.m["mod"] / f"TT-{name.replace(' ', '')}.json").write_text(json.dumps(group))
-
-    def test_group_files_note_legoslibraryofstuff_without_blocking(self):
-        self.add_group()
-        inv = self.inv()
-        self.assertEqual(blocking(inv), [])
-        self.assertEqual([d["id"] for d in inv["railroader_only"]], ["LegosLibraryOfStuff"])
-
-    def test_missing_image_is_a_warning_not_a_block(self):
-        self.add_group()
-        inv = self.inv()
-        self.assertEqual(blocking(inv), [])
-        self.assertIn("missing-texture", codes(inv))
-
-    def test_groups_from_other_mods_do_not_apply(self):
-        (self.m["search"] / "Addon").mkdir()
-        (self.m["search"] / "Addon" / "x.json").write_text(json.dumps({"identifier": "tt-260-a", "bulkAdds": []}))
-        self.assertEqual(self.inv()["optional_groups"], [])
-
-
 class Definitions(Base):
     def test_model_may_name_a_prefab_file_instead_of_a_catalogue_key(self):
         pack = self.m["mod"] / "ts-260-a"
@@ -152,19 +107,6 @@ class Definitions(Base):
         cat["assets"] = {"ts-260-a": {"filename": "ts-260-a.prefab"}}
         (pack / "Catalog.json").write_text(json.dumps(cat))
         self.assertIn("model-not-in-catalog", codes(self.inv()))
-
-    def test_code_mod_component_is_flagged(self):
-        comp = {"kind": "ArticulatedSteamEngineComponent", "diamater": 23.5, "stroke": 32.0, "name": "x"}
-        write_pack(self.m["mod"] / "ts-260-a",
-                   objects=[loco("ts-260-a", tender="tt-260-a", extra_components=[comp]), tender("tt-260-a", truck="test-truck-2s")],
-                   assets={"ts-260-a": {"filename": "a.prefab"}, "tt-260-a": {"filename": "t.prefab"}})
-        inv = self.inv()
-        self.assertEqual([c["provider"] for c in inv["code_mods"]], ["LegosBetterSteam"])
-        self.assertIn("code-mod-component", codes(inv))
-        # LegosBetterSteam is only needed in Railroader: listed, never opened, never blocking.
-        self.assertEqual(blocking(inv), [])
-        self.assertEqual([(d["id"], d["installed"]) for d in inv["railroader_only"]], [("LegosBetterSteam", False)])
-
 
 class Audio(Base):
     def test_boiler_size_rule(self):

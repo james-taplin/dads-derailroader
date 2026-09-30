@@ -230,10 +230,6 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
     if material_problems:
         pending.append(f"materials: {len(material_problems)} renderer(s) have an empty material slot in the export "
                        f"(metadata.materialProblems, first: {material_problems[0]}); check the part looks right in the renders")
-    code_mods = sorted({c["provider"] for c in inv.get("code_mods", [])})
-    if code_mods:
-        pending.append(f"simulation: nonstandard running gear ({', '.join(sorted({c['kind'] for c in inv['code_mods']}))} from "
-                       f"{', '.join(code_mods)}, e.g. articulated); Railroader's figures depend on it, review pull and cylinders (E02)")
     other_loads = sorted({str(slot.get("requiredLoadIdentifier")) for obj, _ in defs.values()
                           for slot in definition(obj).get("loadSlots") or []
                           if str(slot.get("requiredLoadIdentifier", "")).casefold() not in ("water", "coal")})
@@ -298,7 +294,7 @@ def draft(run_path: Path, inv: dict, probe_input: dict, probe_output: dict | Non
                            "wheelCandidates": wheel_candidates, "leftOut": inv.get("left_out", []),
                            "absentBindings": absent_bindings, "materialProblems": material_problems,
                            "sources": inv.get("sources", []),
-                           "audio": inv["audio"], "codeMods": code_mods, "pending": pending}}
+                           "audio": inv["audio"], "pending": pending}}
     if inv.get("tender"):
         tender_id = inv["tender"]["id"]
         t_obj, t_src = defs[tender_id]

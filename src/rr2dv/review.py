@@ -73,15 +73,8 @@ def request(record, definitions, probe, fingerprint):
             'Oil-fired regime combinations: not validated', 'Diesel mechanical/hydraulic/electric: adapters pending',
             'Articulated geometry and steam calibration: in-game validation required'],
     }
-    from . import codemods
-    questions['codeMods'] = codemods.review(source)
     from .reviewchoices import suggest
     questions['prefill'] = suggest(questions, source)
-    if questions['codeMods']['options']:
-        first = questions['codeMods']['options'][0]
-        questions['prefill']['values']['pullBasis'] = first['id']
-        questions['prefill']['provenance']['pullBasis'] = {'basis': 'source', 'evidence':
-            f"{first['label']} ({first['lbf']} lbf): {first['evidence']}; Railroader runs this when the mod is installed"}
     from . import enginemetrics
     questions['engineMetrics'] = enginemetrics.defaults(record, source)
     questions['prefill']['values']['engineMetrics'] = copy.deepcopy(questions['engineMetrics']['values'])
@@ -116,13 +109,7 @@ def resolve(req, answer):
     notes = v.get('engineMetricNotes', '')
     if not isinstance(notes, str) or len(notes) > 2000: raise ReviewError('Engine specification notes must be text, up to 2000 characters')
     v['engineMetricNotes'] = notes.strip()
-    pull_ids = [o['id'] for o in (req.get('codeMods') or {}).get('options', [])]
-    if pull_ids:
-        v.setdefault('pullBasis', pull_ids[0])  # a review saved before the choice existed: the suggestion
-        if v['pullBasis'] not in pull_ids:
-            raise ReviewError('Choose the pull to build to: ' + ', '.join(pull_ids))
-    else:
-        v.pop('pullBasis', None)
+    v.pop('pullBasis', None)  # a review saved by an older edition
     if 'dynamo' not in v:  # a review saved before this choice existed: the source's own answer
         v['dynamo'] = 'yes' if req.get('sourceHasDynamo', True) else 'no'
     v.setdefault('firing', 'hand-fired')  # a review saved before this choice existed
@@ -178,7 +165,6 @@ def resolve(req, answer):
     for key, provenance in prefill.get('provenance', {}).items():
         if key in v and v[key] == prefill.get('values', {}).get(key):
             result['provenance'][key] = copy.deepcopy(provenance)
-    result['codeMods'] = copy.deepcopy(req.get('codeMods') or {'options': [], 'notes': [], 'unrecognised': []})
     result['engineMetrics'] = copy.deepcopy(req.get('engineMetrics', {}))
     result['metricProvenance'] = {}
     for key, value in v['engineMetrics'].items():
@@ -254,7 +240,6 @@ def apply(record, reviewed):
              'engineRpm': round(speed / 3.6 / (2 * math.pi * v['wheelRadius']) * 60 * v['gearRatio'], 2),
              'doubleActingExhaustEventsPerSecond': round(speed / 3.6 / (2 * math.pi * v['wheelRadius']) * v['gearRatio'] * v['cylinders'] * 2, 2)}
             for speed in (10, 30, 50, 60)]
-    _pull_basis(rec, reviewed, v)
     _two_cylinder_sim(rec)
     return rec
 
@@ -273,27 +258,6 @@ def _two_cylinder_sim(rec):
     sim['numCylinders'] = env(2, 'count', 'DV_choice', f'{count} physical cylinders simulated as 2 of equal swept volume: '
                               'DV chuff audio handles 2')
     rec['metadata']['simulationProfile']['simulationBoreM'] = bore
-
-
-def _pull_basis(rec, reviewed, v):
-    """A code mod's pull (LegosBetterSteam...) built into Derail Valley: with the legacy-equivalent profile the
-    equivalent bore is resized so DV's formula gives the chosen figure (pull scales with bore squared). Other profiles
-    use the physical bore, which cannot carry a second engine: listed as a limitation."""
-    option = next((o for o in reviewed.get('codeMods', {}).get('options', []) if o['id'] == v.get('pullBasis')), None)
-    if not option:
-        return
-    meta = rec['metadata']
-    meta['pullBasis'] = option
-    sim = rec['hooks']['SimSpec']['steamEngine']
-    current = (meta.get('tractiveEffort') or {}).get('lbf')
-    if v['physics'] == 'legacy-equivalent' and current and sim.get('cylinderBore') and option['lbf'] != current:
-        bore = sim['cylinderBore']['value'] * math.sqrt(option['lbf'] / current)
-        sim['cylinderBore'] = env(bore, 'm', 'derived', f"Equivalent bore resized for {option['label']} "
-                                  f"({option['lbf']} lbf instead of {round(current)} lbf): {option['evidence']}")
-        meta['tractiveEffort'] = {**(meta.get('tractiveEffort') or {}), 'lbf': option['lbf'], 'basis': option['label']}
-    elif v['physics'] != 'legacy-equivalent':
-        meta['simulationProfile'].setdefault('limitations', []).append(
-            f"{option['label']} ({option['lbf']} lbf) cannot be matched with a physical-bore profile; choose legacy-equivalent to build to it")
 
 
 def _oil_burner(rec):
