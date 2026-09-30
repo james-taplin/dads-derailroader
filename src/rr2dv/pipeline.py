@@ -39,8 +39,11 @@ def search_roots(rr: installs.Install) -> list[Path]:
 
 
 def fingerprint(inv: dict) -> str:
-    """Identity of the exact input bytes a conversion used."""
-    canonical = json.dumps(inv["packs"], sort_keys=True, separators=(",", ":"))
+    """Identity of the exact input bytes a conversion used: each pack's name and its files' names, sizes and hashes.
+    Where a pack was found (which search root, which folder) is not part of it, so a change of settings or layout never
+    invalidates saved reviews; only different bytes or a different set of packs does."""
+    canonical = json.dumps(sorted(({"name": p["name"], "files": p["files"]} for p in inv["packs"]), key=lambda p: p["name"]),
+                           sort_keys=True, separators=(",", ":"))
     return hashlib.sha256(canonical.encode()).hexdigest()
 
 

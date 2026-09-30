@@ -165,6 +165,19 @@ class Scan(unittest.TestCase):
         self.assertIn("whistle-left-out", codes(gone))
         self.assertFalse(gone["whistle"]["placed"])
 
+    def test_the_fingerprint_does_not_depend_on_where_a_pack_was_found(self):
+        from rr2dv.pipeline import fingerprint
+        first = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
+        elsewhere = self.tmp / "empty"
+        elsewhere.mkdir()
+        second = inventory(Index(self.m["mod"], [elsewhere, self.m["search"]]), "ts-260-a")  # the packs are now search2
+        self.assertNotEqual({p["root"] for p in first["packs"]}, {p["root"] for p in second["packs"]})
+        self.assertEqual(fingerprint(first), fingerprint(second))
+        bundle = self.m["search"] / "TruckMod" / "Trucks" / "Bundle"
+        bundle.write_bytes(bundle.read_bytes() + b"x")  # different bytes: a different fingerprint
+        third = inventory(Index(self.m["mod"], [self.m["search"]]), "ts-260-a")
+        self.assertNotEqual(fingerprint(first), fingerprint(third))
+
 
 if __name__ == "__main__":
     unittest.main()
