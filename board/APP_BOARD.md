@@ -2262,3 +2262,14 @@ Branch `vanilla-flavoured`. Codex ran both on 21 steam packs (game build 2023852
 4. Oddities: zero-scale nodes in G-25/C-25/P-18 tenders, C-25, B-65, T-21 valve gear; trailing-space names K-35/B-65/T-22/P-18/P-43; MeshColliders on moving coal meshes in 7 tenders + A-23 cylinder cock; real LOD groups S-23, A-26 and many trucks; no lamp mesh reports emission (unverified why).
 5. End-beam faces vary by metres with ray height (G-16 rear at 1.0 m hits inside the loco): needs a per-loco selection with the grid as evidence.
 Not yet analysed: cab columns, control sweeps, rod phases, collider layout, material roles. Nothing implemented in the app; findings doc and updated VfMeasure.cs with James.
+
+## VF5 (cloud Claude, vanilla-flavoured, 2026-09-30): Phase 2 analysis finished (steam)
+Branch `vanilla-flavoured`. From Codex's Phase 2 zips (21 steam packs); diesels still unmeasured. Evidence in the zips and my findings doc (with James, off git).
+- Controls: every stock steam loco has exactly 3 RadialControls (throttle, reverser, whistle); all else is Toggle/Prefab controls. On the node the definition
+  parents each control to: throttle rotates 15-42.5 deg (21/21), reverser 20-67 deg about x (20/21), whistle 11-77 deg (19/21). P-43's reverser clip has 12 unresolved
+  paths (parent named `Reverser `); T-21 and P-43 whistle measure 0 deg on their parent node. Sweeps are source angles the vanilla record can carry per loco.
+- Rods: the 4-phase wheel-clip sampling works (one revolution per clip); crank throw matches definition stroke on K-28T (0.610 vs 0.6096 m) and C-40 (0.757 vs 0.762 m); T-17's rod node reads 0.729 vs 0.61 (unresolved).
+- Cab: floor missing on 12/21 because rays kept only 12 surfaces per column: cap raised to 40 in VfMeasure.cs; rerun needed. Ceilings 3.0-4.7 m where found.
+- Materials: 4,584 slots, 89% Standard Car Shader, 260 URP Lit, 24 Tender Water; 156 null (truck wheels 91, drivers 65, tender coal 35); no emissive material anywhere.
+- Colliders: 22 loco + 28 tender MeshColliders alongside boxes/spheres/capsules; 7 tenders + A-23 have MeshColliders on moving parts.
+Open: diesels, cab floor rerun, tender/truck spacing vs definitions, per-loco physics answers (VF4 item 3). Nothing implemented.
