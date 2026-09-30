@@ -419,7 +419,7 @@ class Rules(unittest.TestCase):
         levers, cab, loads, taken = b._levers(cfg, comps, ov, {"Throttle": "a", "Reverser": "b"}, "x")
         self.assertEqual([(l["Path"], l["Port"], l["Ctl"]) for l in levers],
                          [("Main/Throttle", "throttle.EXT_IN", 0), ("Main/Rev/Bar", "reverser.CONTROL_EXT_IN", 1)])
-        self.assertEqual(levers[0]["_phys"]["notches"], 21)  # G-29 throttle: 5 % per notch
+        self.assertEqual(levers[0]["_phys"]["notches"], 11)  # throttle: 10 % per notch (was 21 from G-29; James 2026-09-30)
         self.assertEqual((cfg["ReverserHandle"], cfg["ReverserClip"]), ("Main/Rev/Bar", "Reverser"))
         self.assertEqual(cab, ["Main/Throttle"])
         self.assertEqual(loads, [["Throttle", "", "throttle.EXT_IN", False]])  # the rod follows the port outside

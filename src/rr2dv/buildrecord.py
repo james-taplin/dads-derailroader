@@ -22,19 +22,26 @@ import re
 from . import wheels
 from .record import LB_KG, env
 
+# Game test 2026-09-30 (James, stock locos): throttle, cut-off (reverser) and whistle were stiff with too much inertia, the
+# throttle and cut-off had far too many notches, and the whistle must snap back to zero under its spring yet reach full within
+# a second of holding the key. So: 11 throttle and 21 reverser notches; mass, damper and drag cut to a quarter or less; the whistle
+# spring 120 with mass 1.5 and drag 1.5, and its key scroll half the travel. Starting values again (board X42), tuned in game;
+# Rr2dvInteractions.RrControlResponse carries the same numbers for generated levers (tests/test_vanilla_controls.py checks they agree).
+# Earlier values (G-29's accepted profile, James 2026-09-28): throttle 21/50/15/15/10, reverser 41/85/15/30/15, whistle 50/5/5/5.
 # Starting lever joint physics per control role, from the last user-accepted G-29 profile (tooling/locos/g29/profile/
 # G29Config.cs RrLevers). Board X42: accepted builds are evidence, not templates, so these are analogue estimates to be
 # checked in game per loco (CTRL-01); notch counts divide each lever's own measured sweep. Order: notches, spring, damper,
 # mass, drag, angularDrag, scroll, scrollSpring; the whistle's scroll is a quarter of its sweep (scrollAngleFraction).
 G29 = "tooling/locos/g29/profile/G29Config.cs"
 LEVER_PHYSICS = {
-    "throttle": (21, 50, 15, 15, 10, 0, 1, 400, None),
-    "reverser": (41, 85, 15, 30, 15, 0, 1, 200, None),
+    "throttle": (11, 50, 10, 4, 3, 0, 1, 400, None),
+    "reverser": (21, 85, 10, 6, 4, 0, 1, 200, None),
     "trainBrake": (11, 85, 15, 30, 16, 0, 1, 100, None),
     "indBrake": (11, 65, 0, 30, 16, 0, 1, 100, None),
-    "whistle": (0, 50, 5, 5, 5, 0, 1, 100, 0.25),
+    "whistle": (0, 120, 6, 1.5, 1.5, 0, 1, 100, 0.5),
     "toggle": (2, 85, 15, 10, 15, 0, 1, 0, None),
 }
+CONTROL_KINDS = frozenset({"RadialControl", "PrefabControl", "ToggleAnimation", "LoadAnimation", "LoadTarget"})
 # Railroader RadialControl purpose -> (role, DV port, ControlControlsWizard type, toggle, label)
 PURPOSES = {
     "throttle": ("throttle", "throttle.EXT_IN", 0, False, None),
@@ -94,7 +101,7 @@ def control_class(port: str) -> str:
 
 
 # Driving controls a loco needs even when Railroader models no handle for them: a generated backhead lever instead.
-DRIVING = [("Throttle", "throttle.EXT_IN", 0, 21), ("Reverser", "reverser.CONTROL_EXT_IN", 1, 41),
+DRIVING = [("Throttle", "throttle.EXT_IN", 0, 11), ("Reverser", "reverser.CONTROL_EXT_IN", 1, 21),
            ("Train brake", "brake.EXT_IN", 2, 11), ("Independent brake", "indBrake.EXT_IN", 3, 11),
            ("Whistle", "whistle.EXT_IN", 14, 0), ("Cylinder cocks", "cylinderCock.EXT_IN", 22, 2),
            ("Bell", "bellControl.EXT_IN", 15, 2)]
@@ -492,6 +499,13 @@ def fitted_positions(points, door, avoid, count) -> tuple[list[tuple[float, floa
     return best, best_tier
 
 
+def _control_anchor(ov: dict, name: str) -> list[float] | None:
+    """A control's own anchor by name (a RadialControl may share its name with a steam or sound component)."""
+    named = [a for a in ov.get("anchors") or [] if a["name"] == name]
+    a = next((a for a in named if a.get("kind") in CONTROL_KINDS), None) or (named[-1] if named else None)
+    return a["position"] if a and a.get("resolved") and a.get("position") else None
+
+
 def _anchor(anchors: dict, name: str) -> list[float] | None:
     a = anchors.get(name)
     return a["position"] if a and a.get("resolved") and a.get("position") else None
@@ -608,7 +622,16 @@ class _Builder:
 
     @staticmethod
     def anchors(v: dict) -> dict:
-        return {a["name"]: a for a in v.get("anchors") or []}
+        """Anchor by component name. Railroader names a control after what it works ('Whistle' the RadialControl beside 'Whistle'
+        the steam component), and the later entry used to win: K-28T's safety-valve and whistle steam were placed at the cab
+        handle (board 2026-09-30: steam out of the cab roof). A control never replaces another kind's anchor of the same name."""
+        out: dict = {}
+        for a in v.get("anchors") or []:
+            old = out.get(a["name"])
+            if old is not None and a.get("kind") in CONTROL_KINDS and old.get("kind") not in CONTROL_KINDS:
+                continue
+            out[a["name"]] = a
+        return out
 
     @staticmethod
     def bound_paths(v: dict, key: str) -> list[str]:
@@ -1378,7 +1401,7 @@ class _Builder:
                 # Some mods put interaction anchors in car space, separate from the animated handle.
                 # Accept only one animated hierarchy, within that control's source interaction radius.
                 roots = [p for p in bound if p and not any(p.startswith(q + "/") for q in bound if q and q != p)]
-                anchor = _anchor(self.anchors(ov), c["name"])
+                anchor = _control_anchor(ov, c["name"])
                 nodes = self.nodes(ov)
                 reach = e.get("radius")
                 if len(roots) == 1 and anchor and roots[0] in nodes and isinstance(reach, (int, float)) and reach > 0:
