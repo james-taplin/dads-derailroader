@@ -2298,3 +2298,13 @@ Untested: Mapper/TrainCar/simulation/controls/sound in game; power, rpm and gear
 Plan (draft, James decides when/whether): intake and kind gate; drivetrain+basis as a recorded review answer; per-type control map; diesel record; builder-core gating in local tooling first (`CclLocoBuild.cs:474` picks `SteamerSimCreator`); audit; tests; pre-release. Order proposed electric first.
 ? who owns the builder-core diesel gating (local tooling, then snapshot)? does the VF diesel package (VF2) and this plan share one implementation, and which branch?
 ? more diesel samples (scripted/hydraulic/mechanical)?
+
+## VF7 (cloud Claude, vanilla-flavoured, 2026-09-30): James's decisions; gauges and whistles evidence
+Branch `vanilla-flavoured`. James: (1) all stock steam locos are 2-cylinder, compound, coal fired, no auto-stoking, dynamo and front/rear lights; whistles are meshes added by a Railroader customise
+option, so they must be found in the assets and added in conversion; audio conversion returns for whistles only, with a vehicle option to choose the base whistle mesh and sound. (2) Unknown game build: report "unknown", do not refuse
+(Steam will split legacy/beta). (3) Physics numbers may live in the per-loco table; no auto-generated road numbers. (4) No copyright issue: the program contains no Railroader code or art. (5) Steam only for now; diesel continues on `0.3.x`.
+Mod removal must keep everything the measure and build stages need (removal by reachability, each step gated by tests and a pilot conversion). Priority: tight cab arrangement and controls, as many working gauges as possible
+(at least boiler pressure, brake pipe with two needles, speedometer).
+Evidence (definitions): gauge styles across 21 steam locos: BoilerPressure 35 (every loco has one), DualReservoirMainEq 16 (missing on C-25, C-46, K-35, P-43, P-48), DualBrakeCylinderLine 19, Speedometer100 only 5 (G-25, K-28T, B-65, P-43, P-48), Quadruplex 4.
+Today the app maps only the boiler pressure gauge; 16 locos need a generated speedometer. Whistles: 7 definitions name a whistle id (wh-3-sou-lb F-71/C-46/T-22, wh-3-std A-23/C-40, wh-6-nathan P-43, wh-3-hancock-lb P-48), 14 leave it empty; the whistle packs were not in
+the survey scope: new inventory script `run_inventory.py` lists every AssetPacks folder (metadata only). Plan draft updated. Open: what "compound" means for the DV sim, default whistle, whistle audio handling. Nothing implemented.
