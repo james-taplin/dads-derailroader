@@ -2249,3 +2249,16 @@ Phase 2: `VfMeasure.cs` (per-axle wheel measurement, wheel clip at 4 phases, end
 skinned, lamps, colliders, oddities) + driver `run_phase2.py` (measure, and `questions` for Phase 1b). Compiled against the stand-ins only;
 the driver ran against a fake Unity; never run in real Unity. Skinned meshes are not in the rays, so GP9/SD7 bodies will under-report.
 Nothing else implemented. Files with James (kept off git). Next: Phase 1b + Phase 2 results.
+
+## VF4 (cloud Claude, vanilla-flavoured, 2026-09-30): Phase 1b + Phase 2 results
+Branch `vanilla-flavoured`. Codex ran both on 21 steam packs (game build 20238526). VfMeasure.cs ran in real Unity 2019.4.40f1 first go: 0 failed,
+0 compile errors; diesels have no project (steam-only intake). Findings, evidence in Codex's zips (kept off git):
+1. BUG in the app's review prefill: C-46 pre-fills wheelRadius 0.4137 m (basis "measured", "only distinct high-confidence tyre radius"): that is the
+   pilot wheel (0.415); drivers are 0.71 m (probe candidate low confidence). Accepting it would give a 42% too small driver radius. 7 of 21 fall back to nominal.
+2. Wheel radius: on clean wheel nodes the flange tip is 19-39 mm above the definition nominal (K-28T 19, S-51 21, F-71 24, G-25 29, G-16 34, A-26 35, T-21 39), and bands
+   at nominal exist (S-51 0.6477). So nominal = tread; the probe's low-confidence picks were the wheel rim/web (S-51 0.5631 = widest span, 85 mm inside the tread).
+   The "widest lateral span" criterion is the wrong one; the merged-nodes hypothesis is only partly right. Phase 2 kept only 6 bands/node: fixed (all bands), rerun ~9 s/pack.
+3. Review answers are the same generic defaults for all 21 (manual-lap, radio-only, hand-fired, 2 cylinders, boiler = inherited S060 for every loco even at 6,579 ft2): no stock loco has per-loco physics yet.
+4. Oddities: zero-scale nodes in G-25/C-25/P-18 tenders, C-25, B-65, T-21 valve gear; trailing-space names K-35/B-65/T-22/P-18/P-43; MeshColliders on moving coal meshes in 7 tenders + A-23 cylinder cock; real LOD groups S-23, A-26 and many trucks; no lamp mesh reports emission (unverified why).
+5. End-beam faces vary by metres with ray height (G-16 rear at 1.0 m hits inside the loco): needs a per-loco selection with the grid as evidence.
+Not yet analysed: cab columns, control sweeps, rod phases, collider layout, material roles. Nothing implemented in the app; findings doc and updated VfMeasure.cs with James.
