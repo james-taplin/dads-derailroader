@@ -506,7 +506,6 @@ public static class VfOil
             bool travels = moving && mp.travel > .02f;
             if (moving && !travels) continue;                              // a wheel, axle or crank turning in place: not a nub host
             bool big = !moving && longest > 2.5f;
-            if (big && b.min.y > 2 * o.wheelRadius) continue;   // a big static part is scanned only when it reaches down to the axleboxes (frames), in windows round each axle
             if (big)
             {
                 foreach (var w in AxleWindows(hits, mf, o, path)) result.Add(w);
@@ -550,17 +549,21 @@ public static class VfOil
     }
 
 
-    // The axleboxes are usually part of the frame mesh, which is far too big to scan whole: a window 0.8 m long round each driving axle,
-    // on each side, from 0.5 to 2.0 m out, up to the top of the wheels. Only bumps are recorded (the mesh pieces of a frame are not nubs).
+    // Big static parts (frames, running boards, cylinder blocks) are far too big to scan whole: tiles 0.8 m long along the car, on each
+    // side, from 0.5 to 2.0 m out, up to a little above the wheel tops, over the length of the running gear (the axleboxes, the guides
+    // and the cylinder fittings). Only bumps are recorded (the mesh pieces of a frame are not nubs).
     static List<NubPart> AxleWindows(Hits hits, MeshFilter mf, VehicleOut o, string path)
     {
         var list = new List<NubPart>();
-        var zs = o.axles.Where(a => a.clip != null).Select(a => Mathf.Round(a.z * 20f) / 20f).Distinct().OrderBy(z => z).ToArray();
-        foreach (int side in new[] { -1, 1 })
-            foreach (float z in zs)
+        var zs = o.axles.Where(a => a.clip != null).Select(a => a.z).ToArray();
+        if (zs.Length == 0) return list;
+        var b = mf.GetComponent<MeshRenderer>().bounds;
+        float lo = Mathf.Max(b.min.z, zs.Min() - 1.0f), hi = Mathf.Min(b.max.z, zs.Max() + 3.5f);
+        for (float z0 = lo; z0 < hi; z0 += .8f)
+            foreach (int side in new[] { -1, 1 })
             {
-                var part = new NubPart { path = path, motion = "static-window", note = $"axlebox window side {side} z {z:F2}", phase = 0f };
-                var region = new[] { side < 0 ? -2.0f : 0.5f, side < 0 ? -0.5f : 2.0f, z - .4f, z + .4f, 2 * o.wheelRadius + .3f };
+                var part = new NubPart { path = path, motion = "static-window", note = $"window side {side} z {z0:F2}..{z0 + .8f:F2}", phase = 0f };
+                var region = new[] { side < 0 ? -2.0f : 0.5f, side < 0 ? -0.5f : 2.0f, z0, z0 + .8f, 2 * o.wheelRadius + .3f };
                 part.islands = new Island[0];
                 part.bumps = Bumps(hits, null, new AnimationClip[0], mf, Vector3.zero, Vector3.forward, part, false, region);
                 if (part.bumps.Length > 0) list.Add(part);
