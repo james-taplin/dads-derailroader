@@ -1,3 +1,20 @@
+Version 0.4.1
+
+- settings, runs and logs now live in an rr2dv_work folder beside the app instead of hidden system folders, a workRoot you already set still wins [your old settings in AppData are not read, copy machine.json across or set the paths again]
+- a crashed Unity now says so, with the exit code explained and the last lines of the Unity log in the error
+- warns when the Unity, work folder, user profile or temp paths contain non-english characters, these can make Unity 2019.4 crash on some systems
+- trailing wheel animations now work on locos where the node name ended in a space [P-18 trailing wheels]
+- fixed reverser and reverser latch animations being dropped on P-43, and a cab window animation on T-22
+- tenders now get number plates, from the road number decals, else the side lettering, else the middle of each side [placement is a first guess, check them in game]
+- a tender door or hatch animation that cannot be resolved is left out and listed in the build report instead of stopping the whole build [C-55 now builds, its tender water hatch will not open yet]
+- the finished box no longer triggers a false window not responding log entry
+- known issue, F-71 gets no oil cups because no main rod end seat is found
+- known issue, couplings between loco and tender may overlap or sit too far apart, worst on G-25 and K-35, which may show humping
+- known issue, the tender brake release may point sideways on C-40, F-71, G-25, P-43, P-48, S-23 and T-21
+- known issue, T-21 blower and coal dump levers may collide
+- known issue, other tender animations that point at missing parts may be left out, such as coal, brake rig and cut lever
+- known issue, the 0.4.0 known issues still apply
+
 Version 0.4.0
 
 - first public test version of the stock locomotive edition, converts Railroader's own 21 steam locomotives into Derail Valley packs
