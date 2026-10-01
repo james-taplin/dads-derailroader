@@ -48,7 +48,7 @@ namespace UnityEngine
         public void SetParent(Transform p, bool worldPositionStays) { }
         public IEnumerator GetEnumerator() => null;
     }
-    public struct Vector2 { public float x, y; public Vector2(float x, float y) { this.x = x; this.y = y; } public float magnitude => 0; }
+    public struct Vector2 { public float x, y; public Vector2(float x, float y) { this.x = x; this.y = y; } public float magnitude => 0; public static float Distance(Vector2 a, Vector2 b) => 0; }
     public struct Vector3
     {
         public float x, y, z; public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }

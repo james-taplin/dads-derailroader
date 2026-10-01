@@ -783,15 +783,24 @@ public static partial class CclLocoBuild
                     {
                         if (pair >= Rr2dvOilPairsMax) break;
                         string end = crankEnd ? "big end" : "small end";
-                        if (!Rr2dvRodEndSeat(hits, body, l, crankEnd, out var lp, out var lwhy) | !Rr2dvRodEndSeat(hits, body, r, crankEnd, out var rp, out var rwhy))
+                        // a modelled nub on both sides first (best clearance), else the highest level spot on each rod
+                        Transform lhost = l.rod, rhost = r.rod; string how = "main rod " + end;
+                        bool nubs = Rr2dvEndNubSeat(hits, body, l, crankEnd, out var lp, out var lnub, out var lnubWhy) &
+                                    Rr2dvEndNubSeat(hits, body, r, crankEnd, out var rp, out var rnub, out var rnubWhy);
+                        if (nubs) { lhost = lnub; rhost = rnub; how += " (modelled nub)"; }
+                        else
                         {
-                            Line($"rr2dv oil main rod {end} pair ({l.rod.name} / {r.rod.name}) omitted: left {lwhy ?? "seat found"}; right {rwhy ?? "seat found"}");
-                            continue;
+                            Line($"rr2dv oil main rod {end}: no modelled-nub pair ({lnubWhy ?? "left nub found"}; {rnubWhy ?? "right nub found"}); highest level spot instead");
+                            if (!Rr2dvRodEndSeat(hits, body, l, crankEnd, out lp, out var lwhy) | !Rr2dvRodEndSeat(hits, body, r, crankEnd, out rp, out var rwhy))
+                            {
+                                Line($"rr2dv oil main rod {end} pair ({l.rod.name} / {r.rod.name}) omitted: left {lwhy ?? "seat found"}; right {rwhy ?? "seat found"}");
+                                continue;
+                            }
                         }
                         Rr2dvCupSpacing.Add(lp); Rr2dvCupSpacing.Add(rp);
                         pair++;
-                        placed.Add(($"oil_{pair}L", lp, l.rod, "main rod " + end));
-                        placed.Add(($"oil_{pair}R", rp, r.rod, "main rod " + end));
+                        placed.Add(($"oil_{pair}L", lp, lhost, how));
+                        placed.Add(($"oil_{pair}R", rp, rhost, how));
                     }
                 if (placed.Count == 0)
                 {
@@ -988,6 +997,31 @@ public static partial class CclLocoBuild
         return true;
     }
 
+    // A cup on the best-clearance modelled nub around a main-rod end (James, 2026-10-01), in the rod's own level pose with the whole gear at
+    // that phase; the seat is kept in its host part's own space, so the cup rides that part (the side rod's pin cap as much as the rod).
+    static bool Rr2dvEndNubSeat(VisualHits hits, Transform body, Rr2dvMainRod m, bool crankEnd, out Vector3 pos, out Transform host, out string why)
+    {
+        pos = Vector3.zero; host = null; why = null;
+        var animators = Rr2dvGearAnimators(body);
+        Vector3 local = Vector3.zero; string summary = null; Rr2dvOilNubs.Candidate best = null;
+        try
+        {
+            Rr2dvSampleGear(animators, m.levelPhase);
+            var end = m.rod.TransformPoint(crankEnd ? m.crankEnd : m.crossEnd);
+            var found = Rr2dvOilNubs.Find(
+                (Vector3 o, Vector3 d, float dist, out RaycastHit h) => hits.Ray(o, d, dist, out h, null),
+                end, .3f, CupPivotAboveBase - CupSeatSink, t => Rr2dvTravels(t),
+                (p, t, r) => Rr2dvCupClear(hits, body, p, t, out var w, r) ? null : w,
+                Rr2dvCupSpaced, out summary);
+            if (found.Count > 0) { best = found[0]; local = best.local; host = best.host; }
+        }
+        finally { Rr2dvSampleGear(animators, 0); }
+        if (best == null) { why = "no modelled nub with clear space (" + summary + ")"; return false; }
+        pos = host.TransformPoint(local);
+        Line($"rr2dv oil nub on {host.name} for {m.rod.name} {(crankEnd ? "big" : "small")} end: rise {best.rise * 1000:F0} mm, clear to a {best.margin * 100:F1} cm radius ({summary})");
+        return true;
+    }
+
     static (bool found, Vector3 pos, Transform rod, string seat) Rr2dvBoardSeat(VisualHits hits, Transform body, float side, float zHint)
     {
         // Search outboard horizontal surfaces near the axle. This is intentionally a
@@ -1021,7 +1055,7 @@ public static partial class CclLocoBuild
     static readonly System.Collections.Generic.List<Vector3> Rr2dvCupSpacing = new System.Collections.Generic.List<Vector3>();
     static bool Rr2dvCupSpaced(Vector3 pos) => Rr2dvCupSpacing.All(p => Vector3.Distance(p, pos) >= CupSpacing);
 
-    static bool Rr2dvCupClear(VisualHits hits, Transform body, Vector3 pos, Transform rider, out string why)
+    static bool Rr2dvCupClear(VisualHits hits, Transform body, Vector3 pos, Transform rider, out string why, float radius = CupClearRadius)
     {
         why = null;
         var local = rider ? rider.InverseTransformPoint(pos) : pos;
@@ -1041,18 +1075,18 @@ public static partial class CclLocoBuild
                 var baseY = p.y - CupPivotAboveBase + CupSeatSink;
                 var centre = new Vector3(p.x, baseY, p.z);
                 // up through the cup from just above its base, at the centre and around the rim
-                foreach (var o in new[] { Vector3.zero, new Vector3(CupClearRadius, 0, 0), new Vector3(-CupClearRadius, 0, 0), new Vector3(0, 0, CupClearRadius), new Vector3(0, 0, -CupClearRadius) })
+                foreach (var o in new[] { Vector3.zero, new Vector3(radius, 0, 0), new Vector3(-radius, 0, 0), new Vector3(0, 0, radius), new Vector3(0, 0, -radius) })
                     if (hits.Ray(centre + o + Vector3.up * .006f, Vector3.up, CupClearHeight, out var h, body))
                     { why = $"{h.collider.transform.parent.name} above it at phase {phase:F2}"; return false; }
                 // down onto it from above its top (a ray that starts inside a part does not see that part)
-                foreach (var o in new[] { Vector3.zero, new Vector3(CupClearRadius, 0, 0), new Vector3(-CupClearRadius, 0, 0), new Vector3(0, 0, CupClearRadius), new Vector3(0, 0, -CupClearRadius) })
+                foreach (var o in new[] { Vector3.zero, new Vector3(radius, 0, 0), new Vector3(-radius, 0, 0), new Vector3(0, 0, radius), new Vector3(0, 0, -radius) })
                     if (hits.Ray(centre + o + Vector3.up * (CupClearHeight + .04f), Vector3.down, CupClearHeight + .04f - .006f, out var h, body))
                     { why = $"{h.collider.transform.parent.name} over it at phase {phase:F2}"; return false; }
                 // across the cup at three heights, from well outside its rim inward, both ways
                 foreach (float y in new[] { .02f, .045f, .075f })
                     foreach (var d in new[] { Vector3.right, Vector3.left, Vector3.forward, Vector3.back })
-                        if (hits.Ray(centre + Vector3.up * y + d * 3 * CupClearRadius, -d, 4 * CupClearRadius, out var h, body) &&
-                            Vector3.Distance(new Vector3(h.point.x, 0, h.point.z), new Vector3(centre.x, 0, centre.z)) <= CupClearRadius)
+                        if (hits.Ray(centre + Vector3.up * y + d * 3 * radius, -d, 4 * radius, out var h, body) &&
+                            Vector3.Distance(new Vector3(h.point.x, 0, h.point.z), new Vector3(centre.x, 0, centre.z)) <= radius)
                         { why = $"{h.collider.transform.parent.name} inside it at phase {phase:F2}"; return false; }
             }
             return true;
