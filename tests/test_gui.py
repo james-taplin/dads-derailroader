@@ -166,13 +166,20 @@ class Window(unittest.TestCase):
         self.app._ask = fake_ask
         shown = []
         original = self.gui.messagebox.showinfo
-        self.gui.messagebox.showinfo = lambda title, message, **kw: shown.append(message)
+        modal_while_shown = []
+
+        def fake_showinfo(title, message, **kw):
+            modal_while_shown.append(self.app._modal)  # the watchdog must not count the open box as a hang
+            shown.append(message)
+        self.gui.messagebox.showinfo = fake_showinfo
         self.addCleanup(setattr, self.gui.messagebox, "showinfo", original)
         self.app.convert()
         self.until(lambda: not self.app.worker.busy and self.app.last_run and shown, timeout=120)
         self.root.update()
         self.assertEqual([self.app.stage_rows[s].cget("text") for s in ("build", "audit", "publish")], ["✓", "✓", "✓"])
         self.assertEqual(asked, ["Test ts-260-a"])
+        self.assertEqual(modal_while_shown, [True])
+        self.assertFalse(self.app._modal)
         self.assertIn("Installed into your Derail Valley Mods folder", self.app.summary.cget("text"))
         self.assertEqual(str(self.app.open_build.cget("state")), "normal")
         self.assertTrue((self.m["dv_mods"] / "rr2dv_Test ts-260-a" / "rr2dv.json").is_file())

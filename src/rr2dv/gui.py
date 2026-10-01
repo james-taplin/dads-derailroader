@@ -306,9 +306,16 @@ class App:
     # ---- plumbing -----------------------------------------------------------------------------------------------------
     def _modal_error(self, *args, **kwargs) -> None:
         """An error box blocks the window's event loop until it is closed: not a hang for the watchdog."""
+        self._modal_box(messagebox.showerror, *args, **kwargs)
+
+    def _modal_info(self, *args, **kwargs) -> None:
+        """The same for the 'installed' box (a 32 s 'hang' dump was only the box waiting for its OK, 2026-10-01)."""
+        self._modal_box(messagebox.showinfo, *args, **kwargs)
+
+    def _modal_box(self, show, *args, **kwargs) -> None:
         self._modal = True
         try:
-            messagebox.showerror(*args, **kwargs)
+            show(*args, **kwargs)
         finally:
             self._modal = False
             self._beat = time.monotonic()
@@ -666,7 +673,7 @@ class App:
             text, colour = f"Stopped: {outcome.message}", "fail"
         self.summary.configure(text=text, foreground=COLOURS[colour])
         if outcome.code == EXIT_OK:
-            messagebox.showinfo(APP_NAME, installed, parent=self.root)
+            self._modal_info(APP_NAME, installed, parent=self.root)
 
     def _when_shown(self, kind: str, answer: dict, open_dialog, tries: int = 50) -> None:
         """A question needs the user: if the main window is minimised, restore it and wait until Windows has, then open
