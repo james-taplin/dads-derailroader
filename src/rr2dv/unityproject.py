@@ -176,12 +176,12 @@ def guid_references(source_assets: Path, guids: dict[str, str]) -> dict[str, lis
 
 
 def _resolve(source_assets: Path, dest_assets: Path, report: Path, bindings: Path | None = None) -> dict:
-    args = [source_assets, report, "--apply", dest_assets] + (["--bindings", bindings] if bindings else [])
+    resolver = _resolver_module()
     try:
-        _tool("resolve_clip_paths.py", *args)
-    except ProjectError:
+        resolver.resolve(source_assets, report, dest_assets, json.loads(bindings.read_text(encoding="utf-8")) if bindings else None)
+    except ValueError as e:
         if not report.is_file():
-            raise
+            raise ProjectError(f"resolve_clip_paths.py failed: {e}")
     return json.loads(report.read_text(encoding="utf-8"))
 
 
@@ -203,13 +203,48 @@ def _mirror(source_assets: Path, target: Path, skip: set[str] = frozenset(), onl
                 shutil.copy2(g, dst)
 
 
+def _exact_prefab_paths(path: Path) -> dict:
+    """The resolver's `prefab_paths` with names kept exactly as Unity hashes them. The snapshot strips each name, so a node
+    called 'Trailing ' (P-18), 'Reverser ' (P-43) or 'Right Door Window ' (T-22), a space at the end, hashes as
+    'Trailing' and the clip binding that names it never resolves: the wheel, reverser or door animation silently drops.
+    Both spellings are in the table; they map to the one real path. A path that ends in whitespace is returned quoted
+    (YAML would drop the space from a bare scalar)."""
+    import re
+    import zlib
+    names, parents, gameobjects = {}, {}, {}
+    for m in re.finditer(r"^--- !u!(\d+) &(-?\d+)[^\n]*\n(.*?)(?=^--- |\Z)", path.read_text(encoding="utf-8-sig"), re.S | re.M):
+        cls, fid, body = m.groups()
+        if cls == "1":
+            names[fid] = re.search(r"m_Name: (.*)", body)[1].rstrip("\r\n")
+        elif cls == "4":
+            gameobjects[fid] = re.search(r"m_GameObject: \{fileID: (-?\d+)\}", body)[1]
+            parents[fid] = re.search(r"m_Father: \{fileID: (-?\d+)\}", body)[1]
+    table: dict = {}
+    for node in gameobjects:
+        parts, seen = [], set()
+        while parents.get(node, "0") != "0":
+            if node in seen:
+                raise ValueError("Cyclic prefab hierarchy: " + str(path))
+            seen.add(node)
+            parts.append(names[gameobjects[node]])
+            node = parents[node]
+        full = "/".join(reversed(parts))
+        value = "'" + full.replace("'", "''") + "'" if full != full.rstrip() else full
+        for rel in {full, full.partition("/")[2]} if "/" in full else {full}:
+            for spelling in {rel, rel.strip()}:
+                table.setdefault(zlib.crc32(spelling.encode()), set()).add(value)
+    return table
+
+
 def _resolver_module():
-    """Our canonical resolver, loaded (not copied) so a diagnosis reads prefabs and clips exactly as it does."""
+    """Our canonical resolver, loaded (not copied) so a diagnosis reads prefabs and clips exactly as it does, with the
+    whitespace-exact prefab paths (`_exact_prefab_paths`)."""
     import importlib.util
     path = tooling_root() / "builder" / "tools" / "resolve_clip_paths.py"
     spec = importlib.util.spec_from_file_location("rr2dv_resolve_clip_paths", path)
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
+    module.prefab_paths = _exact_prefab_paths
     return module
 
 
