@@ -48,4 +48,8 @@ Exit 0 = all passed, 1 = some failed (zip still written), 2 = preflight failed (
   and `bumps` (places where the part's own top surface, sampled by rays on a 1 cm grid, stands at least 6 mm above its surroundings:
   nubs welded into the part, with rise, plateau area, size, peak position in world and part-local coordinates, distance from each
   end, and whether a cup on the peak has clear space through a whole turn).
+- `renders` and the `oil-renders` folder (third version): tilted orthographic pictures of the running gear, left and right, in tiles 4.5 m long
+  (about 4 pictures per loco), with a small marker on every candidate: magenta = small island, cyan = larger island, yellow = bump of
+  1 cm or more, orange = bump of 6-10 mm, green = a main-rod end seat that passed. They are what we look at to say which candidates are the
+  real modelled oiling nubs. The zip is about 10-15 MB because of them.
 - `spec`: the numbers used, so the analysis matches the requirements above.

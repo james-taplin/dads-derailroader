@@ -4,7 +4,7 @@ For each of the 21 stock steam packs it prepares the Unity project exactly as ru
 review, every answer refused, nothing built, nothing installed), then runs VfOil.Run once in it. VfOil applies the oil-cup
 requirements (main-rod ends as a left/right pair, 4 x 3 cm level seat within 0.3 m of the end, clear 3.5 cm x 9 cm cup space
 through a whole turn, 12 cm apart, running boards only as a fallback) to the source prefab and records every candidate and the
-reason it passed or failed. Small results go to <out-dir>/results/<pack>/ as each pack finishes and <out-dir>/vf_oil.zip is
+reason it passed or failed. Small results (JSON, plus a few dozen small pictures of the running gear with the candidates marked) go to <out-dir>/results/<pack>/ as each pack finishes and <out-dir>/vf_oil.zip is
 rebuilt after every pack, so a crash loses at most one pack. Rerun the same command to resume (--force redoes passed packs).
 
   set PYTHONPATH=src
@@ -13,7 +13,7 @@ rebuilt after every pack, so a crash loses at most one pack. Rerun the same comm
   python tools\\vanilla\\run_oil.py                         (all 21)
 
 Kept projects from a bulk run are reused when their inputs match, so this is much faster after run_bulk.py. Read-only towards
-Railroader and Derail Valley. Never installs. Nothing large goes in the zip.
+Railroader and Derail Valley. Never installs. The zip is about 10-15 MB because of the pictures.
 Exit codes: 0 every pack passed, 1 some packs failed (zip still written), 2 preflight failed, 130 interrupted.
 """
 from __future__ import annotations
@@ -34,6 +34,7 @@ run_bulk.OUT_PREFIX = "vf-oil"
 run_bulk.ZIP_NAME = "vf_oil.zip"
 run_bulk.TOOL_NAME = "run_oil.py"
 run_bulk.OUT_DEFAULT = "vf_oil_out"
+run_bulk.RENDER_DIR = "oil-renders"
 
 
 def check_output(path: Path, run: Path) -> dict:
@@ -54,6 +55,7 @@ def check_output(path: Path, run: Path) -> dict:
              "endSeats": sum(len(v.get("endSeats") or []) for v in locos),
              "pairs": sum(len(v.get("pairs") or []) for v in locos),
              "boardSeats": sum(len(v.get("boardSeats") or []) for v in locos),
+             "renders": sum(len(v.get("renders") or []) for v in locos),
              "nubParts": sum(len(v.get("nubParts") or []) for v in locos),
              "nubIslands": sum(len(p.get("islands") or []) for v in locos for p in (v.get("nubParts") or [])),
              "nubBumps": sum(len(p.get("bumps") or []) for v in locos for p in (v.get("nubParts") or []))}

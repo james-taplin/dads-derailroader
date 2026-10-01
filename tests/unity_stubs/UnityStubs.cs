@@ -32,6 +32,7 @@ namespace UnityEngine
         public Transform transform; public bool activeInHierarchy;
         public SceneManagement.Scene scene;
         public T AddComponent<T>() where T : Component => default(T);
+        public static GameObject CreatePrimitive(PrimitiveType t) => null;
         public T GetComponent<T>() => default(T);
         public T[] GetComponentsInChildren<T>(bool includeInactive) => null;
     }
@@ -41,6 +42,7 @@ namespace UnityEngine
         public Quaternion rotation, localRotation; public Transform parent;
         public Transform Find(string n) => null;
         public bool IsChildOf(Transform t) => false;
+        public void LookAt(Vector3 p) { }
         public Vector3 TransformPoint(Vector3 p) => p;
         public Vector3 InverseTransformPoint(Vector3 p) => p;
         public void SetParent(Transform p, bool worldPositionStays) { }
@@ -67,6 +69,7 @@ namespace UnityEngine
     {
         public float x, y, z, w; public Quaternion(float x, float y, float z, float w) { this.x = x; this.y = y; this.z = z; this.w = w; }
         public static Quaternion identity;
+        public static Quaternion Euler(float x, float y, float z) => identity;
         public static float Angle(Quaternion a, Quaternion b) => 0;
         public static Quaternion operator *(Quaternion a, Quaternion b) => a;
         public static Vector3 operator *(Quaternion a, Vector3 v) => v;
@@ -75,12 +78,25 @@ namespace UnityEngine
     public struct Bounds { public Bounds(Vector3 c, Vector3 s) { center = c; min = c; max = c; } public Vector3 center, min, max; public void Encapsulate(Vector3 p) { } public void Encapsulate(Bounds b) { } }
     public struct LOD { public float screenRelativeTransitionHeight; public Renderer[] renderers; }
     public class LODGroup : Component { public LOD[] GetLODs() => null; }
-    public class Renderer : Component { public bool enabled; public Bounds bounds; public Material[] sharedMaterials; }
+    public class Renderer : Component { public bool enabled; public Bounds bounds; public Material[] sharedMaterials; public Material sharedMaterial; }
     public class MeshRenderer : Renderer { }
     public class SkinnedMeshRenderer : Renderer { public Mesh sharedMesh; }
     public class MeshFilter : Component { public Mesh sharedMesh; }
     public class Mesh : Object { public int subMeshCount, vertexCount; public Vector3[] vertices; public int[] triangles; public uint GetIndexCount(int s) => 0; }
-    public class Material : Object { }
+    public class Material : Object { public Material(Shader s) { } public Color color; }
+    public class Shader : Object { public static Shader Find(string n) => null; }
+    public struct Color { public float r, g, b, a; public Color(float r, float g, float b) { this.r = r; this.g = g; this.b = b; a = 1; } }
+    public struct Rect { public Rect(float x, float y, float w, float h) { } }
+    public enum PrimitiveType { Sphere, Cube, Cylinder }
+    public enum LightType { Directional, Point }
+    public enum CameraClearFlags { SolidColor }
+    public enum TextureFormat { RGB24 }
+    public class Light : Component { public LightType type; public float intensity; }
+    public class Camera : Component { public CameraClearFlags clearFlags; public Color backgroundColor; public bool orthographic; public float orthographicSize, nearClipPlane, farClipPlane; public RenderTexture targetTexture; public void Render() { } }
+    public class RenderTexture : Object { public static RenderTexture active; public RenderTexture(int w, int h, int d) { } }
+    public class Texture2D : Object { public Texture2D(int w, int h, TextureFormat f, bool m) { } public void ReadPixels(Rect r, int x, int y) { } public byte[] EncodeToPNG() => null; }
+    public static class RenderSettings { public static Rendering.AmbientMode ambientMode; public static Color ambientLight; }
+    namespace Rendering { public enum AmbientMode { Flat } }
     public class Collider : Component { public bool enabled; }
     public class MeshCollider : Collider { public Mesh sharedMesh; }
     public class Collider2D : Behaviour { }
@@ -102,7 +118,7 @@ namespace UnityEngine
     public struct PhysicsScene { public int Raycast(Vector3 o, Vector3 d, RaycastHit[] hits, float dist, int mask, QueryTriggerInteraction q) => 0; }
     public static class PhysicsSceneExtensions { public static PhysicsScene GetPhysicsScene(this SceneManagement.Scene s) => default(PhysicsScene); }
     public static class Physics { public static void SyncTransforms() { } }
-    public static class Mathf { public static int RoundToInt(float f) => 0; public static float Abs(float f) => f; public static float Max(float a, float b) => a; public static float Min(float a, float b) => a; public static float Round(float f) => f; public static float Sign(float f) => f; }
+    public static class Mathf { public static int RoundToInt(float f) => 0; public static float Abs(float f) => f; public static float Max(float a, float b) => a; public static float Min(float a, float b) => a; public static float Round(float f) => f; public static float Sign(float f) => f; public static float Ceil(float f) => f; public static int Max(int a, int b) => a; public static int Min(int a, int b) => a; public static float Cos(float f) => f; public static float Sin(float f) => f; public const float Deg2Rad = 0.0174f; }
     public static class Debug { public static void Log(object o) { } public static void LogException(Exception e) { } }
     public static class Application { public static string dataPath, unityVersion; }
     public static class JsonUtility { public static T FromJson<T>(string s) => default(T); public static string ToJson(object o, bool pretty) => ""; }

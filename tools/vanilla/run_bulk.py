@@ -43,6 +43,7 @@ OUT_PREFIX = "vf-measure"
 ZIP_NAME = "vf_bulk.zip"
 TOOL_NAME = "run_bulk.py"
 OUT_DEFAULT = "vf_bulk_out"
+RENDER_DIR = ""                   # a folder of pictures the script writes beside its json (run_oil.py: "oil-renders")
 PILOT = ["ls-282-k28t", "ls-460-t17"]
 PROJECT_FILE = Path("unity") / "project" / "Assets" / "Rr2dv" / "ProbeInput.json"
 KEEP_FROM_RUN = ["run.log", "inventory.json", "review-questions.json", "probe/probe.json", "record/vehicle-record.json"]
@@ -183,6 +184,8 @@ def measure(machine, run: Path, pack_dir: Path) -> dict:
     for name in (OUTNAME, "result.json", "launch.json"):
         if (out / name).is_file():
             shutil.copyfile(out / name, pack_dir / name)
+    if RENDER_DIR and (out / RENDER_DIR).is_dir():
+        shutil.copytree(out / RENDER_DIR, pack_dir / RENDER_DIR, dirs_exist_ok=True)
     for log in sorted(out.glob("unity-*.log")):
         lines = log.read_text(encoding="utf-8", errors="replace").splitlines()
         (pack_dir / (log.name + ".tail.txt")).write_text("\n".join(lines[-200:]), encoding="utf-8")

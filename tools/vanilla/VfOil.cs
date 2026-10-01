@@ -66,7 +66,7 @@ public static class VfOil
         public string id, role, prefab; public float wheelRadius; public bool skipped; public string note;
         public int renderers, lowerLodRenderers;
         public Part[] movingParts; public RodOut[] rods; public EndSeat[] endSeats; public PairOut[] pairs;
-        public AxleOut[] axles; public BoardSeat[] boardSeats; public NubPart[] nubParts; public string[] log;
+        public AxleOut[] axles; public BoardSeat[] boardSeats; public NubPart[] nubParts; public string[] renders; public string[] log;
     }
     [Serializable] public class Spec
     {
@@ -81,6 +81,7 @@ public static class VfOil
     const int Phases = 16;
     static readonly List<string> Problems = new List<string>();
     static List<string> Log = new List<string>();
+    static string OutDir = "";
 
     public static void Run()
     {
@@ -92,6 +93,7 @@ public static class VfOil
             if (string.IsNullOrEmpty(output)) throw new InvalidOperationException("VF_OUT is required");
             Directory.CreateDirectory(output);
             Problems.Clear();
+            OutDir = output;
             var project = Directory.GetParent(Application.dataPath).FullName;
             var input = JsonUtility.FromJson<Input>(File.ReadAllText(Path.Combine(project, InputAsset)));
             if (input == null || input.schema != 1 || input.vehicles == null) throw new InvalidDataException("unsupported probe input");
@@ -156,6 +158,7 @@ public static class VfOil
                 o.nubParts = NubParts(hits, go, root, clips, lower, o);
             }
             o.endSeats = seats.ToArray();
+            o.renders = RenderNubs(go, root, clips, o);
             o.pairs = Pairs(root, main, seats);
             o.log = Log.ToArray();
         }
@@ -679,6 +682,83 @@ public static class VfOil
             bump.clash = clash;
         }
         return top.ToArray();
+    }
+
+
+    // ---- pictures ---------------------------------------------------------------------------------------------------
+    // Tilted orthographic views of the running gear from outside and above, left and right, in tiles 4.5 m long, with a small marker
+    // on every candidate (parented to its part, so it rides with it): magenta = small island (40 triangles or fewer, a top face),
+    // cyan = larger island, yellow = bump 1 cm or more, orange = bump 6-10 mm, green = a main-rod end seat that passed.
+    static string[] RenderNubs(GameObject go, Transform root, AnimationClip[] clips, VehicleOut o)
+    {
+        var made = new List<string>();
+        var markers = new List<GameObject>();
+        var extras = new List<GameObject>();
+        try
+        {
+            Sample(go, clips, 0.1f);
+            Func<Color, Material> mat = c => new Material(Shader.Find("Unlit/Color")) { color = c };
+            Action<Transform, float[], Color, float> mark = (host, local, colour, size) =>
+            {
+                if (!host || local == null) return;
+                var m = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                Object.DestroyImmediate(m.GetComponent<Collider>());
+                m.GetComponent<Renderer>().sharedMaterial = mat(colour);
+                m.transform.position = host.TransformPoint(new Vector3(local[0], local[1], local[2]));
+                m.transform.localScale = Vector3.one * size;
+                m.transform.SetParent(host, true);
+                markers.Add(m);
+            };
+            foreach (var part in o.nubParts ?? new NubPart[0])
+            {
+                var host = root.Find(part.path);
+                foreach (var i in part.islands) mark(host, i.local, i.triangles <= 40 && i.topArea > .0003f ? new Color(1f, 0f, 1f) : new Color(0f, 1f, 1f), .03f);
+                foreach (var b in part.bumps) if (b.rise >= .006f) mark(host, b.local, b.rise >= .01f ? new Color(1f, 1f, 0f) : new Color(1f, .5f, 0f), .025f);
+            }
+            foreach (var s in o.endSeats ?? new EndSeat[0])
+                if (s.found) mark(root.Find(s.rod), s.local, new Color(0f, 1f, 0f), .04f);
+            var sun = new GameObject("sun").AddComponent<Light>(); extras.Add(sun.gameObject);
+            sun.type = LightType.Directional; sun.intensity = 1.2f; sun.transform.rotation = Quaternion.Euler(50, 0, 0);
+            RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
+            RenderSettings.ambientLight = new Color(.55f, .55f, .6f);
+            var cam = new GameObject("cam").AddComponent<Camera>(); extras.Add(cam.gameObject);
+            cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(.72f, .78f, .85f);
+            cam.orthographic = true; cam.orthographicSize = 1.3f; cam.nearClipPlane = .05f; cam.farClipPlane = 30f;
+            var zs = (o.axles ?? new AxleOut[0]).Select(a => a.z).ToArray();
+            if (zs.Length == 0 || string.IsNullOrEmpty(OutDir)) return made.ToArray();
+            float zMin = zs.Min() - 1.2f, zMax = zs.Max() + 1.4f, tile = 4.5f;
+            int n = Mathf.Max(1, Mathf.RoundToInt(Mathf.Ceil((zMax - zMin) / (tile - .4f))));
+            n = Mathf.Min(n, 4);
+            int width = 1350, height = 780;
+            var dir = Path.Combine(OutDir, "oil-renders");
+            Directory.CreateDirectory(dir);
+            float centreY = Mathf.Max(1.0f, o.wheelRadius + .5f);
+            foreach (int side in new[] { -1, 1 })
+                for (int k = 0; k < n; k++)
+                {
+                    float z = n == 1 ? (zMin + zMax) / 2 : zMin + tile / 2 + k * ((zMax - zMin - tile) / (n - 1));
+                    var target = new Vector3(side * 1.0f, centreY, z);
+                    cam.transform.position = target + new Vector3(side * 6f * Mathf.Cos(38 * Mathf.Deg2Rad), 6f * Mathf.Sin(38 * Mathf.Deg2Rad), 0f);
+                    cam.transform.LookAt(target);
+                    var rt = new RenderTexture(width, height, 24);
+                    cam.targetTexture = rt; cam.Render(); RenderTexture.active = rt;
+                    var tex = new Texture2D(width, height, TextureFormat.RGB24, false);
+                    tex.ReadPixels(new Rect(0, 0, width, height), 0, 0);
+                    string name = $"{o.id}-{(side < 0 ? "L" : "R")}{k + 1}.png";
+                    File.WriteAllBytes(Path.Combine(dir, name), tex.EncodeToPNG());
+                    RenderTexture.active = null; cam.targetTexture = null;
+                    Object.DestroyImmediate(rt); Object.DestroyImmediate(tex);
+                    made.Add(name);
+                }
+        }
+        catch (Exception e) { Problems.Add(o.id + ": renders: " + e.GetType().Name + ": " + e.Message); }
+        finally
+        {
+            foreach (var m in markers) if (m) Object.DestroyImmediate(m);
+            foreach (var e in extras) if (e) Object.DestroyImmediate(e);
+            Sample(go, clips, 0f);
+        }
+        return made.ToArray();
     }
 
     // Temporary MeshColliders on every visible mesh under the root (their own colliders switched off) for many raycasts.
