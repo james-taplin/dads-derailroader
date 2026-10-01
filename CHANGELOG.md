@@ -1,0 +1,25 @@
+Version 0.4.0
+
+- first public test version of the stock locomotive edition, converts Railroader's own 21 steam locomotives into Derail Valley packs
+- stock steam only, mod support has been removed and diesels are not included yet
+- needs Railroader, Derail Valley with Custom Car Loader, AssetRipper and Unity 2019.4.40f1 set up in settings, windows only
+- one click personal use notice before anything is installed, the assets belong to the Railroader developers and rights holders, no sharing without their permission
+- every loco comes with sensible answers already filled in, you just confirm them before it builds
+- an unknown game build is reported and never refused
+- vehicle option to pick the whistle mesh from Railroader's 23 whistles, the default is the standard 3 chime
+- normal Derail Valley gauges on every loco, including boiler pressure, brake and speed
+- oil cups on the main rod ends as matched left and right pairs
+- throttle and cut-off have fewer notches and move more freely, the whistle springs back to zero when released
+- known issue, drive via keyboard or the F4 hud for now, cab controls are at your own risk
+- known issue, controls may be stiff or twitchy, and the whistle may take over a second to reach full when you hold the key
+- known issue, some controls only work via the cab or the keyboard
+- known issue, lights may not turn off and headlight lenses might be broken
+- known issue, dials can float in the air
+- known issue, only one pair of oil cups per loco
+- known issue, the tender brake release on S-23 and P-48 may point sideways instead of sitting on the tender
+- known issue, B-65 loco and tender may overlap slightly at the coupling, P-48 couplings may not quite meet
+- known issue, P-48 front doors are missing
+- known issue, bell cords are left out on K-35 because they stretched in game, other locos with bell cords may show the same stretched line
+- known issue, some parts get a plain gunmetal or coal colour where the original material could not be used, so coal piles and some details may look off
+- known issue, whistle sound is still the Derail Valley one, only the mesh changes with your choice
+- known issue, the latest control feel, safety valve and bell cord changes were not tested in game before this release
