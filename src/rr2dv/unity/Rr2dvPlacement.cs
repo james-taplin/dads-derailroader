@@ -910,9 +910,13 @@ public static partial class CclLocoBuild
                 float Ry(Vector3[] p) => p.Max(q => q.y) - p.Min(q => q.y);
                 float Rz(Vector3[] p) => p.Max(q => q.z) - p.Min(q => q.z);
                 bool Circle(Vector3[] p) => Ry(p) > .1f && Rz(p) > .1f;
-                bool Line_(Vector3[] p) => Ry(p) < .03f && Rz(p) > .1f;
+                // The crosshead end of F-71's and C-55's main rod wanders 3.5-3.7 cm in height over a turn (the oil-cup map of all 21 locos,
+                // 2026-10-01), so a line is up to 4.5 cm; and a crank throw is at least 0.2 m (every real main rod measured 0.27-0.43 m;
+                // the 0.05-0.11 m "main rods" kept on A-26, P-18, P-43 and C-40 were eccentric and valve-gear rods).
+                bool Line_(Vector3[] p) => Ry(p) < .045f && Rz(p) > .1f;
                 bool crank0 = Circle(p0) && Line_(p1), crank1 = Circle(p1) && Line_(p0);
                 if (!crank0 && !crank1) continue;
+                if (Ry(crank0 ? p0 : p1) / 2 < .2f) continue;
                 var cross = crank0 ? p1 : p0;
                 int level = Enumerable.Range(0, N).OrderBy(k => tilt[k]).First();
                 found.Add(new Rr2dvMainRod { rod = mf.transform, crankEnd = crank0 ? e0 : e1, crossEnd = crank0 ? e1 : e0,

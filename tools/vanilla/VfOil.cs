@@ -115,7 +115,8 @@ public static class VfOil
         {
             var root = go.transform;
             var clips = (v.wheelsets ?? new Wheelset[0]).Select(w => string.IsNullOrEmpty(w.clipAsset) ? null : AssetDatabase.LoadAssetAtPath<AnimationClip>(w.clipAsset)).Where(c => c).ToArray();
-            o.wheelRadius = (v.wheelsets ?? new Wheelset[0]).Select(w => w.diameter / 2f).DefaultIfEmpty(0f).Max();
+            // the wheelset with the most axles is the drivers (C-40 also has a 'Lubricator' clip with a 5.7 m 'wheel')
+            o.wheelRadius = (v.wheelsets ?? new Wheelset[0]).OrderByDescending(w => w.axles).Select(w => w.diameter / 2f).DefaultIfEmpty(0f).First();
             var lower = LowerLod(root);
             o.lowerLodRenderers = lower.Count;
             foreach (var r in lower) if (r.enabled) { r.enabled = false; lowerOff.Add(r); }   // LOD0 only, as the build does
@@ -249,7 +250,7 @@ public static class VfOil
                 Func<Vector3[], float> Ry = p => p.Max(q => q.y) - p.Min(q => q.y);
                 Func<Vector3[], float> Rz = p => p.Max(q => q.z) - p.Min(q => q.z);
                 Func<Vector3[], bool> Circle = p => Ry(p) > .1f && Rz(p) > .1f;
-                Func<Vector3[], bool> Line = p => Ry(p) < .03f && Rz(p) > .1f;
+                Func<Vector3[], bool> Line = p => Ry(p) < .045f && Rz(p) > .1f;   // as Rr2dvPlacement: F-71 and C-55 wander 3.7 cm
                 if (Ry(p0) < .01f && Rz(p0) < .01f && Ry(p1) < .01f && Rz(p1) < .01f) continue;   // does not move: not running gear
                 var rep = new RodOut
                 {
@@ -266,6 +267,7 @@ public static class VfOil
                     bool two = Circle(p0) && Circle(p1);
                     rep.verdict = "rejected"; rep.reason = two ? "both ends circle: a coupling rod" : "no end runs on a line and the other on a circle";
                 }
+                else if (Ry(crank0 ? p0 : p1) / 2 < .2f) { rep.verdict = "rejected"; rep.reason = "crank throw under 0.2 m: an eccentric or valve-gear rod"; }
                 else
                 {
                     var cross = crank0 ? p1 : p0;
