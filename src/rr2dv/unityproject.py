@@ -203,6 +203,20 @@ def _mirror(source_assets: Path, target: Path, skip: set[str] = frozenset(), onl
                 shutil.copy2(g, dst)
 
 
+def _yaml_name(raw: str) -> str:
+    """A prefab's m_Name as the name itself. AssetRipper writes a name with a space at its end (or other odd text) as a quoted YAML
+    string, 'Trailing ' or "Trailing ": the quotes are not part of the name, and the clip paths hash the name without them."""
+    value = raw.rstrip("\r\n")
+    if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
+        return value[1:-1].replace("''", "'")
+    if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
+        try:
+            return json.loads(value)
+        except ValueError:
+            return value[1:-1]
+    return value
+
+
 def _exact_prefab_paths(path: Path) -> dict:
     """The resolver's `prefab_paths` with names kept exactly as Unity hashes them. The snapshot strips each name, so a node
     called 'Trailing ' (P-18), 'Reverser ' (P-43) or 'Right Door Window ' (T-22), a space at the end, hashes as
@@ -215,7 +229,7 @@ def _exact_prefab_paths(path: Path) -> dict:
     for m in re.finditer(r"^--- !u!(\d+) &(-?\d+)[^\n]*\n(.*?)(?=^--- |\Z)", path.read_text(encoding="utf-8-sig"), re.S | re.M):
         cls, fid, body = m.groups()
         if cls == "1":
-            names[fid] = re.search(r"m_Name: (.*)", body)[1].rstrip("\r\n")
+            names[fid] = _yaml_name(re.search(r"m_Name: (.*)", body)[1])
         elif cls == "4":
             gameobjects[fid] = re.search(r"m_GameObject: \{fileID: (-?\d+)\}", body)[1]
             parents[fid] = re.search(r"m_Father: \{fileID: (-?\d+)\}", body)[1]
@@ -325,6 +339,76 @@ def _absent_plan(source_assets: Path, full_assets: Path, clip: str, owners: list
     return {"prefab": named[0], "owners": owners, "bindings": len(hashes), "restored": len(mapping),
             "absent": [f"0x{h:x}" for h in absent],
             "text": resolver.PAT.sub(lambda m: mapping.get(int(m[1], 16), m[0]), text)}, ""
+
+
+PATH_LINE = re.compile(r"^(?P<lead>[ \t]*path: )(?P<value>.*?)[ \t]*$", re.M)
+
+
+def _node_paths(prefab: Path) -> set[str]:
+    """Every node path of a prefab (the root's own name left out, as clip paths are written), whitespace exact."""
+    names, parents, gameobjects = {}, {}, {}
+    for m in re.finditer(r"^--- !u!(\d+) &(-?\d+)[^\n]*\n(.*?)(?=^--- |\Z)", prefab.read_text(encoding="utf-8-sig"), re.S | re.M):
+        cls, fid, body = m.groups()
+        if cls == "1":
+            names[fid] = _yaml_name(re.search(r"m_Name: (.*)", body)[1])
+        elif cls == "4":
+            gameobjects[fid] = re.search(r"m_GameObject: \{fileID: (-?\d+)\}", body)[1]
+            parents[fid] = re.search(r"m_Father: \{fileID: (-?\d+)\}", body)[1]
+    result = set()
+    for node in gameobjects:
+        parts, seen = [], set()
+        while parents.get(node, "0") != "0" and node not in seen:
+            seen.add(node)
+            parts.append(names[gameobjects[node]])
+            node = parents[node]
+        result.add("/".join(reversed(parts)))
+    return result
+
+
+def prefix_missing_paths(text: str, nodes: set[str]) -> tuple[str, str | None]:
+    """A clip written relative to one child of the prefab root (the Railroader tender 'Tender': 'Coal Load/Bone' where the prefab has
+    'Tender/Coal Load/Bone') names nodes the builder cannot find from the root. When every path that does not resolve resolves under
+    ONE first-level child, those paths get that child's name in front (the clip then animates the same nodes). Anything else is
+    left exactly as it is. Returns (text, the prefix or None)."""
+    values = [m["value"].strip("'\"") for m in PATH_LINE.finditer(text)]
+    missing = {v for v in values if v and not v.startswith("path_0x") and v not in nodes}
+    if not missing:
+        return text, None
+    children = {n for n in nodes if n and "/" not in n}
+    fits = [c for c in sorted(children) if all((c + "/" + v) in nodes for v in missing)]
+    if len(fits) != 1:
+        return text, None
+    prefix = fits[0] + "/"
+
+    def fix(m):
+        v = m["value"].strip("'\"")
+        if v in missing:
+            new = prefix + v
+            return m["lead"] + ("'" + new.replace("'", "''") + "'" if new != new.rstrip() else new)
+        return m.group(0)
+    return PATH_LINE.sub(fix, text), fits[0]
+
+
+def _prefix_rootless_clips(source_assets: Path, dest_assets: Path) -> list[dict]:
+    """After resolution: clips named by exactly one prefab whose literal paths miss that prefab's root but fit under one of its children
+    (C-55's tender, where Coal, Water, Hatch, Brake Rig and Cut Lever all stopped the build). Each fix is listed."""
+    done = []
+    owners = clip_owners(source_assets)
+    nodes_of: dict[str, set[str]] = {}
+    for clip, entries in sorted(owners.items()):
+        prefabs = sorted({o["prefab"] for o in entries})
+        target = dest_assets / clip
+        if len(prefabs) != 1 or not target.is_file():
+            continue
+        if prefabs[0] not in nodes_of:
+            nodes_of[prefabs[0]] = _node_paths(source_assets / prefabs[0])
+        text = target.read_text(encoding="utf-8-sig")
+        fixed, prefix = prefix_missing_paths(text, nodes_of[prefabs[0]])
+        if prefix:
+            target.write_text(fixed, encoding="utf-8")
+            done.append({"clip": clip, "prefab": prefabs[0], "prefix": prefix})
+    return done
+
 
 
 def _resolve_clips(source_assets: Path, dest_assets: Path, report: Path, full_assets: Path | None = None) -> dict:
@@ -440,10 +524,11 @@ def _resolve_clips(source_assets: Path, dest_assets: Path, report: Path, full_as
             pass
         raise ProjectError(f"resolve_clip_paths: {len(errors)} clip(s) did not resolve, first "
                            f"{first.get('clip', '')}: {first.get('error')}; see {where}")
+    prefixed = _prefix_rootless_clips(source_assets, dest_assets)
     absent = [{"clip": c, "prefab": p["prefab"], "keys": sorted({o["key"] for o in p["owners"]}), "bindings": p["bindings"],
                "restored": p["restored"], "absent": p["absent"]} for c, p in sorted(partial.items())]
     return {"clips": len(result.get("clips", [])) + len(partial), "report": report.name, "bound": len(bound),
-            "left_out": excluded, "absent_bindings": absent}
+            "left_out": excluded, "absent_bindings": absent, "prefixed": prefixed}
 
 
 def set_project_settings(project: Path) -> None:
