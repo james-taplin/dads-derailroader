@@ -282,7 +282,7 @@ args = sys.argv[1:]
 project = Path(args[args.index("-projectPath") + 1]); log = Path(args[args.index("-logFile") + 1])
 method = args[args.index("-executeMethod") + 1]
 out = Path(os.environ.get({"Rr2dvProbe.Run": "RR2DV_PROBE_OUT", "Rr2dvBuild.Build": "CCL_BUILD_OUT",
-                           "Rr2dvAudit.Run": "RR2DV_AUDIT_OUT", "VfMeasure.Run": "VF_OUT"}[method]))
+                           "Rr2dvAudit.Run": "RR2DV_AUDIT_OUT", "VfMeasure.Run": "VF_OUT", "VfOil.Run": "VF_OUT"}[method]))
 mode = os.environ.get("FAKE_UNITY_MODE", "")
 state = Path(os.environ.get("FAKE_UNITY_STATE", str(out) + ".state"))
 calls = int(state.read_text()) + 1 if state.exists() else 1
@@ -383,7 +383,21 @@ def vfmeasure():
     (out / "result.json").write_text('{"status":"passed","exitCode":0,"problems":0}')
     return 0
 
-sys.exit({"Rr2dvProbe.Run": probe, "Rr2dvBuild.Build": build, "Rr2dvAudit.Run": audit, "VfMeasure.Run": vfmeasure}[method]())
+def vfoil():
+    data = json.loads((project / "Assets/Rr2dv/ProbeInput.json").read_text())
+    if mode == "vf-fail":
+        (out / "result.json").write_text('{"status":"error","error":"fake"}')
+        return 1
+    vehicles = [{"id": v["id"], "role": v["role"], "skipped": v["role"] != "locomotive",
+                 "movingParts": [{"path": "Main/Rod", "travel": 0.4, "turn": 0.0}],
+                 "rods": [{"path": "Main/Rod", "verdict": "main rod", "side": 1}],
+                 "endSeats": [{"rod": "Main/Rod", "end": "crank", "found": True}], "pairs": [], "boardSeats": []}
+                for v in data["vehicles"]]
+    (out / "vf-oil.json").write_text(json.dumps({"schema": 1, "vehicles": vehicles, "problems": []}))
+    (out / "result.json").write_text('{"status":"passed","exitCode":0,"problems":0}')
+    return 0
+
+sys.exit({"Rr2dvProbe.Run": probe, "Rr2dvBuild.Build": build, "Rr2dvAudit.Run": audit, "VfMeasure.Run": vfmeasure, "VfOil.Run": vfoil}[method]())
 '''
 
 

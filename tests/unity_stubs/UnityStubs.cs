@@ -40,6 +40,7 @@ namespace UnityEngine
         public Vector3 position, localPosition, lossyScale, localScale, eulerAngles;
         public Quaternion rotation, localRotation; public Transform parent;
         public Transform Find(string n) => null;
+        public bool IsChildOf(Transform t) => false;
         public Vector3 TransformPoint(Vector3 p) => p;
         public Vector3 InverseTransformPoint(Vector3 p) => p;
         public void SetParent(Transform p, bool worldPositionStays) { }
@@ -49,14 +50,24 @@ namespace UnityEngine
     public struct Vector3
     {
         public float x, y, z; public Vector3(float x, float y, float z) { this.x = x; this.y = y; this.z = z; }
-        public static Vector3 zero, one, forward, up;
+        public static Vector3 zero, one, forward, up, down, left, right, back;
         public static Vector3 operator -(Vector3 a, Vector3 b) => a;
+        public static Vector3 operator +(Vector3 a, Vector3 b) => a;
+        public static Vector3 operator -(Vector3 a) => a;
+        public static Vector3 operator *(Vector3 a, float f) => a;
+        public static Vector3 operator *(float f, Vector3 a) => a;
+        public static Vector3 operator /(Vector3 a, float f) => a;
+        public Vector3 normalized => this; public float magnitude => 0; public float sqrMagnitude => 0;
+        public static Vector3 Cross(Vector3 a, Vector3 b) => a;
+        public static float Dot(Vector3 a, Vector3 b) => 0;
+        public static float Distance(Vector3 a, Vector3 b) => 0;
         public static Vector3 Scale(Vector3 a, Vector3 b) => a;
     }
     public struct Quaternion
     {
         public float x, y, z, w; public Quaternion(float x, float y, float z, float w) { this.x = x; this.y = y; this.z = z; this.w = w; }
         public static Quaternion identity;
+        public static float Angle(Quaternion a, Quaternion b) => 0;
         public static Quaternion operator *(Quaternion a, Quaternion b) => a;
         public static Vector3 operator *(Quaternion a, Vector3 v) => v;
         public static Quaternion Inverse(Quaternion q) => q;
@@ -91,7 +102,7 @@ namespace UnityEngine
     public struct PhysicsScene { public int Raycast(Vector3 o, Vector3 d, RaycastHit[] hits, float dist, int mask, QueryTriggerInteraction q) => 0; }
     public static class PhysicsSceneExtensions { public static PhysicsScene GetPhysicsScene(this SceneManagement.Scene s) => default(PhysicsScene); }
     public static class Physics { public static void SyncTransforms() { } }
-    public static class Mathf { public static int RoundToInt(float f) => 0; public static float Abs(float f) => f; }
+    public static class Mathf { public static int RoundToInt(float f) => 0; public static float Abs(float f) => f; public static float Max(float a, float b) => a; public static float Min(float a, float b) => a; public static float Round(float f) => f; public static float Sign(float f) => f; }
     public static class Debug { public static void Log(object o) { } public static void LogException(Exception e) { } }
     public static class Application { public static string dataPath, unityVersion; }
     public static class JsonUtility { public static T FromJson<T>(string s) => default(T); public static string ToJson(object o, bool pretty) => ""; }

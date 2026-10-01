@@ -37,6 +37,12 @@ from rr2dv import __version__, installs, machine as machine_mod, stock, unityrun
 from rr2dv.jsonio import read_json  # noqa: E402
 
 SCRIPT = HERE / "VfMeasure.cs"
+METHOD = "VfMeasure.Run"          # run_oil.py swaps these five for the oil-cup map; nothing else differs
+OUTNAME = "vf-measure.json"
+OUT_PREFIX = "vf-measure"
+ZIP_NAME = "vf_bulk.zip"
+TOOL_NAME = "run_bulk.py"
+OUT_DEFAULT = "vf_bulk_out"
 PILOT = ["ls-282-k28t", "ls-460-t17"]
 PROJECT_FILE = Path("unity") / "project" / "Assets" / "Rr2dv" / "ProbeInput.json"
 KEEP_FROM_RUN = ["run.log", "inventory.json", "review-questions.json", "probe/probe.json", "record/vehicle-record.json"]
@@ -161,26 +167,26 @@ def measure(machine, run: Path, pack_dir: Path) -> dict:
     editor.mkdir(parents=True, exist_ok=True)
     shutil.copyfile(SCRIPT, editor / SCRIPT.name)
     n = 1
-    while (run / f"vf-measure-{n}").exists():
+    while (run / f"{OUT_PREFIX}-{n}").exists():
         n += 1
-    out = run / f"vf-measure-{n}"
+    out = run / f"{OUT_PREFIX}-{n}"
     t0 = time.time()
     entry: dict = {}
     try:
-        result = unityrun.run_method(machine.path("unity"), project, "VfMeasure.Run", out, {"VF_OUT": str(out)},
+        result = unityrun.run_method(machine.path("unity"), project, METHOD, out, {"VF_OUT": str(out)},
                                      timeout=MEASURE_TIMEOUT_S)
         entry["result"] = result
     except Exception as e:
         entry["result"] = {"status": "error", "error": f"{type(e).__name__}: {e}"}
     entry["seconds"] = round(time.time() - t0, 1)
     pack_dir.mkdir(parents=True, exist_ok=True)
-    for name in ("vf-measure.json", "result.json", "launch.json"):
+    for name in (OUTNAME, "result.json", "launch.json"):
         if (out / name).is_file():
             shutil.copyfile(out / name, pack_dir / name)
     for log in sorted(out.glob("unity-*.log")):
         lines = log.read_text(encoding="utf-8", errors="replace").splitlines()
         (pack_dir / (log.name + ".tail.txt")).write_text("\n".join(lines[-200:]), encoding="utf-8")
-    entry.update(check_output(pack_dir / "vf-measure.json", run))
+    entry.update(check_output(pack_dir / OUTNAME, run))
     return entry
 
 
@@ -211,11 +217,11 @@ def check_output(path: Path, run: Path) -> dict:
 
 
 def build_zip(out_dir: Path, summary: dict, hashes: dict) -> Path:
-    zip_path = out_dir / "vf_bulk.zip"
+    zip_path = out_dir / ZIP_NAME
     results = out_dir / "results"
     files = sorted(p for p in results.rglob("*") if p.is_file()) if results.is_dir() else []
     manifest = "".join(f"{sha256(p)}  results/{p.relative_to(results).as_posix()}\n" for p in files)
-    tmp = out_dir / "vf_bulk.zip.tmp"
+    tmp = out_dir / (ZIP_NAME + ".tmp")
     with zipfile.ZipFile(tmp, "w", zipfile.ZIP_DEFLATED) as z:
         z.writestr("summary.json", json.dumps(summary, indent=1))
         z.writestr("game-hashes.json", json.dumps(hashes, indent=1))
@@ -251,7 +257,7 @@ def choose_packs(rr, a) -> list[str]:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--machine", help="settings file (default: the app's)")
-    ap.add_argument("--out-dir", default="vf_bulk_out", help="results and the zip go here (default ./vf_bulk_out)")
+    ap.add_argument("--out-dir", default=OUT_DEFAULT, help=f"results and the zip go here (default ./{OUT_DEFAULT})")
     ap.add_argument("--pilot", action="store_true", help="only " + ", ".join(PILOT))
     ap.add_argument("--packs", help="comma-separated pack names")
     ap.add_argument("--force", action="store_true", help="measure again even where a passed result exists")
@@ -280,7 +286,7 @@ def main() -> int:
     state = read_json(state_file) if state_file.is_file() else {}
     say("hashing the game packs (once; cached in game-hashes.json)")
     hashes = game_hashes(rr, out_dir / "game-hashes.json")
-    summary = {"tool": "run_bulk.py", "rr2dv": __version__, "git": git_commit(), "python": sys.version.split()[0],
+    summary = {"tool": TOOL_NAME, "rr2dv": __version__, "git": git_commit(), "python": sys.version.split()[0],
                "os": platform.platform(), "railroader": str(rr.root), "unity": str(machine.path("unity")),
                "script_sha256": script_sha, "packs": state.get("packs", {})}
     t_start = time.time()

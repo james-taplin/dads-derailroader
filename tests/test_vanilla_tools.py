@@ -117,5 +117,59 @@ class BulkRun(unittest.TestCase):
         self.assertIn("colliderYs", text)
 
 
+class OilRun(BulkRun):
+    """tools/vanilla/run_oil.py is run_bulk.py with VfOil.cs: same preflight, resume and failure handling."""
+
+    def setUp(self):
+        super().setUp()
+        spec = importlib.util.spec_from_file_location("run_oil", SCRIPT.with_name("run_oil.py"))
+        self.oil = importlib.util.module_from_spec(spec)
+        sys.path.insert(0, str(SCRIPT.parent))
+        self.addCleanup(sys.path.remove, str(SCRIPT.parent))
+        spec.loader.exec_module(self.oil)
+        self.tool = self.oil.run_bulk
+        self.tool.MIN_FREE_GB = 0
+        for name in ("SCRIPT", "METHOD", "OUTNAME", "OUT_PREFIX", "ZIP_NAME", "TOOL_NAME", "OUT_DEFAULT", "check_output"):
+            self.addCleanup(setattr, self.tool, name, getattr(self.tool, name))
+        self.oil_settings()
+
+    def oil_settings(self):
+        for name, value in (("SCRIPT", SCRIPT.with_name("VfOil.cs")), ("METHOD", "VfOil.Run"), ("OUTNAME", "vf-oil.json"),
+                            ("OUT_PREFIX", "vf-oil"), ("ZIP_NAME", "vf_oil.zip"), ("TOOL_NAME", "run_oil.py")):
+            setattr(self.tool, name, value)
+        self.tool.check_output = self.oil.check_output
+
+    def summary(self):
+        with zipfile.ZipFile(self.out / "vf_oil.zip") as z:
+            return json.loads(z.read("summary.json")), z.namelist()
+
+    def test_a_pack_is_measured_and_zipped_and_the_rerun_resumes(self):
+        code, text = self.run_tool()
+        self.assertEqual(code, 0, text)
+        summary, names = self.summary()
+        entry = summary["packs"]["ts-260-a"]
+        self.assertEqual(entry["verdict"], "OK", entry)
+        self.assertEqual(summary["tool"], "run_oil.py")
+        self.assertGreaterEqual(entry["mainRods"], 1)
+        for n in ("results/ts-260-a/vf-oil.json", "results/ts-260-a/result.json", "results/ts-260-a/probe__probe.json", "MANIFEST.sha256"):
+            self.assertIn(n, names)
+        code, text = self.run_tool()
+        self.assertIn("already measured", text)
+
+    def test_the_oil_script_in_the_repo_has_its_entry_point(self):
+        text = SCRIPT.with_name("VfOil.cs").read_text()
+        self.assertIn("public static void Run()", text)
+        self.assertIn("vf-oil.json", text)
+
+    @unittest.skipUnless(shutil.which("mcs"), "needs the Mono C# compiler (mcs)")
+    def test_the_oil_script_type_checks_against_the_unity_stand_ins(self):
+        import subprocess
+        stubs = SCRIPT.parent.parent.parent / "tests" / "unity_stubs" / "UnityStubs.cs"
+        with tempfile.TemporaryDirectory() as tmp:
+            proc = subprocess.run(["mcs", "-target:library", "-langversion:7", f"-out:{tmp}/oil.dll", str(stubs), str(SCRIPT.with_name("VfOil.cs"))],
+                                  capture_output=True, text=True)
+        self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()
