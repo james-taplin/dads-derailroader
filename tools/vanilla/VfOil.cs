@@ -505,7 +505,13 @@ public static class VfOil
             Part mp; bool moving = motion.TryGetValue(path, out mp);
             bool travels = moving && mp.travel > .02f;
             if (moving && !travels) continue;                              // a wheel, axle or crank turning in place: not a nub host
-            if (!moving && longest > 2.5f) continue;                       // frames, boiler and cylinders blocks are not scanned (time)
+            bool big = !moving && longest > 2.5f;
+            if (big && b.min.y > 2 * o.wheelRadius) continue;   // a big static part is scanned only when it reaches down to the axleboxes (frames), in windows round each axle
+            if (big)
+            {
+                foreach (var w in AxleWindows(hits, mf, o, path)) result.Add(w);
+                continue;
+            }
             if (!moving && (b.center.y > runningGearTop || Mathf.Abs(b.center.x) < .3f)) continue;   // static running gear only, outside the frames
             if (travels && Mathf.Abs(b.center.x) < .3f) continue;
             var part = new NubPart { path = path, motion = travels ? "travels" : "static" };
@@ -541,6 +547,25 @@ public static class VfOil
             if (part.islands.Length > 0 || part.bumps.Length > 0) result.Add(part);
         }
         return result.ToArray();
+    }
+
+
+    // The axleboxes are usually part of the frame mesh, which is far too big to scan whole: a window 0.8 m long round each driving axle,
+    // on each side, from 0.5 to 2.0 m out, up to the top of the wheels. Only bumps are recorded (the mesh pieces of a frame are not nubs).
+    static List<NubPart> AxleWindows(Hits hits, MeshFilter mf, VehicleOut o, string path)
+    {
+        var list = new List<NubPart>();
+        var zs = o.axles.Where(a => a.clip != null).Select(a => Mathf.Round(a.z * 20f) / 20f).Distinct().OrderBy(z => z).ToArray();
+        foreach (int side in new[] { -1, 1 })
+            foreach (float z in zs)
+            {
+                var part = new NubPart { path = path, motion = "static-window", note = $"axlebox window side {side} z {z:F2}", phase = 0f };
+                var region = new[] { side < 0 ? -2.0f : 0.5f, side < 0 ? -0.5f : 2.0f, z - .4f, z + .4f, 2 * o.wheelRadius + .3f };
+                part.islands = new Island[0];
+                part.bumps = Bumps(hits, null, new AnimationClip[0], mf, Vector3.zero, Vector3.forward, part, false, region);
+                if (part.bumps.Length > 0) list.Add(part);
+            }
+        return list;
     }
 
     // Connected pieces of one mesh (vertices welded at 0.2 mm), world space at the current pose. Everything but the largest piece
@@ -607,10 +632,17 @@ public static class VfOil
     // stands at least 6 mm above the median of its surroundings (11 x 11 cells) and is the highest within 2 cm; neighbouring cells
     // 4 mm or more above their surroundings join it. Rise, plateau (cells within 2 mm of the peak), size and place are recorded,
     // then whether a cup on the peak has clear space through the wheel turn.
-    static Bump[] Bumps(Hits hits, GameObject go, AnimationClip[] clips, MeshFilter mf, Vector3 endA, Vector3 endB, NubPart part, bool travels)
+    static Bump[] Bumps(Hits hits, GameObject go, AnimationClip[] clips, MeshFilter mf, Vector3 endA, Vector3 endB, NubPart part, bool travels, float[] region = null)
     {
         var mr = mf.GetComponent<MeshRenderer>();
         var b = mr.bounds;
+        if (region != null)   // x0, x1, z0, z1, top y: only this window of the part
+        {
+            var lo = new Vector3(Mathf.Max(b.min.x, region[0]), b.min.y, Mathf.Max(b.min.z, region[2]));
+            var hi = new Vector3(Mathf.Min(b.max.x, region[1]), Mathf.Min(b.max.y, region[4]), Mathf.Min(b.max.z, region[3]));
+            if (hi.x <= lo.x || hi.z <= lo.z || hi.y <= lo.y) return new Bump[0];
+            b = new Bounds((lo + hi) / 2, hi - lo); b.min = lo; b.max = hi;
+        }
         float step = NubGrid;
         int nx = Mathf.RoundToInt((b.max.x - b.min.x) / step) + 1, nz = Mathf.RoundToInt((b.max.z - b.min.z) / step) + 1;
         while (nx * nz > 10000) { step *= 2; nx = Mathf.RoundToInt((b.max.x - b.min.x) / step) + 1; nz = Mathf.RoundToInt((b.max.z - b.min.z) / step) + 1; }
@@ -678,6 +710,7 @@ public static class VfOil
         {
             var pos = new Vector3(bump.world[0], bump.world[1] + CupPivotAboveBase - CupSeatSink, bump.world[2]);
             string clash;
+            if (go == null) { bump.clear = true; bump.clash = "not checked (frame window)"; continue; }
             bump.clear = Clear(hits, go, clips, pos, travels ? mf.transform : null, out clash);
             bump.clash = clash;
         }
