@@ -371,7 +371,8 @@ def prefix_missing_paths(text: str, nodes: set[str]) -> tuple[str, str | None]:
     ONE first-level child, those paths get that child's name in front (the clip then animates the same nodes). Anything else is
     left exactly as it is. Returns (text, the prefix or None)."""
     values = [m["value"].strip("'\"") for m in PATH_LINE.finditer(text)]
-    missing = {v for v in values if v and not v.startswith("path_0x") and v not in nodes}
+    # a number after `path:` is a binding hash in the clip's genericBindings block (Unity writes it back on import), not a path
+    missing = {v for v in values if v and not v.isdigit() and not v.startswith("path_0x") and v not in nodes}
     if not missing:
         return text, None
     children = {n for n in nodes if n and "/" not in n}
@@ -402,7 +403,8 @@ def _prefix_rootless_clips(source_assets: Path, dest_assets: Path) -> list[dict]
         prefabs = sorted({o["prefab"] for o in entries})
         text = target.read_text(encoding="utf-8-sig")
         literal = sorted({m["value"].strip("'\"") for m in PATH_LINE.finditer(text)
-                          if m["value"].strip("'\"") and not m["value"].strip("'\"").startswith("path_0x")})
+                          if m["value"].strip("'\"") and not m["value"].strip("'\"").isdigit()
+                          and not m["value"].strip("'\"").startswith("path_0x")})
         if len(prefabs) != 1:
             # only report clips that need it: a literal path exists but no prefab nodes are known to check it against
             if literal and not prefabs:

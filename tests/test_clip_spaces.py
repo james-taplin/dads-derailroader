@@ -89,6 +89,14 @@ class RootlessClips(unittest.TestCase):
         original = self.clip("Coal Load/Bone")
         self.assertEqual(unityproject.prefix_missing_paths(original, nodes), (original, None))
 
+    def test_the_numeric_hashes_of_the_generic_bindings_block_are_not_paths(self):
+        # the clip's m_ClipBindingConstant holds `path: 1433417810`-style hashes next to the real curve paths (C-55, 2026-10-01)
+        original = self.clip("Coal Load/Bone", "468499543", "3430509032")
+        text, prefix = unityproject.prefix_missing_paths(original, self.NODES)
+        self.assertEqual(prefix, "Tender")
+        self.assertIn("path: Tender/Coal Load/Bone", text)
+        self.assertIn("path: 468499543", text)
+
     def test_unresolved_hashes_are_not_touched(self):
         original = self.clip("path_0x1234ABCD_xyz", "Coal Load/Bone")
         text, prefix = unityproject.prefix_missing_paths(original, self.NODES)
