@@ -57,6 +57,31 @@ def _launch(unity: Path, project: Path, method: str, log: Path, env: dict, timeo
             procs.stop(proc)  # interruption must stop the editor before workspace cleanup
 
 
+# Windows exit codes a crashed Unity editor leaves (the code is unsigned in Python): what they usually mean for the user.
+CRASH_CODES = {
+    0xC000041D: "Unity crashed with a fatal exception in a callback: typically the graphics driver, low memory or an RDP/locked desktop session",
+    0xC0000005: "Unity crashed with an access violation",
+    0xC0000409: "Unity crashed (stack buffer overrun)",
+    0xC00000FD: "Unity crashed (stack overflow)",
+}
+
+
+def _crash_meaning(code) -> str:
+    if isinstance(code, int) and code != 0:
+        text = CRASH_CODES.get(code & 0xFFFFFFFF)
+        return f" = 0x{code & 0xFFFFFFFF:08X}" + (f": {text}" if text else "")
+    return ""
+
+
+def _log_tail(log: Path, lines: int = 12) -> str:
+    """The last lines of Unity's own log (where a crash names itself), for the error message."""
+    try:
+        tail = [l.rstrip() for l in log.read_text(encoding="utf-8", errors="replace").splitlines() if l.strip()][-lines:]
+    except OSError:
+        return ""
+    return "\n  last lines of the Unity log:\n    " + "\n    ".join(tail) if tail else ""
+
+
 RETRY_PAUSE_S = 10  # lets a just-closed editor release the project before the retry
 
 
@@ -88,7 +113,10 @@ def run_method(unity: Path, project: Path, method: str, out: Path, extra_env: di
     write_json(out / "launch.json", {"method": method, "project": str(project), "attempts": attempts})
     result_file = out / "result.json"
     if not result_file.exists():
-        raise UnityError(f"{method} wrote no result.json (exit code {attempts[-1]['exit_code']}); see {out}")
+        code = attempts[-1]["exit_code"]
+        last = attempts[-1]["attempt"]
+        raise UnityError(f"{method} wrote no result.json (exit code {code}{_crash_meaning(code)}, after {len(attempts)} attempt(s)); "
+                         f"see {out / f'unity-{last}.log'}{_log_tail(out / f'unity-{last}.log')}")
     result = read_json(result_file)
     result["exit_code"] = attempts[-1]["exit_code"]
     return result
