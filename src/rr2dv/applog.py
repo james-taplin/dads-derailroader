@@ -1,4 +1,4 @@
-"""The app-wide log: `%LOCALAPPDATA%\\rr2dv\\logs\\rr2dv.log` (or `$RR2DV_LOG_DIR`), rotated at 1 MB, 5 files kept.
+"""The app-wide log: `rr2dv_work\\logs\\rr2dv.log` beside the app (or `$RR2DV_LOG_DIR`), rotated at 1 MB, 5 files kept.
 
 Each conversion also writes its own `run.log` in its run folder (runs.py); this log holds what happens outside a run:
 commands started, games found or not, mods listed and scanned, and every unexpected error with its full traceback,
@@ -43,8 +43,8 @@ def log_dir() -> Path:
     override = os.environ.get("RR2DV_LOG_DIR")
     if override:
         return Path(override)
-    base = os.environ.get("LOCALAPPDATA")
-    return (Path(base) if base else Path.home() / ".local" / "share") / "rr2dv" / "logs"
+    from . import appdir
+    return appdir.data_dir() / "logs"
 
 
 def log_file() -> Path:

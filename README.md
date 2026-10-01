@@ -215,7 +215,7 @@ Reruns are safe and start from the source files again.
 
 For diagnosis, every run writes a readable **`run.log`** in its run folder. It covers the settings and installs used,
 every stage and issue, tool output, review items, and the full traceback of any unexpected error. The app also keeps
-**`%LOCALAPPDATA%\rr2dv\logs\rr2dv.log`**. The builder's `build/out/build_report.txt` and renders show every placement
+**`rr2dv_work\logs\rr2dv.log`** beside the app. The builder's `build/out/build_report.txt` and renders show every placement
 decision.
 
 ## Rules the tool follows
@@ -255,7 +255,7 @@ driving control lacking its feeder, with duplicate simulation IDs, or with a bra
 
 ## Settings
 
-Settings live in `%APPDATA%\rr2dv\machine.json`, or pass `--machine FILE`. The app's **Settings…** dialog edits the
+Settings live in `rr2dv_work\machine.json` beside the app (the app keeps everything it writes in `rr2dv_work`, nothing in hidden system folders), or pass `--machine FILE`. The app's **Settings…** dialog edits the
 same file. Everything is optional except the three tools.
 
 | Key | What |

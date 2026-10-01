@@ -12,7 +12,7 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import stock
+from . import appdir, stock
 from .jsonio import read_json
 
 TOOL_KEYS = ("python", "unity", "unityPySitePackages", "carCreator", "mods", "game", "ilspy", "assetRipper", "railroader")
@@ -40,13 +40,11 @@ def check_work_root(path: Path) -> None:
 
 
 def default_path() -> Path:
-    base = os.environ.get("APPDATA")
-    return (Path(base) if base else Path.home() / ".config") / "rr2dv" / "machine.json"
+    return appdir.data_dir() / "machine.json"
 
 
 def default_work_root() -> Path:
-    base = os.environ.get("LOCALAPPDATA")
-    return (Path(base) if base else Path.home() / ".local" / "share") / "rr2dv" / "runs"
+    return appdir.data_dir() / "runs"
 
 
 @dataclass

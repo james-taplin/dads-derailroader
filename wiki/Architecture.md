@@ -10,6 +10,6 @@
 | `tests/` | Synthetic stock-shaped pack fixtures, fake external tools, checks for the supported stock input list, an optional check against a real Railroader install, C# compile checks, and optional real Unity regressions. |
 | `docs/` | Maintained block guide and design/validation notes. |
 
-Each conversion has a fresh run workspace. Compact reports live under `<workRoot>/reports/<run-id>`; saved choices live under `<workRoot>/reviews`. Temporary inputs, extracted assets, and build intermediates are normally removed. The imported and measured project cache can remain until a locomotive builds and passes its audit. The app-wide log is `%LOCALAPPDATA%\rr2dv\logs\rr2dv.log`.
+Each conversion has a fresh run workspace. Compact reports live under `<workRoot>/reports/<run-id>`; saved choices live under `<workRoot>/reviews`. Temporary inputs, extracted assets, and build intermediates are normally removed. The imported and measured project cache can remain until a locomotive builds and passes its audit. The app-wide log is `rr2dv_work\logs\rr2dv.log` beside the app.
 
 Start with [The pipeline, stage by stage](https://github.com/james-taplin/dads-derailroader/wiki/The-pipeline-stage-by-stage), [The vehicle record](https://github.com/james-taplin/dads-derailroader/wiki/The-vehicle-record), and [`tooling/NOTES.md`](https://github.com/james-taplin/dads-derailroader/blob/main/tooling/NOTES.md). The [contributor notes](https://github.com/james-taplin/dads-derailroader/blob/main/CLAUDE.md) describe the repository workflow.

@@ -18,5 +18,5 @@ The [complete block and review-item guide](https://github.com/james-taplin/dads-
 <details>
 <summary><strong>What to include when asking for help</strong></summary>
 
-Give the stage, exact message, `run.log` excerpt, and relevant `build_report.txt` or `audit.json` finding. The app-wide log for problems outside a run is `%LOCALAPPDATA%\rr2dv\logs\rr2dv.log`. Remove private paths or personal details before posting. Do not upload source assets.
+Give the stage, exact message, `run.log` excerpt, and relevant `build_report.txt` or `audit.json` finding. The app-wide log for problems outside a run is `rr2dv_work\logs\rr2dv.log` beside the app. Remove private paths or personal details before posting. Do not upload source assets.
 </details>

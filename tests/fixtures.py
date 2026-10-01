@@ -4,8 +4,9 @@ from __future__ import annotations
 import os as _os
 import tempfile as _tempfile
 
-# Tests never write to the user's real app log (%LOCALAPPDATA%\rr2dv\logs): every test module imports this file.
+# Tests never write to the app's real rr2dv_work folder (settings, runs, log): every test module imports this file.
 _os.environ.setdefault("RR2DV_LOG_DIR", _tempfile.mkdtemp(prefix="rr2dv-test-logs-"))
+_os.environ.setdefault("RR2DV_HOME", _tempfile.mkdtemp(prefix="rr2dv-test-home-"))
 
 import hashlib
 import json
