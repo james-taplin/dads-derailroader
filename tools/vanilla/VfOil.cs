@@ -43,13 +43,30 @@ public static class VfOil
         public float axleZ; public int side; public bool found; public string seat; public float[] world;
         public int cells, notLevel, noFootprint, overhead, sideWall, crowded, unclear;
     }
+    // Modelled oiling nubs (Railroader's own, on top of the running gear): small islands of the part's mesh, and small raised
+    // bumps found by sampling the part's top surface with rays (so a nub welded into the rod's own mesh is found too).
+    [Serializable] public class Island
+    {
+        public int triangles; public float[] size, centre, top, local; public float topArea; public bool largest;
+        public float alongFromEndA, alongFromEndB;
+    }
+    [Serializable] public class Bump
+    {
+        public float[] world, local, size; public float rise, plateauArea, peakY, alongFromEndA, alongFromEndB; public int cells;
+        public bool clear; public string clash;
+    }
+    [Serializable] public class NubPart
+    {
+        public string path, motion, note; public float phase, extent, step; public int gridCells, meshIslands;
+        public float[] endA, endB; public Island[] islands; public Bump[] bumps;
+    }
     [Serializable] public class AxleOut { public string clip; public string path; public float z, x; }
     [Serializable] public class VehicleOut
     {
         public string id, role, prefab; public float wheelRadius; public bool skipped; public string note;
         public int renderers, lowerLodRenderers;
         public Part[] movingParts; public RodOut[] rods; public EndSeat[] endSeats; public PairOut[] pairs;
-        public AxleOut[] axles; public BoardSeat[] boardSeats; public string[] log;
+        public AxleOut[] axles; public BoardSeat[] boardSeats; public NubPart[] nubParts; public string[] log;
     }
     [Serializable] public class Spec
     {
@@ -136,6 +153,7 @@ public static class VfOil
                     seats.Add(EndSeatScan(hits, go, root, clips, m, false));
                 }
                 o.boardSeats = Boards(hits, root, o);
+                o.nubParts = NubParts(hits, go, root, clips, lower, o);
             }
             o.endSeats = seats.ToArray();
             o.pairs = Pairs(root, main, seats);
@@ -461,6 +479,206 @@ public static class VfOil
                 result.Add(b);
             }
         return result.ToArray();
+    }
+
+
+    // ---- modelled nubs ----------------------------------------------------------------------------------------------
+    const float NubGrid = 0.01f, NubMinRise = 0.004f, NubSeedRise = 0.006f;
+
+    static NubPart[] NubParts(Hits hits, GameObject go, Transform root, AnimationClip[] clips, HashSet<Renderer> lower, VehicleOut o)
+    {
+        var result = new List<NubPart>();
+        var motion = o.movingParts.ToDictionary(p => p.path, p => p);
+        float runningGearTop = 2 * o.wheelRadius + .6f;
+        Sample(go, clips, 0f);
+        foreach (var mf in root.GetComponentsInChildren<MeshFilter>(true))
+        {
+            var mr = mf.GetComponent<MeshRenderer>();
+            if (!mf.sharedMesh || mf.sharedMesh.vertexCount == 0 || !mr || !mr.enabled || !mf.gameObject.activeInHierarchy || lower.Contains(mr)) continue;
+            var b = mr.bounds;
+            float longest = Mathf.Max(b.max.z - b.min.z, Mathf.Max(b.max.y - b.min.y, b.max.x - b.min.x));
+            if (longest > 7f || longest < .1f) continue;
+            string path = AnimationUtility.CalculateTransformPath(mf.transform, root);
+            Part mp; bool moving = motion.TryGetValue(path, out mp);
+            bool travels = moving && mp.travel > .02f;
+            if (moving && !travels) continue;                              // a wheel, axle or crank turning in place: not a nub host
+            if (!moving && longest > 2.5f) continue;                       // frames, boiler and cylinders blocks are not scanned (time)
+            if (!moving && (b.center.y > runningGearTop || Mathf.Abs(b.center.x) < .3f)) continue;   // static running gear only, outside the frames
+            if (travels && Mathf.Abs(b.center.x) < .3f) continue;
+            var part = new NubPart { path = path, motion = travels ? "travels" : "static" };
+            var vs = mf.sharedMesh.vertices;
+            var c = vs.Aggregate(Vector3.zero, (a, q) => a + q) / vs.Length;
+            var principal = Principal(vs, c);
+            var ea = c + principal.axes[0] * vs.Min(q => Vector3.Dot(q - c, principal.axes[0]));
+            var eb = c + principal.axes[0] * vs.Max(q => Vector3.Dot(q - c, principal.axes[0]));
+            part.extent = principal.ext[0];
+            // the pose to scan: the part's flattest (a travelling rod in its own level pose); rest for the static
+            float phase = 0f;
+            if (travels)
+            {
+                float best = float.MaxValue;
+                for (int k = 0; k < Phases; k++)
+                {
+                    Sample(go, clips, k / (float)Phases);
+                    float tilt = Mathf.Abs((mf.transform.TransformPoint(eb) - mf.transform.TransformPoint(ea)).normalized.y);
+                    if (tilt < best) { best = tilt; phase = k / (float)Phases; }
+                }
+            }
+            part.phase = phase;
+            try
+            {
+                Sample(go, clips, phase);
+                part.endA = V(mf.transform.TransformPoint(ea)); part.endB = V(mf.transform.TransformPoint(eb));
+                part.islands = Islands(mf, ea, eb);
+                part.meshIslands = part.islands.Length;
+                part.islands = part.islands.Where(i => !i.largest).Take(12).ToArray();
+                part.bumps = Bumps(hits, go, clips, mf, ea, eb, part, travels);
+            }
+            finally { Sample(go, clips, 0f); }
+            if (part.islands.Length > 0 || part.bumps.Length > 0) result.Add(part);
+        }
+        return result.ToArray();
+    }
+
+    // Connected pieces of one mesh (vertices welded at 0.2 mm), world space at the current pose. Everything but the largest piece
+    // that is 2-30 cm across and has at least 12 triangles is a candidate nub; the top face area and its centre are recorded.
+    static Island[] Islands(MeshFilter mf, Vector3 endA, Vector3 endB)
+    {
+        var mesh = mf.sharedMesh;
+        var vs = mesh.vertices;
+        var tris = mesh.triangles;
+        var parent = new int[vs.Length];
+        for (int i = 0; i < parent.Length; i++) parent[i] = i;
+        Func<int, int> find = null;
+        find = x => { while (parent[x] != x) { parent[x] = parent[parent[x]]; x = parent[x]; } return x; };
+        var weld = new Dictionary<long, int>();
+        for (int i = 0; i < vs.Length; i++)
+        {
+            long key = ((long)Mathf.Round(vs[i].x * 5000f) * 73856093L) ^ ((long)Mathf.Round(vs[i].y * 5000f) * 19349663L) ^ ((long)Mathf.Round(vs[i].z * 5000f) * 83492791L);
+            int other;
+            if (weld.TryGetValue(key, out other)) parent[find(i)] = find(other); else weld[key] = i;
+        }
+        for (int t = 0; t + 2 < tris.Length; t += 3) { parent[find(tris[t + 1])] = find(tris[t]); parent[find(tris[t + 2])] = find(tris[t]); }
+        var groups = new Dictionary<int, List<int>>();
+        for (int t = 0; t + 2 < tris.Length; t += 3)
+        {
+            int g = find(tris[t]);
+            List<int> list;
+            if (!groups.TryGetValue(g, out list)) { list = new List<int>(); groups[g] = list; }
+            list.Add(t);
+        }
+        var world = vs.Select(q => mf.transform.TransformPoint(q)).ToArray();
+        int biggest = groups.Count == 0 ? 0 : groups.Values.Max(l => l.Count);
+        var axis = (mf.transform.TransformPoint(endB) - mf.transform.TransformPoint(endA));
+        float length = axis.magnitude; var dir = length > 1e-6f ? axis / length : Vector3.forward;
+        var result = new List<Island>();
+        foreach (var l in groups.Values)
+        {
+            if (l.Count < 12 && l.Count != biggest) continue;
+            Vector3 lo = world[tris[l[0]]], hi = lo;
+            foreach (int t in l) for (int k = 0; k < 3; k++) { var q = world[tris[t + k]]; lo = new Vector3(Mathf.Min(lo.x, q.x), Mathf.Min(lo.y, q.y), Mathf.Min(lo.z, q.z)); hi = new Vector3(Mathf.Max(hi.x, q.x), Mathf.Max(hi.y, q.y), Mathf.Max(hi.z, q.z)); }
+            var size = hi - lo;
+            bool largest = l.Count == biggest;
+            if (!largest && (Mathf.Max(size.x, Mathf.Max(size.y, size.z)) < .02f || Mathf.Max(size.x, Mathf.Max(size.y, size.z)) > .3f)) continue;
+            Vector3 top = Vector3.zero; float area = 0;
+            foreach (int t in l)
+            {
+                var a = world[tris[t]]; var b = world[tris[t + 1]]; var c = world[tris[t + 2]];
+                var n = Vector3.Cross(b - a, c - a);
+                if (n.magnitude < 1e-8f || n.normalized.y < .75f || Mathf.Min(a.y, Mathf.Min(b.y, c.y)) < hi.y - .03f) continue;
+                float w = n.magnitude / 2; top += (a + b + c) / 3 * w; area += w;
+            }
+            var centre = (lo + hi) / 2;
+            var topPoint = area > 0 ? top / area : new Vector3(centre.x, hi.y, centre.z);
+            result.Add(new Island
+            {
+                triangles = l.Count, size = V(size), centre = V(centre), top = V(topPoint), local = V(mf.transform.InverseTransformPoint(topPoint)),
+                topArea = area, largest = largest,
+                alongFromEndA = Vector3.Dot(topPoint - mf.transform.TransformPoint(endA), dir), alongFromEndB = Vector3.Dot(mf.transform.TransformPoint(endB) - topPoint, dir)
+            });
+        }
+        return result.ToArray();
+    }
+
+    // The part's own top surface sampled on a 1 cm grid by rays from above (the part and its children only). A bump is a cell that
+    // stands at least 6 mm above the median of its surroundings (11 x 11 cells) and is the highest within 2 cm; neighbouring cells
+    // 4 mm or more above their surroundings join it. Rise, plateau (cells within 2 mm of the peak), size and place are recorded,
+    // then whether a cup on the peak has clear space through the wheel turn.
+    static Bump[] Bumps(Hits hits, GameObject go, AnimationClip[] clips, MeshFilter mf, Vector3 endA, Vector3 endB, NubPart part, bool travels)
+    {
+        var mr = mf.GetComponent<MeshRenderer>();
+        var b = mr.bounds;
+        float step = NubGrid;
+        int nx = Mathf.RoundToInt((b.max.x - b.min.x) / step) + 1, nz = Mathf.RoundToInt((b.max.z - b.min.z) / step) + 1;
+        while (nx * nz > 10000) { step *= 2; nx = Mathf.RoundToInt((b.max.x - b.min.x) / step) + 1; nz = Mathf.RoundToInt((b.max.z - b.min.z) / step) + 1; }
+        part.step = step; part.gridCells = nx * nz;
+        var h = new float[nx, nz]; var ok = new bool[nx, nz];
+        for (int ix = 0; ix < nx; ix++)
+            for (int iz = 0; iz < nz; iz++)
+            {
+                var origin = new Vector3(b.min.x + ix * step, b.max.y + .05f, b.min.z + iz * step);
+                RaycastHit hit;
+                if (hits.Ray(origin, Vector3.down, b.max.y - b.min.y + .1f, out hit, mf.transform)) { h[ix, iz] = hit.point.y; ok[ix, iz] = true; }
+            }
+        int win = Math.Max(2, Mathf.RoundToInt(.05f / step));
+        var rise = new float[nx, nz];
+        var buf = new List<float>();
+        for (int ix = 0; ix < nx; ix++)
+            for (int iz = 0; iz < nz; iz++)
+            {
+                if (!ok[ix, iz]) continue;
+                buf.Clear();
+                for (int dx = -win; dx <= win; dx++) for (int dz = -win; dz <= win; dz++)
+                { int x = ix + dx, z = iz + dz; if (x >= 0 && z >= 0 && x < nx && z < nz && ok[x, z]) buf.Add(h[x, z]); }
+                buf.Sort();
+                rise[ix, iz] = h[ix, iz] - buf[buf.Count / 2];
+            }
+        int peakWin = Math.Max(1, Mathf.RoundToInt(.02f / step));
+        var seen = new bool[nx, nz];
+        var bumps = new List<Bump>();
+        for (int ix = 0; ix < nx; ix++)
+            for (int iz = 0; iz < nz; iz++)
+            {
+                if (!ok[ix, iz] || seen[ix, iz] || rise[ix, iz] < NubSeedRise) continue;
+                bool peak = true;
+                for (int dx = -peakWin; dx <= peakWin && peak; dx++) for (int dz = -peakWin; dz <= peakWin; dz++)
+                { int x = ix + dx, z = iz + dz; if (x >= 0 && z >= 0 && x < nx && z < nz && ok[x, z] && h[x, z] > h[ix, iz]) { peak = false; break; } }
+                if (!peak) continue;
+                // flood the neighbouring raised cells
+                var stack = new Stack<int[]>(); var cluster = new List<int[]>();
+                stack.Push(new[] { ix, iz }); seen[ix, iz] = true;
+                while (stack.Count > 0)
+                {
+                    var cell = stack.Pop(); cluster.Add(cell);
+                    for (int dx = -1; dx <= 1; dx++) for (int dz = -1; dz <= 1; dz++)
+                    {
+                        int x = cell[0] + dx, z = cell[1] + dz;
+                        if (x < 0 || z < 0 || x >= nx || z >= nz || seen[x, z] || !ok[x, z] || rise[x, z] < NubMinRise) continue;
+                        seen[x, z] = true; stack.Push(new[] { x, z });
+                    }
+                }
+                int minX = cluster.Min(q => q[0]), maxX = cluster.Max(q => q[0]), minZ = cluster.Min(q => q[1]), maxZ = cluster.Max(q => q[1]);
+                float peakY = h[ix, iz];
+                var peakPos = new Vector3(b.min.x + ix * step, peakY, b.min.z + iz * step);
+                var plateau = cluster.Count(q => h[q[0], q[1]] >= peakY - .002f) * step * step;
+                var wa = mf.transform.TransformPoint(endA); var wb = mf.transform.TransformPoint(endB);
+                var axis = wb - wa; var dir = axis.magnitude > 1e-6f ? axis.normalized : Vector3.forward;
+                bumps.Add(new Bump
+                {
+                    world = V(peakPos), local = V(mf.transform.InverseTransformPoint(peakPos)),
+                    size = new[] { (maxX - minX + 1) * step, (maxZ - minZ + 1) * step }, rise = rise[ix, iz], plateauArea = plateau, peakY = peakY, cells = cluster.Count,
+                    alongFromEndA = Vector3.Dot(peakPos - wa, dir), alongFromEndB = Vector3.Dot(wb - peakPos, dir)
+                });
+            }
+        var top = bumps.OrderByDescending(q => q.rise).Take(8).ToList();
+        foreach (var bump in top.Take(5))
+        {
+            var pos = new Vector3(bump.world[0], bump.world[1] + CupPivotAboveBase - CupSeatSink, bump.world[2]);
+            string clash;
+            bump.clear = Clear(hits, go, clips, pos, travels ? mf.transform : null, out clash);
+            bump.clash = clash;
+        }
+        return top.ToArray();
     }
 
     // Temporary MeshColliders on every visible mesh under the root (their own colliders switched off) for many raycasts.

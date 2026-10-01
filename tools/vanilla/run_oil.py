@@ -53,7 +53,10 @@ def check_output(path: Path, run: Path) -> dict:
              "mainRods": sum(1 for v in locos for r in (v.get("rods") or []) if r.get("verdict") == "main rod"),
              "endSeats": sum(len(v.get("endSeats") or []) for v in locos),
              "pairs": sum(len(v.get("pairs") or []) for v in locos),
-             "boardSeats": sum(len(v.get("boardSeats") or []) for v in locos)}
+             "boardSeats": sum(len(v.get("boardSeats") or []) for v in locos),
+             "nubParts": sum(len(v.get("nubParts") or []) for v in locos),
+             "nubIslands": sum(len(p.get("islands") or []) for v in locos for p in (v.get("nubParts") or [])),
+             "nubBumps": sum(len(p.get("bumps") or []) for v in locos for p in (v.get("nubParts") or []))}
     if len(vehicles) != expected:
         return {"verdict": "FAILED", "why": f"{len(vehicles)} vehicles mapped, {expected} expected", **facts}
     if not locos:

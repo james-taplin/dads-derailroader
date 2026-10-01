@@ -79,7 +79,7 @@ namespace UnityEngine
     public class MeshRenderer : Renderer { }
     public class SkinnedMeshRenderer : Renderer { public Mesh sharedMesh; }
     public class MeshFilter : Component { public Mesh sharedMesh; }
-    public class Mesh : Object { public int subMeshCount, vertexCount; public Vector3[] vertices; public uint GetIndexCount(int s) => 0; }
+    public class Mesh : Object { public int subMeshCount, vertexCount; public Vector3[] vertices; public int[] triangles; public uint GetIndexCount(int s) => 0; }
     public class Material : Object { }
     public class Collider : Component { public bool enabled; }
     public class MeshCollider : Collider { public Mesh sharedMesh; }

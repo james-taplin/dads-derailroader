@@ -1,8 +1,12 @@
 # Oil-cup map run: brief for Codex (offline)
 
 Goal: for every stock steam loco, record every place an oil cup could go on the running gear under our requirements, and why
-each candidate passes or fails, so we can read the results and add defined positions to the loco table
+each candidate passes or fails, **and every modelled oiling nub** (Railroader's modellers put small nubs on top of the running
+gear: big ends, crossheads, valve gear, axleboxes; they imply the real-world oiling points), so we can read the results and add defined positions to the loco table
 (`src/rr2dv/stock_locos.json`). Nothing is built, installed or changed: this only measures.
+
+The old nub search (islands of 20+ triangles near a rod end, in 0.3.x before 2026-09-30) was replaced by the highest level spot within
+0.3 m of a rod end, which finds a flat but not a small domed nub. This run measures nubs directly so we can see where they are.
 
 Our requirements (James, 2026-09-30, as coded in `Rr2dvPlacement.SeatRr2dvOilCups`): cups only at the ends of the main rods, as a
 left/right pair on the same end or not at all; running boards only when no main-rod pair fits, then on both sides; at most 6 pairs.
@@ -38,4 +42,10 @@ Exit 0 = all passed, 1 = some failed (zip still written), 2 = preflight failed (
   tested (level, footprint), the clearance result and what clashed.
 - `pairs`: left/right main-rod pairs with which end passes on both sides.
 - `axles` and `boardSeats`: running-board fallback seats per driving axle and side, with counts of why cells failed.
+- `nubParts` (new in the second version): for every travelling part and every static part of the running gear outside the frames:
+  `islands` (pieces of the mesh that are 2-30 cm across, 12 or more triangles, not the part's largest piece: nubs modelled as their
+  own piece, with size, top face area, top centre in world and part-local coordinates and the distance along the part from each end)
+  and `bumps` (places where the part's own top surface, sampled by rays on a 1 cm grid, stands at least 6 mm above its surroundings:
+  nubs welded into the part, with rise, plateau area, size, peak position in world and part-local coordinates, distance from each
+  end, and whether a cup on the peak has clear space through a whole turn).
 - `spec`: the numbers used, so the analysis matches the requirements above.
