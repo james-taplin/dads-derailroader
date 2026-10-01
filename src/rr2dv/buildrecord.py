@@ -1135,7 +1135,9 @@ class _Builder:
             self.block("no-geometry", f"{tid}: the probe found no visible geometry on the tender")
             return rec
         rec["hooks"]["CollisionBoxes"] = self._collision(bmin, bmax, front_end, rear_end)
-        plates = self._plates(comps, anchors)
+        plates = self._plates(comps, anchors, tender=True)
+        if not plates:
+            plates = self._tender_fallback_plates(cfg, comps, bmin, bmax, front_end, rear_end)
         if plates:
             cfg["PlateDecals"] = plates
         anims = cfg.get("AnimationMap") or {}
@@ -1242,7 +1244,7 @@ class _Builder:
         return env([["body", _r([0, (y0 + bmax[1]) / 2, (lo + hi) / 2]), _r([width, bmax[1] - y0, hi - lo])]], "m", "measured",
                    "probe/probe.json model bounds, clipped to the Railroader car ends and 0.35 m above the rail")
 
-    def _plates(self, comps: list[dict], anchors: dict) -> list:
+    def _plates(self, comps: list[dict], anchors: dict, tender: bool = False) -> list:
         nums = [(c["name"], _anchor(anchors, c["name"])) for c in comps if c["kind"] == "Decal"
                 and _extra(c).get("content") == "RoadNumber" and _anchor(anchors, c["name"])]
         sides = [n for n in nums if abs(n[1][0]) > 0.5]
@@ -1250,8 +1252,47 @@ class _Builder:
         right = sorted((n for n in sides if n[1][0] > 0), key=lambda n: n[1][2])
         if left and right:
             return [["[car plate anchor1]", left[0][0]], ["[car plate anchor2]", right[0][0]]]
-        self.choose("number plates stay where Custom Car Loader puts them: no road-number decal on each side")
+        if tender:
+            # a tender with only side lettering: the closest left/right pair of Lettering decals (Codex's a18-bogie-plates, 0.1.x)
+            lettering = [(c["name"], _anchor(anchors, c["name"])) for c in comps if c["kind"] == "Decal"
+                         and _extra(c).get("content") == "Lettering" and _anchor(anchors, c["name"])]
+            lefts = [n for n in lettering if n[1][0] < -0.5]
+            rights = [n for n in lettering if n[1][0] > 0.5]
+            if lefts and rights:
+                r, l = min(((r, l) for r in rights for l in lefts),
+                           key=lambda p: (abs(p[0][1][1] - p[1][1][1]) + abs(p[0][1][2] - p[1][1][2]),
+                                          abs(abs(p[0][1][0]) - abs(p[1][1][0])), p[0][0], p[1][0]))
+                self.choose(f"tender number plates: no road-number decal on each side, so plates follow the side lettering ({l[0]!r}, {r[0]!r}); check them in game")
+                return [["[car plate anchor1]", l[0]], ["[car plate anchor2]", r[0]]]
+        if not tender:
+            self.choose("number plates stay where Custom Car Loader puts them: no road-number decal on each side")
         return []
+
+    def _tender_fallback_plates(self, cfg: dict, comps: list[dict], bmin: list[float], bmax: list[float],
+                                front_end: float, rear_end: float) -> list:
+        """A tender with no RoadNumber decal on both sides gets plates on the middle of each side (James, 2026-10-01: none of the
+        tenders had info boards). Two synthetic RoadNumber decals are added, as the fallback cylinder cock is; the core puts each plate
+        on the model's side surface at the decal's height and car position and faces it outward."""
+        z = round((front_end + rear_end) / 2, 3)
+        y0 = max(bmin[1], 0.35)
+        y = round(y0 + 0.45 * (bmax[1] - y0), 3)
+        x = round(min(abs(bmin[0]), abs(bmax[0])), 3)
+        evidence = (f"probe/probe.json bounds and the Railroader car ends: the middle of each side (z {z}), 45% up the body "
+                    f"from 0.35 m above the rail (y {y}), at the model's half-width (x {x}); the core snaps it to the side surface")
+        pairs = []
+        for n, side in ((1, -1), (2, 1)):
+            name = f"rr2dv fallback plate {n}"
+            synthetic = {"kind": "Decal", "name": name, "parentPath": "", "extra": json.dumps({"content": "RoadNumber"}),
+                         "pos": env([side * x, y, z], "m", "analogue_estimate", evidence),
+                         "rot": [0, 0, 0, 1], "scale": [1, 1, 1]}
+            cfg["Components"]["value"].append(synthetic)
+            comps.append(_plain(synthetic))
+            pairs.append([f"[car plate anchor{n}]", name])
+        cfg["Components"]["basis"] = "derived"
+        cfg["Components"]["evidence"].append(evidence)
+        self.choose("tender number plates: the source has no road-number decal on each side, so plates are placed on the middle of "
+                    f"each side (z {z}, y {y}); check them in game")
+        return pairs
 
     GAUGE_SIZE_M = 0.19  # the core's dial diameter at RR scale 1 (CclLocoBuild.BuildInterior)
 
