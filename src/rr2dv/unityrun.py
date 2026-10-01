@@ -73,6 +73,27 @@ def _crash_meaning(code) -> str:
     return ""
 
 
+NON_ASCII_ADVICE = ("Unity 2019.4 is known to be unreliable when a path it uses has non-English (e.g. Cyrillic) characters, "
+                    "and on Windows set to \"Beta: Use Unicode UTF-8 for worldwide language support\". Use a plain-English "
+                    "Unity install folder and work folder (e.g. C:\\rr2dv), and if your user profile name is not plain English, "
+                    "set the TEMP and TMP environment variables to a plain folder such as C:\\Temp")
+
+
+def non_ascii_paths(named: dict) -> list[str]:
+    """`label: path` for every given path (empty ones skipped) containing a non-ASCII character."""
+    return [f"{label}: {value}" for label, value in named.items() if value and not str(value).isascii()]
+
+
+def environment_paths(env=None) -> dict:
+    env = os.environ if env is None else env
+    return {key: env.get(key) for key in ("USERPROFILE", "LOCALAPPDATA", "TEMP", "TMP")}
+
+
+def _non_ascii_hint(paths: dict) -> str:
+    found = non_ascii_paths(paths)
+    return ("\n  non-English characters in paths Unity uses: " + "; ".join(found) + "\n  " + NON_ASCII_ADVICE) if found else ""
+
+
 def _log_tail(log: Path, lines: int = 12) -> str:
     """The last lines of Unity's own log (where a crash names itself), for the error message."""
     try:
@@ -116,7 +137,8 @@ def run_method(unity: Path, project: Path, method: str, out: Path, extra_env: di
         code = attempts[-1]["exit_code"]
         last = attempts[-1]["attempt"]
         raise UnityError(f"{method} wrote no result.json (exit code {code}{_crash_meaning(code)}, after {len(attempts)} attempt(s)); "
-                         f"see {out / f'unity-{last}.log'}{_log_tail(out / f'unity-{last}.log')}")
+                         f"see {out / f'unity-{last}.log'}{_log_tail(out / f'unity-{last}.log')}"
+                         f"{_non_ascii_hint({'Unity': unity, 'project': project, **environment_paths(env)})}")
     result = read_json(result_file)
     result["exit_code"] = attempts[-1]["exit_code"]
     return result

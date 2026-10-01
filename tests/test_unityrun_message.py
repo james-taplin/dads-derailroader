@@ -28,3 +28,16 @@ class CrashMessage(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class NonAsciiTests(unittest.TestCase):
+    def test_detects_cyrillic_and_skips_empty(self):
+        from rr2dv import unityrun
+        found = unityrun.non_ascii_paths({"TEMP": "C:\\Users\\Иван\\AppData\\Local\\Temp", "TMP": None, "Unity": "C:\\Unity\\Editor\\Unity.exe"})
+        self.assertEqual(len(found), 1)
+        self.assertTrue(found[0].startswith("TEMP: "))
+
+    def test_hint_in_crash_message(self):
+        from rr2dv import unityrun
+        self.assertIn("non-English characters", unityrun._non_ascii_hint({"USERPROFILE": "C:\\Users\\Иван"}))
+        self.assertEqual(unityrun._non_ascii_hint({"USERPROFILE": "C:\\Users\\Ivan"}), "")

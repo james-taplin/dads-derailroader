@@ -113,6 +113,11 @@ def doctor(machine: Machine) -> list[Check]:
         check = Check("warn", "Unity Editor", f"{unity}: path does not mention {UNITY_VERSION}; the builder needs exactly that version")
     checks.append(check)
 
+    from . import unityrun
+    odd = unityrun.non_ascii_paths({"Unity Editor": unity, "work folder": machine.work_root, **unityrun.environment_paths()})
+    if odd:
+        checks.append(Check("warn", "non-English characters in paths", "; ".join(odd) + ". " + unityrun.NON_ASCII_ADVICE))
+
     check, cc = _exists(machine, "carCreator", "file", True, "CarCreator package")
     if cc and CARCREATOR_VERSION not in cc.name:
         check = Check("warn", "CarCreator package", f"{cc.name}: expected CarCreator {CARCREATOR_VERSION}")
