@@ -727,8 +727,18 @@ public static class VfOil
         var made = new List<string>();
         var markers = new List<GameObject>();
         var extras = new List<GameObject>();
+        var original = new Dictionary<Renderer, Material[]>();
         try
         {
+            // The exported Railroader shaders render black in a bare editor scene (the K-28T and T-17 pilot, 2026-10-01): every renderer gets
+            // one plain grey Standard material for the pictures, and its own materials back afterwards.
+            var grey = new Material(Shader.Find("Standard")) { color = new Color(.62f, .62f, .64f) };
+            foreach (var r in go.GetComponentsInChildren<Renderer>(true))
+            {
+                if (r.sharedMaterials == null || r.sharedMaterials.Length == 0) continue;
+                original[r] = r.sharedMaterials;
+                r.sharedMaterials = r.sharedMaterials.Select(m => grey).ToArray();
+            }
             Sample(go, clips, 0.1f);
             Func<Color, Material> mat = c => new Material(Shader.Find("Unlit/Color")) { color = c };
             Action<Transform, float[], Color, float> mark = (host, local, colour, size) =>
@@ -751,9 +761,9 @@ public static class VfOil
             foreach (var s in o.endSeats ?? new EndSeat[0])
                 if (s.found) mark(root.Find(s.rod), s.local, new Color(0f, 1f, 0f), .04f);
             var sun = new GameObject("sun").AddComponent<Light>(); extras.Add(sun.gameObject);
-            sun.type = LightType.Directional; sun.intensity = 1.2f; sun.transform.rotation = Quaternion.Euler(50, 0, 0);
+            sun.type = LightType.Directional; sun.intensity = 1.3f;
             RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Flat;
-            RenderSettings.ambientLight = new Color(.55f, .55f, .6f);
+            RenderSettings.ambientLight = new Color(.6f, .6f, .65f);
             var cam = new GameObject("cam").AddComponent<Camera>(); extras.Add(cam.gameObject);
             cam.clearFlags = CameraClearFlags.SolidColor; cam.backgroundColor = new Color(.72f, .78f, .85f);
             cam.orthographic = true; cam.orthographicSize = 1.3f; cam.nearClipPlane = .05f; cam.farClipPlane = 30f;
@@ -770,6 +780,7 @@ public static class VfOil
                 for (int k = 0; k < n; k++)
                 {
                     float z = n == 1 ? (zMin + zMax) / 2 : zMin + tile / 2 + k * ((zMax - zMin - tile) / (n - 1));
+                    sun.transform.rotation = Quaternion.Euler(40, side < 0 ? 90 : -90, 0);   // light travels in from the camera's side, down and across
                     var target = new Vector3(side * 1.0f, centreY, z);
                     cam.transform.position = target + new Vector3(side * 6f * Mathf.Cos(38 * Mathf.Deg2Rad), 6f * Mathf.Sin(38 * Mathf.Deg2Rad), 0f);
                     cam.transform.LookAt(target);
@@ -787,6 +798,7 @@ public static class VfOil
         catch (Exception e) { Problems.Add(o.id + ": renders: " + e.GetType().Name + ": " + e.Message); }
         finally
         {
+            foreach (var kv in original) if (kv.Key) kv.Key.sharedMaterials = kv.Value;
             foreach (var m in markers) if (m) Object.DestroyImmediate(m);
             foreach (var e in extras) if (e) Object.DestroyImmediate(e);
             Sample(go, clips, 0f);
