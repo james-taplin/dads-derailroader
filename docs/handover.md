@@ -51,3 +51,10 @@ released). The test runs you did (oil map, build runs) served these purposes:
 - `tooling/` is a read-only snapshot; app fixes live in `src/rr2dv/`. No real game assets, audio or full logs in git. Check `git remote get-url origin` is
   `https://github.com/james-taplin/dads-derailroader.git` before pushing.
 - James's user-facing text style: lowercase, commas, no formatting, one entry per line.
+
+## Major issues still to investigate and fix (2026-10-01)
+In-game checks (nothing has been seen in game): cups on nubs (F-71's big-end pair falls back to a flat spot); the clip fixes (trailing wheel, P-43 reverser, T-22 window, C-55 tender hatch, coal, water; C-55 water built with 0 objects); tender plates (all from side lettering).
+Working DV prefabs: loco-tender coupling overlaps and gaps (worst at the start: G-25, K-35 overlapping; G-16, B-65, P-48, T-21 gaps; humping unknown); tender brake release "no seat found" on about seven tenders (the app's final placement reports success, verify in game); mostly one cup pair per loco, the crosshead end rarely has a clear nub.
+Controls and cabs: P-43's source reverser replaced by a generated lever; T-21 blower and coal-dump lever clash; generated labels with "no surface below"; floating dials, lights not turning off and headlight lenses (reported in game earlier, not investigated).
+Animations (last): skinned bell cords on ten locos may stretch (K-35's hidden as a stopgap); other tender clips pointing at missing parts are left out and listed.
+Not started: whistle sound swap (only the mesh swaps), diesels (0.3.x), licences (converted locos set vanilla SH282 or SH060; driving works without them, whether to change is undecided).

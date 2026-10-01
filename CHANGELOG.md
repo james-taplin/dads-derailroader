@@ -1,3 +1,21 @@
+Version 0.4.2
+
+- oil cups are now placed on the modelled oiling nubs on the rods, whichever nub has the best clearance at each end [untested in game, falls back to the old flat spot where there is no clear nub]
+- F-71 and C-55 main rods are now found, F-71 now gets oil cups
+- fixed trailing wheel, reverser and door window animations being dropped where the part name ended in a space [P-18, P-43, T-22]
+- C-55 now builds, its tender hatch, coal, water, brake rig and cut lever animations are in
+- every tender now gets number plates, taken from the side lettering [first guess at the position, check them in game]
+- a tender door or hatch animation that cannot be resolved is left out and listed instead of stopping the build
+- settings, runs and logs now live in an rr2dv_work folder beside the app [old AppData settings are not read]
+- a crashed Unity now says so, with the exit code explained and the last lines of its log
+- warns when the Unity, work folder, user profile or temp paths contain non-english characters
+- the release packages now include the changelog, readme, wiki and docs
+- known issue, the 0.4.1 known issues still apply
+- known issue, couplings between loco and tender may overlap or sit too far apart on some locos
+- known issue, the tender brake release may point sideways on several tenders
+- known issue, P-43 gets a generated reverser lever in place of the original one
+- known issue, T-21 blower and coal dump levers may collide
+
 Version 0.4.1
 
 - settings, runs and logs now live in an rr2dv_work folder beside the app instead of hidden system folders, a workRoot you already set still wins [your old settings in AppData are not read, copy machine.json across or set the paths again]
