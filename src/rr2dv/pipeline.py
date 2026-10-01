@@ -258,6 +258,10 @@ def _stages(run: Run, input_path: Path, loco: str | None, search: Sequence[Path]
     for a in absent:
         run.log(f"  clip {a['clip']} ({', '.join(a['keys'])}): {len(a['absent'])} of {a['bindings']} binding(s) target "
                 f"objects not in any model of the export; kept with the other {a['restored']} restored (review item)")
+    for name, c in sorted(project["clips"].items()):
+        for fix in c.get("prefixed", []):
+            run.log(f"  clip {fix['clip']}: " + (f"paths written relative to '{fix['prefix']}', now under it" if fix.get("prefix") else fix["result"])
+                    + ("" if fix.get("prefix") else f" (e.g. {', '.join(map(repr, fix.get('paths', [])))}; root children {fix.get('children', '')})"))
     run.finish("import", "done", f"Unity {project['unity']} project with {len(project['vehicles'])} vehicle(s), "
                                  f"{len(project['parts'])} part(s), {project['unique_guids']} GUIDs"
                                  + (" (reused from an earlier run)" if cached else ""))

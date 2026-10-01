@@ -391,24 +391,38 @@ def prefix_missing_paths(text: str, nodes: set[str]) -> tuple[str, str | None]:
 
 def _prefix_rootless_clips(source_assets: Path, dest_assets: Path) -> list[dict]:
     """After resolution: clips named by exactly one prefab whose literal paths miss that prefab's root but fit under one of its children
-    (C-55's tender, where Coal, Water, Hatch, Brake Rig and Cut Lever all stopped the build). Each fix is listed."""
+    (C-55's tender, where Coal, Water, Hatch, Brake Rig and Cut Lever all stopped the build). Every clip with a literal path that does
+    not resolve is listed with what was done or why not (the 0.4.1 first attempt changed nothing and nobody could see why)."""
     done = []
     owners = clip_owners(source_assets)
     nodes_of: dict[str, set[str]] = {}
-    for clip, entries in sorted(owners.items()):
+    for target in sorted(dest_assets.rglob("*.anim")):
+        clip = target.relative_to(dest_assets).as_posix()
+        entries = owners.get(clip, [])
         prefabs = sorted({o["prefab"] for o in entries})
-        target = dest_assets / clip
-        if len(prefabs) != 1 or not target.is_file():
+        text = target.read_text(encoding="utf-8-sig")
+        literal = sorted({m["value"].strip("'\"") for m in PATH_LINE.finditer(text)
+                          if m["value"].strip("'\"") and not m["value"].strip("'\"").startswith("path_0x")})
+        if len(prefabs) != 1:
+            # only report clips that need it: a literal path exists but no prefab nodes are known to check it against
+            if literal and not prefabs:
+                done.append({"clip": clip, "result": "not changed: no prefab's clip map names it", "paths": literal[:3]})
+            elif literal and len(prefabs) > 1:
+                done.append({"clip": clip, "result": "not changed: several prefabs name it: " + ", ".join(prefabs), "paths": literal[:3]})
             continue
         if prefabs[0] not in nodes_of:
             nodes_of[prefabs[0]] = _node_paths(source_assets / prefabs[0])
-        text = target.read_text(encoding="utf-8-sig")
-        fixed, prefix = prefix_missing_paths(text, nodes_of[prefabs[0]])
+        nodes = nodes_of[prefabs[0]]
+        fixed, prefix = prefix_missing_paths(text, nodes)
         if prefix:
             target.write_text(fixed, encoding="utf-8")
-            done.append({"clip": clip, "prefab": prefabs[0], "prefix": prefix})
+            done.append({"clip": clip, "prefab": prefabs[0], "prefix": prefix, "result": "prefixed"})
+        else:
+            missing = [v for v in literal if v not in nodes]
+            if missing:
+                done.append({"clip": clip, "prefab": prefabs[0], "result": "not changed: no single child of the root holds them all",
+                             "paths": missing[:3], "children": sorted(n for n in nodes if n and "/" not in n)[:6]})
     return done
-
 
 
 def _resolve_clips(source_assets: Path, dest_assets: Path, report: Path, full_assets: Path | None = None) -> dict:
