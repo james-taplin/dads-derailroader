@@ -60,7 +60,12 @@ public static partial class CclLocoBuild
                 targetNode = matches[0];
             }
             if (ambiguous) { LeaveOutOpening(component.name, "Ambiguous declared toggle target: " + target); continue; }
-            var clip = Clip(key);
+            // Clip() throws for a binding that does not resolve (or resolves twice) on this car's model. For an ancillary
+            // toggle that is a reason to leave the opening out and say so, not to stop the build (C-55 tender 'Hatch':
+            // 'Water Hatch/Bone' resolves nowhere on the tender, 2026-10-01); the loco's own clips still throw.
+            AnimationClip clip;
+            try { clip = Clip(key); }
+            catch (InvalidOperationException e) { LeaveOutOpening(component.name, "Unresolved toggle binding: " + key + " (" + e.Message + ")"); continue; }
             var bindings = AnimationUtility.GetCurveBindings(clip);
             if (clip.length <= 0 || bindings.Length == 0 || bindings.Any(b => b.type != typeof(Transform) || string.IsNullOrEmpty(b.path)) ||
                 AnimationUtility.GetObjectReferenceCurveBindings(clip).Length != 0 || AnimationUtility.GetAnimationEvents(clip).Length != 0)

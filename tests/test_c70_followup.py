@@ -38,6 +38,10 @@ class FollowupTests(unittest.TestCase):
             gone = left_out_openings([f"rr2dv ancillary toggle 'A' on {car}_TENDER left out (not interactive; its model "
                                       "stays as modelled): Toggle has no resolved source clip: A"])
             self.assertEqual(gone, {('A', None, car + '_TENDER')})
+            # a toggle whose clip binding resolves nowhere on the model is left out with the builder's reason appended
+            gone = left_out_openings([f"rr2dv ancillary toggle 'Hatch' on {car}_TENDER left out (not interactive; its model stays as "
+                                      f"modelled): Unresolved toggle binding: Hatch ({car}_TENDER unresolved/ambiguous Hatch binding: Water Hatch/Bone)"])
+            self.assertEqual(gone, {('Hatch', None, car + '_TENDER')})
             self.assertEqual(audit_input(record, Path(tmp), gone)['openingCount'], 2)
 
     def test_geared_report_keeps_units_and_does_not_invent_a_speed_limit(self):
