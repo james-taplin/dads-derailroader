@@ -11,13 +11,24 @@ from zipfile import ZIP_DEFLATED, ZipFile
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
 SOURCE_ROOT = f"Derailroader-{VERSION}-Source"
+# Every release carries the changelog, readme, wiki and docs (James, 2026-10-01: 0.4.1's source zip left them out).
+READING_FILES = {"CHANGELOG.md", "README.md", "LICENSE"}
+READING_FOLDERS = ("wiki/", "docs/")
+SOURCE_FILES = {"Derailroader.pyw", "Launch Derailroader.bat", "pyproject.toml"} | READING_FILES
+SOURCE_FOLDERS = ("src/", "tooling/") + READING_FOLDERS
 
 
 def source_files() -> list[Path]:
     tracked = subprocess.check_output(["git", "ls-files", "-z"], cwd=ROOT).split(b"\0")
-    include = {"Derailroader.pyw", "Launch Derailroader.bat", "README.md", "LICENSE", "pyproject.toml"}
     return [ROOT / path for raw in tracked if raw
-            if (path := raw.decode("utf-8")) in include or path.startswith(("src/", "tooling/"))]
+            if (path := raw.decode("utf-8")) in SOURCE_FILES or path.startswith(SOURCE_FOLDERS)]
+
+
+def reading_files() -> list[Path]:
+    """The documents that travel with every package: the changelog, readme, wiki and docs."""
+    tracked = subprocess.check_output(["git", "ls-files", "-z"], cwd=ROOT).split(b"\0")
+    return [ROOT / path for raw in tracked if raw
+            if (path := raw.decode("utf-8")) in READING_FILES or path.startswith(READING_FOLDERS)]
 
 
 def package(dist: Path, output: Path) -> None:
@@ -31,6 +42,9 @@ def package(dist: Path, output: Path) -> None:
             if file.is_file():
                 archive.write(file, f"Derailroader/{file.relative_to(app).as_posix()}")
         archive.write(ROOT / "LICENSE", "Derailroader/LICENSE.txt")
+        for file in reading_files():
+            if file.name != "LICENSE":
+                archive.write(file, f"Derailroader/{file.relative_to(ROOT).as_posix()}")
         python_license = Path(sys.base_prefix) / "LICENSE.txt"
         if python_license.is_file():
             archive.write(python_license, "Derailroader/PYTHON-LICENSE.txt")
