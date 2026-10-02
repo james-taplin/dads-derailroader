@@ -100,10 +100,10 @@ public static partial class CclLocoBuild
             var particles = root.transform.Find("[particles]");
             var dynamo = particles.Find("DynamoSteam");
             var axis = DynamoTestAxes[i];
-            var expected = axis == Vector3.zero ? Vector3.up : new Vector3(-axis.x, axis.y, -axis.z);
+            var expected = axis == Vector3.zero ? Vector3.up : axis;
             var actual = dynamo.rotation * Vector3.forward;
             JetAssert(Vector3.Dot(actual, expected) > .9999f,
-                "Dynamo facing reversed in case " + i + ": expected " + expected + ", got " + actual);
+                "Dynamo does not follow its outlet in case " + i + ": expected " + expected + ", got " + actual);
             JetAssert(Mathf.Abs(actual.y - expected.y) < .0001f, "Dynamo upward tilt changed");
             JetAssert((dynamo.position - position).sqrMagnitude < .000001f, "Dynamo outlet moved");
             var child = dynamo.Find("SteamExhaust Small");

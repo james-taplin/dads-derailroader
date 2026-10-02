@@ -1,0 +1,20 @@
+{
+  "schema": 1,
+  "profiles": {
+    "ls-280-c25": {
+      "state": "pilot-awaiting-game-acceptance",
+      "instruments": [
+        {
+          "sourceGauge": "Boiler Gauge",
+          "reading": "boiler",
+          "position": [-0.007416681, 3.47949219, -2.4512896],
+          "rotation": [0, 0, 0, 1],
+          "scale": 1.0,
+          "supportPoint": [-0.007416681, 3.47949219, -2.4341722],
+          "supportPath": "engine/Interior.007_LOD0.003",
+          "evidence": "C-25's installed backhead plane z=-2.4341722; donor housing rear z=+0.01511714; 2 mm mounting pad; full housing fit still requires game acceptance"
+        }
+      ]
+    }
+  }
+}

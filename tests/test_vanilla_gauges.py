@@ -39,32 +39,35 @@ class Gauges(unittest.TestCase):
         recordcheck._evidence(cfg["Components"], "config.Components", False, errors)
         self.assertEqual(errors, [])
 
-    def test_a_loco_with_only_boiler_gauges_gets_brake_and_speed_gauges_that_do_not_overlap(self):
+    def test_two_source_boiler_gauges_reuse_the_second_mount_for_brakes(self):
         builder, _, value = run([gauge("BP 1", "BoilerPressure", (0.0, 3.0, -4.0), 0.8), gauge("BP 2", "BoilerPressure", (0.3, 3.0, -4.0), 0.8)])
-        self.assertEqual(sorted(set(styles(value))), sorted(STYLES))
-        pos = [buildrecord._plain(c["pos"]) for c in value]
-        for i, a in enumerate(pos):
-            for b in pos[i + 1:]:
-                self.assertGreater(math.dist(a, b), 0.12)
-        self.assertTrue(any("generated one beside" in c for c in builder.choices))
+        self.assertEqual(styles(value), ["BoilerPressure", "DualBrakeCylinderLine"])
+        self.assertEqual(len(value), 2)
+        self.assertEqual([buildrecord._plain(c["pos"]) for c in value], [[0., 3., -4.], [.3, 3., -4.]])
+        self.assertTrue(any("numerical km/h remains on F4" in c for c in builder.choices))
 
-    def test_a_loco_whose_gauges_all_face_sideways_gets_generated_ones_on_the_backhead_plate_facing_the_crew(self):
+    def test_two_sideways_source_mounts_are_retained_without_guessing_new_panel_positions(self):
         side = (0.0, 0.707, 0.0, 0.707)
         builder, cfg, value = run([gauge("BP Engineer", "BoilerPressure", (0.052, 3.381, -4.632), 1.0, side),
                                    gauge("BP Fireman", "BoilerPressure", (-0.048, 3.381, -4.632), 1.0, (0.0, 0.707, 0.0, -0.707))], back_z=-4.71)
-        self.assertEqual(sorted(set(styles(value))), sorted(STYLES))
-        for c in value:
-            if c["name"].startswith("rr2dv generated"):
-                pos = buildrecord._plain(c["pos"])
-                self.assertAlmostEqual(pos[2], -4.74, places=3)
-                self.assertEqual(c["rot"], [0.0, 1.0, 0.0, 0.0])
-                self.assertAlmostEqual(pos[1], 3.381, places=3)
-        xs = sorted(buildrecord._plain(c["pos"])[0] for c in value if c["name"].startswith("rr2dv generated"))
-        self.assertGreater(min(b - a for a, b in zip(xs, xs[1:])), 0.1)  # none on another
+        self.assertEqual(styles(value), ["BoilerPressure", "DualBrakeCylinderLine"])
+        self.assertEqual(len(value), 2)
+        self.assertEqual(value[0]["rot"], list(side))
+        self.assertEqual(value[1]["rot"], [0.0, 0.707, 0.0, -0.707])
         errors = []
         recordcheck._evidence(cfg["Components"], "config.Components", False, errors)
         self.assertEqual(errors, [])
-        self.assertTrue(any("face sideways" in c for c in builder.choices))
+        self.assertFalse(any(c["name"].startswith("rr2dv generated") for c in value))
+
+    def test_c25_keeps_its_boiler_and_brake_positions_without_extra_faces(self):
+        source = [gauge("Brake Gauge", "DualBrakeCylinderLine", (-.0074, 3.6601, -2.4315)),
+                  gauge("Boiler Gauge", "BoilerPressure", (-.0074, 3.4795, -2.4439))]
+        _, _, value = run(source)
+        self.assertEqual(styles(value), ["DualBrakeCylinderLine", "BoilerPressure"])
+        self.assertEqual(len(value), 2)
+        for actual, original in zip(value, source):
+            for field in ("name", "pos", "rot", "scale"):
+                self.assertEqual(actual[field], original[field])
 
     def test_nothing_changes_when_the_model_has_every_gauge(self):
         full = [gauge("BP", "BoilerPressure", (0, 3, -4)), gauge("DBCL", "DualBrakeCylinderLine", (0.3, 3, -4)),
@@ -79,7 +82,7 @@ class Gauges(unittest.TestCase):
         self.assertTrue(builder.choices)
 
     @unittest.skipUnless(os.environ.get("RR2DV_RAILROADER"), "needs a Railroader install")
-    def test_every_real_stock_loco_ends_with_all_four_normal_gauges(self):
+    def test_real_stock_two_gauge_cabs_have_only_essentials_and_larger_cabs_keep_the_full_set(self):
         packs = Path(os.environ["RR2DV_RAILROADER"]) / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
         for name in stock.STEAM:
             raw = re.sub(r",(\s*[}\]])", r"\1", (packs / name / "Definitions.json").read_text(encoding="utf-8-sig"))
@@ -87,7 +90,10 @@ class Gauges(unittest.TestCase):
             gs = [gauge(c["name"], c["style"], c["transform"]["position"], c["transform"]["scale"][0], c["transform"]["rotation"])
                   for c in d["components"] if c["kind"] == "Gauge"]
             _, _, value = run(gs)
-            self.assertEqual(sorted(set(styles(value))), sorted(STYLES), name)
+            expected = ("BoilerPressure", "DualBrakeCylinderLine") if len(gs) == 2 else STYLES
+            self.assertEqual(sorted(set(styles(value))), sorted(expected), name)
+            if len(gs) == 2:
+                self.assertEqual(len(value), 2, name)
             every = [(c["name"], buildrecord._plain(c["pos"])) for c in value if c["kind"] == "Gauge"]
             for n, a in every:
                 if not n.startswith("rr2dv generated"):

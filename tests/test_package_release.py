@@ -21,6 +21,9 @@ class PackageRelease(unittest.TestCase):
         names = {f.relative_to(mod.ROOT).as_posix() for f in mod.source_files()}
         for needed in ("CHANGELOG.md", "README.md", "LICENSE", "pyproject.toml", "Derailroader.pyw"):
             self.assertIn(needed, names)
+        for needed in ("src/rr2dv/gauge_fits.json", "src/rr2dv/gauges.py",
+                       "src/rr2dv/unity/Rr2dvGauges.cs", "src/rr2dv/unity/Rr2dvTruckWheels.cs"):
+            self.assertIn(needed, names)
         for folder in ("src/", "tooling/", "wiki/", "docs/"):
             self.assertTrue([n for n in names if n.startswith(folder)], folder)
         self.assertFalse([n for n in names if n.startswith(("tests/", "tools/"))])

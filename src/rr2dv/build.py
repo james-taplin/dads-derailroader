@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import buildrecord, catalogue, recordcheck, stock, unityrun
+from . import buildrecord, catalogue, gauges, recordcheck, stock, unityrun
 from .jsonio import read_json, read_json_lenient, sha256_file, write_json
 from .rrmod import components, definition
 
@@ -128,6 +128,10 @@ def prepare(run_path: Path, inv: dict, probe_in: dict, probe_out: dict | None, p
             "reversedClips": rec["metadata"].get("reversedClips") or [],
             "noDynamo": bool(rec["metadata"].get("noDynamo")),
             "controlClasses": rec["metadata"].get("controlClasses") or []}
+    try:
+        data['gauges'] = gauges.prepare(rec)
+    except (gauges.GaugeError, OSError, ValueError) as e:
+        raise BuildError(f'Preparing the cab gauge pilot failed: {e}') from e
     write_json(run_path / project["project"] / BUILD_INPUT, data)
     return {"record": rec, "choices": choices, "input": data}
 

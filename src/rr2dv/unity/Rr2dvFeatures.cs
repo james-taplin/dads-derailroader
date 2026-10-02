@@ -6,6 +6,9 @@ using UnityEngine;
 using CCL.Types.Proxies.Ports;
 using CCL.Types.Proxies.Simulation;
 using CCL.Types.Components.Simulation;
+using CCL.Types.HUD;
+using CCL.Types.Proxies.Controls;
+using CCL.Types.Proxies.Indicators;
 
 // Editor-only adapters; exported runtime remains CCL-only.
 public static partial class CclLocoBuild
@@ -19,6 +22,42 @@ public static partial class CclLocoBuild
     }
     [Serializable] class RrReviewInput { public RrReview review; }
     static RrReview RrChoices;
+
+    // All locomotives need the numerical km/h box, independently of their physical cab speedometer.
+    // Reviewed layouts keep their custom controls. CCL's custom HUD exposes the same numerical speed box;
+    // a vanilla fallback must use S282, because the S060 layout does not show it.
+    static void RequireRr2dvSpeedHud()
+    {
+        var hud = AssetDatabase.LoadAssetAtPath<VanillaHUDLayout>($"{carFolder}/{CarId}_hud.asset");
+        if (!hud) throw new InvalidDataException("Locomotive has no HUD layout for its numerical speed box");
+        if (hud.HUDType != VanillaHUDLayout.BaseHUD.Custom) hud.HUDType = VanillaHUDLayout.BaseHUD.S282;
+        hud.CustomHUDSettings.BasicControls.Speedometer = CustomHUDLayout.ShouldDisplay.Display;
+        hud.OnValidate(); EditorUtility.SetDirty(hud);
+        string path = $"{carFolder}/{CarId}_interior.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            var indicator = root.GetComponent<LocoIndicatorReaderProxy>();
+            if (!indicator || !indicator.speed) throw new InvalidDataException("Numerical speed HUD has no speed indicator");
+            var port = indicator.speed.GetComponent<IndicatorPortReaderProxy>();
+            if (!port || port.portId != "traction.WHEEL_SPEED_KMH_EXT_IN")
+                throw new InvalidDataException("Numerical speed HUD must read the km/h traction port");
+            port.useAbsoluteValue = true; // the box reports speed, including travelling in reverse
+            // Two-gauge cabs omit the physical reservoir dial, but the normal steam HUD still reads it.
+            if (!indicator.mainReservoir)
+            {
+                var host = Child(root.transform, "HUD-only mainReservoir", Vector3.zero);
+                var reservoir = host.gameObject.AddComponent<IndicatorGaugeProxy>();
+                reservoir.needle = host; reservoir.minValue = 0f; reservoir.maxValue = 10f;
+                reservoir.minAngle = -135f; reservoir.maxAngle = 135f; reservoir.rotationAxis = Vector3.forward;
+                Add(host.gameObject, "CCL.Types.Proxies.Indicators.IndicatorBrakeReservoirReaderProxy");
+                indicator.mainReservoir = reservoir;
+            }
+            SaveRr2dvPrefab(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+        Line("rr2dv F4 HUD: numerical km/h speed box; custom layout or S282 vanilla fallback; absolute wheel speed");
+    }
 
     static void LoadRrReview()
     {

@@ -125,8 +125,20 @@ public static class Rr2dvAudit
             if (controls) foreach (var f in input.controls ?? new string[0]) if (!Ref(controls, f)) errors.Add("no control for the HUD's " + f);
             var indicators = One("LocoIndicatorReaderProxy", "HUD readings");
             if (indicators && !Ref(indicators, "speed")) errors.Add("Numerical speed HUD has no speed indicator");
-            if (!all.Any(o => o.GetType().Name == "IndicatorPortReaderProxy" && Str(o, "portId") == "traction.WHEEL_SPEED_KMH_EXT_IN"))
-                errors.Add("Numerical speed HUD has no km/h traction port reader");
+            var speedIndicator = indicators ? new SerializedObject(indicators).FindProperty("speed")?.objectReferenceValue as Component : null;
+            var speedPort = speedIndicator ? speedIndicator.GetComponents<Component>().FirstOrDefault(c => c && c.GetType().Name == "IndicatorPortReaderProxy") : null;
+            if (!speedPort || Str(speedPort, "portId") != "traction.WHEEL_SPEED_KMH_EXT_IN" ||
+                !new SerializedObject(speedPort).FindProperty("useAbsoluteValue").boolValue)
+                errors.Add("Numerical speed HUD must read absolute km/h from its own traction port reader");
+            var speedHud = all.FirstOrDefault(o => o.GetType().Name == "VanillaHUDLayout");
+            if (!speedHud) errors.Add("Locomotive has no HUD layout");
+            else
+            {
+                speedHud.GetType().GetMethod("AfterImport")?.Invoke(speedHud, null);
+                var layout = new SerializedObject(speedHud); int basis = layout.FindProperty("HUDType").intValue;
+                if (basis != 20 && (basis != 1000 || layout.FindProperty("CustomHUDSettings.BasicControls.Speedometer").intValue != 1))
+                    errors.Add("Locomotive HUD must use the S282 speed box or enable the numerical speed slot in its custom layout");
+            }
             if (indicators) foreach (var f in input.indicators ?? new string[0]) if (!Ref(indicators, f)) warnings.Add("the HUD has no reading for " + f + " (no instrument for it in the model)");
             foreach (var p in input.ports ?? new string[0]) if (!feeders.Contains(p)) errors.Add("no control feeds " + p);
             One("CabTeleportDestinationProxy", "cab teleport");

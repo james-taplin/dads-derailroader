@@ -1303,7 +1303,8 @@ class _Builder:
     GAUGE_SIZE_M = 0.19  # the core's dial diameter at RR scale 1 (CclLocoBuild.BuildInterior)
 
     def _ensure_gauges(self, cfg: dict, comps: list[dict], lid: str, back_z: float | None = None) -> None:
-        """Every converted loco gets the normal Derail Valley gauges (James, 2026-09-30): boiler pressure, a two-needle brake gauge
+        """Two-instrument source cabs retain only boiler pressure and pipe/cylinder brakes (James, 2026-10-02).
+        Larger cabs get the normal Derail Valley gauges (James, 2026-09-30): boiler pressure, a two-needle brake gauge
         that reads brake pipe (and cylinder), a main-reservoir gauge and a speedometer. RR's 4-needle Quadruplex becomes DV's
         main-reservoir/equalizing gauge (the core makes no HUD reading of it); a style the model lacks is generated beside the
         nearest brake gauge (else the boiler gauge), on the same panel and facing, away from its neighbours. Generated gauges are
@@ -1321,6 +1322,21 @@ class _Builder:
             extra = _extra(c)
             extra["style"] = new
             c["extra"] = json.dumps(extra, separators=(",", ":"))
+            # The flattened list also selects MainPressureGauge after this pass.
+            for plain in comps:
+                if plain["kind"] == "Gauge" and plain["name"] == c["name"]:
+                    plain["extra"] = c["extra"]
+
+        if len(gauges) == 2:
+            boiler = next((c for c in gauges if style(c) == "BoilerPressure"), gauges[0])
+            brake = next(c for c in gauges if c is not boiler)
+            put_style(boiler, "BoilerPressure")
+            put_style(brake, "DualBrakeCylinderLine")
+            cfg["Components"]["basis"] = "derived"
+            cfg["Components"]["evidence"].append("two source gauge positions: boiler pressure and brake pipe/cylinder only; speed stays on F4 HUD")
+            self.choose("two source gauges: retain their mounts for boiler pressure and brake pipe/cylinder; no extra physical "
+                        "reservoir, chest or speed gauge; numerical km/h remains on F4")
+            return
 
         for c in gauges:
             if style(c) == "Quadruplex":

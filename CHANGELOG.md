@@ -1,6 +1,13 @@
 Version 0.4.4
 
-- corrected reversed dynamo steam jets across the steam fleet, turning their horizontal direction by 180 degrees while preserving the pipe's upward tilt [rebuild existing packs; still needs checking in game]
+- made dynamo steam jets follow the measured exhaust spout direction, correcting the blanket 180-degree turn that sent C-25's steam forwards [rebuild existing packs; still needs checking in game]
+- started the cab instrument replacements with C-25's boiler gauge, using the vanilla pressuremeter housing, face, glass and needle with matched pressure calibration [pilot only; appearance and control clearance still need checking in game]
+- made the numerical km/h box a required F4 HUD feature for every steam loco, including tank engines, with the S282 layout as the vanilla fallback [rebuild existing packs; still needs checking in game]
+- corrected tender truck wheel pivots so the wheels spin around their source axle centres instead of orbiting around them [rebuild existing packs; still needs checking in game]
+- limited two-gauge cabs, currently C-25 and K-35, to boiler pressure and brake pipe/cylinder instruments, removing the extra unsupported reservoir and speed faces; numerical speed and reservoir readings remain on F4 [rebuild existing packs; K-35's reused brake mount still needs checking in game]
+- known issue, C-25 can tilt slightly when coupled to its tender and return level when uncoupled; coupling physics investigation remains open
+- known issue, the outstanding 0.4.3 issues still apply, including cab controls, labels, lights, tender brake release placement and other coupling or animation problems
+- automated and native Unity checks passed; the latest rebuilt packs still need in-game acceptance
 
 Version 0.4.3
 

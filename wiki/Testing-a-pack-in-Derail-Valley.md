@@ -19,7 +19,13 @@ An installed pack has passed a build and exported-bundle audit. **It is still a 
 
 Also drive under load and check steam raising, wheel contact, braking, firing, sounds, and spawning. A bundle audit cannot establish these behaviors.
 
-For steam fittings, check the jet starts at the actual outlet and points in the intended direction. The testing builder corrects a reversed dynamo lean by turning its horizontal facing 180 degrees, keeping the upward tilt; pipes that cannot be measured still use a straight-up fallback. Rebuild to apply this change, then switch the dynamo off and on and inspect from the side. Also check the whistle and safety jets remain upright. A measured direction or successful export is still awaiting this game check.
+For steam fittings, check the jet starts at the actual outlet and follows the spout's outward direction. C-25's game test exposed an incorrect blanket 180-degree turn; the builder now uses the measured pipe direction directly. Pipes that cannot be measured still use a straight-up fallback. Rebuild, switch the dynamo off and on and inspect from the side. Also check the whistle and safety jets remain upright. A measured direction or successful export is still awaiting this game check.
+
+C-25 has a reported slight body tilt when coupled on level track that disappears when uncoupled. Record the uncoupled and coupled body pose from the same side view, after settling, then after tightening/releasing the coupling. The exported coupler heights agree and static coupled collision checks show no overlap; this does not validate the live joints or suspension. Keep this issue open while testing the instrument and jet changes.
+
+## Tender wheel rotation
+
+Rebuild older packs to include the corrected truck wheel pivots, then test a fresh spawn. Watch each tender wheel through a complete turn at low speed: its centre should stay at its bearing, with no circular wobble or movement through the ground. Repeat in reverse, on curves, under braking and during a slide, then save and reload. Check the truck frames and rail contact as well. The native A-23 regression and source-spindle checks across all 20 tenders passed; appearance and vehicle behavior still require these game checks.
 
 ## Vehicle catalogue pages
 

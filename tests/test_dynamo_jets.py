@@ -31,7 +31,8 @@ def assemble(project):
 class NativeDynamoJets(unittest.TestCase):
     def test_facing_tilt_position_and_other_jets_survive_export(self):
         from rr2dv.unityrun import run_method
-        with tempfile.TemporaryDirectory(prefix='rr2dv-dynamo-') as tmp:
+        work = Path(__file__).resolve().parents[1]/'rr2dv_work'; work.mkdir(exist_ok=True)
+        with tempfile.TemporaryDirectory(prefix='rr2dv-dynamo-', dir=work) as tmp:
             project = Path(tmp)/'project'
             assemble(project)
             output = Path(tmp)/'out'

@@ -2,6 +2,20 @@
 
 `rr2dv` records the stage, message, evidence, and any unresolved choice. Start with the run's `run.log` and `run.json`; the [README](../README.md) explains setup and the supported locomotive list.
 
+## Cab instrument pilot and numerical speed HUD
+
+The initial C-25 boiler-pressure pilot requires its named gauge and measured support surface to resolve uniquely. A missing/ambiguous gauge or support, an intersecting housing, fewer than seven rear support contacts, or a changed mounting datum stops the build. Preserve the build report for fitting review; do not bypass the check with a generic offset. Every newly built loco also requires a numerical F4 speed box and a speed reader wired to absolute km/h. A missing HUD layout, speed indicator or matching traction reader stops the build/audit for investigation.
+
+The complete DV housing is deeper than the original generated dial. Diagnostic reports therefore retain the original face-distance screen and separately report the rear mounting pad; a face more than 30 mm from the backhead is not itself proof that the complete housing floats. A supported pad remains a candidate requiring driver-view, glass, lighting and full control-sweep checks in game. See [the implementation handover](cab-gauge-implementation-2026-10-02.md).
+
+The two-source-gauge rule now retains only physical boiler and brake pipe/cylinder instruments. Its review choice explains that extra reservoir/chest/speed faces are omitted and numerical speed remains on F4. C-25's unsupported extra faces came from the former four-instrument rule; rebuild instead of manually moving the dials. Invisible speed and reservoir HUD readers remain. K-35's second source boiler mount becomes the brake instrument and still requires its own game check.
+
+## Tender truck wheel pivots
+
+The builder centres each prepared truck's visual rotation pivot on the original Railroader wheel spindle, while retaining its resting geometry and rolling radius. This follows the earlier fix that separated the two wheelsets onto their own axle nodes. Rebuild older packs to apply the additional correction.
+
+Messages including **Truck wheel pivots require explicit wheel-node prefixes**, **Truck wheel spindle is not finite**, **Truck axle contains wheel nodes from different spindle centres**, **Truck wheel spindle does not match its recorded axle position**, or **No prepared truck wheels found for spindle correction** stop the build rather than guessing a rotation centre. Keep the vehicle identifier, probe output and build report for investigation; do not force a generic offset. See [the A-23 investigation](tender-wheel-pivot-fix-2026-10-02.md).
+
 ## Before starting
 
 | Message | What to check |

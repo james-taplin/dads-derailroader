@@ -52,6 +52,7 @@ public static partial class CclLocoBuild
             foreach (var c in Cars(cfg)) BuildRr2dvCar(c);
             if (cfg.Tender != null) LinkTender(cfg, cfg.Tender);
             ConfigureRrReview();
+            Cfg = cfg; carFolder = builtFolders[cfg]; RequireRr2dvSpeedHud();
             Cfg = cfg; refBody = null; carFolder = builtFolders[cfg];
             Rr2dvCatalogue.Attach((CCL.Types.CustomCarPack)FindAsset("CustomCarPack"), Rr2dvCatalogue.ReadInput(), Line);
             EditorSceneManager.SaveOpenScenes();
@@ -104,12 +105,13 @@ public static partial class CclLocoBuild
         if (!c.IsTender) CloseRr2dvWhistle();
         SeatRr2dvOilCups();
         AlignRr2dvBogieSupports();
+        CentreRr2dvTruckWheelPivots();
         SeatRr2dvPlates();
         AlignRr2dvDefaultPlates();
         if (!c.IsTender)
         {
             StripRr2dvSourceColliders();
-            BuildInterior(); RepairRr2dvWaterIndicators(); SeatRr2dvControls(); FinishRr2dvInteriorControls(); BuildInteriorLOD();
+            BuildInterior(); BuildRr2dvGauges(); RepairRr2dvWaterIndicators(); SeatRr2dvControls(); FinishRr2dvInteriorControls(); BuildInteriorLOD(); RestoreRr2dvGaugeLodGrabbers();
             FreshRr2dvSource();
         }
         Rr2dvReleaseSeat();
@@ -433,8 +435,8 @@ public static partial class CclLocoBuild
     // Whistle and dynamo steam jets. CCL's steam template makes 'Whistle' and 'DynamoSteam' unrotated, and its importer
     // puts the vanilla steam system under each with identity rotation (ObjectInstancerProcessor), so it blows along the
     // emitter's +z: forward along the boiler on every converted loco (James's game test, 2026-09-29). The whistle jet goes
-    // straight up. Measured dynamo jets keep the exhaust pipe's upward tilt, with their horizontal facing turned
-    // 180 degrees (James's game report, 2026-10-02), else straight up (James: always up as the fallback).
+    // straight up. Dynamo jets follow the measured outward pipe direction, else straight up. C-25's game test
+    // showed that the previous blanket 180-degree yaw correction reversed an already correct outlet measurement.
     static void AimRr2dvJets()
     {
         string path = $"{carFolder}/{CarId}_template.prefab";
@@ -451,13 +453,10 @@ public static partial class CclLocoBuild
                 if (!whistle && !dynamo) continue;
                 var tip = dynamo ? Rr2dvExhaustTip(t.position) : null;
                 var dir = tip ?? Vector3.up;
-                // Reverse the measured lean around world up, not the upward component. Deriving the target from
-                // the pipe each time also makes repeat application safe: it cannot flip back to the old facing.
-                if (dynamo && tip.HasValue) dir = new Vector3(-dir.x, dir.y, -dir.z);
                 var now = t.rotation * Vector3.forward;
                 t.rotation = Quaternion.FromToRotation(now, dir) * t.rotation;
                 Line($"rr2dv steam jet {t.name}: {V(now)} -> {V(dir)} " +
-                     (tip.HasValue ? "(measured pipe tilt; horizontal facing turned 180 degrees)" : dynamo ? "(straight up: no measurable exhaust pipe tip)" : "(straight up)"));
+                     (tip.HasValue ? "(measured outward pipe direction)" : dynamo ? "(straight up: no measurable exhaust pipe tip)" : "(straight up)"));
             }
             SaveRr2dvPrefab(root, path);
         }
