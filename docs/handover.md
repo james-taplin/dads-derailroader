@@ -1,5 +1,7 @@
 # Handover to Codex (written 2026-10-01 by the cloud Claude session, which is nearly out of usage)
 
+Newest development fix: [Sumrac's oil source-compatibility regression](oil-source-compatibility-2026-10-02.md). Published 0.4.5's exact-byte oil check stopped the entire fleet for differing source hashes. The development builder reports those differences and requires all existing native geometry/motion checks before export, without changing actual fingerprints or reference-table hashes. His actual changed files/game build are not yet known. Proposed end-beam geometry does not solve this error, and the published tag/downloads remain unchanged during this investigation.
+
 Latest promotion receipt: [0.4.5 validation](release-validation-0.4.5.md), combining the fleet work below with app-board X73's complete nested-archive repair from main. Version is 0.4.5, prepared for James's requested main promotion and `v0.4.5` tag. This supersedes earlier version and local-only statements, while preserving their historical validation evidence. No GitHub download release or Nexus upload is implied by the tag.
 
 Latest fleet implementation receipts: [cab gauges](cab-gauge-fleet-pass-2026-10-02.md) and [oil cups](oil-cup-fleet-pass-2026-10-02.md). These supersede the older fitting counts and oil-placement fallback below; game acceptance remains pending.

@@ -2,6 +2,7 @@
 import copy
 import json
 import math
+import re
 from pathlib import Path
 
 
@@ -27,8 +28,16 @@ def prepare(record, path=None, source_files=None):
     from . import stock
     if profile.get('sourceSha256') != stock.entry(source)['sourceSha256']:
         raise OilingError(f'{source}: source hashes differ from the measured oil-cup fitting')
-    if source_files is not None and any(source_files.get(name) != digest for name, digest in profile['sourceSha256'].items()):
-        raise OilingError(f'{source}: game files changed; remeasure the oil-cup fitting before using it')
+    changed = []
+    if source_files is not None:
+        if any(not isinstance(source_files.get(name), str) or
+               not re.fullmatch(r'[0-9a-f]{64}', source_files[name]) for name in stock.HASHED_FILES):
+            raise OilingError(f'{source}: source file hash manifest is incomplete or invalid')
+        changed = [name for name in stock.HASHED_FILES if source_files[name] != profile['sourceSha256'][name]]
+        # A byte change is not evidence that a bearing moved. Unity always checks
+        # these coordinates against the built mesh, axle motion and full-turn
+        # clearance before saving providers. Never omit those checks or substitute
+        # the stored hashes for the actual input fingerprint.
     cfg = record['config']
     units = cfg['EngineUnits']
     units = units['value'] if isinstance(units, dict) else units
@@ -59,4 +68,7 @@ def prepare(record, path=None, source_files=None):
             raise OilingError('Oil-cup support pose must be within one revolution')
     if not profile.get('state'):
         raise OilingError('Oil-cup fitting requires an acceptance state')
-    return dict(schema=1, carId=cfg['CarId'], state=profile['state'], axleZ=profile['axleZ'], points=copy.deepcopy(points))
+    selection = dict(schema=1, carId=cfg['CarId'], state=profile['state'], axleZ=profile['axleZ'], points=copy.deepcopy(points))
+    if changed:
+        selection['changedSourceFiles'] = changed
+    return selection

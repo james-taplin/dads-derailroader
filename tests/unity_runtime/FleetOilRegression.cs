@@ -25,6 +25,27 @@ public static partial class CclLocoBuild
     static float[] OilVector(Vector3 v)=>new[]{v.x,v.y,v.z};
     static OilInput OilCases()=>JsonUtility.FromJson<OilInput>(File.ReadAllText(Environment.GetEnvironmentVariable("FLEET_OIL_INPUT")));
     static void OilAssert(bool condition,string why){if(!condition)throw new Exception(why);}
+    static void OilCheckChangedSourceRejections(OilCase c) {
+        if(c.oiling.changedSourceFiles==null || c.oiling.changedSourceFiles.Length==0)return;
+        foreach(string change in new[]{"axle","bearing","parent"}) {
+            var invalid=JsonUtility.FromJson<OilSelection>(JsonUtility.ToJson(c.oiling));
+            MeshFilter filter=null;Mesh original=null,shifted=null;
+            if(change=="axle")invalid.axleZ[0]+=.1f;
+            else if(change=="bearing") {
+                // Change actual geometry in world metres; local mesh units can be tiny.
+                filter=refBody.Find(invalid.points[0].parentPath).GetComponent<MeshFilter>();
+                original=filter.sharedMesh;shifted=Object.Instantiate(original);
+                var delta=filter.transform.InverseTransformVector(Vector3.up*5);
+                shifted.vertices=shifted.vertices.Select(v=>v+delta).ToArray();shifted.RecalculateBounds();filter.sharedMesh=shifted;
+            }
+            else invalid.points[0].parentPath="missing source-update bearing";
+            bool refused=false;
+            try{RrOilApplyLayout(refBody,c.axleZ,invalid);}catch(InvalidDataException){refused=true;}
+            finally{if(filter)filter.sharedMesh=original;if(shifted)Object.DestroyImmediate(shifted);}
+            OilAssert(refused,"Changed source bypassed "+change+" geometry guard: "+c.id);
+        }
+        Debug.Log("Changed-source oil geometry rejection checks passed: "+c.id);
+    }
     static void OilFail(Exception e){
         string output=Environment.GetEnvironmentVariable("CCL_BUILD_OUT");Directory.CreateDirectory(output);
         File.WriteAllText(Path.Combine(output,"failure.txt"),e.ToString());
@@ -83,6 +104,7 @@ public static partial class CclLocoBuild
                     refBody=source.transform.Find("Model/"+c.pack+"_body");
                     Cfg=new LocoConfig {CarId=c.carId,BodyName=c.pack+"_body",WheelRadius=c.radius,
                         EngineUnits=new List<EngineUnit>{new EngineUnit {GroupName="drivers",DriverParts=c.axleZ.Select(z=>"measured axle").ToArray()}}};
+                    OilCheckChangedSourceRejections(c);
                     var seats=RrOilApplyLayout(refBody,c.axleZ,c.oiling);
                     string folder="Assets/FleetOil/"+c.id;if(AssetDatabase.IsValidFolder(folder))AssetDatabase.DeleteAsset(folder);Folder(folder);int asset=0;
                     fixture=new GameObject(c.carId+"_oil");

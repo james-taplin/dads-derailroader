@@ -13,7 +13,7 @@ public static partial class CclLocoBuild
         public float side,phase;
         public float[] local;
     }
-    [Serializable] public class OilSelection {public int schema;public string carId,state;public float[] axleZ;public OilFit[] points;}
+    [Serializable] public class OilSelection {public int schema;public string carId,state;public string[] changedSourceFiles;public float[] axleZ;public OilFit[] points;}
     [Serializable] class OilBuildInput {public OilSelection oiling;}
 
     static OilSelection ReadRrOilSelection() {
@@ -27,6 +27,8 @@ public static partial class CclLocoBuild
     }
 
     static List<RrOilSeat> RrOilApplyLayout(Transform body,float[] axles,OilSelection selection) {
+        if(selection.changedSourceFiles!=null && selection.changedSourceFiles.Length>0)
+            Warn("Oil-cup source files differ from measured reference ("+string.Join(", ",selection.changedSourceFiles)+"); validating every fitting against current geometry and motion");
         if(selection.axleZ.Length!=axles.Length || selection.axleZ.Where((z,i)=>Mathf.Abs(z-axles[i])>.001f).Any())
             throw new InvalidDataException("Oil-cup fitting axle positions differ from the built locomotive");
         if(selection.points.Length<Mathf.Max(6,2*axles.Length) || selection.points.Length>12 || selection.points.Length%2!=0)
@@ -55,6 +57,8 @@ public static partial class CclLocoBuild
                 if(!Rr2dvCupClear(hits,body,seat.Position,seat.host,out var why))
                     throw new InvalidDataException("Measured oil-cup layout has lost full-turn clearance: "+seat.role+" / "+why);
         }finally{Rr2dvSampleGear(animators,0);}
+        if(selection.changedSourceFiles!=null && selection.changedSourceFiles.Length>0)
+            Line("rr2dv oil source compatibility: current geometry passed axle, moving-parent, support, 64-phase clearance and spacing checks");
         return RrOilSeats.ToList();
     }
 

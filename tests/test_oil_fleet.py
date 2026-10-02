@@ -49,9 +49,34 @@ class OilFleet(unittest.TestCase):
                 oiling.prepare(rec)
         current = oiling.library()['profiles'][pack]['sourceSha256']
         self.assertIsNotNone(oiling.prepare(record(pack), source_files=current))
-        changed = dict(current, Bundle='0'*64)
-        with self.assertRaises(oiling.OilingError):
-            oiling.prepare(record(pack), source_files=changed)
+
+    def test_source_byte_changes_reach_native_geometry_validation_for_every_loco(self):
+        for pack in sorted(stock.REAL_STEAM):
+            current = oiling.library()['profiles'][pack]['sourceSha256']
+            for file in stock.HASHED_FILES:
+                with self.subTest(pack=pack, file=file):
+                    changed = dict(current, **{file:'0'*64})
+                    selection = oiling.prepare(record(pack), source_files=changed)
+                    self.assertEqual(selection['changedSourceFiles'], [file])
+                    self.assertEqual(selection['points'], oiling.library()['profiles'][pack]['points'])
+                    self.assertNotIn('changedSourceFiles', oiling.prepare(record(pack), source_files=current))
+                    self.assertEqual(changed[file], '0'*64)
+
+    def test_missing_or_invalid_input_hashes_do_not_masquerade_as_a_source_update(self):
+        pack='ls-060-s23';current=oiling.library()['profiles'][pack]['sourceSha256']
+        for hashes in ({}, dict(current, Bundle=None), dict(current, Bundle='invalid')):
+            with self.subTest(hashes=hashes), self.assertRaisesRegex(oiling.OilingError, 'hash manifest'):
+                oiling.prepare(record(pack), source_files=hashes)
+
+    def test_changed_files_cannot_bypass_known_driver_geometry_checks(self):
+        pack='ls-060-s23';current=oiling.library()['profiles'][pack]['sourceSha256']
+        changed=dict(current, Bundle='0'*64)
+        rec=record(pack);rec['config']['WheelRadius']['value']+=.1
+        with self.assertRaisesRegex(oiling.OilingError,'Driver radius'):
+            oiling.prepare(rec,source_files=changed)
+        rec=record(pack);rec['config']['EngineUnits']['value'][0]['DriverParts'].append('extra')
+        with self.assertRaisesRegex(oiling.OilingError,'Driven-axle count'):
+            oiling.prepare(rec,source_files=changed)
 
     def test_missing_pairs_and_unsupported_positions_cannot_silently_disable_oiling(self):
         pack = 'ls-440-a23'
@@ -93,9 +118,13 @@ class NativeOilFleet(unittest.TestCase):
             project=Path(tmp)/'project';assemble(project)
             for source in (repo/'tests/unity_runtime/FleetOilRegression.cs',repo/'tools/cab-gauge-kit/GaugeProbe.cs'):
                 shutil.copy2(source,project/'Assets/Editor'/source.name)
+            cases=json.loads(Path(os.environ['RR2DV_FLEET_OIL_INPUT']).read_text())
+            for case in cases['cases']:
+                case['oiling']['changedSourceFiles']=list(stock.HASHED_FILES)
+            source_input=Path(tmp)/'changed-source-input.json';source_input.write_text(json.dumps(cases))
             output=Path(tmp)/'out'
             result=run_method(Path(os.environ['RR2DV_TEST_UNITY']),project,'CclLocoBuild.FleetOilRegression',output,dict(
-                CCL_BUILD_OUT=str(output),FLEET_OIL_INPUT=os.environ['RR2DV_FLEET_OIL_INPUT'],
+                CCL_BUILD_OUT=str(output),FLEET_OIL_INPUT=str(source_input),
                 RR2DV_GAME_MANAGED=str(game/'DerailValley_Data/Managed'),RR2DV_CCL_RUNTIME=str(game/'Mods/DVCustomCarLoader')),timeout=1200)
             self.assertEqual(result,dict(passed=True,locos=21,cups=218,motionSamples=55808,exit_code=0))
 
