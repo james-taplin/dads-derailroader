@@ -58,3 +58,17 @@ Working DV prefabs: loco-tender coupling overlaps and gaps (worst at the start: 
 Controls and cabs: P-43's source reverser replaced by a generated lever; T-21 blower and coal-dump lever clash; generated labels with "no surface below"; floating dials, lights not turning off and headlight lenses (reported in game earlier, not investigated).
 Animations (last): skinned bell cords on ten locos may stretch (K-35's hidden as a stopgap); other tender clips pointing at missing parts are left out and listed.
 Not started: whistle sound swap (only the mesh swaps), diesels (0.3.x), licences (converted locos set vanilla SH282 or SH060; driving works without them, whether to change is undecided).
+
+## Local continuation, catalogue integration (2026-10-01)
+
+Work is in the `dads-derailroader-exp` checkout on `claude/unity-crash-message`; app version is now 0.4.2. The supplied Game Numbers v2 native catalogue pages are integrated into the existing app build path. Each stock steam build imports and exports only its engine page and matching tender page, with the correct references on every livery. K-28T uses one page. The pinned `tooling/` snapshot and locomotive physics are unchanged. See [vehicle catalogue integration](vehicle-catalogue.md) for asset provenance, mapping, and repeatable validation.
+
+Validation: the full Python suite completed 354 tests with no failures or errors and 13 optional checks skipped. The separate real Unity 2019.4.40f1 / Car Creator 3.1.9 regression passed three root-only exports (F-71, K-28T, C-40), including alternate liveries, bundle reload, translation preservation, and rejection of unrelated/missing pages. The wheel contains the selection module, library/index, and Unity adapter. The API guard's existing `GenerateUniqueAssetPath` gap is now documented using that successful native compilation; it was not waived without evidence.
+
+Changes are local development work; no release, game installation, or board post was made. Restart the development app before rebuilding older packs to acquire their pages. In-game catalogue appearance is pending, and the supplied provisional hauling ratings still require driving tests. James is handling the locomotive builds and game checks; the major issues above remain pending.
+
+## Local continuation, steam test-batch repairs (2026-10-02)
+
+See [full patch report](steam-repair-patch-report-2026-10-02.md) for every ledger item, exact validation and remaining blocks. App-owned fixes: uniquely typed whistle fitting lookup, nested tender load groups, bottom-anchored boiler water columns, missing boiler-water HUD fallback, correct S060 licence ID. Separate optional control logger source corrected and compiled, not installed. Full Python suite: 360 tests, no failures/errors, 15 optional skips; separate real Unity export/reload regression and logger port regression pass. All 21 actual source whistle definitions checked. No fleet rebuild/game acceptance, release, push, installed-pack change or offline-core change. Existing coupling, mounting, lights, control sweeps, cords and jet-outlet identification remain open.
+
+Development workflow: finish/stop conversions before pulling code, then restart the development app. James identified mid-operation pulls as a likely source of stale loaded Python. No restart-blocking protection was retained in release code. Catalogue pages/icons are verified in the supplied K-28T and C-25/tender rebuilds; fleet display acceptance remains pending.

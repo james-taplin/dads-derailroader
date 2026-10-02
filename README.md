@@ -109,6 +109,8 @@ opening an archive, and avoid third-party mirrors.
 
 Neither download includes Unity, AssetRipper or the Car Creator Package.
 
+If Windows Security blocks the launcher or a tool, check **Protection history** for the exact affected file and detection. See [Windows Security troubleshooting](docs/resolving-blocks.md#windows-security-blocks-the-launcher-or-a-tool) before restoring or allowing a file.
+
 Then open **Settings… → Check**, and **Save** the detected tool paths. If a tool is not found, browse to the exact file
 described above and check again. From the command line, use `rr2dv doctor`.
 
@@ -233,6 +235,8 @@ decision.
   made it (including its own older, unprefixed install of the same locomotive).
 
 ## What a finished pack must pass
+
+New builds include the selected locomotive's native CCL vehicle catalogue page and its tender's page where fitted. Every livery points to its matching page and icon. K-28T has one page; the other supported steam locomotives have two. Building one or two locomotives installs only their pages, without a separate fleet catalogue mod. Rebuild an older converted pack to add its pages. The supplied Game Numbers v2 sheets retain **provisional** hauling ratings; those ratings are not measured driving results. See [catalogue integration](docs/vehicle-catalogue.md).
 
 A pack that builds and passes the audit is a **candidate**. These gates are checked in game, and anything not yet
 checked stays pending. Earlier accepted conversions (G-29, C-21) are evidence of what works, not templates.

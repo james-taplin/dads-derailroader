@@ -1,0 +1,2121 @@
+{
+  "schema": 1,
+  "edition": "game-numbers-v2",
+  "sourceArchiveSha256": "00fa9706c3f9e9c4292d6f8a98ae5fee9d36f5b343d6f4ba016d736af943c80b",
+  "locomotives": {
+    "ls-060-s23": [
+      {
+        "sourceId": "ls-060-s23",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-060-s23/tech0/description",
+            "text": "12.4 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-060-s23/tech0/type",
+            "text": "Steam Engine / 180 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-060-s23/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-060-s23/tech1/type",
+            "text": "0-6-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-060-s23/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-060-s23/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-060-s23/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-060-s23/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-060-s23/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-060-s23/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-060-s23/tech5/description",
+            "text": "59.194 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-060-s23/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-060-s23",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-060-s23/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-060-s23/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-060-s23/tech1/description",
+            "text": "7,257 kg Coal / 20,820 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-060-s23/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-060-s23/tech2/description",
+            "text": "21.001 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-060-s23/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-080-s51": [
+      {
+        "sourceId": "ls-080-s51",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-080-s51/tech0/description",
+            "text": "12.1 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-080-s51/tech0/type",
+            "text": "Steam Engine / 175 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-080-s51/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-080-s51/tech1/type",
+            "text": "0-8-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-080-s51/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-080-s51/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-080-s51/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-080-s51/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-080-s51/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-080-s51/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-080-s51/tech5/description",
+            "text": "99.790 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-080-s51/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-080-s51",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-080-s51/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-080-s51/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-080-s51/tech1/description",
+            "text": "14,515 kg Coal / 30,283 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-080-s51/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-080-s51/tech2/description",
+            "text": "20.519 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-080-s51/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-2100-d46": [
+      {
+        "sourceId": "ls-2100-d46",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-2100-d46/tech0/description",
+            "text": "13.1 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2100-d46/tech0/type",
+            "text": "Steam Engine / 190 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2100-d46/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2100-d46/tech1/type",
+            "text": "2-10-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2100-d46/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2100-d46/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2100-d46/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2100-d46/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2100-d46/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2100-d46/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2100-d46/tech5/description",
+            "text": "96.162 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2100-d46/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-2100-d46",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-2100-d46/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-2100-d46/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-2100-d46/tech1/description",
+            "text": "10,886 kg Coal / 30,283 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-2100-d46/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-2100-d46/tech2/description",
+            "text": "16.919 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-2100-d46/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-2102-f71": [
+      {
+        "sourceId": "ls-2102-f71",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-2102-f71/tech0/description",
+            "text": "13.8 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2102-f71/tech0/type",
+            "text": "Steam Engine / 200 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2102-f71/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2102-f71/tech1/type",
+            "text": "2-10-2 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2102-f71/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2102-f71/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2102-f71/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2102-f71/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2102-f71/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2102-f71/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2102-f71/tech5/description",
+            "text": "168.101 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-2102-f71/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-2102-f71",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-2102-f71/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-2102-f71/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-2102-f71/tech1/description",
+            "text": "13,608 kg Coal / 37,854 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-2102-f71/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-2102-f71/tech2/description",
+            "text": "33.950 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-2102-f71/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-260-g16": [
+      {
+        "sourceId": "ls-260-g16",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-260-g16/tech0/description",
+            "text": "11.7 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g16/tech0/type",
+            "text": "Steam Engine / 170 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g16/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g16/tech1/type",
+            "text": "2-6-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g16/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g16/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g16/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g16/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g16/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g16/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g16/tech5/description",
+            "text": "37.195 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g16/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-260-g16",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-260-g16/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-260-g16/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-260-g16/tech1/description",
+            "text": "5,443 kg Coal / 15,142 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-260-g16/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-260-g16/tech2/description",
+            "text": "13.608 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-260-g16/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-260-g25": [
+      {
+        "sourceId": "ls-260-g25",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-260-g25/tech0/description",
+            "text": "12.4 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g25/tech0/type",
+            "text": "Steam Engine / 180 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g25/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g25/tech1/type",
+            "text": "2-6-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g25/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g25/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g25/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g25/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g25/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g25/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g25/tech5/description",
+            "text": "64.637 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-260-g25/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-260-g25",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-260-g25/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-260-g25/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-260-g25/tech1/description",
+            "text": "9,979 kg Coal / 18,927 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-260-g25/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-260-g25/tech2/description",
+            "text": "22.350 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-260-g25/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-280-c25": [
+      {
+        "sourceId": "ls-280-c25",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-280-c25/tech0/description",
+            "text": "12.1 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c25/tech0/type",
+            "text": "Steam Engine / 175 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c25/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c25/tech1/type",
+            "text": "2-8-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c25/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c25/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c25/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c25/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c25/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c25/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c25/tech5/description",
+            "text": "56.064 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c25/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-280-c25",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-280-c25/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c25/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c25/tech1/description",
+            "text": "6,350 kg Coal / 15,142 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c25/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c25/tech2/description",
+            "text": "19.619 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c25/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-280-c46": [
+      {
+        "sourceId": "ls-280-c46",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-280-c46/tech0/description",
+            "text": "13.1 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c46/tech0/type",
+            "text": "Steam Engine / 190 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c46/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c46/tech1/type",
+            "text": "2-8-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c46/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c46/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c46/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c46/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c46/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c46/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c46/tech5/description",
+            "text": "129.047 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c46/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-280-c46",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-280-c46/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c46/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c46/tech1/description",
+            "text": "14,515 kg Coal / 28,391 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c46/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c46/tech2/description",
+            "text": "26.308 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c46/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-280-c55": [
+      {
+        "sourceId": "ls-280-c55",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-280-c55/tech0/description",
+            "text": "12.8 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c55/tech0/type",
+            "text": "Steam Engine / 185 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c55/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c55/tech1/type",
+            "text": "2-8-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c55/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c55/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c55/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c55/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c55/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c55/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c55/tech5/description",
+            "text": "121.563 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-280-c55/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-280-c55",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-280-c55/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c55/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c55/tech1/description",
+            "text": "10,886 kg Coal / 32,176 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c55/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c55/tech2/description",
+            "text": "32.688 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-280-c55/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-282-k28t": [
+      {
+        "sourceId": "ls-282-k28t",
+        "kind": "steam",
+        "consist": "1/1",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech0/description",
+            "text": "13.1 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech0/type",
+            "text": "Steam Engine / 190 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech1/type",
+            "text": "2-8-2 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech4/description",
+            "text": "Self-Contained Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech4/type",
+            "text": "Tank locomotive; no separate tender"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech5/description",
+            "text": "76.204 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech5/type",
+            "text": "User-supplied in-game base mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech6/description",
+            "text": "2,268 kg Coal / 7,571 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k28t/tech6/type",
+            "text": "Onboard storage / user-supplied"
+          }
+        ]
+      }
+    ],
+    "ls-282-k35": [
+      {
+        "sourceId": "ls-282-k35",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-282-k35/tech0/description",
+            "text": "12.1 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k35/tech0/type",
+            "text": "Steam Engine / 175 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k35/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k35/tech1/type",
+            "text": "2-8-2 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k35/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k35/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k35/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k35/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k35/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k35/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k35/tech5/description",
+            "text": "81.193 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-282-k35/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-282-k35",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-282-k35/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-282-k35/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-282-k35/tech1/description",
+            "text": "6,350 kg Coal / 20,820 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-282-k35/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-282-k35/tech2/description",
+            "text": "22.766 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-282-k35/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-284-b65": [
+      {
+        "sourceId": "ls-284-b65",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-284-b65/tech0/description",
+            "text": "18.3 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-284-b65/tech0/type",
+            "text": "Steam Engine / 265 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-284-b65/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-284-b65/tech1/type",
+            "text": "2-8-4 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-284-b65/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-284-b65/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-284-b65/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-284-b65/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-284-b65/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-284-b65/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-284-b65/tech5/description",
+            "text": "202.847 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-284-b65/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-284-b65",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-284-b65/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-284-b65/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-284-b65/tech1/description",
+            "text": "22,680 kg Coal / 83,279 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-284-b65/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-284-b65/tech2/description",
+            "text": "68.312 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-284-b65/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-440-a23": [
+      {
+        "sourceId": "ls-440-a23",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-440-a23/tech0/description",
+            "text": "13.1 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-440-a23/tech0/type",
+            "text": "Steam Engine / 190 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-440-a23/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-440-a23/tech1/type",
+            "text": "4-4-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-440-a23/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-440-a23/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-440-a23/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-440-a23/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-440-a23/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-440-a23/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-440-a23/tech5/description",
+            "text": "65.748 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-440-a23/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-440-a23",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-440-a23/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-440-a23/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-440-a23/tech1/description",
+            "text": "9,072 kg Coal / 22,712 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-440-a23/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-440-a23/tech2/description",
+            "text": "20.412 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-440-a23/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-442-a26": [
+      {
+        "sourceId": "ls-442-a26",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-442-a26/tech0/description",
+            "text": "12.8 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-442-a26/tech0/type",
+            "text": "Steam Engine / 185 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-442-a26/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-442-a26/tech1/type",
+            "text": "4-4-2 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-442-a26/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-442-a26/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-442-a26/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-442-a26/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-442-a26/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-442-a26/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-442-a26/tech5/description",
+            "text": "88.451 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-442-a26/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-442-a26",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-442-a26/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-442-a26/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-442-a26/tech1/description",
+            "text": "12,189 kg Coal / 26,498 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-442-a26/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-442-a26/tech2/description",
+            "text": "23.859 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-442-a26/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-460-t17": [
+      {
+        "sourceId": "ls-460-t17",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-460-t17/tech0/description",
+            "text": "11.0 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t17/tech0/type",
+            "text": "Steam Engine / 160 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t17/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t17/tech1/type",
+            "text": "4-6-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t17/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t17/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t17/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t17/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t17/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t17/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t17/tech5/description",
+            "text": "39.576 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t17/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-460-t17",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-460-t17/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t17/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t17/tech1/description",
+            "text": "2,722 kg Coal / 12,870 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t17/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t17/tech2/description",
+            "text": "13.494 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t17/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-460-t21": [
+      {
+        "sourceId": "ls-460-t21",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-460-t21/tech0/description",
+            "text": "12.4 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t21/tech0/type",
+            "text": "Steam Engine / 180 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t21/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t21/tech1/type",
+            "text": "4-6-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t21/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t21/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t21/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t21/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t21/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t21/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t21/tech5/description",
+            "text": "39.916 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t21/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-460-t21",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-460-t21/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t21/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t21/tech1/description",
+            "text": "4,536 kg Coal / 15,899 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t21/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t21/tech2/description",
+            "text": "19.504 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t21/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-460-t22": [
+      {
+        "sourceId": "ls-460-t22",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-460-t22/tech0/description",
+            "text": "12.1 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t22/tech0/type",
+            "text": "Steam Engine / 175 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t22/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t22/tech1/type",
+            "text": "4-6-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t22/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t22/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t22/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t22/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t22/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t22/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t22/tech5/description",
+            "text": "61.235 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-460-t22/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-460-t22",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-460-t22/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t22/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t22/tech1/description",
+            "text": "10,886 kg Coal / 14,385 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t22/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t22/tech2/description",
+            "text": "9.241 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-460-t22/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-462-p18": [
+      {
+        "sourceId": "ls-462-p18",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-462-p18/tech0/description",
+            "text": "13.8 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p18/tech0/type",
+            "text": "Steam Engine / 200 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p18/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p18/tech1/type",
+            "text": "4-6-2 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p18/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p18/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p18/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p18/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p18/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p18/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p18/tech5/description",
+            "text": "49.442 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p18/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-462-p18",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-462-p18/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p18/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p18/tech1/description",
+            "text": "5,443 kg Coal / 13,249 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p18/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p18/tech2/description",
+            "text": "22.132 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p18/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-462-p43": [
+      {
+        "sourceId": "ls-462-p43",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-462-p43/tech0/description",
+            "text": "13.8 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p43/tech0/type",
+            "text": "Steam Engine / 200 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p43/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p43/tech1/type",
+            "text": "4-6-2 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p43/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p43/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p43/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p43/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p43/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p43/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p43/tech5/description",
+            "text": "146.510 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p43/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-462-p43",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-462-p43/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p43/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p43/tech1/description",
+            "text": "13,608 kg Coal / 37,854 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p43/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p43/tech2/description",
+            "text": "35.471 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p43/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-462-p48": [
+      {
+        "sourceId": "ls-462-p48",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-462-p48/tech0/description",
+            "text": "13.8 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p48/tech0/type",
+            "text": "Steam Engine / 200 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p48/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p48/tech1/type",
+            "text": "4-6-2 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p48/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p48/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p48/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p48/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p48/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p48/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p48/tech5/description",
+            "text": "125.645 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-462-p48/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-462-p48",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-462-p48/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p48/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p48/tech1/description",
+            "text": "13,608 kg Coal / 52,996 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p48/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p48/tech2/description",
+            "text": "38.102 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-462-p48/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ],
+    "ls-480-c40": [
+      {
+        "sourceId": "ls-480-c40",
+        "kind": "steam",
+        "consist": "1/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/ls-480-c40/tech0/description",
+            "text": "13.8 bar Coal Burner"
+          },
+          {
+            "key": "rrstock/catalogue/ls-480-c40/tech0/type",
+            "text": "Steam Engine / 200 psi gauge"
+          },
+          {
+            "key": "rrstock/catalogue/ls-480-c40/tech1/description",
+            "text": "2-Cylinder Valve Gear"
+          },
+          {
+            "key": "rrstock/catalogue/ls-480-c40/tech1/type",
+            "text": "4-8-0 Mechanical Transmission"
+          },
+          {
+            "key": "rrstock/catalogue/ls-480-c40/tech2/description",
+            "text": "Train and Independent Brakes"
+          },
+          {
+            "key": "rrstock/catalogue/ls-480-c40/tech2/type",
+            "text": "Compressed Air Brake System"
+          },
+          {
+            "key": "rrstock/catalogue/ls-480-c40/tech3/description",
+            "text": "Rear Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-480-c40/tech3/type",
+            "text": "Open Cab"
+          },
+          {
+            "key": "rrstock/catalogue/ls-480-c40/tech4/description",
+            "text": "Primary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/ls-480-c40/tech4/type",
+            "text": "Locomotive and tender scores provisional"
+          },
+          {
+            "key": "rrstock/catalogue/ls-480-c40/tech5/description",
+            "text": "93.531 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/ls-480-c40/tech5/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      },
+      {
+        "sourceId": "lt-480-c40",
+        "kind": "tender",
+        "consist": "2/2",
+        "terms": [
+          {
+            "key": "rrstock/catalogue/lt-480-c40/tech0/description",
+            "text": "Secondary Unit"
+          },
+          {
+            "key": "rrstock/catalogue/lt-480-c40/tech0/type",
+            "text": "Tender effects are provisional"
+          },
+          {
+            "key": "rrstock/catalogue/lt-480-c40/tech1/description",
+            "text": "14,515 kg Coal / 37,854 L Water"
+          },
+          {
+            "key": "rrstock/catalogue/lt-480-c40/tech1/type",
+            "text": "User-supplied storage capacities"
+          },
+          {
+            "key": "rrstock/catalogue/lt-480-c40/tech2/description",
+            "text": "26.989 t Base Mass"
+          },
+          {
+            "key": "rrstock/catalogue/lt-480-c40/tech2/type",
+            "text": "User-supplied in-game base mass"
+          }
+        ]
+      }
+    ]
+  },
+  "assets": {
+    "ls-060-s23.meta": "ce008cc3e1790327da4f58047139692f12aa027912b883872d40be2372878b06",
+    "ls-060-s23/ls-060-s23-catalogue.asset": "09fc910fced8f765aa7b13cad3d05d52b12ac4476188e2953a39e570620607d4",
+    "ls-060-s23/ls-060-s23-catalogue.asset.meta": "84583e6a02d7a3e1a3ec0495c06e43e0ea592b3775723ab678e3cdac63693f1d",
+    "ls-060-s23/ls-060-s23-diagram.prefab": "d8c48799cdb5c8e205194aa0938b0b3a1a3292821c4bd930035e7a145629afca",
+    "ls-060-s23/ls-060-s23-diagram.prefab.meta": "1e266cf25a140c8e92cbd126fcf2a40b54b00b8eded6f4d6f2e2222aebaf61b4",
+    "ls-060-s23/ls-060-s23-icon.png": "7145799faa57a90466243089cf7c9aef83a068259c4fbc1717f643329e9b2c0f",
+    "ls-060-s23/ls-060-s23-icon.png.meta": "a2e3392880116705483457793211e98338ec59fb8621498e466784513e043dd8",
+    "ls-080-s51.meta": "e4d1e0464ad7e4ed13703feb05fa847a1602a53095f36cbc50c9542b53149d51",
+    "ls-080-s51/ls-080-s51-catalogue.asset": "c45a4137969c52e1dfcfacfe33b9e37dc279aeae488a5399185f8772b26bcec4",
+    "ls-080-s51/ls-080-s51-catalogue.asset.meta": "1e7b958b5123ec3fd4d5a87cb6aef73a4b53f3b3665299c49ce85231fd8868c1",
+    "ls-080-s51/ls-080-s51-diagram.prefab": "7acbee34247449593889b4dcb1d48c17806c142b5d951a7286fee60f78b532bf",
+    "ls-080-s51/ls-080-s51-diagram.prefab.meta": "20c227b62ecb9e0ebf0e473e591586b52a1cd141f131aff9ebf973dc1b8726a0",
+    "ls-080-s51/ls-080-s51-icon.png": "f348e969b095e7af581686f85da9c13ac7965dff06ec8431bf61d2943d066ebe",
+    "ls-080-s51/ls-080-s51-icon.png.meta": "b0f105ca71acfcdbe311ae5ac7e6832cfab6820c49d0fc1ee8d3d59acc61ff55",
+    "ls-2100-d46.meta": "766cec9ed042998fdbf6ed7f550549f2e6e995a48b904f0ce2957caf0516fdb5",
+    "ls-2100-d46/ls-2100-d46-catalogue.asset": "b7416bd36083426652d755cb4929db969b0c99a7e6d27884a7861138b7db8d99",
+    "ls-2100-d46/ls-2100-d46-catalogue.asset.meta": "2dd87f54f82fde60b1aca4f2fb7e6cc6215ce82c7b5963ff9c3f6009a294f97a",
+    "ls-2100-d46/ls-2100-d46-diagram.prefab": "732f4e9d926781bec851c75c5ac41f0e0efb80abe165f7cf1f29c6aea873b2b2",
+    "ls-2100-d46/ls-2100-d46-diagram.prefab.meta": "b5d733aaabc996e418448abf249c4ca129a90be89162cfb3f4812195e3ddcbf9",
+    "ls-2100-d46/ls-2100-d46-icon.png": "c1fdaf0a9ead5c1fbe846e5c20de68f2b13cbf2e8989705efde502c4f19bea45",
+    "ls-2100-d46/ls-2100-d46-icon.png.meta": "bf66b6458e187d98f883e785297d295c8a06ab57012257b78d5b292455c9e895",
+    "ls-2102-f71.meta": "69cd5487bcf4eb99757b3446f2602dfcf5cb147f801b5d8c5924c9a391a26c06",
+    "ls-2102-f71/ls-2102-f71-catalogue.asset": "9e141f8695a6a7e3ff63cc3307c726036b47944e8dc89e9f150edbec87c020ab",
+    "ls-2102-f71/ls-2102-f71-catalogue.asset.meta": "83b918cbf0098dc538695be66000c3b6978394cb80a8f82a08d5105a3c127574",
+    "ls-2102-f71/ls-2102-f71-diagram.prefab": "6b5b0a3ba5586f26a4f644efd2cf4fab502708a3a78677f8365c39d52c0db005",
+    "ls-2102-f71/ls-2102-f71-diagram.prefab.meta": "6dd1a3ad3e19de28aaeec022d1c8b85a34f4c2fd2f3a3d052a4d2efb4938f021",
+    "ls-2102-f71/ls-2102-f71-icon.png": "dbc7a235f497c79b5d8c1af761a3250a80534a4a6f40ab0720c10ead44f34d3a",
+    "ls-2102-f71/ls-2102-f71-icon.png.meta": "11c9c9ed550dec8228b5071314aa0a818a63aa904d4c7523aabc46b1612ef4fa",
+    "ls-260-g16.meta": "5051e3d44e3b1890da16b4e09fe4b798119774ea04c04d87f5218039a669d026",
+    "ls-260-g16/ls-260-g16-catalogue.asset": "1a3a8f586733b387577e37975e6662084175493ae482ca25507f6c18eb0f609f",
+    "ls-260-g16/ls-260-g16-catalogue.asset.meta": "2b5a753366bce61405870a3b36d5deef2a60707b634d1b93a9dfd07e83a88c9d",
+    "ls-260-g16/ls-260-g16-diagram.prefab": "4ce93c88eb36814d59609dcc09ca9c8cebac373f3c0f8048a61f24f6d14002c5",
+    "ls-260-g16/ls-260-g16-diagram.prefab.meta": "0fd118e617abf6cac8da6cc8242765ea07ee58e5d52e0e3aa831b1416ccd93b8",
+    "ls-260-g16/ls-260-g16-icon.png": "182c4aa3ffe36c9470128caf6a751361458cabe46930b2ee72f28ee431afbc3f",
+    "ls-260-g16/ls-260-g16-icon.png.meta": "42e91ba2ae813d8714d12aaeff618580ebf91a3649864a1a51431921439121c5",
+    "ls-260-g25.meta": "820716b57ab24184da0c17140984e1609787c9542f9bdcd249bb50960b8806a3",
+    "ls-260-g25/ls-260-g25-catalogue.asset": "1a5cc736a051b44a64a28079de8b0820e89caa15bd71bf2ec5c8f8e0b4048e01",
+    "ls-260-g25/ls-260-g25-catalogue.asset.meta": "3a2ed7dd32e34bbf60336f3d124275a3e2a58a3a9b6de5d872ef29cdb3df821a",
+    "ls-260-g25/ls-260-g25-diagram.prefab": "6ea3a0f1160b060cf9044153fd5bc01a8e4fd29494022ae4b1d66eea5dd1975c",
+    "ls-260-g25/ls-260-g25-diagram.prefab.meta": "4d9e7d5e9cceef0da14adc6a3e273e6182dbd066458b49a97e1e7e2825069f2b",
+    "ls-260-g25/ls-260-g25-icon.png": "182c4aa3ffe36c9470128caf6a751361458cabe46930b2ee72f28ee431afbc3f",
+    "ls-260-g25/ls-260-g25-icon.png.meta": "95b060320758ba16ca813a1bc14ffcdfa495b70ca791fa1c8780caad3f013767",
+    "ls-280-c25.meta": "2f8c5b794578d6444d101381c66594c9d440873f694a1b87b311e2f8b18ef7e0",
+    "ls-280-c25/ls-280-c25-catalogue.asset": "50eee83f64f1c0f0c11a56ccfae389bf54be5c59b63495efbc3c56d531d4516b",
+    "ls-280-c25/ls-280-c25-catalogue.asset.meta": "b55826dfa5c1b5526cbebc05cdf16ad7749da802b0c947ae71a40e3347255dd0",
+    "ls-280-c25/ls-280-c25-diagram.prefab": "924febe3f1a7932998e08ece67baa37287f544be428e3d5ada57604d68910904",
+    "ls-280-c25/ls-280-c25-diagram.prefab.meta": "3e77405b1d8615df2ee9d1db67b68ab3d09e674e0f01a70994ebf771d7fa9263",
+    "ls-280-c25/ls-280-c25-icon.png": "b0c888e52d7071cb2c7cdf00f665a0f4a68e171222315cbd90268ee8bcd12a25",
+    "ls-280-c25/ls-280-c25-icon.png.meta": "443aea8b32d957fcfedc95f29c7452015e422011363faea16eaac2aec82697a4",
+    "ls-280-c46.meta": "a4234e68e846e0771df0dad813e787a1cbb14b35f48c2b7a4b0237041bbf5c9e",
+    "ls-280-c46/ls-280-c46-catalogue.asset": "2aea6d7b9e7fde984d7431715c6ea9d710b834cba431c3e1cf4d53638baa2053",
+    "ls-280-c46/ls-280-c46-catalogue.asset.meta": "1ce5a58254cd2c123a20a6a0eb92d5ef8b719dc41030cc1d4e335741dc368bfb",
+    "ls-280-c46/ls-280-c46-diagram.prefab": "f70df9cbc8b0d3ec67cf48d7580b5fc8b5808f9ca8a6386ff47dfe5083f8cf40",
+    "ls-280-c46/ls-280-c46-diagram.prefab.meta": "a1bb10c4e2a48e33e254bcb84808046acbab5ba1b282cb36a805f93e66e61c48",
+    "ls-280-c46/ls-280-c46-icon.png": "b0c888e52d7071cb2c7cdf00f665a0f4a68e171222315cbd90268ee8bcd12a25",
+    "ls-280-c46/ls-280-c46-icon.png.meta": "3e32d74a5b5d15c123a492cc4c7097e26ae649d08667d184472560593e4473cb",
+    "ls-280-c55.meta": "3f143774012be28b344e00021db054799cede9b95d2b3e08e25f785bc75299bb",
+    "ls-280-c55/ls-280-c55-catalogue.asset": "9fd7c73362fa9bf06cbb4eb9ed6fc0c2a6e494fa9dacc183447896c41590ab3a",
+    "ls-280-c55/ls-280-c55-catalogue.asset.meta": "bacd82ccf53ece5b012fc36bed3d5be7b748c7d30c5c1f233e10825f0520a24b",
+    "ls-280-c55/ls-280-c55-diagram.prefab": "018716b42d027305d8cb3bfc05eba34f0491154a81fec26eb804e9a361936b8c",
+    "ls-280-c55/ls-280-c55-diagram.prefab.meta": "94a6a5fe3550ac49066485ca931547a00fc81d8350bb2d0cacd04715011fbe07",
+    "ls-280-c55/ls-280-c55-icon.png": "b0c888e52d7071cb2c7cdf00f665a0f4a68e171222315cbd90268ee8bcd12a25",
+    "ls-280-c55/ls-280-c55-icon.png.meta": "6c35575cb77643eb52d12930d0aa172e82a37c6299eb2160b4add860f9384b38",
+    "ls-282-k28t.meta": "01c4cb26fecd1662e8af0e35dc0bf7af5406e7f69a05ed305074db45ab3bb361",
+    "ls-282-k28t/ls-282-k28t-catalogue.asset": "f3d9c1f6a21e3dadbca4f97e48239e04f5bd956a055801afcb94a5868a65f16e",
+    "ls-282-k28t/ls-282-k28t-catalogue.asset.meta": "ec92f136f995bc231a1a117d16f930b1588576e32c4dc8fb39bf0e6443ca9d8e",
+    "ls-282-k28t/ls-282-k28t-diagram.prefab": "153219f84d18b8cb42609cfca3935f4afe7a657ad632c218664b46e103e969b7",
+    "ls-282-k28t/ls-282-k28t-diagram.prefab.meta": "eb361e4c7254d9815b96f66c2c7aeac4d1a331b36a892740e8f1199f44a56014",
+    "ls-282-k28t/ls-282-k28t-icon.png": "b9f572764a4c446d753ea40f1768f192cea35854bc62f6fc932f7733d3db4567",
+    "ls-282-k28t/ls-282-k28t-icon.png.meta": "e35fde8731da9ef959329176879e0b3a91c980eff83c20c4615f6a5b5a8096cf",
+    "ls-282-k35.meta": "3b9f4e4bbcbfe25b2eea6eb92836f764c4b66e18eb2a4852c6c913ad4182e5b0",
+    "ls-282-k35/ls-282-k35-catalogue.asset": "55f05e9682cb3a8802b7da527e164db74722c2fea0e593f8f7d2454dd5522d44",
+    "ls-282-k35/ls-282-k35-catalogue.asset.meta": "cfe0a6a57c30440a60ab8f39413cc38ccb78851e79636603dd1efe6a42147948",
+    "ls-282-k35/ls-282-k35-diagram.prefab": "fb38249480bf4981c482ddefaeb2644f53cc11c19dc085ef413e47c6c8fbc47c",
+    "ls-282-k35/ls-282-k35-diagram.prefab.meta": "90cca905c6296b991fa587aee48da802816fcc1c340dc0b61341a4ab88666245",
+    "ls-282-k35/ls-282-k35-icon.png": "8c8d19233dfd03f792bcab224c8f113b8090809e7e8c3b3a59e63d077dc94296",
+    "ls-282-k35/ls-282-k35-icon.png.meta": "514a75c106f8d86871043d50ecf5e3b17d7818091748f6944f67d15086a5ed30",
+    "ls-284-b65.meta": "14cb0b59ed549bd5517bba72c85ae70cc395dce0f22414554d2587197361923a",
+    "ls-284-b65/ls-284-b65-catalogue.asset": "c525ade32735c82e8102573d55fb6d57921fb5da2ea9adb7c12da793f01f7735",
+    "ls-284-b65/ls-284-b65-catalogue.asset.meta": "ceb13d005ba740ae403c426a0edb0ad90eca90326a483986c32c31d6c749fae7",
+    "ls-284-b65/ls-284-b65-diagram.prefab": "5f64b12918b9dec7b68b9ffe39e2547e5fc0de417afef4ff0686e799e3fd61f0",
+    "ls-284-b65/ls-284-b65-diagram.prefab.meta": "a053b33b511def9f464b406de61a77b2c103b8ee5e2bc480908be3a416543f19",
+    "ls-284-b65/ls-284-b65-icon.png": "04b59e32f26314e97007f15f9a2391c2132e344cdb91eae53b989ee6b1a9f698",
+    "ls-284-b65/ls-284-b65-icon.png.meta": "823fd13a810b7a00877f10e108ac64885b3c033020c6d5c0ae0b871f30ddddc8",
+    "ls-440-a23.meta": "b4757b6e6a7d24223fab76402249d6e631ab272b6a741dcbf823dc90701e1fbb",
+    "ls-440-a23/ls-440-a23-catalogue.asset": "eface3d79bb10412fa093f27f9bd23d46d0813b2e64e3533c1323bd74ac91e3f",
+    "ls-440-a23/ls-440-a23-catalogue.asset.meta": "ac2e6b352b0033e780730f222ebeb6fa9c33ece9e194fe2949ddc3db482922cd",
+    "ls-440-a23/ls-440-a23-diagram.prefab": "752821c10c0f8ab183509ce47d5a4a8f637518b0a1d23c83a4880482ea7f981e",
+    "ls-440-a23/ls-440-a23-diagram.prefab.meta": "709aadb6da203fcd47835af536741e398177cfe09e8a39098907c83e1433d381",
+    "ls-440-a23/ls-440-a23-icon.png": "64d4964361459e624172bb20fc5eac168117d2634e5bff64ba2036bb25d905b9",
+    "ls-440-a23/ls-440-a23-icon.png.meta": "201d277d8769feca3128e514e36fa231b56e0da2354cadfb3ba06d9f861a2b11",
+    "ls-442-a26.meta": "627f6e528be390d71d5fddcacc31ec634abb0e9ecc6b0fc7b39f89c128eadb1c",
+    "ls-442-a26/ls-442-a26-catalogue.asset": "dd5ccaa9ef361be2feb8bd4fec962eb24d68938afc0d4c2ea7da652f815ebea2",
+    "ls-442-a26/ls-442-a26-catalogue.asset.meta": "9dd6d1be9d31080ef7e209113cf3aae120718aafb1113ddeb6b2b885e1a0b599",
+    "ls-442-a26/ls-442-a26-diagram.prefab": "0edcea6ad103b9cd16c103ff38a6bd120582a3f0b6aa4bf6691c68b65cc2f506",
+    "ls-442-a26/ls-442-a26-diagram.prefab.meta": "e15e8c224ebc6f576a08b5728d0cbbd33292f0dbad1e8d06fc42b07d3ea162a0",
+    "ls-442-a26/ls-442-a26-icon.png": "ec98716b44dd86ed74331b6ea457c492a07dee632128169c2d2db3525d2005ca",
+    "ls-442-a26/ls-442-a26-icon.png.meta": "e166686dd905958ae86736729eb4c8d5f147369cc5bf97ce992b1e38122375a1",
+    "ls-460-t17.meta": "1230d3c9512d6d0bd58b6cfa5089b97625cec40fef1a3f3f345b221ff7e444c2",
+    "ls-460-t17/ls-460-t17-catalogue.asset": "29ed26507a2a894d6e2e0d7000bda2944ca3295696be7b1969316bb8825b0816",
+    "ls-460-t17/ls-460-t17-catalogue.asset.meta": "a44b37c9f4db7660996bcfb31ce4ce5536dfed194e83fa77036887e99343057f",
+    "ls-460-t17/ls-460-t17-diagram.prefab": "35cb8a26b7d834d5e1f78fb9e82595c5eff780862d04cf8ed95e53db99819a40",
+    "ls-460-t17/ls-460-t17-diagram.prefab.meta": "ff4f4cae6b9624d92daafbdb4c8f8a4a2b820bfbb2bdbf474ebb5aadb2bd0928",
+    "ls-460-t17/ls-460-t17-icon.png": "a081407ee6f9f97ebdb5d164070a8ad776d6f441f152f7307ce6c57bf5398941",
+    "ls-460-t17/ls-460-t17-icon.png.meta": "f852448a4bd95f2ee90ce94cb927a50252dad2b5841dae02d227501d2cb0b1fc",
+    "ls-460-t21.meta": "e325331a7c7e9ad158cd1f719e173e864bc54a796503704a6e1fd5414a5ed8bc",
+    "ls-460-t21/ls-460-t21-catalogue.asset": "4d1f6367b55a2c43baa37bfde92e84b7eba501d7a4083303c2c97ea44dc80bf5",
+    "ls-460-t21/ls-460-t21-catalogue.asset.meta": "f8d17afd9fc725432dd9140fbdcf0cfed0b1d13398492030e86461360a3ecf88",
+    "ls-460-t21/ls-460-t21-diagram.prefab": "f69494ee701bf20b50ba39bd399ed7866d2588ee95c4767c750b0b3cdaf2aecc",
+    "ls-460-t21/ls-460-t21-diagram.prefab.meta": "68cac1b4336483a9edfbab567254992d63e510af038e37218eefcf7f95b9ded2",
+    "ls-460-t21/ls-460-t21-icon.png": "a081407ee6f9f97ebdb5d164070a8ad776d6f441f152f7307ce6c57bf5398941",
+    "ls-460-t21/ls-460-t21-icon.png.meta": "4ae503b221185f76d4ab0d9ac5b9ab4bc78ed00aef1bd891738a27512b6fe93d",
+    "ls-460-t22.meta": "b8b5c728cfef7b9f2948c557131f4f085086b75668f52ea4b21f658d6992d6eb",
+    "ls-460-t22/ls-460-t22-catalogue.asset": "e48086c9930b098368c89286b8919c57b3c3f3b238890a9fa92954c8005312e5",
+    "ls-460-t22/ls-460-t22-catalogue.asset.meta": "99abce027ce308abde71a65b4007fee57c41fade3286316d8f9da6c08a741e41",
+    "ls-460-t22/ls-460-t22-diagram.prefab": "326fc07e11526eb98791eb18800041ce429766a375e77de3918761fd5b297313",
+    "ls-460-t22/ls-460-t22-diagram.prefab.meta": "c7ca13c21b1fdae14302c16abfa1087bd1af6e00ec486e5855784e28015064c9",
+    "ls-460-t22/ls-460-t22-icon.png": "a081407ee6f9f97ebdb5d164070a8ad776d6f441f152f7307ce6c57bf5398941",
+    "ls-460-t22/ls-460-t22-icon.png.meta": "d2c5864664afe6d3188545498c5cb8b9b355dfe90c9c9db4994b2a60eb6e68db",
+    "ls-462-p18.meta": "461ee5fba489507cb780193fdbe05cb5bc649a06cff4b3284eefafb943b1c93c",
+    "ls-462-p18/ls-462-p18-catalogue.asset": "ab804ae2e03a74ac2c4c9877be76a90c58856f7dc2a9d69985439aac2ab35338",
+    "ls-462-p18/ls-462-p18-catalogue.asset.meta": "70cf8c120d72ee4113fe3da2b06f702d4f83513ada73fe2d1037f18513499c51",
+    "ls-462-p18/ls-462-p18-diagram.prefab": "3eb528ad8e32f20db83fe72de774e5fb57033ea7564a83090e015981dddc11a5",
+    "ls-462-p18/ls-462-p18-diagram.prefab.meta": "f40de2a78bdc8d211688dd6c03c3e4ef87910736e04a9d04f4259f890eba20b3",
+    "ls-462-p18/ls-462-p18-icon.png": "e3e40d7ba3f6846a2ac48d1b9245098f8806e8a24618d8d44f401b1f24922f6e",
+    "ls-462-p18/ls-462-p18-icon.png.meta": "d648ef608f6bfaaa7feea216befa2aac1aaa2b50b60ce3f17343a817753b6fb9",
+    "ls-462-p43.meta": "fa1696bc5d3055b6be1b4d79700a5cc8c4b7829d48e72a7e763ce1d968d1a0b8",
+    "ls-462-p43/ls-462-p43-catalogue.asset": "f3a3d7d6c611163d7baba089f9f55a5744e24c83acf8840f9f07cc54082c66aa",
+    "ls-462-p43/ls-462-p43-catalogue.asset.meta": "b4b8d04f56fcf7bfd56276001107e38d59ac04d5eac82240a9123931baca9468",
+    "ls-462-p43/ls-462-p43-diagram.prefab": "161402c5106b77af99582d13003809cb8fb74357c2f0dda6105f97bcb83e5ccc",
+    "ls-462-p43/ls-462-p43-diagram.prefab.meta": "5ed513a599f16b931fa6c1eaf7f6f3125f0bd856b593bff6fce6958ad814fc5f",
+    "ls-462-p43/ls-462-p43-icon.png": "e3e40d7ba3f6846a2ac48d1b9245098f8806e8a24618d8d44f401b1f24922f6e",
+    "ls-462-p43/ls-462-p43-icon.png.meta": "810687e9e1282162aee7b70aa78e9bc03111f5b22ec42b0134b5a668ef31c37a",
+    "ls-462-p48.meta": "c93dd3e3696cba1b9391affb773b04385a7033aaff0ebc2a0d1a050c84f6639e",
+    "ls-462-p48/ls-462-p48-catalogue.asset": "0bacb18e6baaf0747f8794b240a137c93f1574d6c894f471d7c46318c242eb4d",
+    "ls-462-p48/ls-462-p48-catalogue.asset.meta": "7769234c058199af5b7a43fee9fa1fac83efce7f42364050ff246be407862f61",
+    "ls-462-p48/ls-462-p48-diagram.prefab": "bf71aa499146701218f1c3064e57d12880e3709e83f7eca42c9ac5ca97f45dfd",
+    "ls-462-p48/ls-462-p48-diagram.prefab.meta": "f728a26c27b7646f7f8f8d973832ce228a3caad46b6718f8e0efc6448a96884a",
+    "ls-462-p48/ls-462-p48-icon.png": "e3e40d7ba3f6846a2ac48d1b9245098f8806e8a24618d8d44f401b1f24922f6e",
+    "ls-462-p48/ls-462-p48-icon.png.meta": "c6026e67f45b5e7f499029a640604b4e838c20459b6488f98f62b19e57f529e1",
+    "ls-480-c40.meta": "341c938dd5e9eef6f5d24f7d43f357bfb9fa5cfadf0f62a94ec0dc1eb842017c",
+    "ls-480-c40/ls-480-c40-catalogue.asset": "1b96c99e2646ed1253f2cb8894624c0242f5541ef57d554a57f5a0067908193b",
+    "ls-480-c40/ls-480-c40-catalogue.asset.meta": "fb9eb46d1969a5a2258c3a0bee98764702ff9b784e00acb936a2272048e27926",
+    "ls-480-c40/ls-480-c40-diagram.prefab": "ad7a6cba64d5981a69916331663cc7c41e093010f8010124477a295055125a48",
+    "ls-480-c40/ls-480-c40-diagram.prefab.meta": "00be1f9db17a1b40bc8cc611f3338626615a8b46dc559304715ffc3f712aa656",
+    "ls-480-c40/ls-480-c40-icon.png": "ee88e22cdd95a502870d87e9e525d7f6eeeb0475720ffddb892d7d932d014794",
+    "ls-480-c40/ls-480-c40-icon.png.meta": "f960645923c89d12f8864845a2c08135ab88665aef43381f201393f7bdcc4b5c",
+    "lt-060-s23.meta": "26e70b9254cf75c0d7489ed6fb587d8d63dec96e776b0c0d73bbea5c2cc3c256",
+    "lt-060-s23/lt-060-s23-catalogue.asset": "27926c5b2e62cd00a80051301eb5fa9647d99387ed834bc99ae5c5442862d074",
+    "lt-060-s23/lt-060-s23-catalogue.asset.meta": "d9b384707fb6d9f9b06a4fd17cd4584d4a1816897330e85d5cf1219daa23fa6d",
+    "lt-060-s23/lt-060-s23-diagram.prefab": "297c6a6275fdddea4316f40b22ea8d63e6be184a73081c2ccda6e866a6e6df77",
+    "lt-060-s23/lt-060-s23-diagram.prefab.meta": "fcd90f6ec90ddaa49b4c8256b5b0cc326be33e2eb3387267aefcfe8079204da4",
+    "lt-060-s23/lt-060-s23-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-060-s23/lt-060-s23-icon.png.meta": "3067b1a6670444f7018e427151d902860e9f3fae81b948fdce68b710903e1102",
+    "lt-080-s51.meta": "f114d09a924b1cb9bd9eb90aa09be8d33380ed15b743e215ff6b23333cf1f70e",
+    "lt-080-s51/lt-080-s51-catalogue.asset": "6740d31bd3b39a0e1dae09bdc93724db7bf641cd54088e1a7fc095f4860a41d5",
+    "lt-080-s51/lt-080-s51-catalogue.asset.meta": "f2a51e18400b7844b6fd0d3b803024b6b56018d804830173ded52bd94c9179e2",
+    "lt-080-s51/lt-080-s51-diagram.prefab": "4b1d50b3515f6505c3ad1dd21cc21727369c22b0b6d66bf403a8827803c732bd",
+    "lt-080-s51/lt-080-s51-diagram.prefab.meta": "d8680cbdd23f29bd8a03008e697c072dc37b771001e016387111528ccd48298c",
+    "lt-080-s51/lt-080-s51-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-080-s51/lt-080-s51-icon.png.meta": "8c0a78054c6c75fd3b471aa522ddc5dfa9c602d5617d396d8b6c0e4cba6006c4",
+    "lt-2100-d46.meta": "8ab42379cbbeceade21cf3e1a75cdbbb071c90edafee4251416c76efe8385309",
+    "lt-2100-d46/lt-2100-d46-catalogue.asset": "593d333ba083dbb86ca74295ffb28c18bd0bfe8404ce5d89fc719bffd59c7f6f",
+    "lt-2100-d46/lt-2100-d46-catalogue.asset.meta": "6e4383bd3d94e3a7db68c00377c8cd5a3091dfec78cc0b41e6eaeb85392315e0",
+    "lt-2100-d46/lt-2100-d46-diagram.prefab": "004d440142c99b194e1b039070d19bd3171d29830efd8d54394e765f8910f72b",
+    "lt-2100-d46/lt-2100-d46-diagram.prefab.meta": "2a531860a479a8845cacc02aeeaafe81c38dd9e8328602687cf4e893155ab923",
+    "lt-2100-d46/lt-2100-d46-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-2100-d46/lt-2100-d46-icon.png.meta": "f532a8b18d0338fdd0c4505852af97df66581f73d6c149ec46439e601ec596a6",
+    "lt-2102-f71.meta": "54ef5b4c1ee32592da2f78207a2bc7661c06bc2a5a16be71659e782451aed2f8",
+    "lt-2102-f71/lt-2102-f71-catalogue.asset": "ae87e84a9c6bceee38c75ab53de1d0f4df6bc35645aab3f4b4a497ce0b791739",
+    "lt-2102-f71/lt-2102-f71-catalogue.asset.meta": "f61447245ced927189e6debaebffec4185d918ba051c1e8c4dbd72fd750c7e0a",
+    "lt-2102-f71/lt-2102-f71-diagram.prefab": "d132d8ff2dab8f11b6f7fb8ff27a2265f0cf36a9cd6d5a50670c1e649b0ece18",
+    "lt-2102-f71/lt-2102-f71-diagram.prefab.meta": "db147222df9f4178da1320444dee7597232e13cf70357e9a211565412f7ae5e0",
+    "lt-2102-f71/lt-2102-f71-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-2102-f71/lt-2102-f71-icon.png.meta": "2600c4286eb0dd4c111a98e4d61a083eef64cd963c3ae58e146b83b15110cc6e",
+    "lt-260-g16.meta": "afbb0c98f91603f229d3b8e452f89677684d5b4502e5d221c50d305d5a58afce",
+    "lt-260-g16/lt-260-g16-catalogue.asset": "97e413d71908218ba9031c9dda5a94e7922d957d0bf079b9551f24c100be4126",
+    "lt-260-g16/lt-260-g16-catalogue.asset.meta": "b6f36ef05344a0ec61356ba8293da109c44a748153fb19b6fc8e56be802bd50c",
+    "lt-260-g16/lt-260-g16-diagram.prefab": "c53c0ee20421ae8e87454561a8347d207ffe8e1b4eb26042742d59d4066c466f",
+    "lt-260-g16/lt-260-g16-diagram.prefab.meta": "50275827f391b1f107f5ad0df9f55e2c58a92ee13f0b290add9c468c188da307",
+    "lt-260-g16/lt-260-g16-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-260-g16/lt-260-g16-icon.png.meta": "380a20f3b7a0d2fd5800e604fa7621b36f7946fa59ca71f7ae62b50ff8850c38",
+    "lt-260-g25.meta": "17733e1f5d69dc0ced9dfd89ed9bf39799545cb14a7be277fb63323062afad4e",
+    "lt-260-g25/lt-260-g25-catalogue.asset": "5c55d0bcf901b5b2493076abaff1b252dd9e85ac746a7bcefbc1cbc8d952d2fd",
+    "lt-260-g25/lt-260-g25-catalogue.asset.meta": "5a6fc9dde9c5474f3fbc2dc5ba2f8c77e70b8b0e0a3512d6fb5da88e5e40941f",
+    "lt-260-g25/lt-260-g25-diagram.prefab": "c0e16552182723b5f1c98765e03658b96c059b93d26801f20fbf22af97e2cfac",
+    "lt-260-g25/lt-260-g25-diagram.prefab.meta": "ae06179bc74d447b012a8fb64e2852adef71eedbeb8b662e67b688611fb283b9",
+    "lt-260-g25/lt-260-g25-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-260-g25/lt-260-g25-icon.png.meta": "e2508695e9a301e7c05e3d1bbdb4c600f7775ff341b5d7e9686ce3ddb0c8a8d1",
+    "lt-280-c25.meta": "31e1a6924cd602d7d172781a61b90b80c53cdb9acd07d30529c752e31de9104d",
+    "lt-280-c25/lt-280-c25-catalogue.asset": "89c13e054f51aef99a524e5d7cbddcc01cb66f0f5f6b694fc299b63483f8cc06",
+    "lt-280-c25/lt-280-c25-catalogue.asset.meta": "ad11a3604f12567a62793c766dd7dabd38fad671fb87160a67514aa74a9a0d04",
+    "lt-280-c25/lt-280-c25-diagram.prefab": "98d6254679a018bab7f9c71ffa928e255dfb215dbcff0447fe9872f64648878d",
+    "lt-280-c25/lt-280-c25-diagram.prefab.meta": "330c404a2a793500d6c4616a650808cb86b1acf22e5832cbca3a84242c7495ea",
+    "lt-280-c25/lt-280-c25-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-280-c25/lt-280-c25-icon.png.meta": "005f8ba50c83d7a92334467a1d8dd07180f824ee8f3ff732c7699cd0e6e13176",
+    "lt-280-c46.meta": "acfccb55906e09ffb31a04c557f4f2f8e24d4446c1177d5b3d979d6fcfecb62a",
+    "lt-280-c46/lt-280-c46-catalogue.asset": "96232510aad4bc4dfd3aa669242384de00cd1e7f296a3ec467c914742cb9a415",
+    "lt-280-c46/lt-280-c46-catalogue.asset.meta": "e4f05aa59b6cbc65ee7477641b7fb3043148a8d328238ecb4709c8973152b943",
+    "lt-280-c46/lt-280-c46-diagram.prefab": "eeaa4010b7fe8957ec64139d3df7c381a4876b758da1ae4b76a167d7950c0625",
+    "lt-280-c46/lt-280-c46-diagram.prefab.meta": "d88f727a7423560b7d677f7da8c3d3d73fd3c9bd29d7be8d94569664c4522555",
+    "lt-280-c46/lt-280-c46-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-280-c46/lt-280-c46-icon.png.meta": "add9894b58e08e61d0dd5aee92b181201777529939514b76ac781c95b8a3bd61",
+    "lt-280-c55.meta": "88e0a80cea7922bad59255a094c141aff6fe9406d20450f4a5996b1aa04f3c1a",
+    "lt-280-c55/lt-280-c55-catalogue.asset": "e3532ddeda7120ef947b09d10b9fda0216a5e8f04bdb97785638c9dd410a48cd",
+    "lt-280-c55/lt-280-c55-catalogue.asset.meta": "ef39add4b5ab9ca3c1451564d176b1cde65e5e541a4b8a62cfc9e5f4ac507b84",
+    "lt-280-c55/lt-280-c55-diagram.prefab": "82886ae27f5b01ef50f91ad7cf39bbb3a2464476ae1b6a16b3b378650a5dbf40",
+    "lt-280-c55/lt-280-c55-diagram.prefab.meta": "80490a0fc7d1b0d7b1700ce2114e1fde03383484904b4047aa5215e342f18706",
+    "lt-280-c55/lt-280-c55-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-280-c55/lt-280-c55-icon.png.meta": "3717c4a2ed422a00d24d3d13504962e13c93de1537413a1e574e3b29da515d33",
+    "lt-282-k35.meta": "8ad268e14d270780843dd906e27de59a2257076a0c83ecbb51ad2bb2de6f22d5",
+    "lt-282-k35/lt-282-k35-catalogue.asset": "250c9c99503bedac848dacfa8aeceea8220cf1e0642db7f01de14994bb47327c",
+    "lt-282-k35/lt-282-k35-catalogue.asset.meta": "0bf77db63e5f3150e5bf07c236a6fb1ebb4b139e96cf9d5d88051c1c8297d719",
+    "lt-282-k35/lt-282-k35-diagram.prefab": "a98fea5834fa365d7e1b84df5d6fb26a3bc253a71be76b7911fd12a29329007c",
+    "lt-282-k35/lt-282-k35-diagram.prefab.meta": "97578d820830adf19ff48c129c747767f99380e6eab5894e7b37ea4f7959dedf",
+    "lt-282-k35/lt-282-k35-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-282-k35/lt-282-k35-icon.png.meta": "39ace1b3f8ef3756989ac00c52c6dc03686cde7735c2a9ea51217d17d279d22b",
+    "lt-284-b65.meta": "01877c10c7fa0b182095b391444e63cec731211b98e1095823b01aa113fbfc14",
+    "lt-284-b65/lt-284-b65-catalogue.asset": "4e40628de5fec993ee88a364e844cc6ff4d53b9b1e52575497ec3cd42754a55f",
+    "lt-284-b65/lt-284-b65-catalogue.asset.meta": "242dec655ee860623369a5ef72ee0c4e905ac38fea2040215a12736ac0c7291d",
+    "lt-284-b65/lt-284-b65-diagram.prefab": "eeca92b637b5177fa60ed0258a24312d3f2dde6f6a3113192f04a34be3347b84",
+    "lt-284-b65/lt-284-b65-diagram.prefab.meta": "bd27f3cdb5a5bd931b72a73a5320f4c3c75092ba31454a16af783090b6fa6746",
+    "lt-284-b65/lt-284-b65-icon.png": "39b5a569e33641daa92bdfe072b0f29f661621eb1c17391cf60486a835148000",
+    "lt-284-b65/lt-284-b65-icon.png.meta": "6fc1519943a5705d352fa6cc4163e0ac8b59e82789d452aea6caf6520e32a79b",
+    "lt-440-a23.meta": "284c18891bdc56b9da583bb46871140fe69b9c11a23922235d7a9112f9516be4",
+    "lt-440-a23/lt-440-a23-catalogue.asset": "5413f0daf0bb77d62746869e65eaad27e52e0353061f1277df146eaf3422923b",
+    "lt-440-a23/lt-440-a23-catalogue.asset.meta": "27ff94fef181e977e69cc4bc0217838f0d63eddf7838770ef2cb6b371fa622c9",
+    "lt-440-a23/lt-440-a23-diagram.prefab": "c66b6cc2161a039a5237e4269f39a69d4db85e7ce8d22ec64fe6e01f00ce2a12",
+    "lt-440-a23/lt-440-a23-diagram.prefab.meta": "7ea7e49a1756e04954fec372519e64544e34f6c744c2a1aaada34017fd89654d",
+    "lt-440-a23/lt-440-a23-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-440-a23/lt-440-a23-icon.png.meta": "892f473b562a69daefa934b6a7767d71424eeb4c173be0328e70364a661c6f8b",
+    "lt-442-a26.meta": "761c396560c0b6a1ff4f70becba05c254159f884925562d9b9bf0e39ff80b56b",
+    "lt-442-a26/lt-442-a26-catalogue.asset": "980dc6e0b1776cae372312a65ffd30f10fb15179ed765fc63937a0b897a2f0da",
+    "lt-442-a26/lt-442-a26-catalogue.asset.meta": "59512c26566a57a40fcfab9db311fe88ec6e38b827ae80023217947076187fb9",
+    "lt-442-a26/lt-442-a26-diagram.prefab": "1bd6618c9019109972eda27e104a0f6efc140ea400b567ec04e4f9eea810e959",
+    "lt-442-a26/lt-442-a26-diagram.prefab.meta": "3fd4009a3eefb7471276285b4ced45ea835b6a69f114b4bbefacecefc73a7a62",
+    "lt-442-a26/lt-442-a26-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-442-a26/lt-442-a26-icon.png.meta": "b7129630f842422255ce1f23cc3aed0a53552a9f271c0dc707ea05a766f185b9",
+    "lt-460-t17.meta": "9739c88a0bec7a2dd359ec17f87268ba2696ce2dd8c8fa6f36436647a8d43895",
+    "lt-460-t17/lt-460-t17-catalogue.asset": "9b39eea6b82faa9710c4a19dd0e253ffb29fec0c00379c8fcb8ebab30e0c2a06",
+    "lt-460-t17/lt-460-t17-catalogue.asset.meta": "da2d0ef89d00fe5cfe252128bceecf3e901adb63acaf792a25d9f95856273f2a",
+    "lt-460-t17/lt-460-t17-diagram.prefab": "53b5f5c4f06beec2e975ac11f748f7128aaa4dc4d491bfd10fb1e2bacfa88eef",
+    "lt-460-t17/lt-460-t17-diagram.prefab.meta": "f9109e499f534f204fd8794859f8125a0637d60dbd747f53e7977adc4ee49390",
+    "lt-460-t17/lt-460-t17-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-460-t17/lt-460-t17-icon.png.meta": "ec77a61ea29e4c37ee9be29f4f81ed41c6333754811b39f4ad998e38c9ecc530",
+    "lt-460-t21.meta": "34a3f64983b6ccc3ef7b28ccbe29c076ee085a598136d953642407ac13b8df89",
+    "lt-460-t21/lt-460-t21-catalogue.asset": "4ebca5166fee55f5fbd512db50d9439d2a7cbec31c3d92be95dd2893890d4623",
+    "lt-460-t21/lt-460-t21-catalogue.asset.meta": "548b1231a22201555cf09f0328df967ccf9a2596568a8066047addbe8e503be2",
+    "lt-460-t21/lt-460-t21-diagram.prefab": "d53e36dbb1dffffc4f527d3ed7267161fc5c880ff627f86855aa12b8eb72c712",
+    "lt-460-t21/lt-460-t21-diagram.prefab.meta": "6eea02f10f16d0e9e8f70e6fae23bd09953b54020678ff5fc280d511b9b470b0",
+    "lt-460-t21/lt-460-t21-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-460-t21/lt-460-t21-icon.png.meta": "4b3262322ca4c2185803020f604f62aca8f89909436164238fed978150cf014c",
+    "lt-460-t22.meta": "e4661956b86252b59ab9c11be09dafa4c538693b76ac589129fbf00a8ddc6dbd",
+    "lt-460-t22/lt-460-t22-catalogue.asset": "4cb499ec68a0daa274787802729571f9765bcf9247e53041bd25eb3570748931",
+    "lt-460-t22/lt-460-t22-catalogue.asset.meta": "2fb64bd15f88e863bf1e13810eba2ec3254acf337dc7e725083edd8ada6f1401",
+    "lt-460-t22/lt-460-t22-diagram.prefab": "647951b16ef4f02fcdbc2953f31c81907c73e08e6a56c4183bc10fcbd648dd2b",
+    "lt-460-t22/lt-460-t22-diagram.prefab.meta": "a77d8f5ed31b2b63b3e3c006dbe3915d09ae02538a453768da196d72a5ca7d67",
+    "lt-460-t22/lt-460-t22-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-460-t22/lt-460-t22-icon.png.meta": "e43dc5129377da3c21492d9d8e8705e553beda0f6026e61cc1654d1c09a9dc3f",
+    "lt-462-p18.meta": "32613c87eff06646536fadb86a3f61630c037cc31f3edae1bdb250505c7859eb",
+    "lt-462-p18/lt-462-p18-catalogue.asset": "f863b00365ccd60871ff2e34f8c08f64576b0a632cf0368355b4c6b1c54eec7d",
+    "lt-462-p18/lt-462-p18-catalogue.asset.meta": "4e2fb29e394ee665475fe938558584b1980af30e1e6838e6cce359b991834afe",
+    "lt-462-p18/lt-462-p18-diagram.prefab": "08cab7ffb317af456ce31762c1cc31b786493584bb6645d9b775db602dd1f98c",
+    "lt-462-p18/lt-462-p18-diagram.prefab.meta": "ad60a6da12710598bf6522e9f454dfd71c0e786bc6a22e8089cd7dde8091a40f",
+    "lt-462-p18/lt-462-p18-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-462-p18/lt-462-p18-icon.png.meta": "4bd57cf0026d6b15de19c5c34b2f100ef7ed943a30b57f9dafb62ba85bb5a08d",
+    "lt-462-p43.meta": "7e94c2f6132de63f0b4a5a6c2a638f77ca7157ec6df93a23855145ba7fc877bd",
+    "lt-462-p43/lt-462-p43-catalogue.asset": "4782934c575fc0dc355f17f49902ede28244b9ff10e59e7a3429e1eee4a35292",
+    "lt-462-p43/lt-462-p43-catalogue.asset.meta": "a65b593e4632f4a9d777bf08ac6079b72b5ef07883950749b622ecdacf31484a",
+    "lt-462-p43/lt-462-p43-diagram.prefab": "87003aaa0cdf8c000eed312edfc5a8a9036238d0c04c5f2961709aff48dd0d1a",
+    "lt-462-p43/lt-462-p43-diagram.prefab.meta": "14621732e181c5c701ded63845f1f741a46df706436bc51d7d3505545b3a50cd",
+    "lt-462-p43/lt-462-p43-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-462-p43/lt-462-p43-icon.png.meta": "0d3ef8bc41c0aa5229b75f7579442e1e77b40e2103a7ca4c6790fe9fe86e2cf5",
+    "lt-462-p48.meta": "120bb9d8f0defbac93e49ee9aac6ed1947d024eb12660f1b78c686269180b5fc",
+    "lt-462-p48/lt-462-p48-catalogue.asset": "35b71378485b3bd584971510753c7d12995ba4b9b1d5bc1ce2febeb4f5900fbd",
+    "lt-462-p48/lt-462-p48-catalogue.asset.meta": "631b726721c4761af7c280c5c100a8fbbf0bb773d1478fcdab1a68f2ba9558e6",
+    "lt-462-p48/lt-462-p48-diagram.prefab": "5654bec1c21a6b7652d18c66f44c2d62786832a30257dce3c381e5426615c430",
+    "lt-462-p48/lt-462-p48-diagram.prefab.meta": "027b29b1a34be1fe680cd394a5947f7dc40b84c28a8666afa28e34afc29db676",
+    "lt-462-p48/lt-462-p48-icon.png": "39b5a569e33641daa92bdfe072b0f29f661621eb1c17391cf60486a835148000",
+    "lt-462-p48/lt-462-p48-icon.png.meta": "e64d9e4d87f0d4804d87619f92ee49660cffd7f63143e738b82159c3ceca0dee",
+    "lt-480-c40.meta": "0575e268215de7172b9a724eb68b70971ef18485147e8af3a105bfd0d5921731",
+    "lt-480-c40/lt-480-c40-catalogue.asset": "8afe6b669a0f2ac3622127876e7b52f529388e9c6a2ea38d0a1566686363ddc1",
+    "lt-480-c40/lt-480-c40-catalogue.asset.meta": "f71122203e7f55f0fe9d55058063effaedf258639c5f9e37d6a891f8159d84ae",
+    "lt-480-c40/lt-480-c40-diagram.prefab": "c78f234de4caac61a0e686b4ab924f94287aa65cb788f7b7ff9dd97e889bea3a",
+    "lt-480-c40/lt-480-c40-diagram.prefab.meta": "267a242b8308496bbe0858fa62fbbdf9cdd58b53e328b44ea71a53242a06f399",
+    "lt-480-c40/lt-480-c40-icon.png": "c9fd1f450bb72a361bfb7908a99efed31b53e1fb4e2fd840c71105abef783038",
+    "lt-480-c40/lt-480-c40-icon.png.meta": "e4c2bcc68f06fce5cfffd301e30c956239fa8e9f976e04fbaaef386b3eef45f3"
+  }
+}

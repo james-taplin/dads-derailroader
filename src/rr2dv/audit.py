@@ -95,7 +95,9 @@ def audit_input(rec: dict, pack: Path, left_out: set[str] = frozenset()) -> dict
         sim = _plain(rec['hooks']['SimSpec'])
         expected = [{'component': component, 'field': field, 'value': sim[component][field]}
                     for component, names in fields.items() for field in names if field in sim.get(component, {})]
+    catalogue = rec.get('metadata', {}).get('catalogue') or {}
     return {"schema": 1, "bundles": bundles, "carFolders": folders, "cars": cars, "controls": controls, "ports": required,
+            "cataloguePages": catalogue.get('pages'), "catalogueTermKeys": catalogue.get('termKeys'),
             "engineMetrics": expected,
             "openingCount": len(opening_clips),
             "indicators": INDICATORS, "review": rec.get("metadata", {}).get("review", {}).get("values")}
@@ -137,6 +139,8 @@ def run(run_path: Path, unity: Path | None, project: dict, rec: dict, built: dic
                "buildWarnings": built.get("warnings") or [], "audioClips": report.get("audioClips"),
                "scriptAssemblies": report.get("scriptAssemblies"), "portFeeders": report.get("portFeeders"),
                "coalLoadMeshes": report.get("coalLoadMeshes") or [],
+               "cataloguePages": report.get("cataloguePages") or [],
+               "catalogueLiveries": report.get("catalogueLiveries") or [],
                "files": built["files"], "runtimeValidated": False,
                "acceptance": "runtime pending: CTRL-01/CTRL-02 checks in Derail Valley are still to be done"}
     write_json(out / "summary.json", summary)

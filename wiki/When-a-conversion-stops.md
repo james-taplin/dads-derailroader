@@ -5,6 +5,7 @@
 | Where it stopped | First thing to check |
 | --- | --- |
 | Before conversion | Game installs, CCL, tool paths, a short work folder, and that the locomotive is one of the 21 stock steam locomotives in Railroader's asset packs. |
+| Windows Security blocks or removes a file | Protection history: record the detection name, affected file, and action. See the [Windows Security guide](https://github.com/james-taplin/dads-derailroader/blob/main/docs/resolving-blocks.md#windows-security-blocks-the-launcher-or-a-tool). A Unity crash alone does not establish an antivirus block. |
 | `locate` / `link` | Which locomotive was selected; missing or duplicate tenders, trucks, part packs, or sounds evidence. |
 | `stage` / `extract` | Whether a source file changed while copied; AssetRipper path and export diagnostics. |
 | `import` / `probe` | Animation ownership, Unity version, an open Editor, licence prompt, and Unity logs. |
@@ -20,3 +21,12 @@ The [complete block and review-item guide](https://github.com/james-taplin/dads-
 
 Give the stage, exact message, `run.log` excerpt, and relevant `build_report.txt` or `audit.json` finding. The app-wide log for problems outside a run is `rr2dv_work\logs\rr2dv.log` beside the app. Remove private paths or personal details before posting. Do not upload source assets.
 </details>
+
+## whistle fitting cannot resolve uniquely
+
+the source whistle fitting is missing or ambiguous, keep the run report and locomotive name, the app will not attach its mesh to a similarly named cab lever
+
+
+## Safety jet probe cannot find a supported forward surface
+
+The fallback could not find a broad boiler/dome candidate clear of the cab, chimney and other fittings. Keep the run report and locomotive identifier for model review. Do not substitute the cab roof or whistle position. A reported candidate still needs visual checking after rebuilding and installing the pack.

@@ -44,6 +44,8 @@ class BuildStages(unittest.TestCase):
         self.assertEqual([(b["Axles"], b["PivotAxle"]) for b in cfg["Bogies"]], [([1.2], 0), ([0.0, -1.2], 1)])
         self.assertEqual(cfg["EngineUnits"][0]["DriverParts"], ["Main/Drivers1", "Main/Drivers2", "Main/Drivers3"])
         self.assertEqual((cfg["ChimneyComp"], cfg["WhistleComp"], cfg["CabSeatComp"]), ("Chuff", "Whistle", "Engineer Seat"))
+        self.assertIsNone(cfg["SafetyPos"])  # measured from forward boiler geometry by the builder
+        self.assertNotIn("SndSafety", cfg)  # follows that measurement, not the whistle anchor
         self.assertAlmostEqual(cfg["BackheadZ"], -1.8)  # fake cab rays: plate 0.5 m ahead of the seats at z -2.3
         ports = {p["Port"] for p in cfg["Placed"]}
         for port in ("throttle.EXT_IN", "injector.EXT_IN", "blower.EXT_IN", "fireboxDoor.EXT_IN", "cabLight.EXT_IN"):
@@ -52,6 +54,7 @@ class BuildStages(unittest.TestCase):
         self.assertEqual(cocks["pos"][0], 1.1)  # RR spawns the drain jets at +-radius
         self.assertEqual(cfg["SrcPrefab"], "Assets/RR2DV/RR2DV_TS_260_A/source/ts-260-a.prefab")  # the model with its bell part
         t = buildrecord._plain(rec["tender"]["config"])
+        self.assertTrue(t["NestedClipGroups"])  # resource clips must not claim the whole tender
         self.assertEqual([b["Axles"] for b in t["Bogies"]], [[2.84, 1.16], [-1.16, -2.84]])
         self.assertEqual((t["Trucks"][0]["Wheelset"], t["WheelRadius"]), (buildrecord.TRUCK_WHEEL_PREFIX, 0.42))
         # Rr2dvBuild's input: the part is placed, every prefab loses its AudioSources

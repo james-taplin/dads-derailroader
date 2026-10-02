@@ -15,6 +15,14 @@
 | The work folder path is too long | Set `workRoot` to a short path such as `C:\rr2dv`. |
 | The app refuses to write inside a game folder | Choose a work folder outside both game installations. |
 
+## Windows Security blocks the launcher or a tool
+
+If `Launch Derailroader.bat`, `Derailroader.exe`, or a build tool is blocked or disappears, open **Windows Security > Virus & threat protection > Protection history**. Check the event at the time of the failure and record the detection name, affected file, and action taken. A Unity crash or a locked log file alone does not prove Defender caused it.
+
+Update Defender's security intelligence and check that the download came from the project's linked release page. If the detection remains, report the app version, detection name, and affected filename to the maintainer so the exact file can be investigated and, if appropriate, submitted to Microsoft as a false positive. Do not upload game assets or converted packs.
+
+Only restore or allow the specific detected item after verifying it is safe; do not disable Defender or exclude entire app, work, or game folders. Microsoft's [Protection history guide](https://support.microsoft.com/en-us/windows/security/windows-security/protection-history-in-the-windows-security-app) explains the available actions. If the warning instead says **Windows protected your PC**, include that exact wording in the report; a SmartScreen reputation warning is different from an antivirus detection.
+
 ## Locomotive selection and source files
 
 Choose one of the 21 supported stock steam locomotives listed by `rr2dv list`. The application reads its files from the Railroader installation. If it is missing from the list, use Steam to verify the game installation, then run **Settings > Check** again.
@@ -45,8 +53,17 @@ Review questions identify values the source cannot determine reliably. Use the d
 
 A build or bundle-audit block names the failed check in the app and report. Keep `build_report.txt`, `build/review.json`, and `audit/audit.json` when reporting the issue. A successful build and audit still needs in-game checks for controls, fit, handling, and save/reload.
 
+Catalogue pages are selected by the source locomotive and tender identifiers, then attached to every exported livery. A missing mapping, damaged library asset, wrong page reference, missing icon/diagram, or unrelated page in the exported pack stops the build or audit. Restore the complete app download for a missing or damaged library; keep the run identifier and audit report for a reference or selection failure. Do not install the whole authoring ZIP as a mod. See [vehicle catalogue integration](vehicle-catalogue.md).
+
+A whistle mesh requires exactly one steam fitting with its source name and component type. If the build reports that the Whistle fitting cannot resolve uniquely, keep the report and source locomotive identifier. The converter will not substitute a similarly named cab control or invent a location.
+
 ## Installation and reports
 
 The app installs only after the personal-use notice is accepted. If a folder already exists in Derail Valley's `Mods` directory and was not created by `rr2dv`, the app leaves it untouched; choose another output name or resolve the conflict yourself.
 
 For help, include the run identifier, stage, exact message, and a short relevant log excerpt. Do not post game assets, converted packs, or full private logs publicly.
+
+
+## Safety jet probe cannot find a supported forward surface
+
+The fallback could not find a broad boiler/dome candidate clear of the cab, chimney and other fittings. Keep the run report and locomotive identifier for model review. Do not substitute the cab roof or whistle position. A reported candidate still needs visual checking after rebuilding and installing the pack.

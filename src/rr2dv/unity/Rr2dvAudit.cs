@@ -19,13 +19,17 @@ public static class Rr2dvAudit
     [Serializable] public class Car { public string id; public float mass, wheelRadius; public bool locomotive; }
     [Serializable] public class Review { public string trainBrake, physics; public int[] spawnTracks; }
     [Serializable] public class EngineMetric { public string component, field; public float value; }
-    [Serializable] public class Input { public int schema, openingCount; public string[] bundles; public string[] carFolders; public Car[] cars; public string[] controls, ports, indicators; public Review review; public EngineMetric[] engineMetrics; }
+    [Serializable] public class CataloguePage { public string sourceId, carId, assetName, consist; }
+    [Serializable] public class CatalogueTerm { public string Term; }
+    [Serializable] public class CatalogueTerms { public CatalogueTerm[] terms; }
+    [Serializable] public class Input { public int schema, openingCount; public string[] bundles; public string[] carFolders; public Car[] cars; public string[] controls, ports, indicators; public Review review; public EngineMetric[] engineMetrics; public CataloguePage[] cataloguePages; public string[] catalogueTermKeys; }
     [Serializable] public class Output
     {
         public int schema = 1; public string status; public string[] errors, warnings, bundleAssets, scriptAssemblies, dependencies;
         public int audioClips; public string[] audioClipNames; public string[] portFeeders;
         public int oilCupCount;
         public string[] coalLoadMeshes;
+        public string[] cataloguePages, catalogueLiveries;
     }
     [Serializable] public class Result { public string status; public int errors, warnings; public bool runtimeValidated; public string error; }
 
@@ -95,6 +99,7 @@ public static class Rr2dvAudit
             outp.bundleAssets = names.OrderBy(n => n, StringComparer.Ordinal).ToArray();
             outp.scriptAssemblies = scripts.ToArray();
             outp.portFeeders = feeders.ToArray();
+            CheckCatalogue(input, all, outp, errors);
 
             Func<string, string, Object> One = (type, what) =>
             {
@@ -310,6 +315,56 @@ public static class Rr2dvAudit
             }
         }
         return all;
+    }
+
+    // Read the exported reference graph, not the authoring library. Every livery
+    // must reference its own car's page; unrelated page/text keys cannot ship.
+    public static void CheckCatalogue(Input input, List<Object> all, Output output, List<string> errors)
+    {
+        if (input.cataloguePages == null) return; // older/synthetic builds
+        var expected = input.cataloguePages;
+        var pages = all.Where(o => o.GetType().Name == "CatalogPage").ToArray();
+        output.cataloguePages = pages.Select(p => p.name).OrderBy(n => n, StringComparer.Ordinal).ToArray();
+        if (pages.Length != expected.Length || !new HashSet<string>(pages.Select(p => p.name)).SetEquals(expected.Select(p => p.assetName)))
+            errors.Add("catalogue: exported pages differ from the selected engine/tender pages");
+        var liveries = new List<string>();
+        foreach (var selected in expected)
+        {
+            var matches = pages.Where(p => p.name == selected.assetName).ToArray();
+            if (matches.Length != 1) { errors.Add("catalogue: expected one page " + selected.assetName); continue; }
+            var page = matches[0];
+            if (!Ref(page, "DiagramLayout") || Str(page, "ConsistUnits") != selected.consist)
+                errors.Add("catalogue: missing diagram or wrong engine/tender numbering on " + page.name);
+            var cars = all.Where(o => o.GetType().Name == "CustomCarType" && Str(o, "id") == selected.carId).ToArray();
+            if (cars.Length != 1) { errors.Add("catalogue: expected one car type " + selected.carId); continue; }
+            var variants = new SerializedObject(cars[0]).FindProperty("liveries");
+            if (variants == null || variants.arraySize == 0) { errors.Add("catalogue: no liveries for " + selected.carId); continue; }
+            for (int i = 0; i < variants.arraySize; i++)
+            {
+                var variant = variants.GetArrayElementAtIndex(i).objectReferenceValue;
+                if (!variant) { errors.Add("catalogue: missing livery on " + selected.carId); continue; }
+                string id = Str(variant, "id");
+                if (Reference(variant, "CatalogPage") != page || !Ref(variant, "icon"))
+                    errors.Add("catalogue: wrong page or missing silhouette for " + id);
+                liveries.Add(id + " -> " + page.name);
+            }
+        }
+        output.catalogueLiveries = liveries.OrderBy(n => n, StringComparer.Ordinal).ToArray();
+        var packs = all.Where(o => o.GetType().Name == "CustomCarPack").ToArray();
+        if (packs.Length != 1) { errors.Add("catalogue: expected one car pack"); return; }
+        var extras = Reference(packs[0], "ExtraTranslations");
+        if (!extras) { errors.Add("catalogue: missing pack translations"); return; }
+        var terms = JsonUtility.FromJson<CatalogueTerms>("{\"terms\":" + Str(extras, "_termsJson") + "}");
+        var keys = (terms == null || terms.terms == null ? new CatalogueTerm[0] : terms.terms)
+            .Select(t => t.Term).Where(k => k != null && k.StartsWith("rrstock/catalogue/", StringComparison.Ordinal)).ToArray();
+        if (keys.Distinct().Count() != keys.Length || !new HashSet<string>(keys).SetEquals(input.catalogueTermKeys ?? new string[0]))
+            errors.Add("catalogue: missing, duplicated or unrelated catalogue text keys");
+    }
+
+    static Object Reference(Object o, string field)
+    {
+        var p = new SerializedObject(o).FindProperty(field);
+        return p != null && p.propertyType == SerializedPropertyType.ObjectReference ? p.objectReferenceValue : null;
     }
 
     static string Str(Object o, string field)

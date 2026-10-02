@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rr2dv"
-version = "0.4.2"
+version = "0.4.3"
 description = "Convert Railroader stock steam locomotives into Derail Valley (CCL) packs"
 license = "PolyForm-Noncommercial-1.0.0"
 license-files = ["LICENSE"]
@@ -22,4 +22,4 @@ derailroader = "rr2dv.gui:main"  # the desktop app, without a console window on 
 where = ["src"]
 
 [tool.setuptools.package-data]
-rr2dv = ["unity/*.cs", "unity/materials/*", "spawn_tracks.json", "stock_locos.json"]
+rr2dv = ["unity/*.cs", "unity/materials/*", "spawn_tracks.json", "stock_locos.json", "catalogue/*.json", "catalogue/*.zip"]

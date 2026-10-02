@@ -78,7 +78,10 @@ namespace RR2DVControlLogger
             foreach (var line in File.ReadAllLines(watch))
             {
                 string t = line.Trim();
-                if (t.Length > 0 && !t.StartsWith("#")) ports.Add(t);
+                // Older generated watch files used a nonexistent exhaust input.
+                // Migrate the known typo in memory, preserving the user's file.
+                if (t == "exhaust.WHISTLE_CONTROL") t = "whistle.EXT_IN";
+                if (t.Length > 0 && !t.StartsWith("#") && !ports.Contains(t)) ports.Add(t);
             }
             WatchPorts = ports.ToArray();
             _w.WriteLine("watched ports (" + watch + "): " + string.Join(", ", WatchPorts));
@@ -99,7 +102,7 @@ namespace RR2DVControlLogger
         private const string DefaultWatch =
             "# one full port id per line; edit and restart the game\n" +
             "boiler.PRESSURE\nsteamEngine.STEAM_CHEST_PRESSURE\ntraction.WHEEL_SPEED_KMH_EXT_IN\n" +
-            "exhaust.WHISTLE_CONTROL\nbell.BELL_NORMALIZED\ncompressor.PRODUCTION_RATE_NORMALIZED\n" +
+            "whistle.EXT_IN\nbell.BELL_NORMALIZED\ncompressor.PRODUCTION_RATE_NORMALIZED\n" +
             "sander.SAND_FLOW\nsand.NORMALIZED\nlubricator.LUBRICATION_NORMALIZED\noil.NORMALIZED\n" +
             "firebox.TEMPERATURE\nfirebox.COAL_LEVEL\nboiler.WATER_LEVEL_NORMALIZED\n" +
             "headlightDecoder.FRONT_HEADLIGHTS_EXT_IN\nheadlightDecoder.REAR_HEADLIGHTS_EXT_IN\n";
@@ -374,10 +377,23 @@ namespace RR2DVControlLogger
             if (sb.Length > 0) Log.Write(Id(car) + " |   sim " + why + ": " + sb);
         }
 
+        private static readonly FieldInfo PortMap = typeof(SimulationFlow).GetField("fullPortIdToPort", BindingFlags.Instance | BindingFlags.NonPublic);
+        private static bool portMapWarning;
+
         private static float PortValue(SimulationFlow flow, string id)
         {
+            // DV's TryGetPort logs an error for every missing optional port. Its
+            // third argument only permits empty IDs; it is NOT a quiet switch.
+            if (flow == null) return float.NaN;
+            var ports = PortMap == null ? null : PortMap.GetValue(flow) as IDictionary<string, Port>;
+            if (ports == null)
+            {
+                if (!portMapWarning) Log.Write("optional port snapshots unavailable: simulation port map not found");
+                portMapWarning = true;
+                return float.NaN;
+            }
             Port p;
-            return flow != null && flow.TryGetPort(id, out p) && p != null ? p.Value : float.NaN;
+            return ports.TryGetValue(id, out p) && p != null ? p.Value : float.NaN;
         }
 
         private static bool Same(float a, float b)

@@ -19,6 +19,10 @@ An installed pack has passed a build and exported-bundle audit. **It is still a 
 
 Also drive under load and check steam raising, wheel contact, braking, firing, sounds, and spawning. A bundle audit cannot establish these behaviors.
 
+## Vehicle catalogue pages
+
+Rebuild older packs to include the Game Numbers v2 pages. Each supported locomotive receives its own page and, where fitted, its tender page; K-28T has one page. No separate fleet catalogue mod is needed. Check the in-game catalogue for the correct name, icon, diagram, readable text, and both halves of a tender engine. Try each installed livery. Building just one or two locomotives should add only their entries. Hauling ratings marked **provisional** still need driving tests.
+
 ## Report a finding
 
 Use **Open run folder** for `run.log`, `build_report.txt`, `build/review.json`, and the audit result. For a game-side failure, collect Derail Valley's `Player.log` from `%USERPROFILE%\AppData\LocalLow\Altfuture\Derail Valley\`. A useful report gives the game and app versions, locomotive, exact steps, expected and observed behavior, and one clear screenshot of the affected control or fitting. Do not post converted models or full private logs.

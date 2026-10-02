@@ -1,3 +1,16 @@
+Version 0.4.3
+
+- added vehicle catalogue pages, icons and diagrams for all 21 steam locos and their tenders [rebuild existing packs to include them; appearance still needs checking in game]
+- fixed whistle meshes being attached to a similarly named cab control, which could make the whistle move when pulling the lever
+- corrected tender coal and water animation grouping so the two loads can animate independently
+- corrected water sight glasses so the water column fills upwards from the bottom
+- added the missing boiler-water HUD reading on locos without a suitable sight-glass reader, including P-18
+- corrected the tank locomotive licence identifier to S060 [licence behaviour still needs checking in game]
+- safety steam now uses a measured fallback on the front boiler or dome surface, with the jet pointing upwards and its sound at the same position [placement still needs checking in game, especially K-28T]
+- fixed missing-port error spam in the separate optional control logger [developer tool; not included in the app download]
+- known issue, the outstanding 0.4.2 issues still apply, including coupling gaps or overlaps, tender brake release placement, cab controls, floating labels or dials, lights and bell cords
+- this is a test release: automated checks passed, but these repairs have not yet been fully tested in game
+
 Version 0.4.2
 
 - oil cups are now placed on the modelled oiling nubs on the rods, whichever nub has the best clearance at each end [untested in game, falls back to the old flat spot where there is no clear nub]

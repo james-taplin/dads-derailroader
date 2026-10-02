@@ -857,7 +857,6 @@ class _Builder:
         cfg["ChimneyComp"], cfg["WhistleComp"] = chuff, whistle
         self._cylinder_cocks(cfg, comps, lid)
         chimney = _anchor(anchors, chuff) or [0, bmax[1], bmax[2] - 1]
-        whistle_at = _anchor(anchors, whistle) or chimney
         cock_at = fallback_cock or _anchor(anchors, cocks[0]["name"]) or [0, radius, drivers[0]["z"] + 1.0]
 
         # ---------------- cab, backhead, fire door
@@ -1000,8 +999,12 @@ class _Builder:
         half = (bmax[0] - bmin[0]) / 2
         est = lambda v, why: env(_r(v), "m", "analogue_estimate", why)
         dynamo = next((_anchor(anchors, c["name"]) for c in comps if c["kind"] == "Dynamo" and _anchor(anchors, c["name"])), None)
-        cfg["SafetyPos"] = est([whistle_at[0], whistle_at[1] + 0.1, whistle_at[2]], "at the whistle (safety valves share its dome/firebox top)")
-        cfg["SndSafety"] = cfg["SafetyPos"]
+        # Measured in the builder, from visible forward boiler/dome geometry. A
+        # whistle anchor is not evidence of a safety-valve outlet.
+        cfg["SafetyPos"] = None
+        cfg.pop("SndSafety", None)
+        self.choose("safety jet fallback: probe the highest supported forward boiler/dome surface, "
+                    "excluding cab, chimney and other fittings; sound follows the measured jet")
         cfg["DynamoPos"] = env(_r(dynamo), "m", "source", "Dynamo component (probe anchors)") if dynamo else \
             est([0.0, chimney[1] - 0.3, chimney[2] - 1.0], "behind the chimney (no Dynamo component)")
         cfg["BlowdownPos"] = est([min(0.7, half), door[1] - 0.5, back_z + 0.6], "low on the firebox side (S-16/G-29 layout)")
@@ -1149,6 +1152,9 @@ class _Builder:
                 loads.append([clip, "", f"{e['loadIdentifier']}.NORMALIZED", False])
         cfg["LoadAnimations"] = self._ordered_loads(loads, ov)
         coal_slot, water_slot = self._slots(td)
+        # Coal and water share a top-level tender node: group their actual animated
+        # subtrees so the first load does not take the second load's whole model.
+        cfg["NestedClipGroups"] = True
         self._resources(cfg, rec, comps, coal_slot, water_slot, tank=False, tender_bounds=(bmin, bmax, front_end))
         if coal_slot is not None and not any(l[2] == "coal.NORMALIZED" for l in loads) and rec["hooks"].get("CoalPile"):
             # Railroader draws a tender's coal at runtime when the model has no coal of its own (RLW RPP-1: no coal in

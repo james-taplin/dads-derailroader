@@ -18,7 +18,9 @@ The source is a best guess from what the player did in the last second (mouse, c
 `keyboard`, which is certain when the control's own keyboard input moved it.
 
 Watched ports are listed in `watch.txt` in the mod folder (made on first start; one full port id per line, e.g.
-`boiler.PRESSURE`). A port a loco does not have is skipped.
+`boiler.PRESSURE`). A port a loco does not have is skipped without calling the game's error-logging lookup. The old generated `exhaust.WHISTLE_CONTROL` entry is mapped to `whistle.EXT_IN` in memory; the user's watch file is preserved.
+
+This is a separate, optional developer diagnostic mod. The converter does not install it in a converted pack. Its source lives under `tools/`, outside the app's `src/` and the release source-package selection. The app's own conversion logs are a different logging system.
 
 ## Build and install
 
@@ -30,4 +32,4 @@ This compiles `Main.cs` with the .NET Framework 4 `csc` (C# 5, as our DVCCLContr
 `Managed` folder and copies the DLL and `Info.json` to `Mods\RR2DVControlLogger`. If the compile fails on references,
 use DVCCLControlFix's own `Build.ps1` with this `Main.cs` and the output name `RR2DVControlLogger.dll`.
 
-Untested: written in the cloud without the game's assemblies; the first build on Windows is its compile check.
+2026-10-02 validation: compiled against DV build 99's installed assemblies. `tests/unity_runtime/LoggerPortRegression.cs` checks 330 absent-port reads, a valid whistle value and a null simulation without invoking Unity logging. The implementation reads the game's private read-only port dictionary; if a future game version changes that field, it records one compatibility message and omits optional snapshots. New in-game validation and installation of this revised helper are still pending.

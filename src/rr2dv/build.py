@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import buildrecord, recordcheck, stock, unityrun
+from . import buildrecord, catalogue, recordcheck, stock, unityrun
 from .jsonio import read_json, read_json_lenient, sha256_file, write_json
 from .rrmod import components, definition
 
@@ -40,13 +40,22 @@ def _part_specs(owner: str, d: dict, parts: list[dict]) -> list[dict]:
     """Where Railroader places each part: its component's transform, under its parent path. A part anchored inside
     another part comes after it, so the parent exists when it is placed."""
     comps = {c.get("name"): c for c in components(d) if c.get("kind") == "PrefabModelComponent"}
-    everything = {c.get("name"): c for c in components(d)}
     specs = []
     for p in parts:
         if p["owner"] != owner or p.get("enabled") is False:
             continue
         # a whistle mesh is placed at the loco's Whistle component (its transform), not at a PrefabModelComponent
-        c = (everything.get(p["source_component"]) if p.get("source_component") else comps.get(p["component"])) or {}
+        if p.get("source_component"):
+            # Steam fitting and cab control can both be named Whistle. The mesh belongs
+            # to the fitting, including its original parent, rotation and scale.
+            matches = [c for c in components(d) if c.get("name") == p["source_component"]
+                       and c.get("kind") == "Whistle"]
+            if len(matches) != 1:
+                raise BuildError(f"{owner}: Whistle fitting {p['source_component']!r} must resolve uniquely "
+                                 f"(found {len(matches)}); cannot place its mesh")
+            c = matches[0]
+        else:
+            c = comps.get(p["component"]) or {}
         t = c.get("transform") or {}
         parent = c.get("parent") or {}
         specs.append({"name": p["component"], "parentPath": "/".join(parent.get("path", [])) if isinstance(parent, dict) else "",
@@ -95,6 +104,12 @@ def prepare(run_path: Path, inv: dict, probe_in: dict, probe_out: dict | None, p
         raise BuildError("the completed vehicle record breaks the loader's rules: " + "; ".join(errors[:5])
                          + (f" (+{len(errors) - 5} more)" if len(errors) > 5 else ""))
     build = run_path / "build"
+    try:
+        pages = catalogue.prepare(run_path / project['project'], rec)
+    except (catalogue.CatalogueError, OSError, ValueError) as e:
+        raise BuildError(f'Preparing the vehicle catalogue failed: {e}') from e
+    if pages:
+        rec['metadata']['catalogue'] = pages
     write_json(build / "vehicle-record.json", rec)
     write_json(build / "review.json", {"choices": choices, "pending": rec["metadata"]["pending"]})
     prefabs = sorted({v["unity_prefab"] for v in project.get("vehicles", [])} | {p["unity_prefab"] for p in project.get("parts", [])})

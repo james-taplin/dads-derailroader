@@ -31,6 +31,7 @@ In **Settings**, select <kbd>Check</kbd>, correct any missing paths, then <kbd>S
 - **A game is missing:** Point Settings at the game folder containing `Railroader_Data` or `DerailValley_Data`.
 - **No Derail Valley Mods folder:** Finish the Unity Mod Manager setup, then check CCL.
 - **Work folder too long:** Choose a short path outside either game.
+- **Windows Security blocks the launcher or a tool:** Check **Windows Security > Virus & threat protection > Protection history** for the affected file and detection name. Follow the [Windows Security troubleshooting guide](https://github.com/james-taplin/dads-derailroader/blob/main/docs/resolving-blocks.md#windows-security-blocks-the-launcher-or-a-tool); do not disable Defender or add blanket folder exclusions.
 
 See [When a conversion stops](https://github.com/james-taplin/dads-derailroader/wiki/When-a-conversion-stops) for messages from later stages.
 </details>

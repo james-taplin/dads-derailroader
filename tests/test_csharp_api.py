@@ -17,6 +17,7 @@ CLASSES = ("AnimationUtility", "AssetDatabase", "EditorApplication", "EditorScen
            "SerializedPropertyType", "GameObjectUtility")
 # Members checked by hand against the Unity 2019.4 scripting reference, with a reason.
 REVIEWED = {
+    "AssetDatabase.GenerateUniqueAssetPath": "Compiled with Rr2dvAudit and the full app editor scripts in Unity 2019.4.40f1 during the passing CatalogueRegression export/reload validation",
     "SerializedPropertyType.Integer": "Compiled by engine-metrics diagnostic in Unity 2019.4.40f1; distinguishes integer cylinder count from float simulation fields",
     "AnimationUtility.SetKeyLeftTangentMode": "Compiled and exercised by InteractionRegression in Unity 2019.4.40f1 (displacement-resampled source clips)",
     "AnimationUtility.SetKeyRightTangentMode": "Compiled and exercised by InteractionRegression in Unity 2019.4.40f1",
@@ -53,7 +54,9 @@ class UnityApi(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             # The placement extension shares private members with the actual pinned builder;
             # compile and exercise it with PlacementRegression in Unity, not fake core internals.
-            standalone = [p for p in APP_CS if p.name not in ("Rr2dvPlacement.cs", "Rr2dvFeatures.cs", "Rr2dvInteractions.cs", "Rr2dvOpeningMotion.cs", "Rr2dvSourceFinishing.cs", "Rr2dvMaterialSlots.cs", "Rr2dvWhistleClosure.cs", "Rr2dvStoker.cs")]
+            # The catalogue adapter uses the actual CCL and Language Helper types;
+            # CatalogueRegression validates it in Unity with the real Creator package.
+            standalone = [p for p in APP_CS if p.name not in ("Rr2dvPlacement.cs", "Rr2dvFeatures.cs", "Rr2dvInteractions.cs", "Rr2dvOpeningMotion.cs", "Rr2dvSourceFinishing.cs", "Rr2dvMaterialSlots.cs", "Rr2dvWhistleClosure.cs", "Rr2dvStoker.cs", "Rr2dvCatalogue.cs")]
             proc = subprocess.run(["mcs", "-target:library", "-langversion:7", f"-out:{tmp}/app.dll", str(stubs), *map(str, standalone)],
                                   capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)

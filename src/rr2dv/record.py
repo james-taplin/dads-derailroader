@@ -34,7 +34,7 @@ DRIVER_DIAMETER_TOLERANCE = 0.03
 # Sim/HUD/licence settings by simulation basis (E01, U05): tank locos use onboard resources (S060 basis),
 # tender locos use tender ports (S282 basis). Proven by the S16 (tank) and G29 (tender) profiles.
 BASIS = {
-    "tank": {"SimBasis": 0, "HudType": 25, "License": "SH060", "BaseCarType": 6},
+    "tank": {"SimBasis": 0, "HudType": 25, "License": "S060", "BaseCarType": 6},
     "tender": {"SimBasis": 1, "HudType": 20, "License": "SH282", "BaseCarType": 6},
 }
 TENDER_CAR = {"BaseCarType": 8, "License": None}

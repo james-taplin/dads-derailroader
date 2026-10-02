@@ -53,6 +53,7 @@ public static partial class CclLocoBuild
             if (cfg.Tender != null) LinkTender(cfg, cfg.Tender);
             ConfigureRrReview();
             Cfg = cfg; refBody = null; carFolder = builtFolders[cfg];
+            Rr2dvCatalogue.Attach((CCL.Types.CustomCarPack)FindAsset("CustomCarPack"), Rr2dvCatalogue.ReadInput(), Line);
             EditorSceneManager.SaveOpenScenes();
             AssetDatabase.SaveAssets();
             RenderCheck();
@@ -85,6 +86,7 @@ public static partial class CclLocoBuild
         FinishRr2dvMaterials();
         PrepareRr2dvGrips();
         FitRr2dvCoalLoad();
+        if (!c.IsTender) ProbeRr2dvSafetyJet();
         CreateCar();
         try { BuildExterior(); }
         catch (InvalidOperationException e)
@@ -107,7 +109,7 @@ public static partial class CclLocoBuild
         if (!c.IsTender)
         {
             StripRr2dvSourceColliders();
-            BuildInterior(); SeatRr2dvControls(); FinishRr2dvInteriorControls(); BuildInteriorLOD();
+            BuildInterior(); RepairRr2dvWaterIndicators(); SeatRr2dvControls(); FinishRr2dvInteriorControls(); BuildInteriorLOD();
             FreshRr2dvSource();
         }
         Rr2dvReleaseSeat();
@@ -120,6 +122,48 @@ public static partial class CclLocoBuild
         builtFolders[c] = carFolder;
     }
 
+
+    // App-owned correction applied before the interior LOD is copied. The core's box
+    // mesh is centred, while its scaler is anchored at the bottom of the glass.
+    static void RepairRr2dvWaterIndicators()
+    {
+        string path = $"{carFolder}/{CarId}_interior.prefab";
+        var root = PrefabUtility.LoadPrefabContents(path);
+        try
+        {
+            foreach (Transform glass in root.transform)
+            {
+                if (!glass.name.StartsWith("sight glass ")) continue;
+                var water = glass.Find("scaler/water");
+                if (!water) throw new InvalidOperationException("Generated sight glass has no water column: " + glass.name);
+                var p = water.localPosition;
+                water.localPosition = new Vector3(p.x, water.localScale.y / 2f, p.z);
+                Line($"rr2dv {glass.name}: water centre raised to half-height {water.localPosition.y:F3} m");
+            }
+            var reader = root.GetComponentsInChildren<Component>(true)
+                .Single(c => c && c.GetType().Name == "LocoIndicatorReaderProxy");
+            var serialized = new SerializedObject(reader);
+            var level = serialized.FindProperty("locoWaterLevel");
+            if (level == null) throw new InvalidOperationException("Loco indicator reader has no boiler water field");
+            if (!level.objectReferenceValue)
+            {
+                // A source loco without a SightGlass still needs its boiler-water HUD
+                // reading. This creates no invented visible cab instrument.
+                var host = Child(root.transform, "HUD-only boiler water", Vector3.zero);
+                var dummy = Child(host, "dummy", Vector3.zero);
+                var scaler = Add(host.gameObject, "CCL.Types.Proxies.Indicators.IndicatorScalerProxy");
+                Set(scaler, "indicatorToScale", dummy);
+                Set(scaler, "minValue", 0f); Set(scaler, "maxValue", 1f);
+                Set(scaler, "startScale", Vector3.one); Set(scaler, "endScale", Vector3.one);
+                Set(scaler, "scaleFromModel", false);
+                PortReader(host.gameObject, "boiler.WATER_LEVEL_NORMALIZED");
+                Set(reader, "locoWaterLevel", scaler);
+                Line("rr2dv HUD-only boiler water reader: source has no generated sight glass");
+            }
+            SaveRr2dvPrefab(root, path);
+        }
+        finally { PrefabUtility.UnloadPrefabContents(root); }
+    }
 
     // The core finds the backhead with temporary colliders on the visible meshes, but skips a mesh that already has a
     // collider and then hits that one instead: a single-mesh model whose own RR collider has no backhead face (Reading
@@ -417,9 +461,85 @@ public static partial class CclLocoBuild
         finally { PrefabUtility.UnloadPrefabContents(root); }
     }
 
-    // The exhaust pipe's direction at a jet point: the long axis of the model's vertices within 0.25 m. It counts only when
-    // the cloud is pipe-like (long axis variance >= 2.5x the next), the point sits at its end (the tip: at least 3 cm along
-    // the axis from the cloud's centre, nothing more than 8 cm beyond it) and the axis does not point down.
+    // A fallback surface, not a claim to have identified the model's actual valve.
+    // Restrict the query spatially as well as excluding named fittings: several
+    // stock models use generic mesh names or call bell parts "Boiler".
+    static void ProbeRr2dvSafetyJet()
+    {
+        if (Cfg.SafetyPos.HasValue || !string.IsNullOrEmpty(Cfg.SafetyValvePart)) return;
+        if (!Cfg.BackheadZ.HasValue) throw new InvalidOperationException("Safety jet probe needs the backhead boundary");
+        var chimney = Components.Single(c => c.kind == "Chuff" && c.name == Cfg.ChimneyComp).pos;
+        var fittings = Components.Where(c => c.kind == "Bell" || c.kind == "Whistle" ||
+            c.kind == "Dynamo" || c.kind == "Compressor").Select(c => c.pos).ToArray();
+        var measured = ProbeRr2dvBoilerTop(RefBody, Cfg.BackheadZ.Value, chimney, fittings);
+        Cfg.SafetyPos = measured.point + Vector3.up * .02f;
+        Cfg.SndSafety = Cfg.SafetyPos.Value;
+        Line($"rr2dv safety fallback: highest supported forward boiler/dome surface {measured.part} at {V(measured.point)}; " +
+             $"jet {V(Cfg.SafetyPos.Value)} (20 mm clear), direction up; search z {measured.from:F3}..{measured.to:F3}, " +
+             "centre strip x +/-0.30 m, 25 mm sampling; cab/chimney/other fittings excluded; verify in game");
+    }
+
+    static (Vector3 point, string part, float from, float to) ProbeRr2dvBoilerTop(
+        Transform body, float backhead, Vector3 chimney, Vector3[] fittings)
+    {
+        using (new Rr2dvLodScope(body))
+        {
+            var renderers = body.GetComponentsInChildren<MeshRenderer>(false).Where(r => r.enabled).ToArray();
+            if (renderers.Length == 0) throw new InvalidOperationException("Safety jet probe: no visible boiler geometry");
+            var bounds = renderers[0].bounds;
+            foreach (var r in renderers) bounds.Encapsulate(r.bounds);
+            // Forward half of the locomotive only, and always ahead of the
+            // backhead. Stop behind the stack so its rim cannot win the height search.
+            float from = Mathf.Max(bounds.center.z, backhead + .25f);
+            float to = chimney.z - Mathf.Max(.5f, (chimney.z - backhead) * .1f);
+            if (to - from < .25f) throw new InvalidOperationException("Safety jet probe: no forward boiler search region clear of cab and chimney");
+            float top = bounds.max.y + 1f, floor = (bounds.min.y + chimney.y) * .5f;
+            var disabled = new System.Collections.Generic.List<Renderer>();
+            try
+            {
+                foreach (var r in renderers)
+                {
+                      string path = PathOf(r.transform, body).ToLowerInvariant();
+                      // Cab exclusion is spatial: S-23's Cab mesh also contains
+                      // the boiler, so rejecting that name loses valid surfaces.
+                    if (System.Text.RegularExpressions.Regex.IsMatch(path,
+                        @"roof|chimney|stack|bell|whistle|dynamo|generator|compressor|pump|pipe|handrail|railing|cord|wire|headlight|headlamp|water|coal"))
+                    { r.enabled = false; disabled.Add(r); }
+                }
+                using (var hits = new VisualHits(body))
+                {
+                    bool found = false; Vector3 best = Vector3.zero; string part = null;
+                    bool Sample(float x, float z, out RaycastHit h)
+                    {
+                        h = default(RaycastHit);
+                        if (z < from || z > to || fittings.Any(p => new Vector2(x - p.x, z - p.z).sqrMagnitude < .45f * .45f)) return false;
+                        return hits.Ray(new Vector3(x, top, z), Vector3.down, top - floor, out h, body) && h.normal.y > .45f;
+                    }
+                    for (int iz = 4; from + iz * .025f <= to - .1f; iz++)
+                    for (int ix = -12; ix <= 12; ix++)
+                    {
+                        float x = ix * .025f, z = from + iz * .025f;
+                        if (!Sample(x, z, out var h) || (found && h.point.y < best.y - .0001f)) continue;
+                        // Broad top support rejects narrow rails, pipes and isolated
+                        // spikes, even when they are merged into a generic mesh.
+                        bool supported = true;
+                        foreach (var d in new[] { new Vector2(-.1f, 0), new Vector2(.1f, 0), new Vector2(0, -.1f), new Vector2(0, .1f) })
+                            if (!Sample(x + d.x, z + d.y, out var edge) || Mathf.Abs(edge.point.y - h.point.y) > .08f)
+                            { supported = false; break; }
+                        if (!supported) continue;
+                        if (found && Mathf.Abs(h.point.y - best.y) <= .0001f && Mathf.Abs(x) >= Mathf.Abs(best.x)) continue;
+                        found = true; best = h.point; part = PathOf(h.collider.transform.parent, body);
+                    }
+                    if (!found) throw new InvalidOperationException("Safety jet probe: no supported forward boiler/dome top clear of fittings, review the model");
+                    return (best, part, from, to);
+                }
+            }
+            finally { foreach (var r in disabled) if (r) r.enabled = true; }
+        }
+    }
+
+    // The exhaust pipe's direction at a jet point: the long axis of vertices within 0.25 m.
+    // Require a pipe-like cloud, its end near the jet, and a non-downward direction.
     static Vector3? Rr2dvExhaustTip(Vector3 p)
     {
         const float r = .25f;
