@@ -1,9 +1,14 @@
-Unreleased
+Version 0.4.5
 
-- fitted moving oil cups across all 21 steam locos: a supported left/right pair at every driven axle, plus clear main-rod/crosshead bearings, with six to twelve cups required; corrected search-pose anchor coordinates and added full-turn clearance/spacing checks [rebuild packs; appearance and oil-can access still need checking in game]
-- fitted complete cab instruments across all 21 steam locos, with bespoke two-, three- or four-gauge layouts: boiler and pipe/application brakes, then speed and steam-chest pressure where mounts allow [rebuild packs; cab visibility and control clearance still need checking in game]
+- fitted moving oil cups across all 21 steam locos, with a supported left and right pair at every driven axle and extra cups on clear running gear bearings, six to twelve cups required [rebuild packs, appearance and oil can access still need checking in game]
+- corrected oil cup anchor coordinates and checked support, clearance and spacing through a complete wheel turn so cups ride their parent parts
+- fitted complete cab instruments across all 21 steam locos, with bespoke two, three or four gauge layouts, boiler and pipe and application brakes first, then speed and steam chest pressure where mounts allow [rebuild packs, cab visibility and control clearance still need checking in game]
 - added housed standalone brake and speed dials, corrected brake atmospheric-zero calibration, and retained numerical km/h on every F4 HUD
-- updated the master vehicle table with measured gauge and oil-cup supports, fitting coordinates and current repair status; retained C-40's accepted tender beam band for ordinary rebuilds; C-25's coupling tilt remains open
+- updated the master vehicle table with measured gauge and oil cup supports, fitting coordinates and current repair status
+- retained C-40's accepted tender beam band for ordinary rebuilds
+- included the nested zip packaging repair from main, all catalogue pages and the bundled Python library are loose files, future nested archives stop packaging [pages still selected per loco and matching tender]
+- known issue, C-25 coupling tilt and the outstanding 0.4.4 issues remain open
+- automated and native Unity checks passed, the latest rebuilt packs still need in game acceptance
 
 Version 0.4.4
 
