@@ -5,7 +5,6 @@ import hashlib
 from pathlib import Path, PurePosixPath
 import re
 import shutil
-from zipfile import BadZipFile, ZipFile
 
 from . import stock
 from .jsonio import read_json, sha256_file, write_json
@@ -49,27 +48,25 @@ def prepare(project: Path, record: dict) -> dict | None:
             raise CatalogueError(f'Invalid catalogue page identifier: {pid!r}')
         pages.append({**page, 'carId':cfg['CarId'], 'assetName':pid+'-catalogue'})
     expected = {p['sourceId'] for p in pages}
-    archive_path = DATA/'steam-pages.zip'
+    # Assets are loose files so release archives never contain a nested catalogue ZIP.
+    library = DATA/'pages'
     files = {}
-    try:
-        archive = ZipFile(archive_path)
-    except BadZipFile as e:
-        raise CatalogueError('Damaged catalogue library; restore the complete app download') from e
-    with archive:
-        for name in archive.namelist():
-            path = PurePosixPath(name)
-            if path.is_absolute() or '..' in path.parts or '\\' in name:
-                raise CatalogueError('Unsafe path in catalogue library')
-            if not ((len(path.parts)==2 and path.parts[0] in expected) or name in {p+'.meta' for p in expected}):
-                continue
-            try:
-                data = archive.read(name)
-            except BadZipFile as e:
-                raise CatalogueError(f'Damaged catalogue asset: {name}; restore the complete app download') from e
-            digest = hashlib.sha256(data).hexdigest()
-            if index['assets'].get(name) != digest:
-                raise CatalogueError(f'Catalogue asset failed its integrity check: {name}')
-            files[name] = data
+    for name, digest in index['assets'].items():
+        path = PurePosixPath(name)
+        if path.is_absolute() or '..' in path.parts or '\\' in name or ':' in name:
+            raise CatalogueError('Unsafe path in catalogue library')
+        if not ((len(path.parts)==2 and path.parts[0] in expected) or name in {p+'.meta' for p in expected}):
+            continue
+        asset = library/name
+        if not asset.resolve().is_relative_to(library.resolve()):
+            raise CatalogueError('Catalogue asset escapes the library')
+        try:
+            data = asset.read_bytes()
+        except OSError as e:
+            raise CatalogueError(f'Missing catalogue asset: {name}; restore the complete app download') from e
+        if hashlib.sha256(data).hexdigest() != digest:
+            raise CatalogueError(f'Catalogue asset failed its integrity check: {name}')
+        files[name] = data
     for pid in expected:
         for suffix in ['-catalogue.asset','-catalogue.asset.meta','-diagram.prefab','-diagram.prefab.meta','-icon.png','-icon.png.meta']:
             if f'{pid}/{pid}{suffix}' not in files:
@@ -86,6 +83,6 @@ def prepare(project: Path, record: dict) -> dict | None:
         dest.parent.mkdir(parents=True,exist_ok=True)
         dest.write_bytes(data)
     write_json(project/INPUT, {'schema':1,'locoSourceId':loco_id,'pages':pages})
-    return {'edition':index['edition'], 'librarySha256':sha256_file(archive_path),
+    return {'edition':index['edition'], 'librarySha256':sha256_file(DATA/'index.json'),
             'pages':[{k:p[k] for k in ('sourceId','carId','assetName','consist')} for p in pages],
             'termKeys':[t['key'] for p in pages for t in p['terms']]}

@@ -10,7 +10,7 @@ The builder attaches these references to every `CustomCarVariant` in the complet
 
 Source: `Railroader-DV-Catalogue-44-Pages-Game-Numbers-v2.zip`, SHA-256 `00fa9706c3f9e9c4292d6f8a98ae5fee9d36f5b343d6f4ba016d736af943c80b`.
 
-`src/rr2dv/catalogue/index.json` holds the explicit 21 locomotive-to-page mappings, selected English text, and asset hashes. `steam-pages.zip` holds the 41 native steam/tender pages, icons, diagrams, and original Unity GUID metadata. The three diesel pages and full-fleet translation/authoring tools are excluded. These are the user-supplied catalogue assets, with no game models or converted vehicle packs included.
+`src/rr2dv/catalogue/index.json` holds the explicit 21 locomotive-to-page mappings, selected English text, and asset hashes. The loose `pages/` directory holds the 41 native steam/tender pages, icons, diagrams, and original Unity GUID metadata. The three diesel pages and full-fleet translation/authoring tools are excluded. These are the user-supplied catalogue assets, with no game models or converted vehicle packs included.
 
 The supplied figures and labels are retained. Static page fields, such as hauling limits and rating bars, do not automatically become measurements of the physics simulation. The sheets' provisional rating labels remain visible; actual driving tests are still required. CCL's native catalogue handles the vehicle-data fields it normally derives from the built car. This integration does not calculate new performance ratings or retune vehicles to match the artwork.
 
@@ -23,3 +23,6 @@ The supplied figures and labels are retained. Static page fields, such as haulin
 The catalogue's appearance and readability in Derail Valley remain in-game acceptance checks.
 
 To repeat the native regression, set `RR2DV_TEST_UNITY` to the supported `Unity.exe` and `RR2DV_TEST_CAR_CREATOR` to `CarCreator_3.1.9.unitypackage`. With `PYTHONPATH=src;tests` on Windows, run `python -m unittest test_catalogue.NativeCatalogue -v`. The test creates and removes its own disposable project.
+
+
+Release layout: catalogue assets and their Unity .meta GUID files are ordinary files under `src/rr2dv/catalogue/pages/`. Every selected file is checked against index.json before staging. `librarySha256` now identifies that index (including its complete asset-hash manifest), rather than a container ZIP. The source archive hash above remains provenance only. Release packaging rejects nested archive files; the Windows build also expands Python's base_library.zip into its runtime directory and verifies startup.

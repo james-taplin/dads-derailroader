@@ -42,6 +42,44 @@ class PackageRelease(unittest.TestCase):
         self.assertTrue([n for n in names if n.startswith("Derailroader/wiki/")])
         self.assertTrue([n for n in names if n.startswith("Derailroader/docs/")])
 
+    def test_nested_zip_is_rejected_even_with_a_different_extension(self):
+        mod=load()
+        with tempfile.TemporaryDirectory() as tmp:
+            p=Path(tmp)/'library.dat'
+            with zipfile.ZipFile(p,'w') as z: z.writestr('page','asset')
+            with self.assertRaisesRegex(ValueError,'Nested archive'):
+                mod.reject_nested_archives([p])
+
+    def test_stale_runtime_zip_blocks_packaging_before_output(self):
+        mod=load()
+        with tempfile.TemporaryDirectory() as tmp:
+            root=Path(tmp); app=root/'dist/Derailroader'; app.mkdir(parents=True)
+            (app/'Derailroader.exe').write_bytes(b'exe')
+            (app/'base_library.zip').write_bytes(b'stale')
+            with self.assertRaisesRegex(ValueError,'Nested archive'):
+                mod.package(root/'dist',root/'output')
+            self.assertFalse((root/'output').exists())
+
+    def test_python_runtime_unpack_preserves_bytes(self):
+        spec=importlib.util.spec_from_file_location('unpack_runtime',SCRIPT.with_name('unpack_python_runtime.py'))
+        mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
+        with tempfile.TemporaryDirectory() as tmp:
+            app=Path(tmp); runtime=app/'_internal'; runtime.mkdir()
+            archive=runtime/'base_library.zip'
+            with zipfile.ZipFile(archive,'w') as z: z.writestr('encodings/__init__.pyc',b'original')
+            mod.unpack(app)
+            self.assertFalse(archive.exists())
+            self.assertEqual((runtime/'encodings/__init__.pyc').read_bytes(),b'original')
+
+    def test_runtime_unpack_rejects_traversal_without_writes(self):
+        spec=importlib.util.spec_from_file_location('unpack_runtime',SCRIPT.with_name('unpack_python_runtime.py'))
+        mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)
+        with tempfile.TemporaryDirectory() as tmp:
+            app=Path(tmp); runtime=app/'_internal'; runtime.mkdir()
+            with zipfile.ZipFile(runtime/'base_library.zip','w') as z: z.writestr('../escape.pyc',b'bad')
+            with self.assertRaises(ValueError): mod.unpack(app)
+            self.assertFalse((app/'escape.pyc').exists())
+
 
 if __name__ == "__main__":
     unittest.main()

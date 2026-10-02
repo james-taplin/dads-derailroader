@@ -83,3 +83,6 @@ For help, include the run identifier, stage, exact message, and a short relevant
 ## Safety jet probe cannot find a supported forward surface
 
 The fallback could not find a broad boiler/dome candidate clear of the cab, chimney and other fittings. Keep the run report and locomotive identifier for model review. Do not substitute the cab roof or whistle position. A reported candidate still needs visual checking after rebuilding and installing the pack.
+
+
+Catalogue files are shipped unpacked with their Unity metadata. If release packaging reports "Nested archive cannot ship", expand the required contents and update the loader; do not bypass the check or drop the catalogue. Windows builds also unpack the Python standard library and run the packaged self-test. Rebuild into a fresh output directory to avoid carrying an old nested ZIP forward.

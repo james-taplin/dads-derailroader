@@ -1,0 +1,193 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1615646900, guid: b247489fc36790c41b197410cd8386d9, type: 3}
+  m_Name: ls-282-k28t-catalogue
+  m_EditorClassIdentifier: 
+  HeaderColour: {r: 0.60784316, g: 0.6627451, b: 0.6784314, a: 1}
+  PageName:
+    Items:
+    - Language: 0
+      Value: K-28T
+  ConsistUnits: 1/1
+  HasNickname: 1
+  Nickname:
+    Items:
+    - Language: 0
+      Value: PROVISIONAL RATINGS
+  ProductionYears: 
+  Type: 1
+  Role1: 21
+  Role2: 0
+  ShowLoadRatings: 1
+  LoadFlat:
+    Tonnage: 2000
+    Rating: 0
+  LoadIncline:
+    Tonnage: 700
+    Rating: 2
+  LoadInclineWet:
+    Tonnage: 550
+    Rating: 2
+  DiagramLayout: {fileID: 8983445598564812126, guid: 86c9e643a4fdeae418c67364bdc45329,
+    type: 3}
+  DiagramExtras:
+    Length: 11133
+    Width: 3163
+    Height: 4432
+    IsThinVehicle: 0
+    HasFrontBumper: 1
+    HasRearBumper: 1
+  TechList:
+    Tech1:
+      Icon: 16
+      Description: rrstock/catalogue/ls-282-k28t/tech0/description
+      Type: rrstock/catalogue/ls-282-k28t/tech0/type
+    Tech2:
+      Icon: 13
+      Description: rrstock/catalogue/ls-282-k28t/tech1/description
+      Type: rrstock/catalogue/ls-282-k28t/tech1/type
+    Tech3:
+      Icon: 5
+      Description: rrstock/catalogue/ls-282-k28t/tech2/description
+      Type: rrstock/catalogue/ls-282-k28t/tech2/type
+    Tech4:
+      Icon: 3
+      Description: rrstock/catalogue/ls-282-k28t/tech3/description
+      Type: rrstock/catalogue/ls-282-k28t/tech3/type
+    Tech5:
+      Icon: 17
+      Description: rrstock/catalogue/ls-282-k28t/tech4/description
+      Type: rrstock/catalogue/ls-282-k28t/tech4/type
+    Tech6:
+      Icon: 1
+      Description: rrstock/catalogue/ls-282-k28t/tech5/description
+      Type: rrstock/catalogue/ls-282-k28t/tech5/type
+    Tech7:
+      Icon: 1
+      Description: rrstock/catalogue/ls-282-k28t/tech6/description
+      Type: rrstock/catalogue/ls-282-k28t/tech6/type
+  HidePrice: 1
+  EaseOfOperation:
+    TotalScoreDisplay: 1
+    LearningSimplicity:
+      ScoreType: 2
+      Value: 1
+    BrakeOperation:
+      ScoreType: 2
+      Value: 2
+    WarningSystems:
+      ScoreType: 2
+      Value: 1
+    MisuseTolerance:
+      ScoreType: 2
+      Value: 1
+    RemoteConnectivity:
+      ScoreType: 2
+      Value: 1
+    ControlsLayout:
+      ScoreType: 2
+      Value: 2
+    ItemStorage:
+      ScoreType: 2
+      Value: 2
+    ReversingComfort:
+      ScoreType: 2
+      Value: 1
+    LightingOperation:
+      ScoreType: 2
+      Value: 2
+    SoundComfort:
+      ScoreType: 2
+      Value: 1
+  Maintenance:
+    TotalScoreDisplay: 1
+    EnergyEconomy:
+      ScoreType: 2
+      Value: 5
+    RepairEconomy:
+      ScoreType: 2
+      Value: 4
+    SanderAdjustability:
+      ScoreType: 2
+      Value: 4
+    WheelsLifetime:
+      ScoreType: 2
+      Value: 4
+    PowertrainLifetime:
+      ScoreType: 2
+      Value: 5
+    CollisionToughness:
+      ScoreType: 2
+      Value: 5
+  Hauling:
+    TotalScoreDisplay: 1
+    LoadRating:
+      ScoreType: 2
+      Value: 4
+    TopSpeed:
+      ScoreType: 2
+      Value: 3
+    AdhesionControl:
+      ScoreType: 2
+      Value: 4
+    HeatManagement:
+      ScoreType: 2
+      Value: 4
+    Range:
+      ScoreType: 2
+      Value: 4
+    CruiseDrivingEase:
+      ScoreType: 2
+      Value: 3
+    HillclimbDrivingEase:
+      ScoreType: 2
+      Value: 1
+    DynamicBraking:
+      ScoreType: 2
+      Value: 2
+  Shunting:
+    TotalScoreDisplay: 1
+    Visibility:
+      ScoreType: 2
+      Value: 1
+    Responsiveness:
+      ScoreType: 2
+      Value: 3
+    ShuntAcceleration:
+      ScoreType: 2
+      Value: 4
+    AccelerationDrivingEase:
+      ScoreType: 2
+      Value: 4
+    SoloBraking:
+      ScoreType: 2
+      Value: 3
+    CompressorStrength:
+      ScoreType: 2
+      Value: 2
+    Compactness:
+      ScoreType: 2
+      Value: 2
+    OutsideAccess:
+      ScoreType: 2
+      Value: 2
+  _pageNameJson: '{"Items":[{"Language":"English","Value":"K-28T"}]}'
+  _nicknameJson: '{"Items":[{"Language":"English","Value":"PROVISIONAL RATINGS"}]}'
+  _loadJson: '{"Rating":"Good","Tonnage":2000}'
+  _loadInclineJson: '{"Rating":"Bad","Tonnage":700}'
+  _loadInclineWetJson: '{"Rating":"Bad","Tonnage":550}'
+  _diagramJson: '{"HasFrontBumper":true,"HasRearBumper":true,"Height":4432,"IsThinVehicle":false,"Length":11133,"Width":3163}'
+  _techJson: '{"Tech1":{"Description":"rrstock/catalogue/ls-282-k28t/tech0/description","Icon":"SteamEngine","Type":"rrstock/catalogue/ls-282-k28t/tech0/type"},"Tech2":{"Description":"rrstock/catalogue/ls-282-k28t/tech1/description","Icon":"MechanicalTransmission","Type":"rrstock/catalogue/ls-282-k28t/tech1/type"},"Tech3":{"Description":"rrstock/catalogue/ls-282-k28t/tech2/description","Icon":"CompressedAirBrakeSystem","Type":"rrstock/catalogue/ls-282-k28t/tech2/type"},"Tech4":{"Description":"rrstock/catalogue/ls-282-k28t/tech3/description","Icon":"OpenCab","Type":"rrstock/catalogue/ls-282-k28t/tech3/type"},"Tech5":{"Description":"rrstock/catalogue/ls-282-k28t/tech4/description","Icon":"UnitEffect","Type":"rrstock/catalogue/ls-282-k28t/tech4/type"},"Tech6":{"Description":"rrstock/catalogue/ls-282-k28t/tech5/description","Icon":"Generic","Type":"rrstock/catalogue/ls-282-k28t/tech5/type"},"Tech7":{"Description":"rrstock/catalogue/ls-282-k28t/tech6/description","Icon":"Generic","Type":"rrstock/catalogue/ls-282-k28t/tech6/type"}}'
+  _easeScore: '{"BrakeOperation":{"ScoreType":"Score","Value":2},"ControlsLayout":{"ScoreType":"Score","Value":2},"ItemStorage":{"ScoreType":"Score","Value":2},"LearningSimplicity":{"ScoreType":"Score","Value":1},"LightingOperation":{"ScoreType":"Score","Value":2},"MisuseTolerance":{"ScoreType":"Score","Value":1},"RemoteConnectivity":{"ScoreType":"Score","Value":1},"ReversingComfort":{"ScoreType":"Score","Value":1},"SoundComfort":{"ScoreType":"Score","Value":1},"TotalScoreDisplay":"Average","WarningSystems":{"ScoreType":"Score","Value":1}}'
+  _maintScore: '{"CollisionToughness":{"ScoreType":"Score","Value":5},"EnergyEconomy":{"ScoreType":"Score","Value":5},"PowertrainLifetime":{"ScoreType":"Score","Value":5},"RepairEconomy":{"ScoreType":"Score","Value":4},"SanderAdjustability":{"ScoreType":"Score","Value":4},"TotalScoreDisplay":"Average","WheelsLifetime":{"ScoreType":"Score","Value":4}}'
+  _haulScore: '{"AdhesionControl":{"ScoreType":"Score","Value":4},"CruiseDrivingEase":{"ScoreType":"Score","Value":3},"DynamicBraking":{"ScoreType":"Score","Value":2},"HeatManagement":{"ScoreType":"Score","Value":4},"HillclimbDrivingEase":{"ScoreType":"Score","Value":1},"LoadRating":{"ScoreType":"Score","Value":4},"Range":{"ScoreType":"Score","Value":4},"TopSpeed":{"ScoreType":"Score","Value":3},"TotalScoreDisplay":"Average"}'
+  _shuntScore: '{"AccelerationDrivingEase":{"ScoreType":"Score","Value":4},"Compactness":{"ScoreType":"Score","Value":2},"CompressorStrength":{"ScoreType":"Score","Value":2},"OutsideAccess":{"ScoreType":"Score","Value":2},"Responsiveness":{"ScoreType":"Score","Value":3},"ShuntAcceleration":{"ScoreType":"Score","Value":4},"SoloBraking":{"ScoreType":"Score","Value":3},"TotalScoreDisplay":"Average","Visibility":{"ScoreType":"Score","Value":1}}'
