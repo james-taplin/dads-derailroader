@@ -22,7 +22,7 @@ def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "--rr2dv-self-test":
         import tkinter
         from rr2dv import __version__
-        from rr2dv import attribution, catalogue, oiling, stock
+        from rr2dv import attribution, catalogue, oiling, review, reviewchoices, stock
         import tempfile
         from rr2dv.unityproject import tooling_root
 
@@ -46,8 +46,21 @@ def main() -> int:
                     record['tender'] = {'config': {'CarId': entry['tender']['id']}}
                 catalogue.prepare(Path(tmp), record)
                 profile = oiling.library()['profiles'][loco_id]
+                # Replay an incompatible saved radius through the frozen review path.
+                source = {'mainDriverIndex': 0, 'wheelsets': [{'diameter': profile['wheelRadius']*2,
+                          'animation': {'clipName': 'Drivers'}, 'numberOfAxles': len(profile['axleZ'])}]}
+                questions = review.request({'vehicleId': loco_id, 'config': {'CarName': entry['displayName']},
+                    'metadata': {}}, {loco_id: source}, {}, 'packaged-self-test')
+                previous = review.resolve(questions, {**{k: questions[k] for k in reviewchoices.IDENTITY},
+                    'values': {**questions['prefill']['values'], 'wheelRadius': profile['wheelRadius']+.0352723715782166,
+                               'acknowledgeExperimental': True}})
+                reviewchoices.remember(Path(tmp), previous)
+                recovered = reviewchoices.prepare(questions, Path(tmp))
+                assert recovered['prefill']['values']['wheelRadius'] == questions['prefill']['values']['wheelRadius']
+                assert 'restored for review' in recovered['prefill']['origin']
+                assert recovered['prefill']['values']['acknowledgeExperimental'] is False
                 oil_record = {'vehicleId': loco_id, 'config': {'CarId': loco_id,
-                    'WheelRadius': profile['wheelRadius'],
+                    'WheelRadius': recovered['prefill']['values']['wheelRadius'],
                     'EngineUnits': [{'DriverParts': ['driver']*len(profile['axleZ'])}]}}
                 selection = oiling.prepare(oil_record, source_files={name:'0'*64 for name in stock.HASHED_FILES})
                 assert selection['changedSourceFiles'] == list(stock.HASHED_FILES)

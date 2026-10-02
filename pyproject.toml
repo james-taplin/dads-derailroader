@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "rr2dv"
-version = "0.4.6"
+version = "0.4.7"
 description = "Convert Railroader stock steam locomotives into Derail Valley (CCL) packs"
 license = "PolyForm-Noncommercial-1.0.0"
 license-files = ["LICENSE"]

@@ -1,4 +1,4 @@
-Unreleased
+Version 0.4.7
 
 - prevented incompatible saved stock wheel radii from silently replacing the supported source radius in the pre-build review, retaining other choices and requiring confirmation [S-23's old low confidence probe choice was restored instead of its source radius]
 - oil fitting radius errors now name the reviewed and required values and direct users to the pre-build review [geometry and motion checks remain required]
