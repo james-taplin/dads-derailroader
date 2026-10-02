@@ -1,0 +1,3403 @@
+{
+ "profiles": {
+  "ls-060-s23": {
+   "axleZ": [
+    1.71,
+    -0.0,
+    -1.64
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.0021366537548601627,
+      0.24437765777111053,
+      0.05261724442243576
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods.009_L/Rods.010_L/Driversnstuff_5_LOD0",
+     "phase": 0.8125,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.03633856773376465,
+      -1.3047468662261963,
+      0.07450001686811447
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.013/Rods.012_R/Driversnstuff_14_LOD0",
+     "phase": 0.4375,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.07634711265563965,
+      -0.054764509201049805,
+      0.10772451758384705
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.013/Rods.012_L/Driversnstuff_1_LOD0",
+     "phase": 0.8125,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      -0.0763387680053711,
+      -0.004745831713080406,
+      0.10772447288036346
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.013/Rods.012_R/Driversnstuff_14_LOD0",
+     "phase": 0.4375,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.018474888056516647,
+      -0.01271885260939598,
+      0.11433450877666473
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods.004_L/Rods.005_L/Rods.006_L/Driversnstuff_3_LOD0",
+     "phase": 0.8125,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.1416856050491333,
+      -0.19724802672863007,
+      0.140817791223526
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods.002_R/Rods.003_R/Driversnstuff_15_LOD0",
+     "phase": 0.4375,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.008203528821468353,
+      0.11746947467327118,
+      0.05739998072385788
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods.009_L/Rods.010_L/Driversnstuff_5_LOD0",
+     "phase": 0.8125,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.04240584373474121,
+      -1.4406683444976807,
+      0.07450025528669357
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.013/Rods.012_R/Driversnstuff_14_LOD0",
+     "phase": 0.4375,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 2 usable",
+     "local": [
+      -0.15168583393096924,
+      0.0227972362190485,
+      0.21458637714385986
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods.002_L/Rods.003_L/Driversnstuff_2_LOD0",
+     "phase": 0.8125,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.1516859531402588,
+      0.022797908633947372,
+      0.21458619832992554
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods.002_R/Rods.003_R/Driversnstuff_15_LOD0",
+     "phase": 0.4375,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "a3e4f7259249dd0b3e0c7777ef6bd472d4d9c8e54cf4440b3dbb92eb7930cf74",
+    "Catalog.json": "e44a0ec95d9f099ce0b365cb02e09cbba93325a22b91381129f67aa5450d5bed",
+    "Definitions.json": "a33449a21a85a3aae85e3aca8716401b9185302492a2a57cf85f55f76dc1a7e2"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.6477
+  },
+  "ls-080-s51": {
+   "axleZ": [
+    2.2349,
+    0.7441,
+    -0.7441,
+    -2.226
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 12 bump(s) within 0.30 m of the end: 2 not on a travelling part, 5 not level, 0 too close to another cup, 2 without clear space, 3 usable",
+     "local": [
+      -0.04839968681335449,
+      -0.00560450553894043,
+      0.21822988986968994
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.003/rods_L/Driversnstuff.015",
+     "phase": 0.8125,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 12 bump(s) within 0.30 m of the end: 1 not on a travelling part, 6 not level, 0 too close to another cup, 2 without clear space, 3 usable",
+     "local": [
+      -0.0016002058982849121,
+      -0.005951642990112305,
+      0.21824753284454346
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.003/rods_R/Driversnstuff.025",
+     "phase": 0.9375,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 2 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.038399696350097656,
+      1.5151960849761963,
+      0.21448147296905518
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.003/rods_L/Driversnstuff.015",
+     "phase": 0.8125,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      0.008399784564971924,
+      1.514849305152893,
+      0.21448135375976562
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.003/rods_R/Driversnstuff.025",
+     "phase": 0.9375,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 10 bump(s) within 0.30 m of the end: 1 not on a travelling part, 4 not level, 0 too close to another cup, 3 without clear space, 2 usable",
+     "local": [
+      -0.038399696350097656,
+      2.993396759033203,
+      0.21448178589344025
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.003/rods_L/Driversnstuff.015",
+     "phase": 0.8125,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 5 without clear space, 1 usable",
+     "local": [
+      0.008399784564971924,
+      2.9930498600006104,
+      0.21448171138763428
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.003/rods_R/Driversnstuff.025",
+     "phase": 0.9375,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.04839968681335449,
+      4.465297222137451,
+      0.218049556016922
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.003/rods_L/Driversnstuff.015",
+     "phase": 0.8125,
+     "role": "driven axle 4",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.04839980602264404,
+      4.4649505615234375,
+      0.2182081937789917
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.003/rods_R/Driversnstuff.025",
+     "phase": 0.9375,
+     "role": "driven axle 4",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.13145707547664642,
+      -0.3127206563949585,
+      -0.00016364459588658065
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods.010_L/rods.011_L/rods.013_L/Driversnstuff.006",
+     "phase": 0.8125,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.02774149179458618,
+      0.4833943843841553,
+      0.08919060230255127
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.003/rods_R/Driversnstuff.025",
+     "phase": 0.9375,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 9 bump(s) within 0.30 m of the end: 1 not on a travelling part, 4 not level, 0 too close to another cup, 3 without clear space, 1 usable",
+     "local": [
+      -0.038399696350097656,
+      3.257993221282959,
+      0.12351775169372559
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.003/rods_L/Driversnstuff.015",
+     "phase": 0.8125,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_6L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 2 not on a travelling part, 0 not level, 0 too close to another cup, 4 without clear space, 1 usable",
+     "local": [
+      0.008399784564971924,
+      3.2575550079345703,
+      0.12351760268211365
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone.003/rods_R/Driversnstuff.025",
+     "phase": 0.9375,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_6R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "db31c7e13718724e90287bee80f255ff113f1d639524cb5dd9dba8cc8a36f2c6",
+    "Catalog.json": "6fab12970d52afbc7620a96302d2e5035d59b867f88744a7ac4d85ab2b59a9b0",
+    "Definitions.json": "db6c4bdf0b8b018246b63ba2de55a93b00d57f5aa5a3f27ce8ea5c6b367643e5"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.6477
+  },
+  "ls-2100-d46": {
+   "axleZ": [
+    2.9973,
+    1.5037,
+    0.0,
+    -1.5037,
+    -2.9973
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.0019228458404541016,
+      0.16227436065673828,
+      0.08853110671043396
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/RunningGear_003_L/Main rod 1.002",
+     "phase": 0.75,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 1 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.036353886127471924,
+      -0.0002453327178955078,
+      0.21662947535514832
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/RunningGear_003_L.001/Main rod 1.001",
+     "phase": 0.0,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.011923074722290039,
+      1.5158746242523193,
+      0.2127159833908081
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/RunningGear_003_L/Main rod 1.002",
+     "phase": 0.75,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.016353845596313477,
+      1.5133548974990845,
+      0.21271571516990662
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/RunningGear_003_L.001/Main rod 1.001",
+     "phase": 0.0,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 2 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 5 usable",
+     "local": [
+      -0.011923074722290039,
+      2.9795751571655273,
+      0.21271635591983795
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/RunningGear_003_L/Main rod 1.002",
+     "phase": 0.75,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 2 usable",
+     "local": [
+      0.051803648471832275,
+      0.014712724834680557,
+      0.1833019256591797
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/RunningGear_005_L.001/RunningGear_006_L.001/Piston rod.001",
+     "phase": 0.0,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 4 usable",
+     "local": [
+      -0.011923074722290039,
+      4.523275852203369,
+      0.21271657943725586
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/RunningGear_003_L/Main rod 1.002",
+     "phase": 0.75,
+     "role": "driven axle 4",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.026353895664215088,
+      4.5107550621032715,
+      0.21271643042564392
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/RunningGear_003_L.001/Main rod 1.001",
+     "phase": 0.0,
+     "role": "driven axle 4",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": 4,
+     "evidence": "modelled travelling nub; 1 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.03192305564880371,
+      5.996876239776611,
+      0.216514453291893
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/RunningGear_003_L/Main rod 1.002",
+     "phase": 0.75,
+     "role": "driven axle 5",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": 4,
+     "evidence": "modelled travelling nub; 1 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.036353886127471924,
+      5.994355201721191,
+      0.21654102206230164
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/RunningGear_003_L.001/Main rod 1.001",
+     "phase": 0.0,
+     "role": "driven axle 5",
+     "side": 1.0,
+     "tag": "oil_5R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 1 not on a travelling part, 1 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      0.038076937198638916,
+      0.006579399108886719,
+      0.21630752086639404
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/RunningGear_003_L/Main rod 1.002",
+     "phase": 0.75,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_6L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.0036458969116210938,
+      0.16208648681640625,
+      0.0885310098528862
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/RunningGear_003_L.001/Main rod 1.001",
+     "phase": 0.0,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_6R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "f6a14ec344fc440836f98aaf6177aa1c4ae7b7a1ae1df02790982ad6968f255a",
+    "Catalog.json": "31a61f4480979ec066465246b72d598b093d996dad469a3b5043a0a05b053e73",
+    "Definitions.json": "6274670cb93adeff896dc52bb6512b16ffec32101ae958212fa0d5f507f911d8"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.71
+  },
+  "ls-2102-f71": {
+   "axleZ": [
+    3.2086,
+    1.5086,
+    -0.0005,
+    -1.5014,
+    -3.0014
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 8 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 3 without clear space, 4 usable",
+     "local": [
+      -0.012654542922973633,
+      -0.6126711368560791,
+      0.2723451256752014
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_L/Driversnstuff_16_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 9 bump(s) within 0.30 m of the end: 1 not on a travelling part, 1 not level, 0 too close to another cup, 4 without clear space, 3 usable",
+     "local": [
+      -0.007346034049987793,
+      -0.6026695370674133,
+      0.27234524488449097
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_R/Driversnstuff_25_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.0020502435509115458,
+      -0.31160005927085876,
+      0.15028472244739532
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_005_L/rods_006_L/Driversnstuff_17_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.032653748989105225,
+      1.0673317909240723,
+      0.1644705832004547
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_R/Driversnstuff_25_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.005757296457886696,
+      0.557108998298645,
+      0.04610932990908623
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_008_L/rods_009_L/Driversnstuff_14_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.005837074015289545,
+      0.7776641249656677,
+      0.040313806384801865
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_008_R/rods_009_R/Driversnstuff_23_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.012654542922973633,
+      4.0973310470581055,
+      0.27200478315353394
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_L/Driversnstuff_16_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 4",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.01734602451324463,
+      4.097332954406738,
+      0.2720049023628235
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_R/Driversnstuff_25_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 4",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": 4,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.042654573917388916,
+      5.5973310470581055,
+      0.1474185287952423
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_L/Driversnstuff_16_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 5",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": 4,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.04734605550765991,
+      5.5973334312438965,
+      0.14741864800453186
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_R/Driversnstuff_25_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 5",
+     "side": 1.0,
+     "tag": "oil_5R"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.01732373796403408,
+      -1.1861342191696167,
+      0.2907341718673706
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_005_L/rods_006_L/Driversnstuff_17_LOD0",
+     "phase": 0.75,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_6L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 22 bump(s) within 0.30 m of the end: 16 not on a travelling part, 1 not level, 0 too close to another cup, 4 without clear space, 1 usable",
+     "local": [
+      -0.0026764869689941406,
+      -0.3937143385410309,
+      0.04286715388298035
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_007_R/Driversnstuff_27_LOD0",
+     "phase": 0.0,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_6R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "dbabc8f9eaf29b47d24ed0ed16dd02584831f60ab12d1a5394483961580b6167",
+    "Catalog.json": "5b1fa582b40fa3ef305fda6892ebd0aff9a8b6ea32ec7640a27e6d2dfd5e24a6",
+    "Definitions.json": "47503868eabf6397b37c18bb208e974724a7289347a55313e40893eaed7eb6e6"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.725
+  },
+  "ls-260-g16": {
+   "axleZ": [
+    1.7804,
+    0.0001,
+    -1.7928
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.9110037088394165,
+      -1.6078927516937256,
+      0.06040472537279129
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_R/Driversnstuff.024_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.9105660915374756,
+      -1.6287389993667603,
+      0.060404762625694275
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_L/Driversnstuff.015_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 4 usable",
+     "local": [
+      0.018464062362909317,
+      1.5869276523590088,
+      -0.21440660953521729
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_005_R/rods_006_R/Driversnstuff.025_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 3 usable",
+     "local": [
+      0.0033325734548270702,
+      1.5950753688812256,
+      -0.13851837813854218
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_005_L/rods_006_L/Driversnstuff.016_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.9210036993026733,
+      1.795309066772461,
+      0.1656326800584793
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_R/Driversnstuff.024_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.9005661010742188,
+      1.774463176727295,
+      0.165632963180542
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_L/Driversnstuff.015_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.9116781949996948,
+      -1.480820894241333,
+      0.06040460616350174
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_R/Driversnstuff.024_LOD0",
+     "phase": 0.0,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.9083396196365356,
+      -1.4698671102523804,
+      0.06040458381175995
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_L/Driversnstuff.015_LOD0",
+     "phase": 0.75,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 3 without clear space, 1 usable",
+     "local": [
+      -0.9110037088394165,
+      0.1803613007068634,
+      0.10588276386260986
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_R/Driversnstuff.024_LOD0",
+     "phase": 0.0,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 2 usable",
+     "local": [
+      -0.008782034739851952,
+      1.7791357040405273,
+      -0.1772046685218811
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_005_L/rods_006_L/Driversnstuff.016_LOD0",
+     "phase": 0.75,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "4e8213c63a9a1c0d8c9bdbac34f0bae86885522b3d53343602ec82d2f1d6bc12",
+    "Catalog.json": "b0bf44728a07610ccd2e4009fd48a9d8f5c8d0be8a7365ea147a6155309261f2",
+    "Definitions.json": "fd9dd62b9b19e0678a5facc9837a56f5d5a37d835091aab48c9027f2cbcc56a6"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.635
+  },
+  "ls-260-g25": {
+   "axleZ": [
+    2.3276,
+    0.0031,
+    -2.0037
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      0.005293905735015869,
+      -4.332122802734375,
+      0.17285454273223877
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod L/Main rod 1",
+     "phase": 0.1875,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 0 not on a travelling part, 1 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.045405566692352295,
+      -4.331001281738281,
+      0.17311304807662964
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod R/Main rod 1.001",
+     "phase": 0.5625,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 2 usable",
+     "local": [
+      0.005293905735015869,
+      -1.987621784210205,
+      0.17004980146884918
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod L/Main rod 1",
+     "phase": 0.1875,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 0 not on a travelling part, 1 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      -0.045405566692352295,
+      -1.9865002632141113,
+      0.17004939913749695
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod R/Main rod 1.001",
+     "phase": 0.5625,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 2 usable",
+     "local": [
+      -0.004706084728240967,
+      -0.0008206367492675781,
+      0.17309051752090454
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod L/Main rod 1",
+     "phase": 0.1875,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 1 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.05540555715560913,
+      0.0003006458282470703,
+      0.17307299375534058
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod R/Main rod 1.001",
+     "phase": 0.5625,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 0 not on a travelling part, 1 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      -0.15573060512542725,
+      0.0017428623978048563,
+      0.07294287532567978
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Crosshead Main Linkage L/Cube.045",
+     "phase": 0.1875,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 0 not on a travelling part, 1 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      0.1554938554763794,
+      0.0010392890544608235,
+      0.07301237434148788
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Crosshead Main Linkage R/Cube.051",
+     "phase": 0.5625,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 3 usable",
+     "local": [
+      0.055293917655944824,
+      -1.7693475484848022,
+      0.10275502502918243
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod L/Main rod 1",
+     "phase": 0.1875,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 8 bump(s) within 0.30 m of the end: 1 not on a travelling part, 3 not level, 0 too close to another cup, 2 without clear space, 2 usable",
+     "local": [
+      -0.05540555715560913,
+      -1.771742343902588,
+      0.10269765555858612
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod R/Main rod 1.001",
+     "phase": 0.5625,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "177c5adc89534caa3f4a20935a6cddd51e0a109572fd80a0af46ec969ed7dd1d",
+    "Catalog.json": "cf95f7d56d1ec0f73f248df2312f4cc745c2e5dfdf24e769227836e3cff1c44d",
+    "Definitions.json": "3301e3473069446f6d27e8acb361ff311a5fbc2e0425b7bc09638d622db30533"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.7112
+  },
+  "ls-280-c25": {
+   "axleZ": [
+    2.1631,
+    0.6516,
+    -0.6763,
+    -2.1824
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.00811457633972168,
+      0.28380778431892395,
+      0.025498153641819954
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods.002.left/Rods.003.left/Cube.040",
+     "phase": 0.1875,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.01728224940598011,
+      0.20345303416252136,
+      0.08919048309326172
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Drivers.002/Rods.001.left.001/Main rod 1.002",
+     "phase": 0.0625,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 2 usable",
+     "local": [
+      -0.01947629451751709,
+      1.529658317565918,
+      0.21448150277137756
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Drivers.002/Rods.001.left/Main rod 1.001",
+     "phase": 0.1875,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.0072822580114007,
+      1.5149532556533813,
+      0.21448129415512085
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Drivers.002/Rods.001.left.001/Main rod 1.002",
+     "phase": 0.0625,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 8 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 5 usable",
+     "local": [
+      0.018142998218536377,
+      2.7755050659179688,
+      -0.13064445555210114
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods.002.left/Rods.003.left/Cube.040",
+     "phase": 0.1875,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 3 without clear space, 1 usable",
+     "local": [
+      -0.028171481564641,
+      2.9742369651794434,
+      -0.15551072359085083
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods.002.left.001/Rods.003.left.001/Cube.003",
+     "phase": 0.0625,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.03947627544403076,
+      4.3436598777771,
+      0.21838325262069702
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Drivers.002/Rods.001.left/Main rod 1.001",
+     "phase": 0.1875,
+     "role": "driven axle 4",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": 3,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.01728224940598011,
+      4.178955554962158,
+      0.08919107913970947
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Drivers.002/Rods.001.left.001/Main rod 1.002",
+     "phase": 0.0625,
+     "role": "driven axle 4",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 10 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 3 usable",
+     "local": [
+      -0.03947627544403076,
+      3.1370034217834473,
+      0.12795913219451904
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Drivers.002/Rods.001.left/Main rod 1.001",
+     "phase": 0.1875,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 9 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 3 without clear space, 2 usable",
+     "local": [
+      0.03728247061371803,
+      3.142882823944092,
+      0.12809830904006958
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Drivers.002/Rods.001.left.001/Main rod 1.002",
+     "phase": 0.0625,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "8d40fa871258350a027df1e6bf27c0c0649d48de75fe4bb6e7899d1acc814841",
+    "Catalog.json": "9ea117c0b6f7384943009d0bbba8032a9f94c760dd35ea9147d151e13e805024",
+    "Definitions.json": "c30dcfa8cc299a3497fc671240f5a918fec62dbb2ca1f5d7f5fd2c9a0b52396e"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.65
+  },
+  "ls-280-c46": {
+   "axleZ": [
+    2.4698,
+    0.7813,
+    -0.7662,
+    -2.3892
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.0019735097885131836,
+      -2.451815128326416,
+      0.2065756767988205
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Drivers_02_Left/Driversnstuff_22_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.001973748207092285,
+      -2.4618120193481445,
+      0.2065753936767578
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Drivers_02_Right/Driversnstuff_33_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.03802669048309326,
+      -0.7533130645751953,
+      0.2065758854150772
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Drivers_02_Left/Driversnstuff_22_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.018026232719421387,
+      -0.7733114957809448,
+      0.20657575130462646
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Drivers_02_Right/Driversnstuff_33_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 10 bump(s) within 0.30 m of the end: 8 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.03802669048309326,
+      0.8041873574256897,
+      0.27174484729766846
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Drivers_02_Left/Driversnstuff_22_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 8 bump(s) within 0.30 m of the end: 6 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      0.019331300631165504,
+      0.014192081987857819,
+      0.19764302670955658
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Drivers_04_Right/Drivers_05_Right/Driversnstuff_24_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.03802669048309326,
+      2.4171879291534424,
+      0.20657660067081451
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Drivers_02_Left/Driversnstuff_22_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 4",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": 3,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.018026232719421387,
+      2.3971896171569824,
+      0.20657670497894287
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Drivers_02_Right/Driversnstuff_33_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 4",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 10 bump(s) within 0.30 m of the end: 7 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      -0.03802669048309326,
+      1.1175107955932617,
+      0.14260059595108032
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Drivers_02_Left/Driversnstuff_22_LOD0",
+     "phase": 0.25,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 12 bump(s) within 0.30 m of the end: 9 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      0.028026461601257324,
+      1.117514967918396,
+      0.14259976148605347
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Drivers_02_Right/Driversnstuff_33_LOD0",
+     "phase": 0.0,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "be78df48f279e14299a10f2a53e135d8a842523b971aa2b37aa2d163bec18c5c",
+    "Catalog.json": "b07ee7ea1cf7d62b826cb92860d827191c434eedc2d54ce9f844d254f2d3ffd4",
+    "Definitions.json": "fe42f7c5ce8a61efc47cca8ee0905c99010aa6a099d62727d41c36329952625d"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.71
+  },
+  "ls-280-c55": {
+   "axleZ": [
+    2.3382,
+    0.7692,
+    -0.7934,
+    -2.3624
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 11 bump(s) within 0.30 m of the end: 0 not on a travelling part, 4 not level, 0 too close to another cup, 4 without clear space, 3 usable",
+     "local": [
+      0.0329892635345459,
+      -1.88886559009552,
+      0.27209848165512085
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver 3/Side Rod L/Driversnstuff_004_LOD0",
+     "phase": 0.6875,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 2 usable",
+     "local": [
+      -0.06952011585235596,
+      -2.4724037647247314,
+      0.26165658235549927
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver 3/Side Rod R/Driversnstuff_018_LOD0",
+     "phase": 0.5625,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.018514858558773994,
+      -1.8335882425308228,
+      0.3603493571281433
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Crosshead L/Mainrod L/Driversnstuff_005_LOD0",
+     "phase": 0.6875,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.009520411491394043,
+      -0.9034038782119751,
+      0.20796185731887817
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver 3/Side Rod R/Driversnstuff_018_LOD0",
+     "phase": 0.5625,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 2 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 3 usable",
+     "local": [
+      0.0329892635345459,
+      1.4427354335784912,
+      0.16794106364250183
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver 3/Side Rod L/Driversnstuff_004_LOD0",
+     "phase": 0.6875,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      4.794565597876499e-07,
+      0.041185762733221054,
+      0.22388236224651337
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Crosshead R/Mainrod R/Driversnstuff_019_LOD0",
+     "phase": 0.5625,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": 3,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.05298948287963867,
+      2.7717366218566895,
+      0.28044265508651733
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver 3/Side Rod L/Driversnstuff_004_LOD0",
+     "phase": 0.6875,
+     "role": "driven axle 4",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 1 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.08952009677886963,
+      2.2181975841522217,
+      0.27000075578689575
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver 3/Side Rod R/Driversnstuff_018_LOD0",
+     "phase": 0.5625,
+     "role": "driven axle 4",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 9 bump(s) within 0.30 m of the end: 0 not on a travelling part, 5 not level, 0 too close to another cup, 3 without clear space, 1 usable",
+     "local": [
+      -0.11956927180290222,
+      -0.43633532524108887,
+      0.04246203228831291
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Valve Guide L/Combination L/Union L/Driversnstuff_013_LOD0",
+     "phase": 0.6875,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 2 usable",
+     "local": [
+      0.13850264251232147,
+      -0.03629913926124573,
+      0.09223351627588272
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Valve Guide R/Combination R/Union R/Driversnstuff_025_LOD0",
+     "phase": 0.5625,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 2 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 3 usable",
+     "local": [
+      -0.026246756315231323,
+      -0.019098293036222458,
+      0.147709921002388
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Baker 2 L/Baker 1 L/Eccentric Main L/Driversnstuff_008_LOD0",
+     "phase": 0.6875,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_6L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.019520044326782227,
+      0.9838374257087708,
+      0.16055071353912354
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver 3/Side Rod R/Driversnstuff_018_LOD0",
+     "phase": 0.5625,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_6R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "c0a460ba179427c912fbbf7dc6c4dbb152e73340c855485dd6df7f6a77bf2179",
+    "Catalog.json": "d324fb6bb5cef3e631a219c5f01acb83bfc8337274827bf3314feba122e2ef38",
+    "Definitions.json": "52b39626b491df8eecce6adcd637be8b37b3657498e2624dd0a412f3770af744"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.6965
+  },
+  "ls-282-k28t": {
+   "axleZ": [
+    1.9887,
+    0.6732,
+    -0.6454,
+    -1.9643
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 8 bump(s) within 0.30 m of the end: 6 not on a travelling part, 1 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.04350942373275757,
+      -2.054914951324463,
+      0.15892206132411957
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod L/Main rod 1.001",
+     "phase": 0.1875,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 5 not on a travelling part, 1 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.04414159059524536,
+      -2.060986042022705,
+      0.15923190116882324
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod R/Main rod 1.002",
+     "phase": 0.5625,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.04350942373275757,
+      -0.9794144630432129,
+      0.0890035480260849
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod L/Main rod 1.001",
+     "phase": 0.1875,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 13 bump(s) within 0.30 m of the end: 11 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.02414160966873169,
+      -0.7354855537414551,
+      0.15625810623168945
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod R/Main rod 1.002",
+     "phase": 0.5625,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 8 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 2 usable",
+     "local": [
+      -0.02649056911468506,
+      0.809186577796936,
+      0.08907505869865417
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod L/Main rod 1.001",
+     "phase": 0.1875,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 11 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 4 usable",
+     "local": [
+      -0.02414160966873169,
+      0.5731149911880493,
+      0.1562584489583969
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod R/Main rod 1.002",
+     "phase": 0.5625,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 2 usable",
+     "local": [
+      0.01350945234298706,
+      1.8880873918533325,
+      0.159249410033226
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod L/Main rod 1.001",
+     "phase": 0.1875,
+     "role": "driven axle 4",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.04414159059524536,
+      1.8820158243179321,
+      0.15893971920013428
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod R/Main rod 1.002",
+     "phase": 0.5625,
+     "role": "driven axle 4",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.03898060321807861,
+      -0.15222488343715668,
+      0.0942254289984703
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Crosshead Main Linkage L/Cube.016",
+     "phase": 0.1875,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.03939473628997803,
+      -0.20580743253231049,
+      0.09426572173833847
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Crosshead Main Linkage R/Cube.025",
+     "phase": 0.5625,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 8 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 2 usable",
+     "local": [
+      0.004565241280943155,
+      0.34909430146217346,
+      0.034672532230615616
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Crosshead L/Mainrod L/Piston rod",
+     "phase": 0.1875,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_6L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 9 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 4 without clear space, 2 usable",
+     "local": [
+      -0.04414159059524536,
+      0.8027094006538391,
+      0.08892121911048889
+     ],
+     "parentPath": "engine/Drivers Anim/[anim] drivers/Driver02/Side Rod R/Main rod 1.002",
+     "phase": 0.5625,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_6R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "ade334e645b47672c9bc5b901aabec57498871c3f362f04b374749bcdf19b632",
+    "Catalog.json": "c4c5fc13ee4a13ce11894c68eada42d05fecb513dc7a76fe65fdfc904827f2c5",
+    "Definitions.json": "9085951b6ad507e9edfdcaf9fb81d8d6301d4923a4a7742bb22282365253e23f"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.559
+  },
+  "ls-282-k35": {
+   "axleZ": [
+    2.0684,
+    0.646,
+    -0.646,
+    -1.9668
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.16635043919086456,
+      -3.0058088302612305,
+      0.10847794264554977
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/drivers_002/rods_002_L/Cube.065",
+     "phase": 0.0,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 4 not on a travelling part, 1 not level, 0 too close to another cup, 0 without clear space, 2 usable",
+     "local": [
+      -0.11601078510284424,
+      -2.0528666973114014,
+      0.19146816432476044
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/drivers_002/rods_002_R/Cube.081",
+     "phase": 0.75,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 14 bump(s) within 0.30 m of the end: 5 not on a travelling part, 7 not level, 0 too close to another cup, 0 without clear space, 2 usable",
+     "local": [
+      0.16635006666183472,
+      -1.1190239191055298,
+      0.18794803321361542
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/drivers_002/rods_002_L/Cube.065",
+     "phase": 0.0,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.06960232555866241,
+      -1.488732933998108,
+      0.08763307332992554
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_004_R/rods_005_R/Cube.083",
+     "phase": 0.75,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 10 bump(s) within 0.30 m of the end: 6 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 4 usable",
+     "local": [
+      0.2037370353937149,
+      0.03225095942616463,
+      0.5989678502082825
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_004_L/rods_005_L/Cube.055",
+     "phase": 0.0,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 12 bump(s) within 0.30 m of the end: 7 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 3 usable",
+     "local": [
+      -0.07960207760334015,
+      0.0032695382833480835,
+      0.2046300619840622
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_004_R/rods_005_R/Cube.083",
+     "phase": 0.75,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.15065816044807434,
+      3.106471300125122,
+      0.300449937582016
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/drivers_002/rods_002_L/Cube.065",
+     "phase": 0.0,
+     "role": "driven axle 4",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.12601077556610107,
+      1.9723347425460815,
+      0.1914692372083664
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/drivers_002/rods_002_R/Cube.081",
+     "phase": 0.75,
+     "role": "driven axle 4",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.176799014210701,
+      -3.2492458820343018,
+      0.30044862627983093
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/drivers_002/rods_002_L/Cube.065",
+     "phase": 0.0,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.07025408744812012,
+      -0.31272321939468384,
+      0.0566917359828949
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_006_R/Piston.001",
+     "phase": 0.75,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 8 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 2 usable",
+     "local": [
+      0.1192745491862297,
+      1.3400081396102905,
+      0.19100002944469452
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/drivers_002/rods_002_L/Cube.065",
+     "phase": 0.0,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_6L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 3 without clear space, 1 usable",
+     "local": [
+      -0.08601075410842896,
+      0.8539519309997559,
+      0.12171950936317444
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/drivers_002/rods_002_R/Cube.081",
+     "phase": 0.75,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_6R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "cdc3690c2367cb098062d51c67a1f6c002ea07ff982edaaef0af3567b316db2e",
+    "Catalog.json": "8f2aad5c2f25240100b812c5a1e9a4f210f2ceec0de2f902f9d8c0b203d29f08",
+    "Definitions.json": "aa33192c33bd6322a3de632be84c23b87ae505963f9371d569d811d94e24fa28"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.6096
+  },
+  "ls-284-b65": {
+   "axleZ": [
+    2.76,
+    0.92,
+    -0.92,
+    -2.77
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 8 bump(s) within 0.30 m of the end: 2 not on a travelling part, 0 not level, 0 too close to another cup, 5 without clear space, 1 usable",
+     "local": [
+      0.0024356842041015625,
+      -0.09605813771486282,
+      0.10176098346710205
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Crosshead L/Driversnstuff.017_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 12 bump(s) within 0.30 m of the end: 2 not on a travelling part, 1 not level, 0 too close to another cup, 7 without clear space, 2 usable",
+     "local": [
+      0.0001474618911743164,
+      -0.09820223599672318,
+      0.10189163684844971
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Crosshead R/Driversnstuff.026_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 2 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -1.0454282760620117,
+      -1.8359854221343994,
+      -0.24937598407268524
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver 3/Side Rod L/Driversnstuff.015_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 2 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      1.0480114221572876,
+      -1.8386399745941162,
+      -0.24884699285030365
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver 3/Side Rod R/Driversnstuff.004_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 4 without clear space, 2 usable",
+     "local": [
+      -1.0354282855987549,
+      0.004014909267425537,
+      -0.1573203057050705
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver 3/Side Rod L/Driversnstuff.015_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 2 usable",
+     "local": [
+      1.0380114316940308,
+      0.0013605633284896612,
+      -0.15679097175598145
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver 3/Side Rod R/Driversnstuff.004_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 2 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -1.0354282855987549,
+      1.854015588760376,
+      -0.24458663165569305
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver 3/Side Rod L/Driversnstuff.015_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 4",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": 3,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      1.0180116891860962,
+      1.8513621091842651,
+      -0.24405859410762787
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver 3/Side Rod R/Driversnstuff.004_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 4",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.9883671998977661,
+      -3.6772947311401367,
+      -0.24911849200725555
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver 3/Side Rod L/Driversnstuff.015_LOD0",
+     "phase": 0.0,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.990890383720398,
+      -3.677022695541382,
+      -0.24917258322238922
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver 3/Side Rod R/Driversnstuff.004_LOD0",
+     "phase": 0.25,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 9 bump(s) within 0.30 m of the end: 1 not on a travelling part, 2 not level, 0 too close to another cup, 5 without clear space, 1 usable",
+     "local": [
+      -0.053147971630096436,
+      0.03439308702945709,
+      0.24642427265644073
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Crosshead Slide L/Main Rod L/Driversnstuff.016_LOD0",
+     "phase": 0.0,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_6L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.03330010175704956,
+      0.03470563516020775,
+      0.2463735044002533
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Crosshead Slide R/Main Rod R/Driversnstuff.005_LOD0",
+     "phase": 0.25,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_6R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "a1974bb935c076dc4f1c15937e9ab7c81aada79d39dc3b0322f0b8f1afc4700a",
+    "Catalog.json": "5853e71d016bde58a230f2176fc5158cce612b45e0d65298792a727509d0296c",
+    "Definitions.json": "7a1d620107193c2733d77c47c53eda6704d3c723e7b1b69c3624c8d6f1cdf09e"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.875
+  },
+  "ls-440-a23": {
+   "axleZ": [
+    0.0,
+    -2.2047
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 2 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.0003783451102208346,
+      1.2035452127456665,
+      0.034158434718847275
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_007_L/rods_008_L/Driversnstuff_002_low",
+     "phase": 0.25,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 2 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 2 usable",
+     "local": [
+      -0.05699867010116577,
+      -1.0926542282104492,
+      0.11404599994421005
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_R/Driversnstuff_019_low",
+     "phase": 0.5,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 1 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.03300124406814575,
+      1.1120448112487793,
+      0.11404652893543243
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_L/Driversnstuff_004_low",
+     "phase": 0.25,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.046998679637908936,
+      1.1120460033416748,
+      0.11404639482498169
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_R/Driversnstuff_019_low",
+     "phase": 0.5,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 1 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.006095527205616236,
+      0.139265239238739,
+      0.02776729315519333
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_012_L/rods_013_L/Driversnstuff_008_low",
+     "phase": 0.25,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 1 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.003905963385477662,
+      0.1466779112815857,
+      0.02650248073041439
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_012_R/rods_013_R/Driversnstuff_024_low",
+     "phase": 0.5,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.003000974655151367,
+      -1.1061409711837769,
+      0.11404605209827423
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_L/Driversnstuff_004_low",
+     "phase": 0.25,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.0003790877526625991,
+      1.2199467420578003,
+      0.03152482584118843
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_007_R/rods_008_R/Driversnstuff_022_low",
+     "phase": 0.5,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_4R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "11ca0aaf08909948eedab7fc330c8908ca2f49c9e733c90fd3957f55d6798045",
+    "Catalog.json": "385f096740520caf87df644118f9a42ddef8fcfed057c797e114b20cd90817f5",
+    "Definitions.json": "5df700dd574fcb7b53ac7457996982a51539e22ec96a26d498f2515f61d663fb"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.775
+  },
+  "ls-442-a26": {
+   "axleZ": [
+    0.6227,
+    -1.2764
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.011470580473542213,
+      -1.9810107946395874,
+      0.35669517517089844
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods.002_L/rods.003_L/Driversnstuff_5_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.0494762659072876,
+      0.02094149775803089,
+      0.16337370872497559
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_R/Driversnstuff_13_LOD0",
+     "phase": 0.5,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 2 usable",
+     "local": [
+      -0.06147043779492378,
+      0.11293665319681168,
+      0.19396530091762543
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods.002_L/rods.003_L/Driversnstuff_5_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 2 usable",
+     "local": [
+      -0.0494762659072876,
+      1.970042109489441,
+      0.16337402164936066
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_R/Driversnstuff_13_LOD0",
+     "phase": 0.5,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.17388522624969482,
+      0.001215711236000061,
+      0.06139793246984482
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods.004_L/Driversnstuff_6_LOD0",
+     "phase": 0.25,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.0005698660970665514,
+      -0.016587546095252037,
+      0.06171146780252457
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods.009_R/rods.010_R/rods.014_R/Driversnstuff_18_LOD0",
+     "phase": 0.5,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 2 usable",
+     "local": [
+      0.0585295669734478,
+      0.11080347746610641,
+      0.1942380964756012
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods.002_L/rods.003_L/Driversnstuff_5_LOD0",
+     "phase": 0.25,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 2 usable",
+     "local": [
+      -0.058529745787382126,
+      0.08865087479352951,
+      0.20531891286373138
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods.002_R/rods.003_R/Driversnstuff_14_LOD0",
+     "phase": 0.5,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_4R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "c66bb6a183d97fb28a8b1f37a13c4c06f248ec1b99b09f1a4a7019164c8fa18a",
+    "Catalog.json": "5bb569ea2afb50f097703a963d63d5ed8364198f10ce74c5d8de0f00cd9c83b2",
+    "Definitions.json": "94a8620e0c0daca2751bad1b20bb712f335c54ca58bb4a99378b6aef1507da3a"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.89
+  },
+  "ls-460-t17": {
+   "axleZ": [
+    2.1792,
+    0.579,
+    -2.1792
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 4 usable",
+     "local": [
+      -0.9624248743057251,
+      -0.8007398843765259,
+      0.5514689683914185
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driversnstuff_002/Driversnstuff_003_L/Cube.009",
+     "phase": 0.8125,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 1 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 3 usable",
+     "local": [
+      0.942043125629425,
+      -0.790250301361084,
+      0.5514687895774841
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driversnstuff_002/Driversnstuff_003_R/Cube.091",
+     "phase": 0.4375,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 6 usable",
+     "local": [
+      -0.9624248743057251,
+      0.7994606494903564,
+      0.5514693856239319
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driversnstuff_002/Driversnstuff_003_L/Cube.009",
+     "phase": 0.8125,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 6 usable",
+     "local": [
+      0.942043125629425,
+      0.7999505996704102,
+      0.5514691472053528
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driversnstuff_002/Driversnstuff_003_R/Cube.091",
+     "phase": 0.4375,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 3 usable",
+     "local": [
+      -0.9524248242378235,
+      3.377661943435669,
+      0.4907347559928894
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driversnstuff_002/Driversnstuff_003_L/Cube.009",
+     "phase": 0.8125,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 3 usable",
+     "local": [
+      0.9620431661605835,
+      3.3881521224975586,
+      0.49073463678359985
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driversnstuff_002/Driversnstuff_003_R/Cube.091",
+     "phase": 0.4375,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.002475261688232422,
+      0.42927834391593933,
+      0.24325349926948547
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driversnstuff_010_L/Cylinder.008",
+     "phase": 0.8125,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.0028693675994873047,
+      0.4930992126464844,
+      0.2432537078857422
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driversnstuff_010_R/Cylinder.004",
+     "phase": 0.4375,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 3 without clear space, 2 usable",
+     "local": [
+      -1.1223266124725342,
+      0.6611778140068054,
+      0.495585560798645
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driversnstuff_008_L/Driversnstuff_009_L/Cube.008",
+     "phase": 0.8125,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 3 usable",
+     "local": [
+      1.1223266124725342,
+      0.8154016733169556,
+      0.5511466264724731
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driversnstuff_008_R/Driversnstuff_009_R/Cube.092",
+     "phase": 0.4375,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "a04342b44b863d8d0c1c1c59d461df01578b7de1102f30849f7f178d8a866e6f",
+    "Catalog.json": "52a1e6a6ba00565d607ff0c6cb051c1f0221f3aaf64396eeb0f0147f86e72b61",
+    "Definitions.json": "45f83e13968a434cabce39a269c9fe8a585cf06cd8acebe32717fc188683550e"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.71
+  },
+  "ls-460-t21": {
+   "axleZ": [
+    1.9174,
+    -0.0026,
+    -2.1726
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.03184175863862038,
+      -2.9613685607910156,
+      0.20567721128463745
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Drivers 2/ValveGear_002_L/Vert.003",
+     "phase": 0.5,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.028089407831430435,
+      -0.822418212890625,
+      0.2056780457496643
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Drivers 2/ValveGear_002_R/Vert.002",
+     "phase": 0.25,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 3 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.025352103635668755,
+      3.230756998062134,
+      0.13550269603729248
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/ValveGear_006_L/ValveGear_007_L/Cylinder.030",
+     "phase": 0.5,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.017830457538366318,
+      2.9178552627563477,
+      0.12768352031707764
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/ValveGear_006_R/ValveGear_007_R/Cylinder.011",
+     "phase": 0.25,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.028158310800790787,
+      1.0986316204071045,
+      0.20567865669727325
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Drivers 2/ValveGear_002_L/Vert.003",
+     "phase": 0.5,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.028089050203561783,
+      1.094494104385376,
+      0.20567840337753296
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Drivers 2/ValveGear_002_R/Vert.015",
+     "phase": 0.25,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.05756679177284241,
+      0.14420583844184875,
+      0.21985642611980438
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/ValveGear_005_L/Cylinder.029",
+     "phase": 0.5,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.029522782191634178,
+      0.14852003753185272,
+      0.21985401213169098
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/ValveGear_005_R/Cylinder.010",
+     "phase": 0.25,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.00539893563836813,
+      3.1078295707702637,
+      0.13238608837127686
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/ValveGear_006_L/ValveGear_007_L/Cylinder.030",
+     "phase": 0.5,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.017841678112745285,
+      3.046875238418579,
+      0.13094565272331238
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/ValveGear_006_R/ValveGear_007_R/Cylinder.011",
+     "phase": 0.25,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "5616a4a5b718ddcd9c04d9433afb0244a457f6d9b42ac39e28f9fbc9c1eb936a",
+    "Catalog.json": "a76af8e6ab7257be1e0060eb09dec6a47d45bb82bd899f7e39155df214eecd44",
+    "Definitions.json": "fde2df058b0e5e60a79658a302809ed87f73cb1c4b751c1d7c4dd9e8e3c0166a"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.875
+  },
+  "ls-460-t22": {
+   "axleZ": [
+    1.7527,
+    -0.0003,
+    -1.7748
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 9 bump(s) within 0.30 m of the end: 5 not on a travelling part, 3 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.01456362009048462,
+      -1.9627327919006348,
+      0.11508389562368393
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Gear_002_L/Driversnstuff_017_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 11 bump(s) within 0.30 m of the end: 6 not on a travelling part, 3 not level, 0 too close to another cup, 0 without clear space, 2 usable",
+     "local": [
+      0.016022861003875732,
+      -1.9627370834350586,
+      0.11508405208587646
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Gear_002_R/Driversnstuff_032_LOD0",
+     "phase": 0.5,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 11 bump(s) within 0.30 m of the end: 8 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      -0.0008000896777957678,
+      0.2668193280696869,
+      0.08639867603778839
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Gear_004_L/Gear_005_L/Driversnstuff_006_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 12 bump(s) within 0.30 m of the end: 8 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 2 usable",
+     "local": [
+      -0.0008000797824934125,
+      0.26681816577911377,
+      0.08639884740114212
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Gear_004_R/Gear_005_R/Driversnstuff_018_LOD0",
+     "phase": 0.5,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.024563908576965332,
+      1.544768214225769,
+      0.11508473008871078
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Gear_002_L/Driversnstuff_017_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.02602285146713257,
+      1.5447633266448975,
+      0.1150846928358078
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/Gear_002_R/Driversnstuff_032_LOD0",
+     "phase": 0.5,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 13 bump(s) within 0.30 m of the end: 10 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      0.0183118786662817,
+      -0.025833236053586006,
+      0.15290994942188263
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Gear_007_R.001/Gear_008_R.001/Driversnstuff_007_LOD0",
+     "phase": 0.75,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 13 bump(s) within 0.30 m of the end: 10 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      0.02695130556821823,
+      -0.026401367038488388,
+      0.15292789041996002
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Gear_007_R/Gear_008_R/Driversnstuff_013_LOD0",
+     "phase": 0.5,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_4R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "a49d1bdb116988935f4807a98afdaf9e25e1dce642003a738b2c1069b4d9bdc0",
+    "Catalog.json": "7a85001d264f6683d7a3aa258560354564a379f5bde3c31d98ccfed7b2f82b8b",
+    "Definitions.json": "4f1149571d4b5ac11bb448dc4cbce8958f7ca3d902ef2e8ffee33482352328b2"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.815
+  },
+  "ls-462-p18": {
+   "axleZ": [
+    1.2785,
+    0.0,
+    -1.2732
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.021660208702087402,
+      -1.2138065099716187,
+      0.08501514047384262
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_008_L/rods_009_L/Circle.039",
+     "phase": 0.6875,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.9388641119003296,
+      -2.5413661003112793,
+      0.627050518989563
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_004_R/rods_005_R/Connectrd.001",
+     "phase": 0.5625,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 10 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 3 usable",
+     "local": [
+      -0.8890652656555176,
+      -1.2462925910949707,
+      0.46542149782180786
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_L/DriveWheel3.016",
+     "phase": 0.6875,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 12 bump(s) within 0.30 m of the end: 6 not on a travelling part, 0 not level, 0 too close to another cup, 3 without clear space, 3 usable",
+     "local": [
+      0.8623194098472595,
+      -1.288922667503357,
+      0.46542131900787354
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_R/DriveWheel3.005",
+     "phase": 0.5625,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 2 usable",
+     "local": [
+      -0.8890652656555176,
+      0.026907920837402344,
+      0.46542298793792725
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_L/DriveWheel3.016",
+     "phase": 0.6875,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.8623194098472595,
+      0.034277915954589844,
+      0.46542274951934814
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Bone/rods_002_R/DriveWheel3.005",
+     "phase": 0.5625,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 9 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 3 without clear space, 2 usable",
+     "local": [
+      -0.021660327911376953,
+      -0.018509477376937866,
+      0.10778407752513885
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_008_L/rods_009_L/Circle.039",
+     "phase": 0.6875,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      0.9489012360572815,
+      -1.3638757467269897,
+      0.4864692986011505
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_004_R/rods_005_R/Connectrd.001",
+     "phase": 0.5625,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_4R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "cf791a8adef86650ea62d2d03282d8d3eff929cca661f2fd2c590d5284bcdb94",
+    "Catalog.json": "fede7e5504bb94e91e3bfedbac259f64c28515a72ece64bcf0ba4f6d708df700",
+    "Definitions.json": "eabaa4606c665d6bc74ffd64f64ef9b81b49475de58c879ae679ae4a4d44fcdd"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.595
+  },
+  "ls-462-p43": {
+   "axleZ": [
+    2.117,
+    0.0056,
+    -2.09
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      0.06389749050140381,
+      0.020805835723876953,
+      0.2748994827270508
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver_2/Rods_2_L/Driversnstuff_11_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 2 usable",
+     "local": [
+      -0.0570298433303833,
+      -2.4397451877593994,
+      0.22611093521118164
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver_2/Rods_2_R/Driversnstuff_17_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.13917088508605957,
+      0.01624254696071148,
+      0.21625089645385742
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods_4_L/Rods_5_L/Driversnstuff_5_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 0 not on a travelling part, 1 not level, 0 too close to another cup, 3 without clear space, 1 usable",
+     "local": [
+      0.03917109966278076,
+      0.05622900277376175,
+      0.21180683374404907
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods_4_R/Rods_5_R/Driversnstuff_18_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 2 usable",
+     "local": [
+      0.06389749050140381,
+      4.217805862426758,
+      0.2931476831436157
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver_2/Rods_2_L/Driversnstuff_11_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 2 usable",
+     "local": [
+      -0.03702986240386963,
+      1.7372559309005737,
+      0.28552117943763733
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver_2/Rods_2_R/Driversnstuff_17_LOD0",
+     "phase": 0.25,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.020416976884007454,
+      -0.011185840703547001,
+      0.17405858635902405
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods_12_L/Rods_13_L/Rods_15_L/Driversnstuff_3_LOD0",
+     "phase": 0.0,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 2 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.019580131396651268,
+      -0.02323601208627224,
+      0.17195600271224976
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods_12_R/Rods_13_R/Rods_15_R/Driversnstuff_23_LOD0",
+     "phase": 0.25,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 3 bump(s) within 0.30 m of the end: 0 not on a travelling part, 1 not level, 0 too close to another cup, 0 without clear space, 2 usable",
+     "local": [
+      0.03389739990234375,
+      2.5061333179473877,
+      0.18369746208190918
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver_2/Rods_2_L/Driversnstuff_11_LOD0",
+     "phase": 0.0,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 0 not on a travelling part, 0 not level, 0 too close to another cup, 3 without clear space, 1 usable",
+     "local": [
+      0.03297019004821777,
+      0.023024262860417366,
+      0.17607112228870392
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver_2/Rods_2_R/Driversnstuff_17_LOD0",
+     "phase": 0.25,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "223cd724c03645f5a08e6ef2178d0e760d030ba6bdb49d2d83d83829e30f50df",
+    "Catalog.json": "5d69954922f1c7816b6219cef86d856c0b52e3e589a016e166f836a5e564a74e",
+    "Definitions.json": "8903c679cabc23c4e5cea8378be6ab125106697ec125e96867a325bf74961188"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 1.0033
+  },
+  "ls-462-p48": {
+   "axleZ": [
+    1.9262,
+    0.0,
+    -1.9226
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.004547780379652977,
+      -1.8855453729629517,
+      0.1175096184015274
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods_3_L/Rods_4_L/Driversnstuff_23_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.00018525123596191406,
+      -1.925527572631836,
+      0.20102667808532715
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver Main/Rods_1_R/Driversnstuff_12_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 13 bump(s) within 0.30 m of the end: 9 not on a travelling part, 1 not level, 0 too close to another cup, 1 without clear space, 2 usable",
+     "local": [
+      0.01981484889984131,
+      0.03065113164484501,
+      0.24365240335464478
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver Main/Rods_1_L/Driversnstuff_22_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 13 bump(s) within 0.30 m of the end: 8 not on a travelling part, 1 not level, 0 too close to another cup, 2 without clear space, 2 usable",
+     "local": [
+      -0.020184993743896484,
+      -0.029326260089874268,
+      0.24365250766277313
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver Main/Rods_1_R/Driversnstuff_12_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 4 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.01981484889984131,
+      1.953251838684082,
+      0.19544969499111176
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver Main/Rods_1_L/Driversnstuff_22_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.00018525123596191406,
+      1.9232745170593262,
+      0.1954500675201416
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver Main/Rods_1_R/Driversnstuff_12_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 4 bump(s) within 0.30 m of the end: 0 not on a travelling part, 1 not level, 0 too close to another cup, 2 without clear space, 1 usable",
+     "local": [
+      0.00037655228516086936,
+      0.000954933580942452,
+      0.10350553691387177
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods_9_L/Rods_10_L/Rods_11_L/Driversnstuff_29_LOD0",
+     "phase": 0.75,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 5 bump(s) within 0.30 m of the end: 0 not on a travelling part, 1 not level, 0 too close to another cup, 3 without clear space, 1 usable",
+     "local": [
+      0.00037065515061840415,
+      -0.0008638573926873505,
+      0.1033230721950531
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods_9_R/Rods_10_R/Rods_11_R/Driversnstuff_20_LOD0",
+     "phase": 0.0,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 12 bump(s) within 0.30 m of the end: 7 not on a travelling part, 1 not level, 0 too close to another cup, 2 without clear space, 2 usable",
+     "local": [
+      -0.00018513202667236328,
+      0.3417583405971527,
+      0.18396082520484924
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver Main/Rods_1_L/Driversnstuff_22_LOD0",
+     "phase": 0.75,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 14 bump(s) within 0.30 m of the end: 8 not on a travelling part, 2 not level, 0 too close to another cup, 2 without clear space, 2 usable",
+     "local": [
+      0.044548265635967255,
+      0.0017609217902645469,
+      0.23264703154563904
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Rods_3_R/Rods_4_R/Driversnstuff_14_LOD0",
+     "phase": 0.0,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "501d65151f46561b0d07be7e602e3fe3b1594e2116fcd1801d767b3e6a083c45",
+    "Catalog.json": "53163e07244a66bf3b847687f99f97d8d9de0ab16ec222079c2710e957b2c07f",
+    "Definitions.json": "1766908ecfc2f4e01691dcab8f82ecc8f6dc61fc9c21f35e0142e52601856315"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.925
+  },
+  "ls-480-c40": {
+   "axleZ": [
+    2.4003,
+    0.7747,
+    -0.7747,
+    -2.3241
+   ],
+   "points": [
+    {
+     "axle": 0,
+     "evidence": "modelled travelling nub; 10 bump(s) within 0.30 m of the end: 8 not on a travelling part, 1 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.0035869479179382324,
+      -2.387436628341675,
+      0.230726957321167
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver2/rods_002_l/Driversnstuff_08_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 1",
+     "side": -1.0,
+     "tag": "oil_1L"
+    },
+    {
+     "axle": 0,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      -0.0001304683682974428,
+      -1.5989242792129517,
+      0.34820064902305603
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_004_r/rods_005_r/Driversnstuff_22_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 1",
+     "side": 1.0,
+     "tag": "oil_1R"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 14 bump(s) within 0.30 m of the end: 8 not on a travelling part, 0 not level, 0 too close to another cup, 3 without clear space, 3 usable",
+     "local": [
+      -0.013586938381195068,
+      -0.7518364191055298,
+      0.2597804367542267
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver2/rods_002_l/Driversnstuff_08_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 2",
+     "side": -1.0,
+     "tag": "oil_2L"
+    },
+    {
+     "axle": 1,
+     "evidence": "modelled travelling nub; 14 bump(s) within 0.30 m of the end: 8 not on a travelling part, 0 not level, 0 too close to another cup, 5 without clear space, 1 usable",
+     "local": [
+      -0.010130439884960651,
+      0.17361576855182648,
+      0.12348063290119171
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_004_r/rods_005_r/Driversnstuff_22_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 2",
+     "side": 1.0,
+     "tag": "oil_2R"
+    },
+    {
+     "axle": 2,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      0.006413102149963379,
+      0.7875638008117676,
+      0.2597808837890625
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver2/rods_002_l/Driversnstuff_08_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 3",
+     "side": -1.0,
+     "tag": "oil_3L"
+    },
+    {
+     "axle": 2,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.0036005377769470215,
+      0.7875629663467407,
+      0.2597808241844177
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver2/rods_002_r/Driversnstuff_20_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 3",
+     "side": 1.0,
+     "tag": "oil_3R"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 6 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 0 without clear space, 1 usable",
+     "local": [
+      -0.0035869479179382324,
+      2.3369641304016113,
+      0.2307281494140625
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver2/rods_002_l/Driversnstuff_08_LOD0",
+     "phase": 0.0,
+     "role": "driven axle 4",
+     "side": -1.0,
+     "tag": "oil_4L"
+    },
+    {
+     "axle": 3,
+     "evidence": "modelled travelling nub; 7 bump(s) within 0.30 m of the end: 5 not on a travelling part, 0 not level, 0 too close to another cup, 1 without clear space, 1 usable",
+     "local": [
+      -0.006399214267730713,
+      2.34696364402771,
+      0.2307281792163849
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/Driver2/rods_002_r/Driversnstuff_20_LOD0",
+     "phase": 0.75,
+     "role": "driven axle 4",
+     "side": 1.0,
+     "tag": "oil_4R"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.0010263476287946105,
+      -0.0029382025822997093,
+      0.048935744911432266
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_025_l/rods_026_l/Driversnstuff_11_LOD0",
+     "phase": 0.0,
+     "role": "crosshead/small end",
+     "side": -1.0,
+     "tag": "oil_5L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.02899414673447609,
+      -0.14311887323856354,
+      0.06368770450353622
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_025_r/rods_026_r/Driversnstuff_25_LOD0",
+     "phase": 0.75,
+     "role": "crosshead/small end",
+     "side": 1.0,
+     "tag": "oil_5R"
+    },
+    {
+     "axle": -1,
+     "evidence": "modelled travelling nub; 13 bump(s) within 0.30 m of the end: 6 not on a travelling part, 2 not level, 0 too close to another cup, 4 without clear space, 1 usable",
+     "local": [
+      -0.04985620453953743,
+      0.2796469032764435,
+      0.14426343142986298
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_004_l/rods_005_l/Driversnstuff_13_LOD0",
+     "phase": 0.0,
+     "role": "main-rod big end",
+     "side": -1.0,
+     "tag": "oil_6L"
+    },
+    {
+     "axle": -1,
+     "evidence": "measured 4 x 3 cm level bearing seat on travelling gear",
+     "local": [
+      0.005670782644301653,
+      0.5745082497596741,
+      0.050266314297914505
+     ],
+     "parentPath": "engine/Drivers/[anim] drivers/rods_014_r/rods_016_r/rods_017_r/Driversnstuff_21_LOD0",
+     "phase": 0.75,
+     "role": "main-rod big end",
+     "side": 1.0,
+     "tag": "oil_6R"
+    }
+   ],
+   "sourceSha256": {
+    "Bundle": "4f05aa200ea150d948fa1c4fe5b852ab732214bb9853d8e23db8b170987a8205",
+    "Catalog.json": "a083037f1ebdc034cc1a74f8952c301613a15dd20ec5b760396e19c2613fc472",
+    "Definitions.json": "753b5052dbbab19c306c46937dd55f1f02f757134584baa14b3655f453bf9f2f"
+   },
+   "state": "native-clearance-verified-awaiting-game-acceptance",
+   "wheelRadius": 0.71
+  }
+ },
+ "schema": 1
+}

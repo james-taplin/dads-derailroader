@@ -2,13 +2,19 @@
 
 `rr2dv` records the stage, message, evidence, and any unresolved choice. Start with the run's `run.log` and `run.json`; the [README](../README.md) explains setup and the supported locomotive list.
 
-## Cab instrument pilot and numerical speed HUD
+## Measured cab instruments and numerical speed HUD
 
-The initial C-25 boiler-pressure pilot requires its named gauge and measured support surface to resolve uniquely. A missing/ambiguous gauge or support, an intersecting housing, fewer than seven rear support contacts, or a changed mounting datum stops the build. Preserve the build report for fitting review; do not bypass the check with a generic offset. Every newly built loco also requires a numerical F4 speed box and a speed reader wired to absolute km/h. A missing HUD layout, speed indicator or matching traction reader stops the build/audit for investigation.
+All 21 cabs now require their selected source gauges and measured supports to agree with the fitting library. Changed source counts, names/styles or transforms stop the build. Missing/ambiguous gauges or supports, an intersecting pad, fewer than seven rear pad contacts, or changed mounting data also stop it. Stud adapters require at least three non-collinear contacts meeting their named source geometry within 1 mm and lengths of 2–160 mm. Preserve the build report for fitting review; do not bypass the check with a generic offset. Every newly built loco also requires a numerical F4 speed box and a speed reader wired to absolute km/h. A missing HUD layout, speed indicator or matching traction reader stops the build/audit for investigation.
 
 The complete DV housing is deeper than the original generated dial. Diagnostic reports therefore retain the original face-distance screen and separately report the rear mounting pad; a face more than 30 mm from the backhead is not itself proof that the complete housing floats. A supported pad remains a candidate requiring driver-view, glass, lighting and full control-sweep checks in game. See [the implementation handover](cab-gauge-implementation-2026-10-02.md).
 
-The two-source-gauge rule now retains only physical boiler and brake pipe/cylinder instruments. Its review choice explains that extra reservoir/chest/speed faces are omitted and numerical speed remains on F4. C-25's unsupported extra faces came from the former four-instrument rule; rebuild instead of manually moving the dials. Invisible speed and reservoir HUD readers remain. K-35's second source boiler mount becomes the brake instrument and still requires its own game check.
+Two-instrument cabs retain boiler and pipe/cylinder brakes; three add speed; four add steam-chest pressure. Numerical speed and main reservoir remain on F4. Known cabs no longer receive neighbour-generated extra faces. C-25's unsupported extra faces came from the former shared rule; rebuild instead of manually moving the dials. All 73 assemblies have complete cases and measured backing pads or studs. See [the all-21 fitting pass](cab-gauge-fleet-pass-2026-10-02.md) for layouts and remaining game checks.
+
+## Running-gear oil cups
+
+The testing branch requires a left/right oil-cup pair for every driven axle, a minimum of six cups, and a maximum of twelve. Additional main-rod or crosshead bearing pairs are used where the source geometry supports them. All 21 stock locos have measured fittings in `oil_fits.json`, mirrored in the master vehicle table. Each anchor is parented to its named travelling mesh; CCL's stock position sync moves the cup while keeping it upright.
+
+Changed source hashes, driver radius/axle count or axle positions, a missing/stationary moving parent, lost bearing contact, or lost clearance stops the build. The builder checks an upright 3.5 cm radius, 9 cm high cup envelope and 12 cm cup spacing at 64 phases through a revolution. It does not fill the quota with running-board cups or silently disable manual oiling. Keep the run's build report and vehicle identifier for fitting review. Rebuild older packs; visual seating, lid motion and oil-can access still need in-game acceptance. See [the fleet oil-cup report](oil-cup-fleet-pass-2026-10-02.md).
 
 ## Tender truck wheel pivots
 

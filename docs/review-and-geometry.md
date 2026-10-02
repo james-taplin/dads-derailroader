@@ -74,8 +74,10 @@ now centred at (0, 0.35, 5.4699), and the rear at (0, 0.79438, −0.9859). Both 
 rule also corrects tender capsules. This is a confirmed generated-prefab defect; removal of the in-game pitch still
 needs a fresh build/spawn test.
 
-The old fallback generated four A18 oil points at an estimated y = 1.63876 m, where they could hide inside geometry.
-The generic builder now looks for compact, upward-facing big-end nub geometry on modelled main, side and connecting
+Current stock builds use the [2026-10-02 fleet fittings](oil-cup-fleet-pass-2026-10-02.md): a supported travelling pair per driven axle, six to twelve total, with 64-phase bearing contact/clearance/spacing checks. Source fingerprints and explicit per-loco parents/local anchors are recorded in the master table. Missing supports or quota failures stop the build. Visual seating, lids and oil-can reach still need game acceptance.
+
+The following describes the historical A18 regression before that fleet policy. The old fallback generated four A18 oil points at an estimated y = 1.63876 m, where they could hide inside geometry.
+The generic builder then looked for compact, upward-facing big-end nub geometry on modelled main, side and connecting
 rods first. Left and right nubs define a pair; each provider is parented to its moving rod. A missing or inaccessible
 nub uses an accessible running-board seat with room for the whole cup footprint. If either side still has no seat,
 the builder omits both cups in that pair and reduces the simulation, provider and interactable counts together.

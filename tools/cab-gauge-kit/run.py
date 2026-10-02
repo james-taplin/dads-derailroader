@@ -101,6 +101,7 @@ def create_project(source, output):
         raise ValueError('Creator project must use Unity 2019.4.40f1')
     (project/'Assets/Editor').mkdir()
     shutil.copyfile(HERE/'GaugeProbe.cs', project/'Assets/Editor/GaugeProbe.cs')
+    shutil.copyfile(HERE/'FleetGaugeFit.cs', project/'Assets/Editor/FleetGaugeFit.cs')
     return project
 
 

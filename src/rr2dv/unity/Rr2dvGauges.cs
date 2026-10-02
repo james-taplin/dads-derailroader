@@ -15,9 +15,12 @@ public static partial class CclLocoBuild
     [Serializable] public class GaugeFit
     {
         public string sourceGauge, reading, supportPath, evidence;
+        public int sourceIndex;
         public float[] position, rotation, supportPoint;
         public float scale;
+        public GaugeContact[] supports;
     }
+    [Serializable] public class GaugeContact { public float[] point, radial; public string supportPath; }
     [Serializable] public class GaugeSelection
     {
         public int schema;
@@ -31,9 +34,9 @@ public static partial class CclLocoBuild
         string path = Path.Combine(Application.dataPath, "Rr2dv/BuildInput.json");
         if (!File.Exists(path)) return null;
         var selection = JsonUtility.FromJson<GaugeBuildInput>(File.ReadAllText(path)).gauges;
-        if (selection == null || selection.carId != CarId) return null; // no fleet/tender deployment
+        if (selection == null || selection.carId != CarId) return null; // no tender deployment
         if (selection.schema != 1 || selection.instruments == null || selection.instruments.Length == 0)
-            throw new InvalidDataException("Unsupported or empty gauge pilot selection");
+            throw new InvalidDataException("Unsupported or empty measured gauge selection");
         return selection;
     }
 
@@ -100,8 +103,19 @@ public static partial class CclLocoBuild
         return indicator;
     }
 
+    static IndicatorGaugeProxy Rr2dvLaggingGauge(IndicatorGaugeProxy original)
+    {
+        var lagging=original.gameObject.AddComponent<IndicatorGaugeLaggingProxy>();
+        foreach(var field in typeof(IndicatorGaugeProxy).GetFields()) field.SetValue(lagging,field.GetValue(original));
+        // Stock DV speed and steam-chest gauges use this damping.
+        lagging.smoothTime=.5f;lagging.updateThreshold=.001f;
+        Object.DestroyImmediate(original);
+        return lagging;
+    }
+
     static void ValidateRr2dvGaugeSupport(GaugeFit fit)
     {
+        if (fit.supports != null && fit.supports.Length > 0) { ValidateRr2dvGaugeAdapter(fit); return; }
         var surfaces = RefBody.GetComponentsInChildren<MeshFilter>(false).Where(f => f.sharedMesh &&
             (AnimationUtility.CalculateTransformPath(f.transform, RefBody) == fit.supportPath || AnimationUtility.CalculateTransformPath(f.transform, RefBody).EndsWith("/" + fit.supportPath))).ToArray();
         if (surfaces.Length != 1) throw new InvalidDataException("Gauge support must resolve uniquely: " + fit.supportPath);
@@ -134,6 +148,52 @@ public static partial class CclLocoBuild
         finally { Object.DestroyImmediate(temporary); }
     }
 
+    static void ValidateRr2dvGaugeAdapter(GaugeFit fit)
+    {
+        if(fit.supports.Length<3) throw new InvalidDataException("Gauge adapter needs three non-collinear attachments");
+        var rotation=GaugeRotation(fit.rotation);var normal=rotation*Vector3.back;var centre=GaugeVector(fit.position);
+        bool triangle=false;
+        for(int i=0;i<fit.supports.Length;i++) for(int j=i+1;j<fit.supports.Length;j++) for(int k=j+1;k<fit.supports.Length;k++)
+            if(Vector3.Cross(GaugeVector(fit.supports[j].radial)-GaugeVector(fit.supports[i].radial),
+                GaugeVector(fit.supports[k].radial)-GaugeVector(fit.supports[i].radial)).magnitude>.001f*fit.scale*fit.scale) triangle=true;
+        if(!triangle) throw new InvalidDataException("Gauge adapter attachments lie on one line");
+        foreach(var contact in fit.supports) {
+            var surfaces=RefBody.GetComponentsInChildren<MeshFilter>(false).Where(f=>f.sharedMesh &&
+                (AnimationUtility.CalculateTransformPath(f.transform,RefBody)==contact.supportPath ||
+                 AnimationUtility.CalculateTransformPath(f.transform,RefBody).EndsWith("/"+contact.supportPath))).ToArray();
+            if(surfaces.Length!=1) throw new InvalidDataException("Gauge adapter support must resolve uniquely: "+contact.supportPath);
+            var point=GaugeVector(contact.point);var rear=centre+rotation*(GaugeVector(contact.radial)+new Vector3(0,0,.015117139f*fit.scale));
+            float length=Vector3.Distance(rear,point);
+            if(length<.002f || length>.16f || Vector3.Dot(rear-point,normal)<0) throw new InvalidDataException("Gauge adapter "+fit.sourceGauge+" has an invalid attachment length: "+length+" m");
+            var temporary=new GameObject("[adapter support check]");temporary.transform.SetParent(surfaces[0].transform,false);
+            try {
+                var co=temporary.AddComponent<MeshCollider>();co.sharedMesh=surfaces[0].sharedMesh;Physics.SyncTransforms();
+                var hits=Physics.RaycastAll(point+normal*.02f,-normal,.04f).Where(h=>h.collider==co).OrderBy(h=>h.distance).ToArray();
+                if(hits.Length==0 || Vector3.Distance(hits[0].point,point)>.001f) throw new InvalidDataException("Measured gauge adapter contact no longer meets its source mesh");
+            } finally {Object.DestroyImmediate(temporary);}
+        }
+        Line("rr2dv gauge adapter: "+fit.supports.Length+" verified non-collinear source attachments; game control clearance pending");
+    }
+
+    static void BuildRr2dvGaugeMount(Transform gauge, GaugeFit fit)
+    {
+        if(fit.supports!=null && fit.supports.Length>0) {
+            foreach(var contact in fit.supports) {
+                var radial=GaugeVector(contact.radial)/fit.scale;
+                var start=gauge.TransformPoint(radial+new Vector3(0,0,.015117139f));var end=GaugeVector(contact.point);
+                var stud=GameObject.CreatePrimitive(PrimitiveType.Cylinder);stud.name="mounting stud";stud.transform.SetParent(gauge,false);
+                stud.transform.position=(start+end)/2;stud.transform.rotation=Quaternion.FromToRotation(Vector3.up,end-start);
+                stud.transform.localScale=new Vector3(.008f/fit.scale,Vector3.Distance(start,end)/(2*fit.scale),.008f/fit.scale);
+                Object.DestroyImmediate(stud.GetComponent<Collider>());stud.GetComponent<MeshRenderer>().sharedMaterial=ownMats["needle_black"];
+            }
+        } else {
+            var pad=GameObject.CreatePrimitive(PrimitiveType.Cube);pad.name="mounting pad";pad.transform.SetParent(gauge,false);
+            pad.transform.localPosition=new Vector3(0,0,.016117139f);pad.transform.localScale=new Vector3(.10f,.10f,.002f);
+            Object.DestroyImmediate(pad.GetComponent<Collider>());pad.GetComponent<MeshRenderer>().sharedMaterial=ownMats["needle_black"];
+            Child(gauge,"mount datum",new Vector3(0,0,.017117139f));
+        }
+    }
+
     static void BuildRr2dvGauges()
     {
         var selection = ReadRr2dvGaugeSelection(); if (selection == null) return;
@@ -142,27 +202,25 @@ public static partial class CclLocoBuild
         try
         {
             var hud = root.GetComponent<LocoIndicatorReaderProxy>();
-            if (!hud) throw new InvalidDataException("Gauge pilot has no HUD indicator reader");
+            if (!hud) throw new InvalidDataException("Fitted gauges have no HUD indicator reader");
             foreach (var fit in selection.instruments)
             {
-                if (fit.reading != "boiler") throw new InvalidDataException("Initial pressuremeter pilot supports boiler only; other fittings await pilot acceptance");
                 var matches = root.GetComponentsInChildren<Transform>(true).Where(t => t.name == "gauge " + fit.sourceGauge).ToArray();
-                if (matches.Length != 1 || fit.sourceGauge != Cfg.MainPressureGauge)
-                    throw new InvalidDataException("Pilot main boiler gauge must resolve uniquely");
+                if (matches.Length != 1 || fit.reading == "boiler" && fit.sourceGauge != Cfg.MainPressureGauge)
+                    throw new InvalidDataException("Selected cab gauge must resolve uniquely and boiler must be the main instrument");
                 ValidateRr2dvGaugeSupport(fit);
                 var gauge = matches[0];
                 foreach (Transform child in gauge.Cast<Transform>().ToArray()) Object.DestroyImmediate(child.gameObject);
                 gauge.SetPositionAndRotation(GaugeVector(fit.position), GaugeRotation(fit.rotation));
                 gauge.localScale = Vector3.one * fit.scale;
-                hud.steam = BuildS060Pressuremeter(gauge, "boiler.PRESSURE");
-                var pad = GameObject.CreatePrimitive(PrimitiveType.Cube);
-                pad.name = "mounting pad"; pad.transform.SetParent(gauge, false);
-                pad.transform.localPosition = new Vector3(0, 0, .016117139f);
-                pad.transform.localScale = new Vector3(.10f, .10f, .002f);
-                Object.DestroyImmediate(pad.GetComponent<Collider>());
-                pad.GetComponent<MeshRenderer>().sharedMaterial = ownMats["needle_black"];
-                Child(gauge, "mount datum", new Vector3(0, 0, .017117139f));
-                Line("rr2dv gauge pilot " + fit.sourceGauge + ": S060 housing/face/glass/needle; boiler.PRESSURE 1..19 absolute -> 0..18 bar printed; CCL resolution and game acceptance pending");
+                if (fit.reading == "boiler") hud.steam = BuildS060Pressuremeter(gauge, "boiler.PRESSURE");
+                else if (fit.reading == "chest") {
+                    hud.chestPressure = Rr2dvLaggingGauge(BuildS060Pressuremeter(gauge, "steamEngine.STEAM_CHEST_PRESSURE"));
+                    Rr2dvGaugeCaption(gauge, "CHEST");
+                }
+                else BuildRr2dvStandaloneGauge(gauge, fit.reading, hud);
+                BuildRr2dvGaugeMount(gauge, fit);
+                Line("rr2dv fitted gauge " + fit.sourceGauge + " (" + fit.reading + "): complete housing at measured support; game acceptance pending");
             }
             SaveRr2dvPrefab(root, path);
         }
@@ -180,7 +238,7 @@ public static partial class CclLocoBuild
         try
         {
             var lod = root.transform.Find("[interior LOD]");
-            if (!lod) throw new InvalidDataException("Gauge pilot has no interior LOD");
+            if (!lod) throw new InvalidDataException("Fitted gauges have no interior LOD");
             foreach (var source in interior.GetComponentsInChildren<MeshGrabberFilter>(true))
             {
                 var target = lod.Find(AnimationUtility.CalculateTransformPath(source.transform, interior.transform));

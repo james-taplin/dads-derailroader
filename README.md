@@ -39,7 +39,7 @@ P-43, P-48 and C-40).
   - functions with no handle get generated backhead controls;
   - the F4 HUD, keyboard and cab controls all drive the same simulation;
   - doors, windows and hatches open;
-  - oil cups sit on the moving rods;
+  - oil cups sit on moving running-gear bearings; the testing branch now requires a pair per driven axle and six to twelve cups, with [per-loco fittings and motion checks](docs/oil-cup-fleet-pass-2026-10-02.md);
   - lamps work;
   - the brake release is fitted under the cab.
 - **Asks you only what the source cannot answer**, in a pre-build review (below), and remembers your answers.

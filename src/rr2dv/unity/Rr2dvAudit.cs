@@ -16,7 +16,7 @@ using Object = UnityEngine.Object;
 // Passing is not acceptance: runtime checks (CTRL-01/CTRL-02) stay pending.
 public static class Rr2dvAudit
 {
-    [Serializable] public class Car { public string id; public float mass, wheelRadius; public bool locomotive; }
+    [Serializable] public class Car { public string id; public float mass, wheelRadius; public bool locomotive; public int drivenAxles; }
     [Serializable] public class Review { public string trainBrake, physics; public int[] spawnTracks; }
     [Serializable] public class EngineMetric { public string component, field; public float value; }
     [Serializable] public class CataloguePage { public string sourceId, carId, assetName, consist; }
@@ -184,6 +184,21 @@ public static class Rr2dvAudit
             var cupTags = oilCups.Select(o => Str(o, "SyncTag")).ToArray();
             var providerTags = oilProviders.Select(o => Str(o, "syncTag")).ToArray();
             outp.oilCupCount = oilCups.Length;
+            int drivenAxles=(input.cars??new Car[0]).Where(c=>c.locomotive).Sum(c=>c.drivenAxles);
+            if(drivenAxles>0) {
+                if(oilCups.Length<Math.Max(6,drivenAxles*2) || oilCups.Length>12 || oilCups.Length%2!=0)
+                    errors.Add("oil cups must cover every driven axle and total six to twelve in complete pairs");
+                for(int i=1;i<=drivenAxles;i++)foreach(string side in new[]{"L","R"})
+                    if(!cupTags.Contains("oil_"+i+side))errors.Add("missing driven-axle oil cup oil_"+i+side);
+                foreach(var provider in oilProviders.OfType<Component>()) {
+                    // AssetBundle prefab roots are inactive; GetComponentInParent's default lookup skips them.
+                    bool animated=false;
+                    for(var parent=provider.transform.parent;parent;parent=parent.parent)
+                        if(parent.GetComponent<Animator>()) {animated=true;break;}
+                    if(!provider.transform.parent || !provider.transform.parent.GetComponent<MeshFilter>() || !animated)
+                        errors.Add("oil provider is not parented to animated running-gear geometry: "+provider.name);
+                }
+            }
             if (cupTags.Any(string.IsNullOrEmpty) || cupTags.Distinct().Count() != cupTags.Length ||
                 !cupTags.OrderBy(t => t, StringComparer.Ordinal).SequenceEqual(providerTags.OrderBy(t => t, StringComparer.Ordinal)))
                 errors.Add("oil-cup and moving-provider tags do not match the placed layout");

@@ -25,7 +25,7 @@ public static class GaugeProbe
     static string PathOf(Transform t) { return t.parent ? PathOf(t.parent) + "/" + t.name : t.name; }
     static bool IsGauge(Transform t) { return t.name.StartsWith("gauge ", StringComparison.Ordinal); }
     static bool GaugeAncestor(Transform t) { while (t) { if (IsGauge(t)) return true; t = t.parent; } return false; }
-    static List<Object> Collect(Object[] roots) {
+    public static List<Object> Collect(Object[] roots) {
         var all = new List<Object>(); var seen = new HashSet<Object>(); var q = new Queue<Object>(roots);
         while (q.Count > 0) {
             var o = q.Dequeue(); if (!o || !seen.Add(o)) continue; all.Add(o);
@@ -40,7 +40,7 @@ public static class GaugeProbe
         }
         return all;
     }
-    static List<Mesh> ReadMeshes(string path) {
+    public static List<Mesh> ReadMeshes(string path) {
         var list = new List<Mesh>();
         using (var r = new BinaryReader(File.OpenRead(path))) {
             int count = r.ReadInt32();
@@ -55,7 +55,7 @@ public static class GaugeProbe
         }
         return list;
     }
-    static void ReplaceMeshes(GameObject root, List<Mesh> meshes) {
+    public static void ReplaceMeshes(GameObject root, List<Mesh> meshes) {
         foreach (var f in root.GetComponentsInChildren<MeshFilter>(true)) {
             var old = f.sharedMesh; if (!old) continue;
             // Unity built-in primitives are external bundle references but already
@@ -142,6 +142,19 @@ public static class GaugeProbe
                 }
                 result.housingSupport=contacts;
                 result.housingMounting=buried>0 ? "intersects-surface" : contacts>=7 ? "supported-pad-candidate" : "pad-support-review";
+            }
+            var studs=gauge.Cast<Transform>().Where(t=>t.name=="mounting stud").ToArray();
+            if(studs.Length>0) {
+                var endpoints=studs.Select(s=>s.TransformPoint(Vector3.up)).ToArray(); int contacts=0;
+                foreach(var point in endpoints) {
+                    var hits=Physics.RaycastAll(point+normal*.02f,-normal,.04f).Where(h=>support.Contains(h.collider)).OrderBy(h=>h.distance).ToArray();
+                    if(hits.Length>0 && Vector3.Distance(hits[0].point,point)<=.001f) contacts++;
+                }
+                bool triangle=false;
+                for(int i=0;i<endpoints.Length;i++) for(int j=i+1;j<endpoints.Length;j++) for(int k=j+1;k<endpoints.Length;k++)
+                    if(Vector3.Cross(endpoints[j]-endpoints[i],endpoints[k]-endpoints[i]).magnitude>.00025f) triangle=true;
+                result.housingSupport=contacts;
+                result.housingMounting=contacts==studs.Length && contacts>=3 && triangle ? "supported-adapter-candidate" : "adapter-support-review";
             }
         } catch(Exception e) { result.error=e.Message; result.orientation="unmeasured"; result.mounting="unmeasured"; }
         return result;

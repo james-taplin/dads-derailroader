@@ -6,7 +6,7 @@ The app measures each source model and applies general rules. A prior locomotive
 | --- | --- | --- |
 | Backhead controls | Seat generated controls and labels on visible source meshes, not hidden collision shapes. | Camelback backhead. |
 | Brake release (BR-01) | Place the stock fitting upright, red handle outward, hanger up into the mount. | External fitting regression. |
-| Oil cups | Prefer modelled big-end nubs on moving rods; use accessible running-board seats when needed. Omit a pair if neither seat is valid. | A-18 and C-70. |
+| Oil cups | A supported travelling left/right pair per driven axle; additional main-rod/crosshead bearing pairs where clear. Six to twelve total. Measured per-loco parents/local anchors, with 64-phase upright clearance and 12 cm spacing; reject missing support or quota failures. | Fleet of 21 steam locos; C-40 rear-right bearing needs the finer seat search. |
 | Number plates | Seat against the visible body at the source road-number height and length; report unsupported seating. | A-18 cab and curved tank sides. |
 | Lamps and glass | Match visible source surfaces and record missing lenses or materials for review. | Exported material warnings. |
 | Doors and windows | Treat a part as moving only when source animation or component evidence supports movement. | Source models with static panels. |

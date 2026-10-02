@@ -874,121 +874,18 @@ public static partial class CclLocoBuild
         foreach (var a in RefBody.GetComponentsInChildren<Animator>(true)) { }
     }
 
-    // The record's axle pairs are provisional. Modelled big-end nubs define the oiling
-    // layout when present; a board is only a fallback for a missing nub or a model
-    // without detectable nubs. A pair with no seat on either surface is omitted.
+    // Per-driven-axle pairs and supported additional bearings; six to twelve cups.
     static void SeatRr2dvOilCups()
     {
         if (Cfg.IsTender || Cfg.OilPoints == null || Cfg.RodOilers != null || Cfg.OilAnchors != null) return;
-        var hints = Cfg.OilPoints(RefBody).ToArray();
-        if (hints.Length % 2 != 0 || hints.Length != Cfg.EngineUnits.Sum(u => u.DriverParts.Length) * 2)
-            throw new InvalidOperationException("Oil-cup hints must contain a left/right pair for every driving axle");
-        string path = $"{carFolder}/{CarId}_template.prefab";
-        var root = PrefabUtility.LoadPrefabContents(path);
-        try
-        {
-            var body = root.transform.Find("Model/" + Cfg.BodyName);
-            if (!body) throw new InvalidOperationException("Missing built body for oil-cup placement");
-            var placed = new System.Collections.Generic.List<(string tag, Vector3 pos, Transform rod, string seat)>();
-            Rr2dvMotion = Rr2dvGearMotion(body);
-            int mainRods = 0;
-            using (new Rr2dvLodScope(body))
-            using (var hits = new VisualHits(body))
-            {
-                Rr2dvCupSpacing.Clear();
-                var rods = Rr2dvMainRods(body);
-                mainRods = rods.Count;
-                int pair = 0;
-                // cups only at the ends of the main rods, the same end on both sides or neither (James, 2026-09-30)
-                foreach (var (l, r) in Rr2dvPairRods(rods))
-                    foreach (bool crankEnd in new[] { true, false })
-                    {
-                        if (pair >= Rr2dvOilPairsMax) break;
-                        string end = crankEnd ? "big end" : "small end";
-                        // a modelled nub on both sides first (best clearance), else the highest level spot on each rod
-                        Transform lhost = l.rod, rhost = r.rod; string how = "main rod " + end;
-                        bool nubs = Rr2dvEndNubSeat(hits, body, l, crankEnd, out var lp, out var lnub, out var lnubWhy) &
-                                    Rr2dvEndNubSeat(hits, body, r, crankEnd, out var rp, out var rnub, out var rnubWhy);
-                        if (nubs) { lhost = lnub; rhost = rnub; how += " (modelled nub)"; }
-                        else
-                        {
-                            Line($"rr2dv oil main rod {end}: no modelled-nub pair ({lnubWhy ?? "left nub found"}; {rnubWhy ?? "right nub found"}); highest level spot instead");
-                            if (!Rr2dvRodEndSeat(hits, body, l, crankEnd, out lp, out var lwhy) | !Rr2dvRodEndSeat(hits, body, r, crankEnd, out rp, out var rwhy))
-                            {
-                                Line($"rr2dv oil main rod {end} pair ({l.rod.name} / {r.rod.name}) omitted: left {lwhy ?? "seat found"}; right {rwhy ?? "seat found"}");
-                                continue;
-                            }
-                        }
-                        Rr2dvCupSpacing.Add(lp); Rr2dvCupSpacing.Add(rp);
-                        pair++;
-                        placed.Add(($"oil_{pair}L", lp, lhost, how));
-                        placed.Add(($"oil_{pair}R", rp, rhost, how));
-                    }
-                if (placed.Count == 0)
-                {
-                    // no main-rod pair: the running boards, the same axle on both sides or neither (never mixed with rods)
-                    Line($"rr2dv oil: no main-rod end pair ({mainRods} main rod(s) found); running-board pairs at the driving axles instead");
-                    for (int i = 0; i < hints.Length / 2 && pair < Rr2dvOilPairsMax; i++)
-                    {
-                        float z = (hints[2 * i].Item2.z + hints[2 * i + 1].Item2.z) / 2;
-                        var a = Rr2dvBoardSeat(hits, body, -1, z);
-                        var b = a.found ? Rr2dvBoardSeat(hits, body, 1, a.pos.z) : a;
-                        if (!a.found || !b.found || Mathf.Abs(a.pos.z - b.pos.z) > .1f)
-                        {
-                            Line($"rr2dv oil board pair at axle z {z:F3} omitted: no matching running-board seat on {(a.found ? "the right" : "the left")}");
-                            continue;
-                        }
-                        Rr2dvCupSpacing.Add(a.pos); Rr2dvCupSpacing.Add(b.pos);
-                        pair++;
-                        placed.Add(($"oil_{pair}L", a.pos, null, a.seat));
-                        placed.Add(($"oil_{pair}R", b.pos, null, b.seat));
-                    }
-                }
-            }
-            var old = body.Find("[oiling points]");
-            if (old) Object.DestroyImmediate(old.gameObject);
-            var holder = new GameObject("[oiling points]").transform;
-            holder.SetParent(body, false);
-            var points = new (string tag, Vector3 pos)[placed.Count];
-            for (int i = 0; i < placed.Count; i++)
-            {
-                var p = placed[i];
-                var provider = new GameObject(p.tag).transform;
-                provider.SetParent(p.rod ? p.rod : holder, false);
-                provider.position = p.pos;
-                Set(Add(provider.gameObject, "CCL.Types.Proxies.Util.PositionSyncProviderProxy"), "syncTag", p.tag);
-                points[i] = (p.tag, root.transform.InverseTransformPoint(p.pos));
-                Line($"rr2dv oil {p.tag}: {p.seat} at {V(points[i].pos)}; provider parent {provider.parent.name}");
-            }
-            Cfg.OilPoints = _ => points;
-            var oilDefinition = root.transform.Find("[sim]/oilingPoints")?.GetComponents<Component>()
-                .FirstOrDefault(c => c.GetType().Name == "ManualOilingPointsDefinitionProxy");
-            if (!oilDefinition) throw new InvalidOperationException("Missing simulation oiling-point definition");
-            if (points.Length > 0) Set(oilDefinition, "OilingPointCount", points.Length);
-            else
-            {
-                // No manual oiling (James, 2026-09-29): with no seat at any driving axle, the oiling system keeps one internal
-                // point that never drains (no cup, the oil lamp never lights, no running-gear wear), rather than zero points,
-                // whose "lowest oil level" Derail Valley may read as empty. Deliberate and reported; the audit accepts it.
-                Set(oilDefinition, "OilingPointCount", 1);
-                Set(oilDefinition, "consumptionPerRev", 0f);
-                Warn("rr2dv oil: no accessible seat at any driving axle: no manual oiling (one internal oiling point that never drains, no cup)");
-            }
-            oilDefinition.GetType().GetMethod("OnValidate", BF)?.Invoke(oilDefinition, null);
-            Line($"rr2dv oil layout: {placed.Count} cups ({mainRods} main rod(s), {hints.Length} provisional axle hints)");
-            Line($"rr2dv oil simulation count: {points.Length}");
-            SaveRr2dvPrefab(root, path);
-        }
-        finally { PrefabUtility.UnloadPrefabContents(root); }
+        SeatRr2dvAxleOilCups();
     }
 
-    // Oil cups (James, 2026-09-30): only at the ends of the main rods, as a left/right pair on the same end or not at all;
-    // the running boards only when no main-rod pair fits, and then on both sides. At most 6 pairs (12 cups: x-4-4-x).
+    // Per-axle paired cups use Rr2dvOilLayout. These helpers measure the source rods and their moving bearing seats.
     // The sides' cranks are quartered, so at rest one main rod lies level and the other is pitched: a seat found in the
     // rest pose differed side to side (a nub on one, the board on the other). Each rod is measured in its own level pose
     // (the wheel phase where it lies flattest), against its own mesh only; the seat is then fixed on the rod, and its
     // clearance checked through a whole turn (Rr2dvCupClear).
-    const int Rr2dvOilPairsMax = 6;
 
     class Rr2dvMainRod { public Transform rod; public Vector3 crankEnd, crossEnd; public float side, throwM, crossZ, levelPhase; }
 
@@ -1133,7 +1030,7 @@ public static partial class CclLocoBuild
             var found = Rr2dvOilNubs.Find(
                 (Vector3 o, Vector3 d, float dist, out RaycastHit h) => hits.Ray(o, d, dist, out h, null),
                 end, .3f, CupPivotAboveBase - CupSeatSink, t => Rr2dvTravels(t),
-                (p, t, r) => Rr2dvCupClear(hits, body, p, t, out var w, r) ? null : w,
+                (p, t, r) => { Rr2dvSampleGear(animators,m.levelPhase); bool clear=Rr2dvCupClear(hits,body,p,t,out var w,r); Rr2dvSampleGear(animators,m.levelPhase); return clear?null:w; },
                 Rr2dvCupSpaced, out summary);
             if (found.Count > 0) { best = found[0]; local = best.local; host = best.host; }
         }
@@ -1185,7 +1082,7 @@ public static partial class CclLocoBuild
             .Where(a => a.name == $"[anim] {u.GroupName}" || a.name.StartsWith($"[anim] {u.GroupName} "))).Distinct().ToList();
         try
         {
-            foreach (var phase in new[] { 0f, .125f, .25f, .375f, .5f, .625f, .75f, .875f })
+            foreach (var phase in Enumerable.Range(0,64).Select(i=>i/64f))
             {
                 foreach (var a in animators)
                 {
@@ -1194,8 +1091,13 @@ public static partial class CclLocoBuild
                 }
                 Physics.SyncTransforms();
                 var p = rider ? rider.TransformPoint(local) : pos;
+                foreach(var other in RrOilSeats.Where(s=>s.host && !(s.host==rider && Vector3.Distance(s.local,local)<.0001f)))
+                    if(Vector3.Distance(p,other.Position)<CupSpacing) {why="another oil cup within 12 cm at phase "+phase.ToString("F3");return false;}
                 var baseY = p.y - CupPivotAboveBase + CupSeatSink;
                 var centre = new Vector3(p.x, baseY, p.z);
+                if(rider && (!hits.Ray(centre+Vector3.up*.025f,Vector3.down,.05f,out var support,rider) ||
+                    support.normal.y<.7f || Mathf.Abs(support.point.y-baseY)>.006f))
+                {why="moving bearing lost cup-base contact at phase "+phase.ToString("F3");return false;}
                 // up through the cup from just above its base, at the centre and around the rim
                 foreach (var o in new[] { Vector3.zero, new Vector3(radius, 0, 0), new Vector3(-radius, 0, 0), new Vector3(0, 0, radius), new Vector3(0, 0, -radius) })
                     if (hits.Ray(centre + o + Vector3.up * .006f, Vector3.up, CupClearHeight, out var h, body))

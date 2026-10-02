@@ -1,3 +1,10 @@
+Unreleased
+
+- fitted moving oil cups across all 21 steam locos: a supported left/right pair at every driven axle, plus clear main-rod/crosshead bearings, with six to twelve cups required; corrected search-pose anchor coordinates and added full-turn clearance/spacing checks [rebuild packs; appearance and oil-can access still need checking in game]
+- fitted complete cab instruments across all 21 steam locos, with bespoke two-, three- or four-gauge layouts: boiler and pipe/application brakes, then speed and steam-chest pressure where mounts allow [rebuild packs; cab visibility and control clearance still need checking in game]
+- added housed standalone brake and speed dials, corrected brake atmospheric-zero calibration, and retained numerical km/h on every F4 HUD
+- updated the master vehicle table with measured gauge and oil-cup supports, fitting coordinates and current repair status; retained C-40's accepted tender beam band for ordinary rebuilds; C-25's coupling tilt remains open
+
 Version 0.4.4
 
 - made dynamo steam jets follow the measured exhaust spout direction, correcting the blanket 180-degree turn that sent C-25's steam forwards [rebuild existing packs; still needs checking in game]

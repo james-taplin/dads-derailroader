@@ -6,7 +6,7 @@ from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
 HERE = Path(__file__).resolve().parent
-SOURCE = ('README.md', 'GaugeProbe.cs', 'run.py', 'test_kit.py', 'package.py', 'LICENSE')
+SOURCE = ('README.md', 'GaugeProbe.cs', 'FleetGaugeFit.cs', 'run.py', 'test_kit.py', 'package.py', 'LICENSE')
 RESULTS = ('report.html', 'gauges.csv', 'summary.json', 'result.json')
 
 

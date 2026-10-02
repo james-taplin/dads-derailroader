@@ -2,9 +2,12 @@
 
 First-pass tools for all 21 rr2dv steam cabs: **do the actual dial faces point rearwards, and is there support behind them?** This is a diagnostic package, not a gauge repair, converter update or game mod.
 
+The testing-branch converter now uses the measured fleet fitting library. This kit separately reports pad/stud attachment support; its historical face-distance screen is not a full housing-clearance test. See [the fleet pass](../../docs/cab-gauge-fleet-pass-2026-10-02.md).
+
 ## What you get
 
 - `GaugeProbe.cs`: automated Unity inspection and native synthetic regression cases.
+- `FleetGaugeFit.cs`: optional numerical support-fitting search on diagnostic clones; not applied to installed packs.
 - `run.py`: discovers installed packs, decodes their geometry, creates a separate inspection project, runs Unity and writes reports.
 - `test_kit.py`: tests the report/error handling and ZIP allowlist.
 - `report.html`: generated fleet tables and top-view face-direction diagrams; opens in a normal browser without a server.
@@ -14,6 +17,10 @@ First-pass tools for all 21 rr2dv steam cabs: **do the actual dial faces point r
 - `gauge-results.zip`: only the four report files, never game geometry or the inspection project.
 
 ## Requirements
+
+`FleetGaugeFit.Run` is an optional developer fitting entry point in the disposable project. It reads `FLEET_GAUGE_INPUT` and writes JSON to `FLEET_GAUGE_OUTPUT`. Each `cases` item supplies `id`, `pack`, `carId`, `bundle`, `meshData`, `sha256`, `backheadZ` and `slots`; each slot specifies `sourceGauge`, `sourceIndex`, `reading`, `position`, `rotation` and `scale` from a reviewed source-mount plan. Use the private readable buffers from `run.py` and measured backhead/source definitions. Run Unity with `-executeMethod FleetGaugeFit.Run`. Any missing fit makes `completed` false. Review the result before transferring numerical candidates into `gauge_fits.json`; this entry point never changes converter data or installed packs. Do not distribute reconstructed buffers or projects.
+
+Adapters require three non-collinear contacts on static meshes, 2–160 mm stud lengths and sampled housing clearance. Flat pads require at least seven of nine rear contacts. These are fitting screens; visibility and control travel still need game testing.
 
 Windows; licensed Unity **2019.4.40f1**; Python 3.11 or later with UnityPy; an existing disposable Unity project with **Car Creator 3.1.9** imported at `Assets/CarCreator`; installed rr2dv packs. No game or Creator assets are distributed in this kit.
 

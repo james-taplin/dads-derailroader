@@ -153,6 +153,25 @@ def main() -> int:
             "sourceSha256": {"Bundle": files["Bundle"], "Catalog.json": files["Catalog.json"], "Definitions.json": files["Definitions.json"]},
         }
     table = {"schema": 1, "gameBuild": GAME_BUILD, "measured": MEASURED, "locos": out}
+    # Keep the maintained fitting policy when regenerating the source measurements.
+    # Refuse stale source hashes rather than silently resurrecting neighbour-generated faces.
+    from update_tuning import reconcile
+    fits = Path(__file__).resolve().parents[2] / 'src/rr2dv/gauge_fits.json'
+    existing = Path(a.out)
+    if existing.is_file():
+        previous = json.loads(existing.read_text(encoding='utf-8'))
+        for pack, entry in table['locos'].items():
+            prior = previous.get('locos', {}).get(pack, {})
+            if prior.get('sourceSha256') == entry['sourceSha256']:
+                entry['repairs'] = prior.get('repairs', {})
+                if any(vid != 'none' for vid in prior.get('endBeam', {})):
+                    entry['endBeam'] = prior['endBeam']
+                if 'oiling' in prior:
+                    entry['oiling'] = prior['oiling']
+                for key in ('historicalPolicy', 'installedBaseline'):
+                    if key in prior.get('gauges', {}):
+                        entry['gauges'][key] = prior['gauges'][key]
+    table = reconcile(table, json.loads(fits.read_text(encoding='utf-8'))['profiles'])
     Path(a.out).write_text(json.dumps(table, indent=1, sort_keys=True) + "\n", encoding="utf-8")
     print(f"wrote {a.out}: {len(out)} locos")
     return 0

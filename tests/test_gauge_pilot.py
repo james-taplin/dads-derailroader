@@ -9,17 +9,21 @@ from rr2dv import gauges
 
 
 def record(source='ls-280-c25'):
-    return dict(vehicleId=source, config=dict(CarId='RR2DV_LS_280_C25', MainPressureGauge='Boiler Gauge',
-        Components=dict(value=[dict(kind='Gauge', name='Boiler Gauge', extra=json.dumps(dict(style='BoilerPressure')))])))
+    profile = gauges.library()['profiles'].get(source)
+    fits = profile['instruments'] if profile else []
+    return dict(vehicleId=source, config=dict(CarId='RR2DV_'+source.replace('-', '_').upper(),
+        MainPressureGauge=next((f['sourceGauge'] for f in fits if f['reading']=='boiler'), ''),
+        Components=dict(value=[dict(kind='Gauge', name=f['sourceGauge'], extra=json.dumps(dict(style=gauges.STYLES[f['reading']]))) for f in fits])))
 
 
 class GaugePilot(unittest.TestCase):
-    def test_only_reviewed_pilot_is_selected_and_other_cabs_are_preserved(self):
+    def test_every_stock_cab_selects_its_measured_layout(self):
         fit = gauges.prepare(record())
         self.assertEqual(fit['carId'], 'RR2DV_LS_280_C25')
-        self.assertEqual([g['reading'] for g in fit['instruments']], ['boiler'])
-        for source in ('ls-442-a26', 'ls-282-k35', 'ls-460-t21'):
-            self.assertIsNone(gauges.prepare(record(source)))
+        self.assertEqual([g['reading'] for g in fit['instruments']], ['boiler', 'brake'])
+        for source, profile in gauges.library()['profiles'].items():
+            self.assertEqual(gauges.prepare(record(source))['instruments'], profile['instruments'])
+        self.assertIsNone(gauges.prepare(record('synthetic-not-stock')))
 
     def test_missing_ambiguous_or_wrong_reading_gauge_fails(self):
         for change in ('missing', 'duplicate', 'wrong-style', 'wrong-main'):
@@ -69,7 +73,7 @@ class NativeGaugePilot(unittest.TestCase):
                                              RR2DV_CCL_RUNTIME=str(game/'Mods/DVCustomCarLoader'),
                                              RR2DV_PRESSURE_MESHES=os.environ['RR2DV_PRESSURE_MESHES']), timeout=600)
             for key in ('passed', 'bundleReload', 'lodGrabbers', 'actualCclBinding', 'actualDvIndicator', 'numericalHud'):
-                self.assertTrue(result[key], key)
+                self.assertTrue(result[key], (key, result))
             self.assertEqual(result['pressureSamples'], 3)
             self.assertEqual(result['speedSamples'], 4)
             self.assertEqual(result['exit_code'], 0)

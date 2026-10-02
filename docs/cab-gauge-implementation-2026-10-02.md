@@ -1,5 +1,7 @@
 # Initial cab instrument implementation — 0.4.4 testing branch
 
+Historical pilot report. James subsequently authorised the all-21 fitting pass; see [the fleet implementation and current layouts](cab-gauge-fleet-pass-2026-10-02.md). Its game acceptance remains pending; the pilot-only statuses below describe the earlier implementation.
+
 ## Delivered
 
 The app-owned gauge construction path and separate measured fitting library are implemented. C-25's main boiler gauge is the first pilot. Its complete S060 pressuremeter housing, face, glass and needle use CCL MeshGrabberFilter/MaterialGrabberRenderer references; no extracted DV meshes, textures or materials are shipped in the app or pilot gauge assembly. The existing converter, CCL pipeline and pinned tooling remain in use.

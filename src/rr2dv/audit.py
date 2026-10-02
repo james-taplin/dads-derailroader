@@ -53,7 +53,8 @@ def left_out_openings(build_warnings: list[str]) -> set[tuple[str, str | None, s
 
 def audit_input(rec: dict, pack: Path, left_out: set[str] = frozenset()) -> dict:
     cfg = _plain(rec["config"])
-    cars = [{"id": cfg["CarId"], "mass": cfg["WeightEmptyKg"], "wheelRadius": cfg["WheelRadius"], "locomotive": True}]
+    cars = [{"id": cfg["CarId"], "mass": cfg["WeightEmptyKg"], "wheelRadius": cfg["WheelRadius"], "locomotive": True,
+             "drivenAxles": sum(len(u.get('DriverParts', [])) for u in cfg.get('EngineUnits', []))}]
     folders = [f"Assets/_CCL_CARS/{cfg['CarName']}", f"Assets/_CCL_CARS/{cfg['CarId']}"]
     if rec.get("tender"):
         t = _plain(rec["tender"]["config"])

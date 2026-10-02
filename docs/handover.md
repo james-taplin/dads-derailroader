@@ -1,5 +1,7 @@
 # Handover to Codex (written 2026-10-01 by the cloud Claude session, which is nearly out of usage)
 
+Latest fleet implementation receipts: [cab gauges](cab-gauge-fleet-pass-2026-10-02.md) and [oil cups](oil-cup-fleet-pass-2026-10-02.md). These supersede the older fitting counts and oil-placement fallback below; game acceptance remains pending.
+
 Read this first on branch `claude/unity-crash-message` of `james-taplin/dads-derailroader` (private). The app board lives in the OLD repo
 `james-taplin/derailroader` (`board/APP_BOARD.md`, posts VF27 to VF29 hold the same findings); this repo has no board and James wants it kept that way.
 Also read `CLAUDE.md` (workflow rules): implement on a branch, never straight to `main`; board posts and releases only when James says.

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from . import buildrecord, catalogue, gauges, recordcheck, stock, unityrun
+from . import buildrecord, catalogue, gauges, oiling, recordcheck, stock, unityrun
 from .jsonio import read_json, read_json_lenient, sha256_file, write_json
 from .rrmod import components, definition
 
@@ -131,7 +131,12 @@ def prepare(run_path: Path, inv: dict, probe_in: dict, probe_out: dict | None, p
     try:
         data['gauges'] = gauges.prepare(rec)
     except (gauges.GaugeError, OSError, ValueError) as e:
-        raise BuildError(f'Preparing the cab gauge pilot failed: {e}') from e
+        raise BuildError(f'Preparing the measured cab gauges failed: {e}') from e
+    try:
+        source_pack = next((p for p in inv['packs'] if p['name'] == rec['vehicleId']), {})
+        data['oiling'] = oiling.prepare(rec, source_files={f['name']: f['sha256'] for f in source_pack.get('files', [])})
+    except (oiling.OilingError, OSError, ValueError) as e:
+        raise BuildError(f'Preparing the measured running-gear oil cups failed: {e}') from e
     write_json(run_path / project["project"] / BUILD_INPUT, data)
     return {"record": rec, "choices": choices, "input": data}
 

@@ -58,7 +58,7 @@ class UnityApi(unittest.TestCase):
             # CatalogueRegression validates it in Unity with the real Creator package.
             # Gauge and truck partials likewise require the real core/Creator types;
             # PressuremeterRegression and TruckWheelOrbitRegression compile/exercise them in Unity.
-            standalone = [p for p in APP_CS if p.name not in ("Rr2dvPlacement.cs", "Rr2dvFeatures.cs", "Rr2dvInteractions.cs", "Rr2dvOpeningMotion.cs", "Rr2dvSourceFinishing.cs", "Rr2dvMaterialSlots.cs", "Rr2dvWhistleClosure.cs", "Rr2dvStoker.cs", "Rr2dvCatalogue.cs", "Rr2dvGauges.cs", "Rr2dvTruckWheels.cs")]
+            standalone = [p for p in APP_CS if p.name not in ("Rr2dvPlacement.cs", "Rr2dvFeatures.cs", "Rr2dvInteractions.cs", "Rr2dvOpeningMotion.cs", "Rr2dvSourceFinishing.cs", "Rr2dvMaterialSlots.cs", "Rr2dvWhistleClosure.cs", "Rr2dvStoker.cs", "Rr2dvCatalogue.cs", "Rr2dvGauges.cs", "Rr2dvGaugeFaces.cs", "Rr2dvTruckWheels.cs", "Rr2dvOilLayout.cs")]
             proc = subprocess.run(["mcs", "-target:library", "-langversion:7", f"-out:{tmp}/app.dll", str(stubs), *map(str, standalone)],
                                   capture_output=True, text=True)
         self.assertEqual(proc.returncode, 0, proc.stdout + proc.stderr)

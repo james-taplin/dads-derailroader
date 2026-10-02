@@ -41,6 +41,7 @@ public static partial class CclLocoBuild
             speedHost.gameObject.AddComponent<IndicatorPortReaderProxy>().portId = "traction.WHEEL_SPEED_KMH_EXT_IN";
             var old = Child(root.transform, "gauge Boiler Gauge", Vector3.zero);
             Child(old, "old generated dial", Vector3.zero);
+            Child(root.transform, "gauge Brake Gauge", Vector3.zero);
             Child(root.transform, "gauge preserved reservoir", new Vector3(.4f, 3.5f, -2.4f));
             SaveRr2dvPrefab(root, $"{carFolder}/{CarId}_interior.prefab"); Object.DestroyImmediate(root);
             root = new GameObject(CarId + "_template");
@@ -63,7 +64,7 @@ public static partial class CclLocoBuild
             var source = new GameObject("source"); var engine = Child(source.transform, "engine", Vector3.zero);
             var panel = GameObject.CreatePrimitive(PrimitiveType.Cube); panel.name = "Interior.007_LOD0.003";
             panel.transform.SetParent(engine, false); panel.transform.position = new Vector3(0, 3.5f, -2.4241722f);
-            panel.transform.localScale = new Vector3(.4f, .4f, .02f); Object.DestroyImmediate(panel.GetComponent<Collider>());
+            panel.transform.localScale = new Vector3(.6f, .8f, .02f); Object.DestroyImmediate(panel.GetComponent<Collider>());
             refBody = source.transform;
             BuildRr2dvGauges(); BuildRr2dvGauges(); BuildInteriorLOD(); RestoreRr2dvGaugeLodGrabbers(); RestoreRr2dvGaugeLodGrabbers();
             var interior = AssetDatabase.LoadAssetAtPath<GameObject>($"{carFolder}/{CarId}_interior.prefab");
@@ -168,8 +169,7 @@ public static partial class CclLocoBuild
             var game = Assembly.LoadFrom(Path.Combine(Environment.GetEnvironmentVariable("RR2DV_GAME_MANAGED"), "Assembly-CSharp.dll"));
             var importer = Assembly.LoadFrom(Path.Combine(Environment.GetEnvironmentVariable("RR2DV_CCL_RUNTIME"), "CCL.Importer.dll"));
             var processor = importer.GetType("CCL.Importer.Processing.GrabberProcessor", true);
-            var donorMeshes = (List<Mesh>)typeof(GaugeProbe).GetMethod("ReadMeshes", BindingFlags.Static | BindingFlags.NonPublic)
-                .Invoke(null, new object[] { Environment.GetEnvironmentVariable("RR2DV_PRESSURE_MESHES") });
+            var donorMeshes = GaugeProbe.ReadMeshes(Environment.GetEnvironmentVariable("RR2DV_PRESSURE_MESHES"));
             var meshes = donorMeshes.ToDictionary(m => m.name, m => m);
             var materials = new[] { "LocoS060_Interior", "LocoS060_Gauges", "GlassIndoors" }
                 .ToDictionary(n => n, n => new Material(Shader.Find("Standard")) { name = n });

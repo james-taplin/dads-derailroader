@@ -39,7 +39,8 @@ public static partial class CclLocoBuild
             }
             SeatRr2dvOilCups();
             var oil = Cfg.OilPoints(RefBody).ToArray();
-            if (oil.Length % 2 != 0 || oil.Length > 4) throw new Exception("A18 oil placement did not retain complete pairs");
+            if (oil.Length % 2 != 0 || oil.Length < Math.Max(6,2*Cfg.EngineUnits.Sum(u=>u.DriverParts.Length)) || oil.Length > 12)
+                throw new Exception("Oil placement did not retain the required axle pairs within six to twelve cups");
             foreach (var p in oil) Debug.Log("RR_OIL_FIXED " + p.Item1 + " " + p.Item2.ToString("F5"));
             var root = UnityEngine.Object.Instantiate(prefab);
             foreach (var c in root.GetComponentsInChildren<CapsuleCollider>(true))

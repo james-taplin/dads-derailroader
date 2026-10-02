@@ -14,7 +14,7 @@ An installed pack has passed a build and exported-bundle audit. **It is still a 
 - [ ] **8. Check exact closure (CTRL-02).** Under steam pressure, a closed throttle or whistle commands zero flow, not merely a 0% display.
 - [ ] **9. Check input routes.** Grab, F4 HUD, and keyboard or scroll input agree for each control. Check VR too if used. Gauges and labels must reflect the real state.
 - [ ] **10. Repeat and reload.** Try tiny openings, full travel, repeated operation, then save and reload.
-- [ ] **11. Check external fittings (BR-01).** The brake release stands upright, red handle outward, hanger up into its mounting. Check the handbrake, lamps, cab light, doors, windows, hatches, couplers, and tender. Oil cups should move with their rods or sit on accessible running-board seats.
+- [ ] **11. Check external fittings (BR-01).** The brake release stands upright, red handle outward, hanger up into its mounting. Check the handbrake, lamps, cab light, doors, windows, hatches, couplers, and tender. Rebuilt steam locos require six to twelve oil cups, including a left/right pair at every driven axle. Check their bearing contact, full forward/reverse travel, upright orientation, lids and oil-can reach on both sides. No cup should float or clip through other gear.
 - [ ] **12. Record evidence.** Mark each control and input route pass, fail, or pending. Untested is pending.
 
 Also drive under load and check steam raising, wheel contact, braking, firing, sounds, and spawning. A bundle audit cannot establish these behaviors.

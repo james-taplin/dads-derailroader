@@ -1,5 +1,7 @@
 # Oil-cup map run: brief for Codex (offline)
 
+Historical diagnostic brief: the [2026-10-02 fleet implementation](oil-cup-fleet-pass-2026-10-02.md) supersedes the main-rod-only/board fallback below. Current stock builds require six to twelve supported travelling cups and a pair at every driven axle. This offline map remains read-only historical evidence.
+
 Goal: for every stock steam loco, record every place an oil cup could go on the running gear under our requirements, and why
 each candidate passes or fails, **and every modelled oiling nub** (Railroader's modellers put small nubs on top of the running
 gear: big ends, crossheads, valve gear, axleboxes; they imply the real-world oiling points), so we can read the results and add defined positions to the loco table

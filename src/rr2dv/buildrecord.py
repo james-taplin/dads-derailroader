@@ -19,7 +19,7 @@ import json
 import math
 import re
 
-from . import wheels
+from . import wheels, gauges as cab_gauges
 from .record import LB_KG, env
 
 # Game test 2026-09-30 (James, stock locos): throttle, cut-off (reverser) and whistle were stiff with too much inertia, the
@@ -1023,8 +1023,8 @@ class _Builder:
         self._lamps(cfg, rec, comps, anchors)
         cfg["PortRefOverrides"] = env({"boiler.FEEDWATER_TEMPERATURE": ""}, "port", "DV_choice", "S-16 and G-29: no feedwater heater")
         rec["hooks"]["OilPoints"] = self._oil(drivers, radius)
-        self.choose("oil-cup axle pairs are provisional: the builder first seats cups on modelled rod big-end nubs, "
-                    "then tries running boards; a pair with no valid seat is omitted")
+        self.choose("oil-cup hints identify the measured driven axles: the builder requires a supported travelling pair "
+                    "at every axle and six to twelve cups total, with additional main-rod/crosshead bearings where clear")
         coal_slot, water_slot = self._slots(self.definition_of(lid))
         self._resources(cfg, rec, comps, coal_slot, water_slot, tank=not tender)
         # At the rear of the engine, under the cab bodywork by the steps (James, 2026-09-28): between the drivers the
@@ -1303,12 +1303,11 @@ class _Builder:
     GAUGE_SIZE_M = 0.19  # the core's dial diameter at RR scale 1 (CclLocoBuild.BuildInterior)
 
     def _ensure_gauges(self, cfg: dict, comps: list[dict], lid: str, back_z: float | None = None) -> None:
-        """Two-instrument source cabs retain only boiler pressure and pipe/cylinder brakes (James, 2026-10-02).
-        Larger cabs get the normal Derail Valley gauges (James, 2026-09-30): boiler pressure, a two-needle brake gauge
-        that reads brake pipe (and cylinder), a main-reservoir gauge and a speedometer. RR's 4-needle Quadruplex becomes DV's
-        main-reservoir/equalizing gauge (the core makes no HUD reading of it); a style the model lacks is generated beside the
-        nearest brake gauge (else the boiler gauge), on the same panel and facing, away from its neighbours. Generated gauges are
-        estimates: check their position in game."""
+        """Use measured two/three/four-instrument layouts for the 21 stock cabs (James, 2026-10-02).
+        Unknown/synthetic profiles retain the older source-derived fallback for compatibility;
+        any generated fallback placement is an estimate requiring game review."""
+        if cab_gauges.apply_layout(cfg, comps, lid, self.choose):
+            return
         value = cfg["Components"]["value"]
         gauges = [c for c in value if c["kind"] == "Gauge"]
         if not gauges:
@@ -1574,7 +1573,7 @@ class _Builder:
         for i, a in enumerate(drivers):
             for side, x in (("L", -0.95), ("R", 0.95)):
                 pts.append([f"oil_{i + 1}{side}", _r([x, 2 * radius + 0.05, a["z"]])])
-        return env(pts, "m", "DV_choice", "provisional axle-pair hints; final cup count follows measured rod-nub or running-board seats")
+        return env(pts, "m", "DV_choice", "measured driven-axle hints; final six-to-twelve cup layout requires travelling bearing support and full-turn clearance")
 
     @staticmethod
     def _slots(d: dict) -> tuple[int | None, int | None]:
