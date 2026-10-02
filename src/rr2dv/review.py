@@ -8,6 +8,7 @@ import math
 import re
 from pathlib import Path
 
+from . import attribution
 from .record import env, INCH_M
 
 SCHEMA = 1
@@ -61,6 +62,7 @@ def request(record, definitions, probe, fingerprint):
         'schema': SCHEMA, 'adapterVersion': ADAPTER_VERSION, 'vehicleId': ident,
         'fingerprint': fingerprint, 'catalogueHash': digest, 'catalogueEvidence': cat['evidence'],
         'name': cfg['CarName'], 'sourceSpecs': specs, 'consistLengthM': length, 'requiredTrackLengthM': required,
+        'sources': copy.deepcopy(record['metadata'].get('sources', [])),
         'lengthBasis': 'source car ends + 1 m per coupling; 2 m total clearance (DV choice)',
         'tracks': tracks, 'wheelsets': source.get('wheelsets', []),
         'wheelCandidates': record['metadata'].get('wheelCandidates', []),
@@ -311,6 +313,7 @@ def _cli_interactive(req):
         raise ReviewError('Pre-build answers required: use the GUI or --review-file. See review-questions.json in the report.')
     print('Review:', req['name'], '\nSource wheelsets:', req['wheelsets'])
     print('Measured candidates:', req['wheelCandidates'])
+    print('Content used:\n' + '\n'.join(attribution.source_labels(req.get('sources', []))))
     v = copy.deepcopy(req.get('prefill', {}).get('values', {}))
     print(req.get('prefill', {}).get('origin', ''))
     def prompt(key, label):

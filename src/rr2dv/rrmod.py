@@ -18,7 +18,7 @@ from pathlib import Path
 from typing import Iterable, Sequence
 
 from .jsonio import SourceError, read_json_lenient, sha256_file
-from . import stock
+from . import attribution, stock
 from .safety import is_link
 
 DEFINITIONS = "definitions.json"
@@ -301,6 +301,37 @@ def _unreadable_hint(index: "Index") -> str:
         ", ".join(f"{p.root.label}:{p.rel}" for p in broken[:5]) + ("..." if len(broken) > 5 else "") + ")"
 
 
+def _model_credit_fields(pack: Pack, model: str) -> list[tuple]:
+    """Only definitions/catalogue entries matching the selected model, not its whole pack."""
+    fields = []
+    for obj in pack.objects:
+        d = definition(obj)
+        ref = d.get('modelIdentifier') or (d.get('model') or {}).get('assetIdentifier')
+        if obj['identifier'] == model or (ref == model and d.get('kind') not in
+                {'Whistle', 'SteamLocomotive', 'DieselLocomotive', 'Car', 'Truck'}):
+            meta = obj.get('metadata') or {}
+            fields.append((meta.get('credits'), meta.get('name') or obj['identifier']))
+    for key, asset in pack.assets.items():
+        if isinstance(asset, dict) and (key == model or Path(str(asset.get('filename', ''))).stem.casefold() == Path(model).stem.casefold()):
+            meta = asset.get('metadata') or {}
+            fields.append((meta.get('credits') or asset.get('credits'), meta.get('name') or asset.get('name') or key))
+    return fields
+
+
+def _whistle_credit(index: Index, pack: Pack, obj: dict) -> dict:
+    meta = obj.get('metadata') or {}
+    model = definition(obj).get('model') or {}
+    mpack = pack
+    if model.get('assetPackIdentifier'):
+        found = index.find_pack(model['assetPackIdentifier'])
+        mpack = found.hit
+    fields = [(meta.get('credits'), meta.get('name') or obj['identifier'])]
+    if mpack and isinstance(model.get('assetIdentifier'), str):
+        fields += _model_credit_fields(mpack, model['assetIdentifier'])
+    return attribution.content(obj['identifier'], meta.get('name'), 'whistle definition and mesh',
+                               pack.name, fields)
+
+
 def whistle_options(index: Index) -> list[dict]:
     """Every whistle Railroader offers (objects of kind Whistle), by identifier: {id, name, model, audio}."""
     out = []
@@ -308,7 +339,8 @@ def whistle_options(index: Index) -> list[dict]:
         d = definition(obj)
         model, audio = d.get("model") or {}, d.get("audio") or {}
         out.append({"id": obj["identifier"], "name": (obj.get("metadata") or {}).get("name") or obj["identifier"],
-                    "model": model.get("assetIdentifier"), "audio": audio.get("assetIdentifier")})
+                    "model": model.get("assetIdentifier"), "audio": audio.get("assetIdentifier"),
+                    "contentCredit": _whistle_credit(index, pack, obj)})
     return sorted(out, key=lambda o: o["id"])
 
 
@@ -322,7 +354,7 @@ def _whistle(index: Index, loco_id: str, ldef: dict, chosen: str | None, packs: 
     if chosen:
         source, wanted = "option", chosen
     info = {"id": wanted, "source": source, "component": comp.get("name") if comp else None, "model": None, "audio": None,
-            "name": None, "placed": False, "options": whistle_options(index)}
+            "name": None, "placed": False, "enabled": comp is not None and comp.get('enabled', True), "options": whistle_options(index)}
     if comp is None:
         issues.append(Issue("warning", "no-whistle-component", f"{loco_id} has no Whistle component; no whistle mesh is placed"))
         return info
@@ -353,11 +385,13 @@ def _whistle(index: Index, loco_id: str, ldef: dict, chosen: str | None, packs: 
     asset = mpack.assets.get(asset_ident) if isinstance(asset_ident, str) else None
     if not isinstance(asset, dict) or not isinstance(asset.get("filename"), str):
         return leave_out(f"has model {asset_ident!r}, which is not in {mpack.name}/Catalog.json")
+    packs[wpack.path] = wpack
     packs[mpack.path] = mpack
     parts.append({"owner": loco_id, "component": "Whistle mesh", "source_component": comp.get("name"), "whistle": wanted,
                   "pack": mpack.name, "pack_ref": mpack.describe(), "asset": asset_ident, "filename": asset["filename"],
                   "enabled": comp.get("enabled", True)})
     info["placed"] = True
+    info['contentCredit'] = _whistle_credit(index, wpack, wobj)
     return info
 
 
@@ -439,6 +473,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
     radial, toggles = [], []
 
     vehicle_records = []
+    content_credits = []
     for vpack, vehicle in vehicles:
         vdef = definition(vehicle)
         vid = vehicle["identifier"]
@@ -449,6 +484,9 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         if isinstance(model, str) and model:
             vehicle_records.append({"id": vid, "role": role, "model": model, "prefab": vpack.model_prefab(model), "pack": vpack.describe(),
                                     "credits": str((vehicle.get("metadata") or {}).get("credits") or "").strip()})
+            meta = vehicle.get('metadata') or {}
+            content_credits.append(attribution.content(vid, meta.get('name'), role+' model', vpack.name,
+                [(meta.get('credits'), meta.get('name') or vid)] + _model_credit_fields(vpack, model)))
         else:
             issues.append(Issue("error", "no-model", f"{vid} ({role}) has no modelIdentifier"))
         is_car = vid in car_ids
@@ -492,11 +530,16 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
             packs[ppack.path] = ppack
             parts.append({"owner": vid, "component": comp.get("name"), "pack": ppack.name, "pack_ref": ppack.describe(),
                           "asset": asset_ident, "filename": asset.get("filename"), "enabled": comp.get("enabled", True)})
+            if comp.get('enabled', True):
+                content_credits.append(attribution.content(vid+'/'+str(comp.get('name')), comp.get('name') or asset_ident,
+                    'part model', ppack.name, _model_credit_fields(ppack, asset_ident)))
 
     # The whistle: an optional Railroader mesh (a model in the whistle pack) placed at the locomotive's Whistle component,
     # chosen by the user, else the definition's defaultWhistleIdentifier, else the stock default. Its mesh is placed like
     # any part; a whistle that cannot be found is left out and listed, never a block.
     whistle_info = _whistle(index, loco_id, ldef, whistle, packs, parts, left_out, issues)
+    if whistle_info.get('placed') and whistle_info['enabled']:
+        content_credits.append(whistle_info['contentCredit'])
 
     ordered = sorted(packs.values(), key=lambda p: (p.root.rank, p.rel))
     pack_records = []
@@ -516,8 +559,7 @@ def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | 
         pack_records.append({**p.describe(), "files": files})
 
     # Source provenance for the notice and SOURCE_PROVENANCE.txt: everything used comes from Railroader's own asset packs.
-    sources = [{"id": "Railroader (base game asset packs)", "kind": "game", "root": "", "path": "", "credits": [],
-                "packs": sorted(p.rel or p.path.name for p in ordered)}]
+    sources = [attribution.source(content_credits, sorted(p.rel or p.path.name for p in ordered))]
 
     audio_choice = audio_basis(ldef, audio)
     audio_choice["replaces"] = sorted(sounds)

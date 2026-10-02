@@ -16,7 +16,7 @@ import uuid
 from pathlib import Path
 from typing import Callable, Sequence
 
-from . import __version__, consent as consent_mod
+from . import __version__, attribution, consent as consent_mod
 from .installs import Install
 from .jsonio import read_json, sha256_file
 from .safety import UnsafePath, is_link
@@ -50,8 +50,7 @@ def made_by_rr2dv(folder: Path) -> bool:
 
 def source_label(source: dict) -> str:
     """One line of "Source content detected": the source id, and the authors its definitions credit."""
-    credits = source.get("credits") or []
-    return source["id"] + (f" (credited: {', '.join(credits)})" if credits else "")
+    return attribution.source_label(source)
 
 
 def provenance_text(name: str, sources: Sequence[dict], details: dict, acknowledged: str) -> str:
@@ -65,7 +64,10 @@ def provenance_text(name: str, sources: Sequence[dict], details: dict, acknowled
     for s in sources:
         where = f" [{s['root']}{':' + s['path'] if s.get('path') else ''}]" if s.get("root") else ""
         lines.append(f"  - {source_label(s)}{where}")
+        lines += [f"      {item['name']} ({item['role']}): {item['attribution']}" for item in s.get('contentCredits', [])]
         lines += [f"      {p}" for p in s.get("packs", [])]
+    if any('contentCredits' in s for s in sources):
+        lines += ['', attribution.RIGHTS_NOTICE]
     lines += ["", "Railroader and its assets are the property of the Railroader developers and their respective rights holders.", ""]
     return "\n".join(lines)
 
@@ -95,7 +97,7 @@ def install(pack_dir: Path, dv: Install, expected: dict[str, str], sources: Sequ
         raise InstallRefused(f"{dest} already exists and was not made by rr2dv; it was left untouched. Rename or remove "
                              "it yourself if you want to install this conversion")
 
-    labels = [source_label(s) for s in sources]
+    labels = attribution.source_labels(sources)
     text = consent_mod.notice_text(name, labels)
     if not ask(name, labels):
         raise InstallRefused("the personal-use notice was not agreed to; nothing was installed")

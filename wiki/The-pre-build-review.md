@@ -2,6 +2,8 @@
 
 The review opens after the source is scanned and measured, before the pack is built. It labels **source facts**, **measured candidates**, and **starting assumptions** separately. Confirm what you know; do not treat a suggested value as proof.
 
+The **Content used** tab shows source credits for this locomotive, its tender, trucks, parts and selected whistle definition/model. Named artists are listed where provided; otherwise the content is attributed to **Giraffe Labs LLC**. All models remain the property of their existing rights holders. These same credits are carried into the installation notice and provenance records.
+
 | Choice | What it changes |
 | --- | --- |
 | Train brake | Selects self-lapping or manual-lap behavior for the valve, simulation, and HUD. A handle labelled "Train Brake" does not establish its type. |

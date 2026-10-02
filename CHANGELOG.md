@@ -1,3 +1,7 @@
+Unreleased
+
+- added named source artists to Content used and the pre-build review, including the selected whistle definition and mesh, and carried the same credits into the installation notice and provenance records [Giraffe Labs LLC where no artist is named; all models remain the property of their existing rights holders]
+
 Version 0.4.5
 
 - 2 october rebuild, fixed the oil cup build stop when Railroader source file hashes differ, byte differences are reported and every fitting is checked against the current model and motion before export [download the updated app, changed bearings, axles, parents or clearance still stop for fitting review]

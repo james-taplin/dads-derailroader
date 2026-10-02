@@ -37,6 +37,7 @@ class Window(unittest.TestCase):
         self.addCleanup(self.app.close)
         from rr2dv import reviewgui
         original_review = reviewgui.show
+        self.real_review = original_review
         def reviewed(parent, req, answer):
             value = None
             if self.app.wheel.get():
@@ -80,6 +81,50 @@ class Window(unittest.TestCase):
         self.assertIsNone(self.app.whistle_ids[self.app.whistle.get()])  # nothing chosen: the default
         self.app.whistle.set("Whistle wh-other (wh-other)")
         self.assertEqual(self.app.whistle_ids[self.app.whistle.get()], "wh-other")
+
+    def test_content_used_updates_whistle_and_is_shown_in_the_real_review(self):
+        from threading import Event
+        from rr2dv import attribution, review, rrmod, stock
+        from rr2dv.jsonio import read_json_lenient
+        path = self.m['search'] / stock.WHISTLE_PACK / 'Definitions.json'
+        data = read_json_lenient(path)
+        data['objects'][0]['metadata']['credits'] = 'Chris Currao'
+        data['objects'][1]['metadata']['credits'] = 'Other Artist'
+        path.write_text(json.dumps(data), encoding='utf-8')
+        self.select('ts-260-a', 'ts-260-a')
+        label = self.app.facts['sources'].cget('text')
+        self.assertIn('Chris Currao', label)
+        self.assertIn('Giraffe Labs LLC', label)
+        self.assertIn(attribution.RIGHTS_NOTICE, label)
+        self.app.whistle.set('Whistle wh-other (wh-other)')
+        self.app.whistle.event_generate('<<ComboboxSelected>>')
+        self.root.update()
+        label = self.app.facts['sources'].cget('text')
+        self.assertIn('Other Artist', label)
+        self.assertNotIn('Chris Currao', label)
+        original = self.app.report['inventories']['ts-260-a']['sources']
+        self.assertIn('Chris Currao', original[0]['credits'])
+        inv = rrmod.inventory(rrmod.Index(self.m['mod'], [self.m['search']]), 'ts-260-a',
+                              hash_files=False, whistle='wh-other')
+        req = review.request({'vehicleId':'x', 'config':{'CarName':'Example'}, 'metadata':{'sources':inv['sources']}},
+                             {'x':{}}, {}, 'fingerprint')
+        answer = {'event': Event()}
+        dialog = self.real_review(self.root, req, answer)
+        self.addCleanup(lambda: dialog['window'].winfo_exists() and dialog['window'].destroy())
+        tabs = dialog['tabs']
+        page_id = next(t for t in tabs.tabs() if tabs.tab(t, 'text') == 'Content used')
+        tabs.select(page_id)
+        self.root.update()
+        page = self.root.nametowidget(page_id)
+        text = next(w for w in page.winfo_children() if isinstance(w, tk.Text))
+        displayed = text.get('1.0', 'end')
+        self.assertIn('Whistle wh-other (whistle definition and mesh): Other Artist', displayed)
+        self.assertIn(attribution.RIGHTS_NOTICE, displayed)
+        self.assertNotIn('Chris Currao', displayed)
+        self.assertEqual(str(text.cget('state')), 'disabled')
+        dialog['window'].tk.call(dialog['window'].protocol('WM_DELETE_WINDOW'))
+        self.assertTrue(answer['event'].is_set())
+        self.assertIsNone(answer['value'])
 
     def test_geometry_box_lists_fitting_reviews_and_browse_starts_in_reports(self):
         from rr2dv import installs

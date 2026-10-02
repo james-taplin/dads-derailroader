@@ -71,6 +71,8 @@ Choose one of the 21 supported stock steam locomotives listed by `rr2dv list`. T
 
 ## Review and build
 
+**Content used** lists credits from the selected source definitions and models, including the chosen whistle's definition and mesh. Missing artist metadata does not block conversion: that content is attributed to **Giraffe Labs LLC**, and all models remain the property of their existing rights holders. Unrelated definitions in the same asset pack are excluded. The credits accompany the installation notice and installed provenance records.
+
 Review questions identify values the source cannot determine reliably. Use the displayed source facts and measurements; keep uncertain values unresolved until you can verify them. The driving-wheel value is a radius in metres. A measured candidate is evidence to inspect, not a confirmed measurement.
 
 A build or bundle-audit block names the failed check in the app and report. Keep `build_report.txt`, `build/review.json`, and `audit/audit.json` when reporting the issue. A successful build and audit still needs in-game checks for controls, fit, handling, and save/reload.

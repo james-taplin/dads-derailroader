@@ -5,6 +5,10 @@
 
 Before writing a pack into Derail Valley's `Mods` folder, the app displays a notice listing the source content detected. You click <kbd>I agree</kbd> once. Cancel or close the notice and nothing is installed. There is no skip setting.
 
+**Content used** lists artists named in the definitions and model catalogue entries for the selected locomotive, tender, trucks, parts and whistle. Whistle attribution includes both its definition and model credits; changing the whistle updates the list. Credits elsewhere in the same pack are not attributed to the selected content. Content without a named artist uses **Giraffe Labs LLC**. Asset titles in a credit field, such as C-40's “Mastodon”, are retained in the provenance data but are not presented as artist names.
+
+The review, installation notice and installed provenance records include **All models remain the property of their existing rights holders.** Attribution preserves the names and spelling supplied by the game files; it is not a claim that the metadata identifies every contributor or grants permission to share their work.
+
 The notice says the conversion is for your own personal use, that `derailroader` contains no Railroader code or art and distributes none (it only reads the files already installed on your computer), that you should not share the converted locomotive without permission from the Railroader developers and any other rights holders, and that `derailroader` is unofficial. The tool does not decide rights questions for you. See the [notice implementation](https://github.com/james-taplin/dads-derailroader/blob/main/src/rr2dv/consent.py) for its exact current text.
 
 <details>

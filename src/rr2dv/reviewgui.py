@@ -2,7 +2,7 @@
 import tkinter as tk
 from tkinter import ttk, messagebox, filedialog
 import json
-from . import review
+from . import attribution, review
 
 
 def scroll_with(canvas, frame, item):
@@ -45,6 +45,16 @@ def show(parent, req, answer):
     setup_tab, tracks, wheels, source = [ttk.Frame(tabs, padding=10) for _ in range(4)]
     for page, title in ((setup_tab, 'Vehicle choices'), (tracks, 'Spawn tracks'), (wheels, 'Geared wheels'), (source, 'Advanced / source details')):
         tabs.add(page, text=title)
+    content = ttk.Frame(tabs, padding=10)
+    tabs.add(content, text='Content used')
+    ttk.Label(content, text='Credits recorded in the selected source definitions and models.', wraplength=900).pack(anchor='w', pady=(0, 8))
+    credits = tk.Text(content, wrap='word', height=12)
+    credit_scroll = ttk.Scrollbar(content, orient='vertical', command=credits.yview)
+    credit_scroll.pack(side='right', fill='y')
+    credits.pack(fill='both', expand=True)
+    credits.configure(yscrollcommand=credit_scroll.set)
+    credits.insert('1.0', '\n'.join(attribution.source_labels(req.get('sources', []))) or attribution.RIGHTS_NOTICE)
+    credits.configure(state='disabled')
     canvas = tk.Canvas(setup_tab, highlightthickness=0)
     scrollbar = ttk.Scrollbar(setup_tab, orient='vertical', command=canvas.yview)
     scrollbar.pack(side='right', fill='y')

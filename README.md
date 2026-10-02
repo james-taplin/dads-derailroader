@@ -61,6 +61,11 @@ folder, `rr2dv` shows a large notice. It says that:
 The notice also lists the source content it detected. You click **I agree** once to continue, and there is no
 setting that skips it.
 
+**Content used** shows artists named in the selected locomotive, tender, truck, part and whistle definition/model
+credits. Changing the whistle updates its attribution. Content without a named artist is attributed to **Giraffe Labs
+LLC**, with the note **All models remain the property of their existing rights holders.** These credits also appear in
+the pre-build review, installation notice and installed provenance records; they do not grant redistribution rights.
+
 The installed pack carries three records:
 - `NOTICE.txt`: the same text;
 - `SOURCE_PROVENANCE.txt`: the notice version, when it was acknowledged, and which Railroader packs the content came

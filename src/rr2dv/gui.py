@@ -20,7 +20,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 from tkinter import font as tkfont
 
-from . import __version__, applog, consent, toolfinder
+from . import __version__, applog, attribution, consent, toolfinder
 from .appmodel import SETTINGS, Controller
 from .runs import STAGES
 
@@ -207,7 +207,7 @@ class App:
         facts.pack(side="top", fill="x", pady=(8, 0))
         self.facts = {}
         for row, (key, label) in enumerate((("tender", "Tender"), ("trucks", "Trucks"), ("parts", "Parts"),
-                                            ("controls", "Controls"), ("sounds", "Sounds"), ("sources", "Uses work from"))):
+                                            ("controls", "Controls"), ("sounds", "Sounds"), ("sources", "Content used"))):
             ttk.Label(facts, text=label, style="Muted.TLabel").grid(row=row, column=0, sticky="nw", padx=(0, 12), pady=1)
             value = ttk.Label(facts, text="", wraplength=640, justify="left")
             value.grid(row=row, column=1, sticky="w", pady=1)
@@ -225,6 +225,7 @@ class App:
         ttk.Label(options, text="Whistle").pack(side="left")
         self.whistle = ttk.Combobox(options, state="readonly", width=30)
         self.whistle.pack(side="left", padx=(6, 18))
+        self.whistle.bind('<<ComboboxSelected>>', lambda _: self._show_content_used())
         self.whistle_ids: dict[str, str | None] = {}
         wheel_label = ttk.Label(options, text="Wheel radius (m)")
         wheel_label.pack(side="left")
@@ -487,7 +488,6 @@ class App:
         self.facts["controls"].configure(text=f"{', '.join(purposes) or 'none'}; {len(inv['controls']['toggles'])} toggles")
         audio = inv["audio"]
         self.facts["sounds"].configure(text=f"vanilla {audio['basis'] or '(choose below)'} — {audio['rule']}")
-        self.facts["sources"].configure(text=", ".join(s["id"] for s in inv.get("sources", [])) or "—")
         self.issues.delete(*self.issues.get_children())
         shown = [i for i in inv["issues"] if i["severity"] != "info"] or [{"severity": "info", "message": "No problems found."}]
         for issue in shown:
@@ -500,9 +500,24 @@ class App:
         self.whistle_ids = {default: None, **{f"{o['name']} ({o['id']})": o["id"] for o in whistle.get("options", [])}}
         self.whistle.configure(values=list(self.whistle_ids))
         self.whistle.current(0)
+        self._show_content_used()
         self.loco_sub.configure(text=f"{ident} in {Path(folder).name}" + (" (Railroader base game)" if Path(folder).is_absolute() else ""))
         self._update_convert_button()
         self._find_geometry_reviews()
+
+    def _show_content_used(self) -> None:
+        if not self.selected or not self.report:
+            return
+        inv = self.report['inventories'][self.selected[1]]
+        sources = inv.get('sources', [])
+        chosen = self.whistle_ids.get(self.whistle.get())
+        option = next((o for o in (inv.get('whistle') or {}).get('options', []) if o['id'] == chosen), None)
+        if option and option.get('contentCredit') and (inv.get('whistle') or {}).get('enabled'):
+            sources = attribution.preview_whistle(sources, option['contentCredit'])
+        text = '\n'.join(attribution.source_label(s) for s in sources) or '—'
+        if any('contentCredits' in s for s in sources):
+            text += '\n' + attribution.RIGHTS_NOTICE
+        self.facts['sources'].configure(text=text)
 
     def _reports_folder(self) -> Path:
         """Browse starts in the last run's reports (where its proposed review is), else in all the reports."""
