@@ -1,5 +1,11 @@
 # 0.4.5 promotion, 2 October 2026
 
+## 2 October oil compatibility rebuild
+
+James requested replacement of the existing 0.4.5 prerelease after Sumrac's source-hash regression. The corrected source includes geometric revalidation for differing game-file bytes, documented in [the investigation](oil-source-compatibility-2026-10-02.md). The full correction suite passed 387 tests with 21 optional skips. Native validation passed all 21 locomotives, 218 cups, 55,808 movement checks and 63 incompatible-geometry rejection cases. The replacement Windows build uses a fresh output directory and its executable self-test now exercises changed-source oil preparation for every locomotive in addition to all catalogue selections, Tk and tooling. Release-focused checks passed 24 tests with two optional skips.
+
+The existing `v0.4.5` tag and prerelease are updated at the owner's explicit request, replacing the original downloads and checksums. The original source commit remains `21ecd86c469084cde95b238698374e7be251de4a`. Users must download the rebuilt app rather than accepting proposed end-beam geometry or editing hashes. New private release receipts are under `rr2dv_work/release-0.4.5-oil-hotfix`; previous receipts remain intact. Gameplay limitations below still apply.
+
 The testing branch combines the measured cab-gauge and travelling oil-cup fleet passes with the complete nested-archive repair from `ca01c37b8b20d1a6cdc9965ad6558a74ded061b5` on main. App-board handover X73 was read before integration. The only merge conflict was package data, resolved by retaining the new oil fitting library and all loose catalogue assets.
 
 Both app version declarations are 0.4.5. The changelog describes the complete combined change. The pinned tooling snapshot is unchanged. No private game meshes, converted packs, local logs or machine settings were added to Git.

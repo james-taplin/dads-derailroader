@@ -22,7 +22,7 @@ def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "--rr2dv-self-test":
         import tkinter
         from rr2dv import __version__
-        from rr2dv import catalogue, stock
+        from rr2dv import catalogue, oiling, stock
         import tempfile
         from rr2dv.unityproject import tooling_root
 
@@ -37,6 +37,13 @@ def main() -> int:
                 if not entry['tank']:
                     record['tender'] = {'config': {'CarId': entry['tender']['id']}}
                 catalogue.prepare(Path(tmp), record)
+                profile = oiling.library()['profiles'][loco_id]
+                oil_record = {'vehicleId': loco_id, 'config': {'CarId': loco_id,
+                    'WheelRadius': profile['wheelRadius'],
+                    'EngineUnits': [{'DriverParts': ['driver']*len(profile['axleZ'])}]}}
+                selection = oiling.prepare(oil_record, source_files={name:'0'*64 for name in stock.HASHED_FILES})
+                assert selection['changedSourceFiles'] == list(stock.HASHED_FILES)
+                assert len(selection['points']) >= max(6, 2*len(profile['axleZ']))
         print(f"Derailroader {__version__}: bundled tooling and Tk OK")
         return 0
 

@@ -14,7 +14,7 @@ The proposed-geometry button reviews end-beam placement only. It cannot address 
 
 ## Reproduction and evidence
 
-Private receipts are in ignored `rr2dv_work/oil-source-compatibility-20261002`, with suite logs alongside that directory. Published-code comparison uses the unchanged `v0.4.5` tag. The original report is reproduced with only the S-23 definitions hash changed; the corrected preparation retains all ten cups and identifies `Definitions.json` as differing.
+Private receipts are in ignored `rr2dv_work/oil-source-compatibility-20261002`, with suite logs alongside that directory. Published-code comparison used the original 0.4.5 commit `21ecd86c469084cde95b238698374e7be251de4a`, before the owner-requested tag update. The original report is reproduced with only the S-23 definitions hash changed; the corrected preparation retains all ten cups and identifies `Definitions.json` as differing.
 
 Python regressions cover separate bundle, catalogue and definition changes for every supported locomotive, unchanged-source selection, malformed/missing hash manifests, and radius/count changes despite differing hashes. Geometry and motion checks run separately in native Unity; Python preparation alone is not acceptance of a fit.
 
@@ -26,6 +26,6 @@ The full Python suite passed 387 tests with no failures/errors and 21 optional s
 
 ## Support and release state
 
-The correction is development work on the testing branch. Published 0.4.5 is unchanged, and no replacement release or tag was made during investigation. Sumrac can temporarily keep using 0.4.4, which he reports working. Do not tell him to edit source hashes, accept an unrelated geometry proposal or reinstall the game solely on this evidence.
+No replacement release or tag was made during the initial investigation. James subsequently explicitly requested promotion to main and an update of the existing 0.4.5 prerelease. The 2 October rebuild contains this correction, with replacement Windows/source downloads and checksums and a tag pointing to their corrected source. Users of the original 0.4.5 archive must download the rebuilt app and restart. Do not tell them to edit source hashes, accept an unrelated geometry proposal or reinstall the game solely on this evidence.
 
 His exact changed-file list and build number are still needed to attribute the mismatch. Successful local regression tests do not establish compatibility with his actual game files or whole-locomotive game appearance. See [the fleet oil pass](oil-cup-fleet-pass-2026-10-02.md) for runtime-fixture and in-game limitations.

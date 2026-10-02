@@ -1,8 +1,6 @@
-Unreleased
-
-- fixed the 0.4.5 oil cup build stop when Railroader source file hashes differ, byte differences are reported and every fitting is checked against the current model and motion before export [changed bearings, axles, parents or clearance still stop for fitting review]
-
 Version 0.4.5
+
+- 2 october rebuild, fixed the oil cup build stop when Railroader source file hashes differ, byte differences are reported and every fitting is checked against the current model and motion before export [download the updated app, changed bearings, axles, parents or clearance still stop for fitting review]
 
 - fitted moving oil cups across all 21 steam locos, with a supported left and right pair at every driven axle and extra cups on clear running gear bearings, six to twelve cups required [rebuild packs, appearance and oil can access still need checking in game]
 - corrected oil cup anchor coordinates and checked support, clearance and spacing through a complete wheel turn so cups ride their parent parts
