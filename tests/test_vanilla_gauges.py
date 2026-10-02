@@ -84,7 +84,7 @@ class Gauges(unittest.TestCase):
     @unittest.skipUnless(os.environ.get("RR2DV_RAILROADER"), "needs a Railroader install")
     def test_real_stock_two_gauge_cabs_have_only_essentials_and_larger_cabs_keep_the_full_set(self):
         packs = Path(os.environ["RR2DV_RAILROADER"]) / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
-        for name in stock.STEAM:
+        for name in sorted(stock.REAL_STEAM):
             raw = re.sub(r",(\s*[}\]])", r"\1", (packs / name / "Definitions.json").read_text(encoding="utf-8-sig"))
             d = next(o["definition"] for o in json.loads(raw)["objects"] if o["definition"]["kind"] == "SteamLocomotive")
             gs = [gauge(c["name"], c["style"], c["transform"]["position"], c["transform"]["scale"][0], c["transform"]["rotation"])

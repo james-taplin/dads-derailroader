@@ -35,7 +35,7 @@ class StockAnswers(unittest.TestCase):
     @unittest.skipUnless(os.environ.get("RR2DV_RAILROADER"), "needs a Railroader install")
     def test_every_real_stock_loco_gets_its_nominal_radius(self):
         packs = Path(os.environ["RR2DV_RAILROADER"]) / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
-        for name in stock.STEAM:
+        for name in sorted(stock.REAL_STEAM):
             raw = re.sub(r",(\s*[}\]])", r"\1", (packs / name / "Definitions.json").read_text(encoding="utf-8-sig"))
             source = next(o["definition"] for o in json.loads(raw)["objects"] if o["definition"]["kind"] == "SteamLocomotive")
             v = reviewchoices.suggest(req(name, source), source)["values"]
