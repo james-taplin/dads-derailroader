@@ -5,6 +5,8 @@ import math
 import re
 from pathlib import Path
 
+RADIUS_TOLERANCE_M = .0001
+
 
 class OilingError(ValueError):
     pass
@@ -48,8 +50,9 @@ def prepare(record, path=None, source_files=None):
         raise OilingError('Driven-axle positions must be finite and distinct')
     radius = cfg['WheelRadius']
     radius = radius['value'] if isinstance(radius, dict) else radius
-    if isinstance(radius, bool) or not isinstance(radius, (float, int)) or not math.isfinite(radius) or abs(radius-profile['wheelRadius']) > .0001:
-        raise OilingError('Driver radius differs from the measured oil-cup fitting')
+    if isinstance(radius, bool) or not isinstance(radius, (float, int)) or not math.isfinite(radius) or abs(radius-profile['wheelRadius']) > RADIUS_TOLERANCE_M:
+        raise OilingError(f"{source}: Driver radius {radius!r} m differs from the measured oil-cup fitting "
+                          f"({profile['wheelRadius']:g} m); check the driving tyre radius in the pre-build review")
     points = profile.get('points', [])
     if len(points) < max(6, 2*axles) or len(points) > 12 or len(points) % 2:
         raise OilingError('Oil cups must cover every driven axle in pairs and total six to twelve')

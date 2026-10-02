@@ -3,8 +3,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from rr2dv import review, reviewchoices
-from rr2dv.jsonio import write_json
+from rr2dv import oiling, review, reviewchoices, stock
+from rr2dv.jsonio import read_json, write_json
 
 
 def questions(source=None):
@@ -19,6 +19,16 @@ def questions(source=None):
 def confirmed(req):
     return review.resolve(req, {**{k: req[k] for k in reviewchoices.IDENTITY},
                                'values': {**req['prefill']['values'], 'acknowledgeExperimental': True}})
+
+
+def stock_questions(pack='ls-060-s23', radius=None):
+    profile = oiling.library()['profiles'][pack]
+    radius = profile['wheelRadius'] if radius is None else radius
+    source = {'mainDriverIndex': 0, 'wheelsets': [{'animation': {'clipName': 'Drivers'},
+              'diameter': radius * 2, 'numberOfAxles': len(profile['axleZ'])}]}
+    return review.request({'vehicleId': pack, 'config': {'CarName': stock.STEAM[pack]},
+        'metadata': {'wheelCandidates': [{'clip': 'Drivers', 'tread': radius + .0352723715782166,
+            'confidence': 'low', 'meshesUsed': ['drivers']}]}}, {pack: source}, {}, 'source-a')
 
 
 class Suggestions(unittest.TestCase):
@@ -94,6 +104,66 @@ class Suggestions(unittest.TestCase):
 
 
 class RememberedChoices(unittest.TestCase):
+    def test_s23_low_confidence_saved_radius_resets_only_radius_for_confirmation(self):
+        req = stock_questions()
+        saved = confirmed(req)
+        saved['values'].update(wheelRadius=.6829723715782166, trainBrake='self-lapping')
+        saved['provenance']['wheelRadius'] = {'basis': 'DV_choice', 'evidence': 'Previously accepted candidate'}
+        before = copy.deepcopy(req)
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reviewchoices.remember(root, saved)
+            result = reviewchoices.prepare(req, root)
+            self.assertEqual(result['prefill']['values']['wheelRadius'], .6477)
+            self.assertEqual(result['prefill']['values']['trainBrake'], 'self-lapping')
+            self.assertEqual(result['prefill']['provenance']['wheelRadius']['basis'], 'source')
+            self.assertIn('0.682972', result['prefill']['origin'])
+            self.assertIn('0.6477', result['prefill']['origin'])
+            self.assertFalse(result['prefill']['values']['acknowledgeExperimental'])
+            self.assertEqual(read_json(reviewchoices.profile_path(root, req)), saved)
+            self.assertEqual(req, before)
+
+    def test_radius_recovery_applies_to_every_stock_loco_and_old_report_history(self):
+        for pack in sorted(stock.REAL_STEAM):
+            with self.subTest(pack=pack), tempfile.TemporaryDirectory() as tmp:
+                req = stock_questions(pack)
+                saved = confirmed(req)
+                expected = req['prefill']['values']['wheelRadius']
+                saved['values']['wheelRadius'] += .035
+                root = Path(tmp)
+                write_json(root / 'reports/old/prebuild-review.json', saved)
+                result = reviewchoices.prepare(req, root)
+                self.assertEqual(result['prefill']['values']['wheelRadius'], expected)
+                self.assertIn('restored for review', result['prefill']['origin'])
+
+    def test_a_changed_source_radius_is_not_overwritten_with_reference_geometry(self):
+        req = stock_questions(radius=.70)
+        saved = confirmed(req)
+        saved['values']['wheelRadius'] = .71
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reviewchoices.remember(root, saved)
+            result = reviewchoices.prepare(req, root)
+        self.assertEqual(result['prefill']['values']['wheelRadius'], .71)
+        self.assertNotIn('restored for review', result['prefill']['origin'])
+        profile = oiling.library()['profiles']['ls-060-s23']
+        rec = {'vehicleId':'ls-060-s23', 'config':{'CarId':'s23', 'WheelRadius':.71,
+               'EngineUnits':[{'DriverParts':['driver']*len(profile['axleZ'])}]}}
+        with self.assertRaisesRegex(oiling.OilingError, '0.71.*0.6477.*pre-build review'):
+            oiling.prepare(rec)
+
+    def test_supported_saved_radius_keeps_its_existing_provenance(self):
+        req = stock_questions()
+        saved = confirmed(req)
+        saved['provenance']['wheelRadius'] = {'basis': 'DV_choice', 'evidence': 'Confirmed correct source radius'}
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            reviewchoices.remember(root, saved)
+            result = reviewchoices.prepare(req, root)
+        self.assertEqual(result['prefill']['values']['wheelRadius'], .6477)
+        self.assertEqual(result['prefill']['provenance']['wheelRadius'], saved['provenance']['wheelRadius'])
+        self.assertNotIn('restored for review', result['prefill']['origin'])
+
     def test_profile_roundtrip_resets_confirmation_and_preserves_provenance(self):
         req = questions()
         with tempfile.TemporaryDirectory() as tmp:
@@ -155,6 +225,35 @@ except Exception:
 
 @unittest.skipUnless(HAVE_TK, 'needs Tk')
 class ReviewWindow(unittest.TestCase):
+    def test_restored_stock_radius_and_explanation_are_visible_and_require_confirmation(self):
+        from rr2dv.reviewgui import show
+        from threading import Event
+        from tkinter import ttk
+        req = stock_questions()
+        saved = confirmed(req)
+        saved['values']['wheelRadius'] = .6829723715782166
+        with tempfile.TemporaryDirectory() as tmp:
+            root_path = Path(tmp)
+            reviewchoices.remember(root_path, saved)
+            req = reviewchoices.prepare(req, root_path)
+        root = tk.Tk()
+        root.withdraw()
+        self.addCleanup(root.destroy)
+        state = show(root, req, {'event': Event()})
+        root.update_idletasks()
+        self.assertEqual(state['fields']['wheelRadius'].get(), '0.6477')
+        def labels(widget):
+            for child in widget.winfo_children():
+                if isinstance(child, ttk.Label):
+                    var = child.cget('textvariable')
+                    yield root.getvar(var) if var else child.cget('text')
+                yield from labels(child)
+        self.assertIn(req['prefill']['origin'], list(labels(state['window'])))
+        self.assertFalse(state['ack'].get())
+        with self.assertRaises(review.ReviewError): state['collect']()
+        state['ack'].set(True)
+        self.assertEqual(state['collect']()['values']['wheelRadius'], .6477)
+
     def test_populated_form_builds_without_a_json_file_and_hides_unused_gears(self):
         from rr2dv.reviewgui import show
         from threading import Event

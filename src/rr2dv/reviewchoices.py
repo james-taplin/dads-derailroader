@@ -125,6 +125,34 @@ def profile_path(root: Path, req) -> Path:
     return Path(root) / 'reviews' / (key + '.json')
 
 
+def _restore_supported_radius(req, prefill):
+    """Do not silently reuse a stock radius that the current fitting will reject.
+
+    Only restore the current source suggestion when it agrees with the measured
+    fitting. A genuinely changed source radius must still require fitting review.
+    Other saved choices and the saved file remain intact; confirmation is required.
+    """
+    if req['vehicleId'] not in stock.REAL_STEAM:
+        return
+    from . import oiling
+    profile = oiling.library()['profiles'].get(req['vehicleId'])
+    current = req.get('prefill', {})
+    source = current.get('values', {}).get('wheelRadius')
+    provenance = current.get('provenance', {}).get('wheelRadius', {})
+    previous = prefill['values'].get('wheelRadius')
+    if (not profile or provenance.get('basis') != 'source' or
+            type(source) not in (int, float) or type(previous) not in (int, float) or
+            abs(source - profile['wheelRadius']) > oiling.RADIUS_TOLERANCE_M or
+            abs(previous - profile['wheelRadius']) <= oiling.RADIUS_TOLERANCE_M):
+        return
+    message = (f'Previously saved radius {previous:g} m differs from the measured oil-cup fitting; '
+               f'source radius {source:g} m restored for review. Other saved choices are retained.')
+    prefill['values']['wheelRadius'] = source
+    prefill['provenance']['wheelRadius'] = {**copy.deepcopy(provenance),
+        'evidence': provenance.get('evidence', '') + '; ' + message}
+    prefill['origin'] = message
+
+
 def prepare(req, root: Path):
     """Use exact-source saved answers, including reports made before the profile store existed."""
     from .review import resolve
@@ -145,9 +173,10 @@ def prepare(req, root: Path):
         values = resolved['values']
         values['acknowledgeExperimental'] = False
         result['prefill'] = {'values': values,
-            'provenance': saved.get('provenance', resolved['provenance']),
+            'provenance': copy.deepcopy(saved.get('provenance', resolved['provenance'])),
             'metricProvenance': saved.get('metricProvenance', resolved.get('metricProvenance', {})),
             'origin': 'Previous choices restored for this vehicle and unchanged source'}
+        _restore_supported_radius(req, result['prefill'])
         break
     return result
 

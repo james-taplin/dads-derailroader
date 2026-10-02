@@ -71,6 +71,10 @@ Choose one of the 21 supported stock steam locomotives listed by `rr2dv list`. T
 
 ## Review and build
 
+If oil preparation reports **Driver radius … differs from the measured oil-cup fitting**, compare the displayed values with the source driving-wheel radius. A low-confidence probe candidate may not be the tyre tread. Sumrac's S-23 report from 3 October restored a previously accepted **0.682972 m** candidate, while the definition and fitting use **0.6477 m**. In the pre-build review, set S-23's **Driving tyre radius (m)** to **0.6477**, confirm and retry. This addresses that review mismatch; the actual model must still pass the native bearing and motion checks. **Use proposed geometry** only concerns car ends.
+
+The testing branch now replaces an incompatible automatically restored stock radius with the current source suggestion only when that suggestion agrees with the measured oil fitting. It explains the change in the review, retains all other saved choices and requires confirmation. It does not alter the original saved file before confirmation, substitute reference values for changed source geometry, or relax the oil-fitting checks. The error now names both radii and points to the pre-build review. Low-confidence candidates remain labelled; confirm the driving tyre rather than a flange.
+
 **Content used** lists credits from the selected source definitions and models, including the chosen whistle's definition and mesh. Missing artist metadata does not block conversion: that content is attributed to **Giraffe Labs LLC**, and all models remain the property of their existing rights holders. Unrelated definitions in the same asset pack are excluded. The credits accompany the installation notice and installed provenance records.
 
 Review questions identify values the source cannot determine reliably. Use the displayed source facts and measurements; keep uncertain values unresolved until you can verify them. The driving-wheel value is a radius in metres. A measured candidate is evidence to inspect, not a confirmed measurement.
