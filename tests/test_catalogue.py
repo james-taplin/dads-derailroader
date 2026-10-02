@@ -7,7 +7,6 @@ import shutil
 import tempfile
 import unittest
 from unittest import mock
-from zipfile import ZipFile
 
 from rr2dv import catalogue, stock
 from rr2dv.audit import audit_input
@@ -74,10 +73,9 @@ class Catalogue(unittest.TestCase):
             project=folder/'project'
             catalogue.prepare(project,record('ls-282-k28t'))
             source=read_json(catalogue.DATA/'index.json')
-            with ZipFile(catalogue.DATA/'steam-pages.zip') as original, ZipFile(folder/'steam-pages.zip','w') as damaged:
-                for name in original.namelist():
-                    data=original.read(name)
-                    damaged.writestr(name,data+b'changed' if name.endswith('ls-282-k28t-catalogue.asset') else data)
+            shutil.copytree(catalogue.DATA/'pages', folder/'pages')
+            asset=folder/'pages/ls-282-k28t/ls-282-k28t-catalogue.asset'
+            asset.write_bytes(asset.read_bytes()+b'changed')
             (folder/'index.json').write_text(__import__('json').dumps(source))
             existing=(project/catalogue.ASSETS/'ls-282-k28t/ls-282-k28t-catalogue.asset').read_bytes()
             with mock.patch.object(catalogue,'DATA',folder), self.assertRaisesRegex(catalogue.CatalogueError,'integrity check'):
@@ -107,8 +105,9 @@ class Catalogue(unittest.TestCase):
             self.assertFalse((Path(tmp)/catalogue.ASSETS).exists())
 
     def test_only_native_steam_authoring_assets_are_bundled_with_the_app(self):
-        with ZipFile(catalogue.DATA/'steam-pages.zip') as archive:
-            names=archive.namelist()
+        names=[p.relative_to(catalogue.DATA/'pages').as_posix() for p in (catalogue.DATA/'pages').rglob('*') if p.is_file()]
+        self.assertFalse(list(catalogue.DATA.rglob('*.zip')))
+        self.assertEqual(set(names), set(read_json(catalogue.DATA/'index.json')['assets']))
         self.assertEqual(len([n for n in names if n.endswith('-catalogue.asset')]),41)
         self.assertFalse(any(n.startswith('ld-') for n in names))
         self.assertFalse(any(n.endswith(('.cs','.dll','.pdf','.anim')) for n in names))

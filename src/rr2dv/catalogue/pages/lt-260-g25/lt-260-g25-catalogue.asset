@@ -1,0 +1,193 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 1615646900, guid: b247489fc36790c41b197410cd8386d9, type: 3}
+  m_Name: lt-260-g25-catalogue
+  m_EditorClassIdentifier: 
+  HeaderColour: {r: 0.60784316, g: 0.6627451, b: 0.6784314, a: 1}
+  PageName:
+    Items:
+    - Language: 0
+      Value: G-25B
+  ConsistUnits: 2/2
+  HasNickname: 1
+  Nickname:
+    Items:
+    - Language: 0
+      Value: PROVISIONAL RATINGS
+  ProductionYears: 
+  Type: 2
+  Role1: 30
+  Role2: 0
+  ShowLoadRatings: 0
+  LoadFlat:
+    Tonnage: 0
+    Rating: 0
+  LoadIncline:
+    Tonnage: 0
+    Rating: 2
+  LoadInclineWet:
+    Tonnage: 0
+    Rating: 2
+  DiagramLayout: {fileID: 7447761018426429642, guid: 6d20cfbec992d774ba39cce18e393f0b,
+    type: 3}
+  DiagramExtras:
+    Length: 8191
+    Width: 3181
+    Height: 3379
+    IsThinVehicle: 0
+    HasFrontBumper: 1
+    HasRearBumper: 1
+  TechList:
+    Tech1:
+      Icon: 17
+      Description: rrstock/catalogue/lt-260-g25/tech0/description
+      Type: rrstock/catalogue/lt-260-g25/tech0/type
+    Tech2:
+      Icon: 1
+      Description: rrstock/catalogue/lt-260-g25/tech1/description
+      Type: rrstock/catalogue/lt-260-g25/tech1/type
+    Tech3:
+      Icon: 1
+      Description: rrstock/catalogue/lt-260-g25/tech2/description
+      Type: rrstock/catalogue/lt-260-g25/tech2/type
+    Tech4:
+      Icon: 0
+      Description: 
+      Type: 
+    Tech5:
+      Icon: 0
+      Description: 
+      Type: 
+    Tech6:
+      Icon: 0
+      Description: 
+      Type: 
+    Tech7:
+      Icon: 0
+      Description: 
+      Type: 
+  HidePrice: 1
+  EaseOfOperation:
+    TotalScoreDisplay: 0
+    LearningSimplicity:
+      ScoreType: 0
+      Value: 1
+    BrakeOperation:
+      ScoreType: 0
+      Value: 1
+    WarningSystems:
+      ScoreType: 0
+      Value: 1
+    MisuseTolerance:
+      ScoreType: 0
+      Value: 1
+    RemoteConnectivity:
+      ScoreType: 0
+      Value: 1
+    ControlsLayout:
+      ScoreType: 0
+      Value: 1
+    ItemStorage:
+      ScoreType: 3
+      Value: 1
+    ReversingComfort:
+      ScoreType: 4
+      Value: 3
+    LightingOperation:
+      ScoreType: 0
+      Value: 1
+    SoundComfort:
+      ScoreType: 0
+      Value: 1
+  Maintenance:
+    TotalScoreDisplay: 0
+    EnergyEconomy:
+      ScoreType: 0
+      Value: 1
+    RepairEconomy:
+      ScoreType: 0
+      Value: 1
+    SanderAdjustability:
+      ScoreType: 0
+      Value: 1
+    WheelsLifetime:
+      ScoreType: 0
+      Value: 1
+    PowertrainLifetime:
+      ScoreType: 0
+      Value: 1
+    CollisionToughness:
+      ScoreType: 0
+      Value: 1
+  Hauling:
+    TotalScoreDisplay: 0
+    LoadRating:
+      ScoreType: 0
+      Value: 1
+    TopSpeed:
+      ScoreType: 0
+      Value: 1
+    AdhesionControl:
+      ScoreType: 0
+      Value: 1
+    HeatManagement:
+      ScoreType: 0
+      Value: 1
+    Range:
+      ScoreType: 3
+      Value: 4
+    CruiseDrivingEase:
+      ScoreType: 0
+      Value: 1
+    HillclimbDrivingEase:
+      ScoreType: 0
+      Value: 1
+    DynamicBraking:
+      ScoreType: 0
+      Value: 1
+  Shunting:
+    TotalScoreDisplay: 0
+    Visibility:
+      ScoreType: 4
+      Value: 3
+    Responsiveness:
+      ScoreType: 0
+      Value: 1
+    ShuntAcceleration:
+      ScoreType: 0
+      Value: 1
+    AccelerationDrivingEase:
+      ScoreType: 0
+      Value: 1
+    SoloBraking:
+      ScoreType: 4
+      Value: 1
+    CompressorStrength:
+      ScoreType: 0
+      Value: 1
+    Compactness:
+      ScoreType: 4
+      Value: 2
+    OutsideAccess:
+      ScoreType: 4
+      Value: 2
+  _pageNameJson: '{"Items":[{"Language":"English","Value":"G-25B"}]}'
+  _nicknameJson: '{"Items":[{"Language":"English","Value":"PROVISIONAL RATINGS"}]}'
+  _loadJson: '{"Rating":"Good","Tonnage":0}'
+  _loadInclineJson: '{"Rating":"Bad","Tonnage":0}'
+  _loadInclineWetJson: '{"Rating":"Bad","Tonnage":0}'
+  _diagramJson: '{"HasFrontBumper":true,"HasRearBumper":true,"Height":3379,"IsThinVehicle":false,"Length":8191,"Width":3181}'
+  _techJson: '{"Tech1":{"Description":"rrstock/catalogue/lt-260-g25/tech0/description","Icon":"UnitEffect","Type":"rrstock/catalogue/lt-260-g25/tech0/type"},"Tech2":{"Description":"rrstock/catalogue/lt-260-g25/tech1/description","Icon":"Generic","Type":"rrstock/catalogue/lt-260-g25/tech1/type"},"Tech3":{"Description":"rrstock/catalogue/lt-260-g25/tech2/description","Icon":"Generic","Type":"rrstock/catalogue/lt-260-g25/tech2/type"},"Tech4":{"Description":"","Icon":"None","Type":""},"Tech5":{"Description":"","Icon":"None","Type":""},"Tech6":{"Description":"","Icon":"None","Type":""},"Tech7":{"Description":"","Icon":"None","Type":""}}'
+  _easeScore: '{"BrakeOperation":{"ScoreType":"None","Value":1},"ControlsLayout":{"ScoreType":"None","Value":1},"ItemStorage":{"ScoreType":"PositiveEffect","Value":1},"LearningSimplicity":{"ScoreType":"None","Value":1},"LightingOperation":{"ScoreType":"None","Value":1},"MisuseTolerance":{"ScoreType":"None","Value":1},"RemoteConnectivity":{"ScoreType":"None","Value":1},"ReversingComfort":{"ScoreType":"NegativeEffect","Value":3},"SoundComfort":{"ScoreType":"None","Value":1},"TotalScoreDisplay":"None","WarningSystems":{"ScoreType":"None","Value":1}}'
+  _maintScore: '{"CollisionToughness":{"ScoreType":"None","Value":1},"EnergyEconomy":{"ScoreType":"None","Value":1},"PowertrainLifetime":{"ScoreType":"None","Value":1},"RepairEconomy":{"ScoreType":"None","Value":1},"SanderAdjustability":{"ScoreType":"None","Value":1},"TotalScoreDisplay":"None","WheelsLifetime":{"ScoreType":"None","Value":1}}'
+  _haulScore: '{"AdhesionControl":{"ScoreType":"None","Value":1},"CruiseDrivingEase":{"ScoreType":"None","Value":1},"DynamicBraking":{"ScoreType":"None","Value":1},"HeatManagement":{"ScoreType":"None","Value":1},"HillclimbDrivingEase":{"ScoreType":"None","Value":1},"LoadRating":{"ScoreType":"None","Value":1},"Range":{"ScoreType":"PositiveEffect","Value":4},"TopSpeed":{"ScoreType":"None","Value":1},"TotalScoreDisplay":"None"}'
+  _shuntScore: '{"AccelerationDrivingEase":{"ScoreType":"None","Value":1},"Compactness":{"ScoreType":"NegativeEffect","Value":2},"CompressorStrength":{"ScoreType":"None","Value":1},"OutsideAccess":{"ScoreType":"NegativeEffect","Value":2},"Responsiveness":{"ScoreType":"None","Value":1},"ShuntAcceleration":{"ScoreType":"None","Value":1},"SoloBraking":{"ScoreType":"NegativeEffect","Value":1},"TotalScoreDisplay":"None","Visibility":{"ScoreType":"NegativeEffect","Value":3}}'

@@ -22,11 +22,21 @@ def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "--rr2dv-self-test":
         import tkinter
         from rr2dv import __version__
+        from rr2dv import catalogue, stock
+        import tempfile
         from rr2dv.unityproject import tooling_root
 
         assert (tooling_root() / "builder" / "tools" / "resolve_clip_paths.py").is_file()
         assert (Path(__file__).resolve().parent / "rr2dv" / "unity" / "Rr2dvBuild.cs").is_file()
         tkinter.Tcl().eval("info patchlevel")
+        # Exercise loose packaged catalogue data, including every engine/tender selection.
+        with tempfile.TemporaryDirectory(prefix='rr2dv-self-test-') as tmp:
+            for loco_id in stock.REAL_STEAM:
+                record = {'vehicleId': loco_id, 'config': {'CarId': loco_id}}
+                entry = stock.entry(loco_id)
+                if not entry['tank']:
+                    record['tender'] = {'config': {'CarId': entry['tender']['id']}}
+                catalogue.prepare(Path(tmp), record)
         print(f"Derailroader {__version__}: bundled tooling and Tk OK")
         return 0
 

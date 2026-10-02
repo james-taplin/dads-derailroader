@@ -6,7 +6,7 @@ import subprocess
 import sys
 import tomllib
 from pathlib import Path
-from zipfile import ZIP_DEFLATED, ZipFile
+from zipfile import ZIP_DEFLATED, ZipFile, is_zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
@@ -16,6 +16,14 @@ READING_FILES = {"CHANGELOG.md", "README.md", "LICENSE"}
 READING_FOLDERS = ("wiki/", "docs/")
 SOURCE_FILES = {"Derailroader.pyw", "Launch Derailroader.bat", "pyproject.toml"} | READING_FILES
 SOURCE_FOLDERS = ("src/", "tooling/") + READING_FOLDERS
+
+
+def reject_nested_archives(files: list[Path]) -> None:
+    """Fail rather than silently omit assets when a nested archive would ship."""
+    extensions = {'.zip', '.7z', '.rar', '.gz', '.tgz', '.tar', '.bz2', '.xz', '.whl', '.unitypackage'}
+    for file in files:
+        if file.suffix.lower() in extensions or is_zipfile(file):
+            raise ValueError(f'Nested archive cannot ship in release: {file}; store its required contents as loose files')
 
 
 def source_files() -> list[Path]:
@@ -35,14 +43,17 @@ def package(dist: Path, output: Path) -> None:
     app = dist / "Derailroader"
     if not (app / "Derailroader.exe").is_file():
         raise SystemExit(f"Missing Windows build: {app / 'Derailroader.exe'}")
+    app_files = sorted(p for p in app.rglob('*') if p.is_file())
+    sources = source_files()
+    reading = reading_files()
+    reject_nested_archives(app_files + sources + reading)
     output.mkdir(parents=True, exist_ok=True)
     windows = output / f"Derailroader-{VERSION}-Windows.zip"
     with ZipFile(windows, "w", ZIP_DEFLATED, compresslevel=9) as archive:
-        for file in sorted(app.rglob("*")):
-            if file.is_file():
-                archive.write(file, f"Derailroader/{file.relative_to(app).as_posix()}")
+        for file in app_files:
+            archive.write(file, f"Derailroader/{file.relative_to(app).as_posix()}")
         archive.write(ROOT / "LICENSE", "Derailroader/LICENSE.txt")
-        for file in reading_files():
+        for file in reading:
             if file.name != "LICENSE":
                 archive.write(file, f"Derailroader/{file.relative_to(ROOT).as_posix()}")
         python_license = Path(sys.base_prefix) / "LICENSE.txt"
@@ -59,7 +70,7 @@ def package(dist: Path, output: Path) -> None:
 
     source = output / f"Derailroader-{VERSION}-Source.zip"
     with ZipFile(source, "w", ZIP_DEFLATED, compresslevel=9) as archive:
-        for file in source_files():
+        for file in sources:
             archive.write(file, f"{SOURCE_ROOT}/{file.relative_to(ROOT).as_posix()}")
     print(windows)
     print(source)

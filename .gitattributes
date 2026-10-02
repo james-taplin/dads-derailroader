@@ -3,3 +3,4 @@ tooling/** -text
 # GitHub's language bar and search: the snapshot is vendored reference material, the app is src/.
 tooling/** linguist-vendored
 board/** linguist-documentation
+src/rr2dv/catalogue/pages/** -text

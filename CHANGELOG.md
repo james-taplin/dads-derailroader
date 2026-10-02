@@ -7,6 +7,8 @@ Unreleased
 
 Version 0.4.4
 
+- repackaged catalogue pages and the bundled Python standard library as loose files, removing nested ZIPs from both downloads; catalogue pages are retained and future nested archives stop release packaging
+
 - made dynamo steam jets follow the measured exhaust spout direction, correcting the blanket 180-degree turn that sent C-25's steam forwards [rebuild existing packs; still needs checking in game]
 - started the cab instrument replacements with C-25's boiler gauge, using the vanilla pressuremeter housing, face, glass and needle with matched pressure calibration [pilot only; appearance and control clearance still need checking in game]
 - made the numerical km/h box a required F4 HUD feature for every steam loco, including tank engines, with the S282 layout as the vanilla fallback [rebuild existing packs; still needs checking in game]
