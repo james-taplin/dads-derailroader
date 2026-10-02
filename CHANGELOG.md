@@ -1,6 +1,10 @@
-Unreleased
+Version 0.4.6
 
-- added named source artists to Content used and the pre-build review, including the selected whistle definition and mesh, and carried the same credits into the installation notice and provenance records [Giraffe Labs LLC where no artist is named; all models remain the property of their existing rights holders]
+- updated to explicitly credit all known authors and modelers whose art is in the parts being converted.
+- all previous Nexus releases have been archived.
+- changed hashes from recently updated copies of Railroader should no longer throw a blocking error unless geometry has actually changed.
+- i'm aware that some locos may be too tall for some routes [that's just the Appalachian way, pick better routes] s/ i'll look into mesh changes via script to trim funnels, but no promises at all.
+- see complete changelog, this release is inclusive of all previous changes and known bugs.
 
 Version 0.4.5
 

@@ -22,13 +22,21 @@ def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "--rr2dv-self-test":
         import tkinter
         from rr2dv import __version__
-        from rr2dv import catalogue, oiling, stock
+        from rr2dv import attribution, catalogue, oiling, stock
         import tempfile
         from rr2dv.unityproject import tooling_root
 
         assert (tooling_root() / "builder" / "tools" / "resolve_clip_paths.py").is_file()
         assert (Path(__file__).resolve().parent / "rr2dv" / "unity" / "Rr2dvBuild.cs").is_file()
         tkinter.Tcl().eval("info patchlevel")
+        # Confirm the frozen app includes selected-content credits and ownership wording.
+        reading = attribution.content('wh-6-reading', 'Reading 6-Chime', 'whistle definition and mesh',
+                                      'audio.whistles01', [('Chris Currao', 'Reading 6-Chime')])
+        unnamed = attribution.content('loco', 'Locomotive', 'locomotive model', 'loco', [])
+        labels = attribution.source_labels([attribution.source([unnamed, reading], ['loco', 'audio.whistles01'])])
+        assert any('Chris Currao' in label for label in labels)
+        assert any('Giraffe Labs LLC' in label for label in labels)
+        assert attribution.RIGHTS_NOTICE in labels
         # Exercise loose packaged catalogue data, including every engine/tender selection.
         with tempfile.TemporaryDirectory(prefix='rr2dv-self-test-') as tmp:
             for loco_id in stock.REAL_STEAM:
