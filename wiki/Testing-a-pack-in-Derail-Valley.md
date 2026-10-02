@@ -19,6 +19,8 @@ An installed pack has passed a build and exported-bundle audit. **It is still a 
 
 Also drive under load and check steam raising, wheel contact, braking, firing, sounds, and spawning. A bundle audit cannot establish these behaviors.
 
+For steam fittings, check the jet starts at the actual outlet and points in the intended direction. The testing builder corrects a reversed dynamo lean by turning its horizontal facing 180 degrees, keeping the upward tilt; pipes that cannot be measured still use a straight-up fallback. Rebuild to apply this change, then switch the dynamo off and on and inspect from the side. Also check the whistle and safety jets remain upright. A measured direction or successful export is still awaiting this game check.
+
 ## Vehicle catalogue pages
 
 Rebuild older packs to include the Game Numbers v2 pages. Each supported locomotive receives its own page and, where fitted, its tender page; K-28T has one page. No separate fleet catalogue mod is needed. Check the in-game catalogue for the correct name, icon, diagram, readable text, and both halves of a tender engine. Try each installed livery. Building just one or two locomotives should add only their entries. Hauling ratings marked **provisional** still need driving tests.

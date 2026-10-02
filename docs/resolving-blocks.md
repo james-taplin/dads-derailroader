@@ -57,6 +57,8 @@ Catalogue pages are selected by the source locomotive and tender identifiers, th
 
 A whistle mesh requires exactly one steam fitting with its source name and component type. If the build reports that the Whistle fitting cannot resolve uniquely, keep the report and source locomotive identifier. The converter will not substitute a similarly named cab control or invent a location.
 
+The testing builder turns measured dynamo jets' horizontal facing by 180 degrees while preserving their upward pipe tilt and outlet position. An unmeasurable pipe still uses the straight-up fallback. Rebuild older packs to receive the correction; the build report identifies which direction was used. Compare the rebuilt jet with the physical outlet in game, including switching the dynamo off and on, and report the locomotive and a clear side view if it is still wrong.
+
 ## Installation and reports
 
 The app installs only after the personal-use notice is accepted. If a folder already exists in Derail Valley's `Mods` directory and was not created by `rr2dv`, the app leaves it untouched; choose another output name or resolve the conflict yourself.

@@ -1,3 +1,7 @@
+Version 0.4.4
+
+- corrected reversed dynamo steam jets across the steam fleet, turning their horizontal direction by 180 degrees while preserving the pipe's upward tilt [rebuild existing packs; still needs checking in game]
+
 Version 0.4.3
 
 - added vehicle catalogue pages, icons and diagrams for all 21 steam locos and their tenders [rebuild existing packs to include them; appearance still needs checking in game]

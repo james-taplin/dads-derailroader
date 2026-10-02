@@ -433,8 +433,8 @@ public static partial class CclLocoBuild
     // Whistle and dynamo steam jets. CCL's steam template makes 'Whistle' and 'DynamoSteam' unrotated, and its importer
     // puts the vanilla steam system under each with identity rotation (ObjectInstancerProcessor), so it blows along the
     // emitter's +z: forward along the boiler on every converted loco (James's game test, 2026-09-29). The whistle jet goes
-    // straight up. The dynamo jet follows its exhaust pipe where the tip can be measured (swept back, to the side or
-    // otherwise angled), else straight up (James: always up as the fallback).
+    // straight up. Measured dynamo jets keep the exhaust pipe's upward tilt, with their horizontal facing turned
+    // 180 degrees (James's game report, 2026-10-02), else straight up (James: always up as the fallback).
     static void AimRr2dvJets()
     {
         string path = $"{carFolder}/{CarId}_template.prefab";
@@ -451,10 +451,13 @@ public static partial class CclLocoBuild
                 if (!whistle && !dynamo) continue;
                 var tip = dynamo ? Rr2dvExhaustTip(t.position) : null;
                 var dir = tip ?? Vector3.up;
+                // Reverse the measured lean around world up, not the upward component. Deriving the target from
+                // the pipe each time also makes repeat application safe: it cannot flip back to the old facing.
+                if (dynamo && tip.HasValue) dir = new Vector3(-dir.x, dir.y, -dir.z);
                 var now = t.rotation * Vector3.forward;
                 t.rotation = Quaternion.FromToRotation(now, dir) * t.rotation;
                 Line($"rr2dv steam jet {t.name}: {V(now)} -> {V(dir)} " +
-                     (tip.HasValue ? "(along the measured exhaust pipe tip)" : dynamo ? "(straight up: no measurable exhaust pipe tip)" : "(straight up)"));
+                     (tip.HasValue ? "(measured pipe tilt; horizontal facing turned 180 degrees)" : dynamo ? "(straight up: no measurable exhaust pipe tip)" : "(straight up)"));
             }
             SaveRr2dvPrefab(root, path);
         }
