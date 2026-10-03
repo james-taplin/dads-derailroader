@@ -1,4 +1,4 @@
-Version 0.4.7+fixed.1 (main and testing source; not a published release)
+Version 0.4.7+fixed.1 (restricted build uploaded to Nexus as 0.4.7; now on main and testing)
 
 - restricted support to A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22; other locomotive selections are refused
 - removed Reading 6-Chime from whistle choices and blocked its use through explicit selection or a source default

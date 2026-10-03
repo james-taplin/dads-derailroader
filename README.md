@@ -6,7 +6,7 @@
 install, rebuilds it for Derail Valley's Custom Car Loader (CCL 3.1.9), checks the result, and installs it into your own
 Derail Valley `Mods` folder. It never changes your Railroader install. The current source on main and the testing branch supports only **A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22**.
 Other locomotives and the **Reading 6-Chime** whistle are unavailable and refused by conversion checks.
-Version `0.4.7+fixed.1` identifies this restricted source revision. **The published `v0.4.7` tag and downloads predate the restriction and still support 21 locomotives.** Updating main and the testing branch does not update those existing downloads; use this source revision for the restricted edition.
+James confirmed on 3 October 2026 that the Nexus 0.4.7 upload was built from `dads-derailroader/fixed` and is the restricted ten-locomotive edition, with Reading 6-Chime excluded. The separate GitHub `v0.4.7` tag remains at `b5e7dfc`; its Source and Windows ZIPs were downloaded and inspected on 3 October and still contain the unrestricted stock list. Main and testing now contain the restriction. This source integration did not replace GitHub release assets. Earlier all-fleet reports are historical evidence, not the current support list.
 
 ![The derailroader app](docs/app-window.png)
 

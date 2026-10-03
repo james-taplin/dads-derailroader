@@ -41,4 +41,4 @@ See [When a conversion stops](https://github.com/james-taplin/dads-derailroader/
 Next: [Your first conversion](https://github.com/james-taplin/dads-derailroader/wiki/Your-first-conversion).
 
 
-**Release distinction (3 October 2026):** main and the testing branch contain the ten-locomotive `0.4.7+fixed.1` restriction. The existing `v0.4.7` tag/downloads predate it and still represent the 21-locomotive edition. No restricted binary release is implied by this source update.
+James confirmed on 3 October 2026 that the Nexus 0.4.7 upload was built from `dads-derailroader/fixed` and is the restricted ten-locomotive edition, with Reading 6-Chime excluded. The separate GitHub `v0.4.7` tag remains at `b5e7dfc`; its Source and Windows ZIPs were downloaded and inspected on 3 October and still contain the unrestricted stock list. Main and testing now contain the restriction. This source integration did not replace GitHub release assets. Earlier all-fleet reports are historical evidence, not the current support list.
