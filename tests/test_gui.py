@@ -82,6 +82,19 @@ class Window(unittest.TestCase):
         self.app.whistle.set("Whistle wh-other (wh-other)")
         self.assertEqual(self.app.whistle_ids[self.app.whistle.get()], "wh-other")
 
+    def test_reading_is_not_offered_in_the_real_whistle_dropdown(self):
+        from fixtures import whistle
+        from rr2dv import stock
+        path = self.m['search'] / stock.WHISTLE_PACK / 'Definitions.json'
+        data = json.loads(path.read_text())
+        data['objects'].append(whistle('wh-6-reading', 'TestChime'))
+        path.write_text(json.dumps(data), encoding='utf-8')
+        self.select('ts-260-a', 'ts-260-a')
+        values = list(self.app.whistle.cget('values'))
+        self.assertFalse(any('wh-6-reading' in value for value in values))
+        self.assertNotIn('wh-6-reading', self.app.whistle_ids.values())
+        self.assertIn('Whistle wh-other (wh-other)', values)
+
     def test_content_used_updates_whistle_and_is_shown_in_the_real_review(self):
         from threading import Event
         from rr2dv import attribution, review, rrmod, stock

@@ -1,6 +1,6 @@
 # derailroader contributor notes
 
-This repository contains the Windows app that converts Railroader's 21 stock steam locomotives into Derail Valley Custom Car Loader packs. The app reads game files from the local installation, builds and audits a pack, then installs it after the user accepts the personal-use notice. Keep this scope accurate in user-facing documentation.
+This test branch contains the Windows app restricted to A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22. Reading 6-Chime is excluded. Historical tuning records for the full stock fleet remain reference data, not conversion support. The app reads game files from the local installation, builds and audits a pack, then installs it after the user accepts the personal-use notice. Keep this scope accurate in user-facing documentation.
 
 ## Working practices
 

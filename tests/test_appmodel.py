@@ -34,19 +34,19 @@ class ControllerTests(unittest.TestCase):
     def test_lists_only_stock_steam_locomotive_packs(self):
         # The list is the supported stock steam set, filtered to installed and readable packs.
         packs = self.m["search"]
-        write_pack(packs / "ls-282-k28t", objects=[loco("ls-282-k28t")], assets={"ls-282-k28t": {"filename": "k28t.prefab"}})
+        write_pack(packs / "ls-440-a23", objects=[loco("ls-440-a23")], assets={"ls-440-a23": {"filename": "a23.prefab"}})
         write_pack(packs / "truck.archbar.diamond", assets={"t": {"filename": "t.prefab"}})  # not a locomotive, not stock
         write_pack(packs / "SomeMod", objects=[loco("ls-999-x")], assets={"ls-999-x": {"filename": "x.prefab"}})  # not stock
         seen = []
         entries = self.c.list_locos(lambda i, n: seen.append((i, n)))
         folders = [e.folder for e in entries]
-        self.assertIn("ls-282-k28t", folders)
+        self.assertIn("ls-440-a23", folders)
         self.assertIn("ts-260-a", folders)
         self.assertNotIn("SomeMod", folders)
         self.assertNotIn("truck.archbar.diamond", folders)
         self.assertEqual(seen[-1][1], len(__import__("rr2dv.stock", fromlist=["STEAM"]).STEAM))
-        report = self.c.scan("ls-282-k28t")
-        self.assertEqual([l["id"] for l in report["steam_locomotives"]], ["ls-282-k28t"])
+        report = self.c.scan("ls-440-a23")
+        self.assertEqual([l["id"] for l in report["steam_locomotives"]], ["ls-440-a23"])
         for refused in ("SomeMod", "truck.archbar.diamond", "ld-gp9"):
             with self.assertRaises(__import__("rr2dv.installs", fromlist=["InstallError"]).InstallError):
                 self.c.scan(refused)

@@ -2,7 +2,7 @@
 
 ## Before you begin
 
-Choose one of Railroader's **21 stock steam locomotives**; the app lists them and reads them from your Railroader install. Run **Settings > Check** first; see [Installation](https://github.com/james-taplin/dads-derailroader/wiki/Installation) if anything is missing.
+This test edition supports **A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22**; the app lists them and reads them from your Railroader install. Reading 6-Chime is unavailable. Run **Settings > Check** first; see [Installation](https://github.com/james-taplin/dads-derailroader/wiki/Installation) if anything is missing.
 
 ## In the app
 

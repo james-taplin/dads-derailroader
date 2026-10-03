@@ -39,7 +39,7 @@ class Install:
     @property
     def asset_packs(self) -> Path:
         """Railroader's base-game asset packs: each locomotive pack is a folder here with Catalog.json, Definitions.json
-        and its bundle (e.g. ls-282-k28t)."""
+        and its bundle (e.g. ls-440-a23)."""
         return self.root / "Railroader_Data" / "StreamingAssets" / "AssetPacks"
 
 
@@ -128,8 +128,8 @@ def ccl_installed(dv: Install) -> bool:
 
 
 def stock_pack(rr: Install, given: str | os.PathLike) -> Path:
-    """The input: one of Railroader's 21 stock steam locomotive packs, a real folder directly in
-    Railroader_Data/StreamingAssets/AssetPacks, by pack name (e.g. "ls-282-k28t") or by path. Nothing from the Mods
+    """The input: one of this edition's ten supported stock steam locomotive packs, a real folder directly in
+    Railroader_Data/StreamingAssets/AssetPacks, by pack name (e.g. "ls-440-a23") or by path. Nothing from the Mods
     folder, no other folder, no link (a link placed there could point anywhere), no archive, no diesel. Only read."""
     text = str(given)
     candidate = Path(text)
@@ -138,7 +138,7 @@ def stock_pack(rr: Install, given: str | os.PathLike) -> Path:
     candidate = Path(os.path.abspath(candidate))
     if Path(os.path.realpath(candidate.parent)) != Path(os.path.realpath(rr.asset_packs)):
         raise InstallError(f"{given} is not a pack in Railroader's asset packs folder ({rr.asset_packs}); this edition converts "
-                           "only Railroader's own stock steam locomotives (give the pack name, e.g. \"ls-282-k28t\")")
+                           "only Railroader's own stock steam locomotives (give the pack name, e.g. \"ls-440-a23\")")
     reason = stock.refusal(candidate.name)
     if reason:
         raise InstallError(reason)

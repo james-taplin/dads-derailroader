@@ -48,6 +48,8 @@ def fingerprint(inv: dict) -> str:
 
 
 def choose_locomotive(index: Index, requested: str | None) -> tuple[str | None, str]:
+    if requested in stock.EXCLUDED_STEAM:
+        return None, stock.refusal(requested)
     steam = [obj["identifier"] for _, obj in index.steam_locomotives()]
     if requested:
         if requested in steam:
@@ -84,7 +86,7 @@ def convert(mod: str | Path, machine: Machine, loco: str | None = None,
             audio: str | None = None, livery: str | None = None, wheel_radius: float | None = None,
             ask: Callable = consent.ask, on_progress: Callable[[str | None, str, str], None] | None = None,
             geometry_review: Path | None = None, prebuild_review=None, whistle: str | None = None) -> Outcome:
-    # Both installs (and CCL) first (W25), then the input must be one of the 21 stock steam packs (nothing is read before this).
+    # Both installs (and CCL) first (W25), then the input must be a supported stock steam pack.
     rr, dv = _installs(machine)
     input_path = installs.stock_pack(rr, mod)
     work_root = machine.work_root.resolve()

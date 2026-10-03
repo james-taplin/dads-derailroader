@@ -26,7 +26,7 @@ def stock_questions(pack='ls-060-s23', radius=None):
     radius = profile['wheelRadius'] if radius is None else radius
     source = {'mainDriverIndex': 0, 'wheelsets': [{'animation': {'clipName': 'Drivers'},
               'diameter': radius * 2, 'numberOfAxles': len(profile['axleZ'])}]}
-    return review.request({'vehicleId': pack, 'config': {'CarName': stock.STEAM[pack]},
+    return review.request({'vehicleId': pack, 'config': {'CarName': stock.KNOWN_STEAM[pack]},
         'metadata': {'wheelCandidates': [{'clip': 'Drivers', 'tread': radius + .0352723715782166,
             'confidence': 'low', 'meshesUsed': ['drivers']}]}}, {pack: source}, {}, 'source-a')
 

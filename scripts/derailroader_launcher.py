@@ -22,7 +22,7 @@ def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "--rr2dv-self-test":
         import tkinter
         from rr2dv import __version__
-        from rr2dv import attribution, catalogue, oiling, review, reviewchoices, stock
+        from rr2dv import attribution, catalogue, oiling, review, reviewchoices, rrmod, stock
         import tempfile
         from rr2dv.unityproject import tooling_root
 
@@ -30,16 +30,25 @@ def main() -> int:
         assert (Path(__file__).resolve().parent / "rr2dv" / "unity" / "Rr2dvBuild.cs").is_file()
         tkinter.Tcl().eval("info patchlevel")
         # Confirm the frozen app includes selected-content credits and ownership wording.
-        reading = attribution.content('wh-6-reading', 'Reading 6-Chime', 'whistle definition and mesh',
-                                      'audio.whistles01', [('Chris Currao', 'Reading 6-Chime')])
         unnamed = attribution.content('loco', 'Locomotive', 'locomotive model', 'loco', [])
-        labels = attribution.source_labels([attribution.source([unnamed, reading], ['loco', 'audio.whistles01'])])
-        assert any('Chris Currao' in label for label in labels)
+        labels = attribution.source_labels([attribution.source([unnamed], ['loco'])])
         assert any('Giraffe Labs LLC' in label for label in labels)
         assert attribution.RIGHTS_NOTICE in labels
+        assert len(stock.STEAM) == 10 and set(stock.STEAM) == stock.SUPPORTED_STEAM
+        assert all(stock.refusal(loco_id) for loco_id in stock.EXCLUDED_STEAM)
+        # Exercise the actual selection functions in the packaged executable.
+        class WhistleIndex:
+            def objects_of_kind(self, kind):
+                return [(None, {'identifier': 'wh-6-reading', 'definition': {'kind': 'Whistle'}})]
+        assert rrmod.whistle_options(WhistleIndex()) == []
+        issues = []
+        blocked = rrmod._whistle(WhistleIndex(), 'ls-440-a23',
+            {'components': [{'kind': 'Whistle', 'defaultWhistleIdentifier': 'wh-6-reading'}]},
+            None, {}, [], [], issues)
+        assert not blocked['placed'] and issues[0].code == 'unsupported-whistle'
         # Exercise loose packaged catalogue data, including every engine/tender selection.
         with tempfile.TemporaryDirectory(prefix='rr2dv-self-test-') as tmp:
-            for loco_id in stock.REAL_STEAM:
+            for loco_id in stock.SUPPORTED_STEAM:
                 record = {'vehicleId': loco_id, 'config': {'CarId': loco_id}}
                 entry = stock.entry(loco_id)
                 if not entry['tank']:

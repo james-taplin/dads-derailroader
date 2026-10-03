@@ -184,7 +184,8 @@ class Cli(unittest.TestCase):
     def test_list_shows_the_stock_steam_locomotives_and_names_the_diesels_as_unsupported(self):
         code, text = self.run_cli("list")
         self.assertEqual(code, 0, text)
-        self.assertIn("ls-282-k28t: K-28T Logging Tank Mikado  (pack not found)", text)
+        self.assertIn("ls-440-a23: A-23 American  (pack not found)", text)
+        self.assertNotIn('ls-282-k28t:', text)
         self.assertIn("ts-260-a: ts-260-a", text)  # the test pack registered as stock by the fixture
         self.assertIn("Not supported in this release: ld-gp9 (EMD GP9)", text)
         self.assertNotIn("TruckMod", text)

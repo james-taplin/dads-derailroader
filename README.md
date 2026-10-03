@@ -1,12 +1,13 @@
 # derailroader
 
-**Convert Railroader's 21 stock steam locomotives into Derail Valley locomotives.**
+**Convert ten selected Railroader stock steam locomotives into Derail Valley locomotives.**
 
 `derailroader` (command line: `rr2dv`) takes one of Railroader's own stock steam locomotives from your own Railroader
 install, rebuilds it for Derail Valley's Custom Car Loader (CCL 3.1.9), checks the result, and installs it into your own
-Derail Valley `Mods` folder. It never changes your Railroader install. It converts the 21 stock steam locomotives
-(S-23, S-51, D-46, F-71, G-16, G-25, C-25, C-46, C-55, K-28T, K-35, B-65, A-23, A-26, T-17, T-21, T-22, P-18,
-P-43, P-48 and C-40).
+Derail Valley `Mods` folder. It never changes your Railroader install. This test edition on
+`dads-derailroader/fixed` supports only **A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22**.
+Other locomotives and the **Reading 6-Chime** whistle are unavailable and refused by conversion checks.
+Version `0.4.7+fixed.1` identifies this test build separately from the published 0.4.7 release.
 
 ![The derailroader app](docs/app-window.png)
 
@@ -162,9 +163,9 @@ Inherited boiler values are labelled as simulation defaults, not measurements of
 ```
 rr2dv doctor                      # find both games and check Unity, Car Creator, AssetRipper and CCL
 rr2dv list                        # the supported stock steam locomotives, and which are installed
-rr2dv scan ls-282-k28t            # read-only: what the locomotive needs
-rr2dv convert ls-282-k28t         # convert, with the pre-build review in the terminal
-rr2dv convert ls-282-k28t --review-file prebuild-review.json  # replay reviewed choices
+rr2dv scan ls-440-a23            # read-only: what the locomotive needs
+rr2dv convert ls-440-a23         # convert, with the pre-build review in the terminal
+rr2dv convert ls-440-a23 --review-file prebuild-review.json  # replay reviewed choices
 ```
 
 Name the locomotive by its Railroader pack name (as `rr2dv list` shows), or give the path of its pack folder in
@@ -241,7 +242,7 @@ decision.
 
 ## What a finished pack must pass
 
-New builds include the selected locomotive's native CCL vehicle catalogue page and its tender's page where fitted. Every livery points to its matching page and icon. K-28T has one page; the other supported steam locomotives have two. Building one or two locomotives installs only their pages, without a separate fleet catalogue mod. Rebuild an older converted pack to add its pages. The supplied Game Numbers v2 sheets retain **provisional** hauling ratings; those ratings are not measured driving results. See [catalogue integration](docs/vehicle-catalogue.md).
+New builds include the selected locomotive's native CCL vehicle catalogue page and its tender's page. Every livery points to its matching page and icon. Each supported steam locomotive has two pages. Building one or two locomotives installs only their pages, without a separate fleet catalogue mod. Rebuild an older converted pack to add its pages. The supplied Game Numbers v2 sheets retain **provisional** hauling ratings; those ratings are not measured driving results. See [catalogue integration](docs/vehicle-catalogue.md).
 
 A pack that builds and passes the audit is a **candidate**. These gates are checked in game, and anything not yet
 checked stays pending. Earlier accepted conversions (G-29, C-21) are evidence of what works, not templates.

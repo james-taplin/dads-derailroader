@@ -4,8 +4,9 @@
 
 | Where it stopped | First thing to check |
 | --- | --- |
-| Before conversion | Game installs, CCL, tool paths, a short work folder, and that the locomotive is one of the 21 stock steam locomotives in Railroader's asset packs. |
+| Before conversion | Game installs, CCL, tool paths, a short work folder, and that the locomotive is one of the ten supported stock steam locomotives in Railroader's asset packs. |
 | Windows Security blocks or removes a file | Protection history: record the detection name, affected file, and action. See the [Windows Security guide](https://github.com/james-taplin/dads-derailroader/blob/main/docs/resolving-blocks.md#windows-security-blocks-the-launcher-or-a-tool). A Unity crash alone does not establish an antivirus block. |
+| `unsupported-whistle` | Reading 6-Chime is excluded in this test edition. Choose another available whistle. |
 | `locate` / `link` | Which locomotive was selected; missing or duplicate tenders, trucks, part packs, or sounds evidence. |
 | `stage` / `extract` | Whether a source file changed while copied; AssetRipper path and export diagnostics. |
 | `import` / `probe` | Animation ownership, Unity version, an open Editor, licence prompt, and Unity logs. |

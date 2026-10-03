@@ -1,4 +1,4 @@
-"""Scope tripwires: the app reads Railroader's 21 supported stock steam locomotives.
+"""Scope tripwires: historical stock reference and the restricted supported edition.
 
 These read the source files, not the runtime lists, because other tests add synthetic pack names to stock.STEAM for the
 test process (fixtures.register_stock). If one of these fails, modded-locomotive support has crept back in."""
@@ -30,15 +30,16 @@ def literal_dict_keys(source: str, name: str) -> set[str]:
 class StockList(unittest.TestCase):
     def test_the_source_lists_exactly_the_24_stock_locomotives(self):
         source = (SRC / "stock.py").read_text(encoding="utf-8")
-        self.assertEqual(literal_dict_keys(source, "STEAM"), STEAM)
+        self.assertEqual(literal_dict_keys(source, "KNOWN_STEAM"), STEAM)
         self.assertEqual(literal_dict_keys(source, "DIESEL"), DIESEL)
         self.assertEqual(len(STEAM) + len(DIESEL), 24)
 
     def test_refusal_messages(self):
         from rr2dv import stock
-        self.assertIsNone(stock.refusal("ls-282-k28t"))
+        self.assertIsNone(stock.refusal("ls-440-a23"))
+        self.assertIn('not supported', stock.refusal('ls-282-k28t'))
         self.assertIn("not supported in this release", stock.refusal("ld-gp9"))
-        self.assertIn("not one of Railroader's 21 stock steam locomotives", stock.refusal("Some Loco Mod"))
+        self.assertIn("not one of this edition's ten supported stock steam locomotives", stock.refusal("Some Loco Mod"))
 
 
 class NoModdedLocomotiveSupport(unittest.TestCase):

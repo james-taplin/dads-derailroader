@@ -2,7 +2,7 @@
 
 <p align="center"><strong>From a Railroader stock steam locomotive to a local Derail Valley CCL pack.</strong></p>
 
-`derailroader` (`rr2dv` on the command line) converts one of Railroader's 21 stock steam locomotives, read from your own Railroader install, into a Custom Car Loader pack, checks the exported bundle, and offers to install it in your Derail Valley `Mods` folder. It leaves your Railroader install and your saves alone. The supported locomotives are listed in the [README](https://github.com/james-taplin/dads-derailroader#readme).
+`derailroader` (`rr2dv` on the command line) converts one of ten supported Railroader stock steam locomotives, read from your own Railroader install, into a Custom Car Loader pack, checks the exported bundle, and offers to install it in your Derail Valley `Mods` folder. It leaves your Railroader install and your saves alone. This test branch supports A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22; Reading 6-Chime is unavailable.
 
 > [!IMPORTANT]
 > This is a work in progress. A successful build and bundle audit produce a **candidate**, not an accepted locomotive. Test it in game before treating it as finished.

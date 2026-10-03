@@ -2,6 +2,8 @@
 
 This is an evidence index, not a pack catalogue. Record **built**, **driven**, and **accepted** separately: a successful export or audit does not prove in-game behavior. Do not attach converted packs or source assets. See [Personal use and provenance](https://github.com/james-taplin/dads-derailroader/wiki/Personal-use-and-provenance).
 
+Historical evidence below includes engines excluded from this test edition. Current support is restricted to A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22; Reading 6-Chime is unavailable.
+
 | Locomotive | Last app version tested | Status | General lesson or open check |
 | --- | --- | --- | --- |
 | K-28T | To verify | Built and installed candidate | Check the handbrake, oil cups, and controls in game. |

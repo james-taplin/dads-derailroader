@@ -1,6 +1,6 @@
-"""The locomotives this edition converts: Railroader's own 21 stock steam locomotives, by asset-pack name.
+"""Supported conversion scope and retained stock tuning reference, by asset-pack name.
 
-vanilla-flavoured (James, 2026-09-30): no modded locomotives. The only input is one of these packs in Railroader's
+vanilla-flavoured (James, 2026-09-30): no modded locomotives. The only input is one of the ten supported packs in Railroader's
 Railroader_Data/StreamingAssets/AssetPacks folder. The three stock diesels are known but not converted in this
 release (diesel integration continues on the 0.3.x branch). Nothing here reads a file; the names are the packs'
 folder names, which are also their locomotive identifiers.
@@ -8,7 +8,7 @@ folder names, which are also their locomotive identifiers.
 from __future__ import annotations
 
 # pack folder name -> display name (the Definitions.json metadata name)
-STEAM: dict[str, str] = {
+KNOWN_STEAM: dict[str, str] = {
     "ls-060-s23": "S-23 Switcher",
     "ls-080-s51": "S-51 Switcher",
     "ls-2100-d46": "D-46 Decapod",
@@ -32,7 +32,14 @@ STEAM: dict[str, str] = {
     "ls-480-c40": "C-40 Mastodon",
 }
 
-REAL_STEAM = frozenset(STEAM)  # the 21, as shipped (tests add synthetic names to STEAM for their own process)
+# Keep the complete measurement table as reference; it does not grant conversion support.
+REAL_STEAM = frozenset(KNOWN_STEAM)
+SUPPORTED_STEAM = frozenset({
+    'ls-440-a23', 'ls-442-a26', 'ls-280-c25', 'ls-2100-d46', 'ls-2102-f71',
+    'ls-260-g25', 'ls-282-k35', 'ls-462-p18', 'ls-460-t17', 'ls-460-t22',
+})
+STEAM: dict[str, str] = {key: name for key, name in KNOWN_STEAM.items() if key in SUPPORTED_STEAM}
+EXCLUDED_STEAM = REAL_STEAM - SUPPORTED_STEAM
 
 DIESEL: dict[str, str] = {
     "ld-gp9": "EMD GP9",
@@ -45,16 +52,19 @@ DIESEL: dict[str, str] = {
 # locomotive gets when its definition names none (James, 2026-09-30).
 WHISTLE_PACK = "audio.whistles01"
 DEFAULT_WHISTLE = "wh-3-std"
+EXCLUDED_WHISTLES = frozenset({'wh-6-reading'})
 
 
 def refusal(pack_name: str) -> str | None:
-    """Why a pack folder name is not converted here, or None when it is one of the 21 stock steam locomotives."""
+    """Why a pack folder name is not converted in this test edition."""
     if pack_name in STEAM:
         return None
+    if pack_name in EXCLUDED_STEAM:
+        return f"{pack_name} ({KNOWN_STEAM[pack_name]}) is not supported in this ten-locomotive test edition"
     if pack_name in DIESEL:
         return (f"{pack_name} ({DIESEL[pack_name]}) is a stock diesel; diesel locomotives are not supported in this release "
                 "(diesel integration is on the 0.3.x branch)")
-    return (f"{pack_name} is not one of Railroader's 21 stock steam locomotives; this edition converts only those "
+    return (f"{pack_name} is not one of this edition's ten supported stock steam locomotives; this edition converts only those "
             f"({', '.join(sorted(STEAM))})")
 
 

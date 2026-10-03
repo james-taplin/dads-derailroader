@@ -1,3 +1,9 @@
+Version 0.4.7+fixed.1 (test branch dads-derailroader/fixed)
+
+- restricted support to A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22; other locomotive selections are refused
+- removed Reading 6-Chime from whistle choices and blocked its use through explicit selection or a source default
+- retained the 0.4.7 saved-radius repair, measured fittings and personal-use provenance for supported conversions
+
 Version 0.4.7
 
 - prevented incompatible saved stock wheel radii from silently replacing the supported source radius in the pre-build review, retaining other choices and requiring confirmation [S-23's old low confidence probe choice was restored instead of its source radius]

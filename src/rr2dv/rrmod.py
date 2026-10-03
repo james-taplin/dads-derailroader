@@ -269,7 +269,8 @@ class Index:
         return sorted(hits, key=lambda po: (po[0].root.rank, po[0].rel, po[1]["identifier"]))
 
     def steam_locomotives(self, input_only: bool = True) -> list[tuple[Pack, dict]]:
-        locos = self.objects_of_kind(STEAM_LOCOMOTIVE)
+        locos = [po for po in self.objects_of_kind(STEAM_LOCOMOTIVE)
+                 if po[1]['identifier'] not in stock.EXCLUDED_STEAM]
         return [po for po in locos if po[0].root.rank == 0] if input_only else locos
 
     def other_locomotives(self) -> list[tuple[Pack, dict]]:
@@ -333,9 +334,11 @@ def _whistle_credit(index: Index, pack: Pack, obj: dict) -> dict:
 
 
 def whistle_options(index: Index) -> list[dict]:
-    """Every whistle Railroader offers (objects of kind Whistle), by identifier: {id, name, model, audio}."""
+    """Supported whistles, excluding Reading 6-Chime in this test edition."""
     out = []
     for pack, obj in index.objects_of_kind("Whistle"):
+        if obj['identifier'] in stock.EXCLUDED_WHISTLES:
+            continue
         d = definition(obj)
         model, audio = d.get("model") or {}, d.get("audio") or {}
         out.append({"id": obj["identifier"], "name": (obj.get("metadata") or {}).get("name") or obj["identifier"],
@@ -355,6 +358,10 @@ def _whistle(index: Index, loco_id: str, ldef: dict, chosen: str | None, packs: 
         source, wanted = "option", chosen
     info = {"id": wanted, "source": source, "component": comp.get("name") if comp else None, "model": None, "audio": None,
             "name": None, "placed": False, "enabled": comp is not None and comp.get('enabled', True), "options": whistle_options(index)}
+    if wanted in stock.EXCLUDED_WHISTLES:
+        issues.append(Issue('error', 'unsupported-whistle',
+                            'Reading 6-Chime (wh-6-reading) is not supported in this test edition; choose another whistle'))
+        return info
     if comp is None:
         issues.append(Issue("warning", "no-whistle-component", f"{loco_id} has no Whistle component; no whistle mesh is placed"))
         return info
@@ -398,6 +405,9 @@ def _whistle(index: Index, loco_id: str, ldef: dict, chosen: str | None, packs: 
 def inventory(index: Index, loco_id: str, hash_files: bool = True, audio: str | None = None, whistle: str | None = None) -> dict:
     """Dependency closure of one steam locomotive, as a deterministic JSON-ready dict."""
     issues: list[Issue] = []
+    if loco_id in stock.EXCLUDED_STEAM:
+        return {'schema': 1, 'locomotive': {'id': loco_id},
+                'issues': [Issue('error', 'unsupported-locomotive', stock.refusal(loco_id)).as_dict()]}
     res = index.find_object(loco_id)
     if res.hit is None:
         code, msg = ("ambiguous", _ambiguous(f"locomotive {loco_id}", res)) if res.candidates else ("not-found", f"locomotive {loco_id} not found" + _unreadable_hint(index))

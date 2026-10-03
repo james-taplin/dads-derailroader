@@ -2,6 +2,10 @@
 
 `rr2dv` records the stage, message, evidence, and any unresolved choice. Start with the run's `run.log` and `run.json`; the [README](../README.md) explains setup and the supported locomotive list.
 
+## Restricted test edition
+
+`0.4.7+fixed.1` on `dads-derailroader/fixed` supports only A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22. An excluded stock locomotive is refused before extraction. Reading 6-Chime (`wh-6-reading`) is absent from the whistle choices; selecting it explicitly or naming it as a source default blocks conversion with `unsupported-whistle`. Choose another available whistle. Historical all-fleet measurements below describe the retained reference library, not this edition's supported list. Existing installed packs and settings are not removed.
+
 ## Measured cab instruments and numerical speed HUD
 
 All 21 cabs now require their selected source gauges and measured supports to agree with the fitting library. Changed source counts, names/styles or transforms stop the build. Missing/ambiguous gauges or supports, an intersecting pad, fewer than seven rear pad contacts, or changed mounting data also stop it. Stud adapters require at least three non-collinear contacts meeting their named source geometry within 1 mm and lengths of 2–160 mm. Preserve the build report for fitting review; do not bypass the check with a generic offset. Every newly built loco also requires a numerical F4 speed box and a speed reader wired to absolute km/h. A missing HUD layout, speed indicator or matching traction reader stops the build/audit for investigation.
@@ -47,7 +51,7 @@ Only restore or allow the specific detected item after verifying it is safe; do 
 
 ## Locomotive selection and source files
 
-Choose one of the 21 supported stock steam locomotives listed by `rr2dv list`. The application reads its files from the Railroader installation. If it is missing from the list, use Steam to verify the game installation, then run **Settings > Check** again.
+Choose one of the ten supported stock steam locomotives listed by `rr2dv list`. Excluded engines stay unavailable even when installed. The application reads supported engines' files from the Railroader installation. If a supported engine is missing from the list, use Steam to verify the game installation, then run **Settings > Check** again.
 
 | Stage or message | What to check |
 |---|---|

@@ -72,9 +72,9 @@ class Detection(unittest.TestCase):
 
     def test_input_is_a_stock_steam_pack_directly_in_the_asset_packs_folder(self):
         rr = installs.railroader(Machine(None, game_installs(self.tmp)))
-        pack = rr.asset_packs / "ls-282-k28t"
+        pack = rr.asset_packs / "ls-440-a23"
         pack.mkdir(parents=True)
-        self.assertEqual(installs.stock_pack(rr, "ls-282-k28t"), pack)
+        self.assertEqual(installs.stock_pack(rr, "ls-440-a23"), pack)
         self.assertEqual(installs.stock_pack(rr, pack), pack)
         (rr.asset_packs / "SomeMod").mkdir()
         (rr.asset_packs / "truck.archbar.diamond").mkdir()
@@ -92,11 +92,11 @@ class Detection(unittest.TestCase):
 
     def test_a_folder_in_a_railroader_mods_folder_is_never_read(self):
         rr = installs.railroader(Machine(None, game_installs(self.tmp)))
-        (rr.root / "Mods" / "ls-282-k28t").mkdir(parents=True)  # a mod folder carrying a stock name
+        (rr.root / "Mods" / "ls-440-a23").mkdir(parents=True)  # a mod folder carrying a stock name
         with self.assertRaises(installs.InstallError):
-            installs.stock_pack(rr, "ls-282-k28t")  # the asset pack is missing: the Mods folder is not a substitute
+            installs.stock_pack(rr, "ls-440-a23")  # the asset pack is missing: the Mods folder is not a substitute
         with self.assertRaises(installs.InstallError):
-            installs.stock_pack(rr, rr.root / "Mods" / "ls-282-k28t")
+            installs.stock_pack(rr, rr.root / "Mods" / "ls-440-a23")
 
     def test_railroader_needs_no_mods_folder(self):
         games = game_installs(self.tmp)
@@ -106,11 +106,11 @@ class Detection(unittest.TestCase):
     @unittest.skipIf(sys.platform == "win32", "symlink creation needs privileges on Windows")
     def test_a_link_placed_in_the_asset_packs_folder_is_refused(self):
         rr = installs.railroader(Machine(None, game_installs(self.tmp)))
-        real = self.tmp / "elsewhere" / "ls-282-k28t"
+        real = self.tmp / "elsewhere" / "ls-440-a23"
         real.mkdir(parents=True)
-        os.symlink(real, rr.asset_packs / "ls-282-k28t")
+        os.symlink(real, rr.asset_packs / "ls-440-a23")
         with self.assertRaisesRegex(installs.InstallError, "link"):
-            installs.stock_pack(rr, "ls-282-k28t")
+            installs.stock_pack(rr, "ls-440-a23")
 
 
 class Notice(unittest.TestCase):
@@ -175,11 +175,11 @@ class Install(unittest.TestCase):
         return True
 
     SOURCES = [{"id": "Railroader (base game asset packs)", "kind": "game", "root": "", "path": "", "credits": [],
-                "packs": ["ls-282-k28t", "truck.archbar.diamond"]}]
+                "packs": ["ls-440-a23", "truck.archbar.diamond"]}]
 
     def run_install(self, ask=None):
         dest, record = install(self.pack, self.dv, self.expected, self.SOURCES,
-                               {"run": "r1", "input": "AssetPacks/ls-282-k28t", "locomotive": "ls-282-k28t"}, ask or self.agree)
+                               {"run": "r1", "input": "AssetPacks/ls-440-a23", "locomotive": "ls-440-a23"}, ask or self.agree)
         self.record = record
         return dest
 
@@ -197,7 +197,7 @@ class Install(unittest.TestCase):
         provenance = (dest / PROVENANCE_FILE).read_text()
         for line in ("Notice version: 2.0", "Acknowledged: " + marker["acknowledged"], "Source content detected:",
                      "  - Railroader (base game asset packs)\n", "      truck.archbar.diamond",
-                     "Converted from: AssetPacks/ls-282-k28t (locomotive ls-282-k28t)"):
+                     "Converted from: AssetPacks/ls-440-a23 (locomotive ls-440-a23)"):
             self.assertIn(line, provenance)
         self.assertIn("PERSONAL USE ONLY", (dest / NOTICE_FILE).read_text())
         self.assertEqual(self.asked, [("RR2DV_TEST", ["Railroader (base game asset packs)"])])

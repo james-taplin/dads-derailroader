@@ -1,6 +1,6 @@
 """Command line: `rr2dv doctor`, `rr2dv list`, `rr2dv scan`, `rr2dv convert`.
 
-Locomotives are named by their Railroader asset-pack name: `rr2dv scan ls-282-k28t`. Only the 21 stock steam locomotives
+Locomotives are named by their Railroader asset-pack name: `rr2dv scan ls-440-a23`. Only the ten supported stock steam locomotives
 are accepted (see stock.py)."""
 from __future__ import annotations
 
@@ -134,13 +134,13 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("gui", help="open the desktop app").set_defaults(func=cmd_gui)
 
     scan = sub.add_parser("scan", help="show what a stock steam locomotive needs (read-only)")
-    scan.add_argument("input", help="stock locomotive pack name, e.g. ls-282-k28t")
+    scan.add_argument("input", help="stock locomotive pack name, e.g. ls-440-a23")
     scan.add_argument("--json", metavar="FILE", help="also write the full report as JSON")
     scan.add_argument("--no-hash", action="store_true", help="skip file hashes (faster)")
     scan.set_defaults(func=cmd_scan)
 
     conv = sub.add_parser("convert", help="convert one stock steam locomotive into your Derail Valley Mods folder")
-    conv.add_argument("input", help="stock locomotive pack name, e.g. ls-282-k28t (never modified)")
+    conv.add_argument("input", help="stock locomotive pack name, e.g. ls-440-a23 (never modified)")
     conv.add_argument("--loco", help="locomotive identifier (the pack's own; normally not needed)")
     conv.add_argument("--livery", help="livery name to use (default: the locomotive's first)")
     conv.add_argument("--whistle", metavar="ID", help="Railroader whistle to place on the locomotive, e.g. wh-3-std "
