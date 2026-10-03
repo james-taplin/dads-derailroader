@@ -1,15 +1,15 @@
-Version 0.4.7+fixed.1 (restricted build uploaded to Nexus as 0.4.7; now on main and testing)
+Version 0.4.7 (GitHub rebuild from main, 4 October 2026)
 
 - restricted support to A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22; other locomotive selections are refused
 - removed Reading 6-Chime from whistle choices and blocked its use through explicit selection or a source default
 - retained the 0.4.7 saved-radius repair, measured fittings and personal-use provenance for supported conversions
 
-Local continuation (not included in the initial fixed.1 ZIPs):
+Included in this GitHub rebuild (not in the original Nexus fixed.1 build):
 
 - report a persistent missing Unity Editor licence promptly with activation instructions instead of waiting for the one-hour timeout; temporary startup refusals that recover retain their existing behavior
 - clarified Unity licence activation in the installation and troubleshooting guides
 
-Version 0.4.7
+Retained from the original 0.4.7:
 
 - prevented incompatible saved stock wheel radii from silently replacing the supported source radius in the pre-build review, retaining other choices and requiring confirmation [S-23's old low confidence probe choice was restored instead of its source radius]
 - oil fitting radius errors now name the reviewed and required values and direct users to the pre-build review [geometry and motion checks remain required]
