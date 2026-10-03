@@ -114,6 +114,8 @@ opening an archive, and avoid third-party mirrors.
 
 Neither download includes Unity, AssetRipper or the Car Creator Package.
 
+Activate your Unity Editor licence through [Unity Hub](https://docs.unity.com/en-us/hub/manage-license), then open the configured **2019.4.40f1** Editor once to confirm it starts normally and close it. Installing Unity alone does not establish an active licence; a licensing prompt can leave conversion waiting at **Measure the model**.
+
 If Windows Security blocks the launcher or a tool, check **Protection history** for the exact affected file and detection. See [Windows Security troubleshooting](docs/resolving-blocks.md#windows-security-blocks-the-launcher-or-a-tool) before restoring or allowing a file.
 
 Then open **Settings… → Check**, and **Save** the detected tool paths. If a tool is not found, browse to the exact file

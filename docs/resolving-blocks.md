@@ -73,6 +73,14 @@ Choose one of the ten supported stock steam locomotives listed by `rr2dv list`. 
 | Unity appears to pause during a fresh import | A fresh import can take several minutes. Check whether `probe/unity-1.log` is still growing. |
 | Unity did not produce a result | Inspect `probe/unity-1.log` for a licensing prompt or error, open Unity once to resolve licensing, then rerun. |
 
+## Unity Editor licence not active
+
+An explicit **No valid Unity Editor license found. Please activate your license.** means Unity cannot start the conversion method. The supplied F-71 report from 3 October reached this message before any Editor initialization or model measurements, then waited for the one-hour timeout. It is not evidence that measuring F-71 needs an hour or that the PC needs more RAM. LicensingClient connecting or saying licences updated does not itself establish an active Editor licence.
+
+Open Unity Hub and sign in, then check **Settings > Licenses**. For Unity Personal, sign-in normally activates the licence; if necessary use **Add license > Get a free personal license** and complete the activation. Follow the [official licence instructions](https://docs.unity.com/en-us/hub/manage-license) for the plan in use. Open the same **Unity 2019.4.40f1** Editor selected in the app, confirm it starts without the licence error, then close it and retry. No settings/cache reset or game-file remeasurement is required for this blocker. If the licence error remains, retain the new report for further diagnosis.
+
+The local runner correction detects this explicit refusal while Unity remains open, allows a 30-second startup grace period, then stops the process and explains activation. Subsequent engine initialization or assembly reload clears the startup refusal; a short licence-error exit still receives the existing single retry. Successful conversions retain the normal time limit. The correction does not activate Unity on the user's behalf. After cleanup, the measurement log is preserved as **probe.log** in `<workRoot>/reports/<run-id>`.
+
 ## Review and build
 
 If oil preparation reports **Driver radius … differs from the measured oil-cup fitting**, compare the displayed values with the source driving-wheel radius. A low-confidence probe candidate may not be the tyre tread. Sumrac's S-23 report from 3 October restored a previously accepted **0.682972 m** candidate, while the definition and fitting use **0.6477 m**. In the pre-build review, set S-23's **Driving tyre radius (m)** to **0.6477**, confirm and retry. This addresses that review mismatch; the actual model must still pass the native bearing and motion checks. **Use proposed geometry** only concerns car ends.

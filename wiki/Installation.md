@@ -17,6 +17,8 @@ These steps are for Windows. Start with Railroader and Derail Valley installed t
 
 Select the extracted file for each tool, not its ZIP or enclosing folder. The app imports Car Creator itself; you do not need to open the package in Unity.
 
+**Activate Unity before converting.** Sign in to Unity Hub and check **Settings > Licenses**. If your Personal licence is not activated automatically, use **Add license > Get a free personal license**; other plans have their own activation options in the [official instructions](https://docs.unity.com/en-us/hub/manage-license). Open the exact **2019.4.40f1** Editor selected in derailroader once, confirm it starts without a licence error, and close it. An installed Editor without an active licence can wait at startup while the app displays **Measure the model**.
+
 ## 3. Install and check derailroader
 
 If a Windows package is listed on [Releases](https://github.com/james-taplin/dads-derailroader/releases), extract the whole folder and run `Derailroader.exe`. Keep `_internal` beside the executable. To use the source, clone the [repository](https://github.com/james-taplin/dads-derailroader) or choose **Code → Download ZIP**, then run `Launch Derailroader.bat`; it needs Python 3.11 or newer with Tk.

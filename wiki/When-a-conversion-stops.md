@@ -7,6 +7,7 @@
 | Before conversion | Game installs, CCL, tool paths, a short work folder, and that the locomotive is one of the ten supported stock steam locomotives in Railroader's asset packs. |
 | Windows Security blocks or removes a file | Protection history: record the detection name, affected file, and action. See the [Windows Security guide](https://github.com/james-taplin/dads-derailroader/blob/main/docs/resolving-blocks.md#windows-security-blocks-the-launcher-or-a-tool). A Unity crash alone does not establish an antivirus block. |
 | `unsupported-whistle` | Reading 6-Chime is excluded in this test edition. Choose another available whistle. |
+| No active Unity Editor licence | Sign in to Unity Hub and activate or refresh the appropriate licence. Open the configured Unity 2019.4.40f1 once to confirm startup, close it, then retry. After a failed run, send the compact report's `probe.log`; see [Installation](https://github.com/james-taplin/dads-derailroader/wiki/Installation). |
 | `locate` / `link` | Which locomotive was selected; missing or duplicate tenders, trucks, part packs, or sounds evidence. |
 | `stage` / `extract` | Whether a source file changed while copied; AssetRipper path and export diagnostics. |
 | `import` / `probe` | Animation ownership, Unity version, an open Editor, licence prompt, and Unity logs. |

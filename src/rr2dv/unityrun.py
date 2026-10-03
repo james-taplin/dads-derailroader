@@ -20,6 +20,17 @@ LICENCE_FLAKE = "No valid Unity Editor license"
 # A windowed editor with compiler errors waits forever instead of running the method (board X29): stop it at once.
 COMPILER_ERROR = re.compile(r"\): error CS\d+:.*|Scripts have compiler errors")
 POLL_SECONDS = 2.0
+LICENCE_GRACE_SECONDS = 30.0
+LICENCE_ADVICE = ('Open Unity Hub, sign in and activate the appropriate Editor licence. '
+                  'Open the configured Unity 2019.4.40f1 Editor once to confirm it starts, '
+                  'then close it and retry the conversion.')
+
+
+def _licence_blocks_startup(text: str) -> bool:
+    """An explicit licence refusal without subsequent Editor startup progress."""
+    refusal = text.rfind(LICENCE_FLAKE)
+    return refusal >= 0 and not any(marker in text[refusal:] for marker in
+                                   ('Initialize engine version:', 'ReloadAssembly'))
 
 
 class UnityError(RuntimeError):
@@ -39,6 +50,7 @@ def _launch(unity: Path, project: Path, method: str, log: Path, env: dict, timeo
     except OSError as e:
         raise UnityError(f"Unity at {unity} could not be started ({e}); check `unity` in the settings file") from e
     deadline = time.monotonic() + timeout
+    licence_since = None
     try:
         while True:
             try:
@@ -47,10 +59,20 @@ def _launch(unity: Path, project: Path, method: str, log: Path, env: dict, timeo
                 pass
             text = log.read_text(encoding="utf-8", errors="replace") if log.exists() else ""
             errors = sorted({m.group(0).strip() for m in COMPILER_ERROR.finditer(text)})
-            if errors or time.monotonic() > deadline:
+            now = time.monotonic()
+            if _licence_blocks_startup(text):
+                if licence_since is None:
+                    licence_since = now
+            else:
+                licence_since = None
+            licence_blocked = licence_since is not None and now - licence_since >= LICENCE_GRACE_SECONDS
+            if errors or licence_blocked or now > deadline:
                 procs.stop(proc, grace=60)
                 if errors:
                     raise UnityError(f"scripts did not compile, so {method} could not run: " + "; ".join(errors[:5]) + f" (see {log})")
+                if licence_blocked:
+                    raise UnityError(f'Unity has no active Editor licence, so {method} could not start. '
+                                     f'{LICENCE_ADVICE} (see {log})')
                 raise UnityError(f"Unity did not finish {method} within {timeout:.0f} s; see {log}")
     finally:
         if proc.poll() is None:
@@ -138,7 +160,8 @@ def run_method(unity: Path, project: Path, method: str, out: Path, extra_env: di
         last = attempts[-1]["attempt"]
         raise UnityError(f"{method} wrote no result.json (exit code {code}{_crash_meaning(code)}, after {len(attempts)} attempt(s)); "
                          f"see {out / f'unity-{last}.log'}{_log_tail(out / f'unity-{last}.log')}"
-                         f"{_non_ascii_hint({'Unity': unity, 'project': project, **environment_paths(env)})}")
+                         + (f'\n  {LICENCE_ADVICE}' if _licence_blocks_startup(text) else '')
+                         + _non_ascii_hint({'Unity': unity, 'project': project, **environment_paths(env)}))
     result = read_json(result_file)
     result["exit_code"] = attempts[-1]["exit_code"]
     return result
