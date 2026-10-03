@@ -1,5 +1,7 @@
 # Unattended test build of all stock steam locos: brief for Codex
 
+Historical 21-locomotive baseline procedure: current source is restricted to the ten locomotives in the README. Do not bypass the support gate to reproduce the older full-fleet run.
+
 Goal: build and audit all 21 stock steam locos with the current commit, never install anything, and send back the compact reports so the
 owner can read the build reports when back. The owner allowed, for this run only: confirming the app's suggested vehicle choices as they are,
 ticking "I acknowledge experimental physics and pending in-game calibration", and using the app's own measured end-beam proposals when a

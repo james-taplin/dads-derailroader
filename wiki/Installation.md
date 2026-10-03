@@ -37,3 +37,6 @@ See [When a conversion stops](https://github.com/james-taplin/dads-derailroader/
 </details>
 
 Next: [Your first conversion](https://github.com/james-taplin/dads-derailroader/wiki/Your-first-conversion).
+
+
+**Release distinction (3 October 2026):** main and the testing branch contain the ten-locomotive `0.4.7+fixed.1` restriction. The existing `v0.4.7` tag/downloads predate it and still represent the 21-locomotive edition. No restricted binary release is implied by this source update.

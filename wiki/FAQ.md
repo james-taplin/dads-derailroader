@@ -39,5 +39,5 @@ No. The pack is built from Railroader's game files, which belong to the Railroad
 <details>
 <summary><strong>Which locomotives are supported?</strong></summary>
 
-This test edition supports A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22. Other locomotives and Reading 6-Chime are unavailable.
+The current source edition supports A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22. Other locomotives and Reading 6-Chime are unavailable.
 </details>

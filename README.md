@@ -4,10 +4,9 @@
 
 `derailroader` (command line: `rr2dv`) takes one of Railroader's own stock steam locomotives from your own Railroader
 install, rebuilds it for Derail Valley's Custom Car Loader (CCL 3.1.9), checks the result, and installs it into your own
-Derail Valley `Mods` folder. It never changes your Railroader install. This test edition on
-`dads-derailroader/fixed` supports only **A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22**.
+Derail Valley `Mods` folder. It never changes your Railroader install. The current source on main and the testing branch supports only **A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22**.
 Other locomotives and the **Reading 6-Chime** whistle are unavailable and refused by conversion checks.
-Version `0.4.7+fixed.1` identifies this test build separately from the published 0.4.7 release.
+Version `0.4.7+fixed.1` identifies this restricted source revision. **The published `v0.4.7` tag and downloads predate the restriction and still support 21 locomotives.** Updating main and the testing branch does not update those existing downloads; use this source revision for the restricted edition.
 
 ![The derailroader app](docs/app-window.png)
 

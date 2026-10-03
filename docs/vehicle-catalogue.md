@@ -1,5 +1,7 @@
 # Vehicle catalogue integration
 
+Current conversion support is the ten-locomotive list in the README. The 21-profile/41-page library described below remains historical reference data; it does not bypass the supported-selection checks. All ten currently supported locomotives have tenders.
+
 The existing build pipeline imports the selected locomotive's native CCL `CatalogPage`, diagram prefab, and icon from the supplied Game Numbers v2 library. It imports the matching tender assets only when that build has a tender. K-28T uses `1/1`; the other 20 steam locomotives use an engine `1/2` and tender `2/2`. The locomotive physics settings are unchanged.
 
 The builder attaches these references to every `CustomCarVariant` in the completed engine/tender pack, before the usual CCL export. It adds only the selected pages' text keys to the pack's `ExtraTranslations`, preserving unrelated existing translations. CCL continues to export the pack root and its dependencies. There is no global page registrar, custom runtime script, or separate catalogue mod.
