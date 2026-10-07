@@ -7,11 +7,15 @@ $ErrorActionPreference = "Stop"
 $repo = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $env:PYTHONPATH = "$repo\src;$env:PYTHONPATH"
 
+$payloadRoot = Join-Path $BuildRoot ("runtime-payload-" + [guid]::NewGuid().ToString('N'))
+& $Python "$repo\scripts\release_payload.py" $payloadRoot
+if ($LASTEXITCODE -ne 0) { throw "Runtime payload staging failed" }
+
 & $Python -m PyInstaller --noconfirm --clean --onedir --windowed `
     --name Derailroader `
     --paths "$repo\src" `
-    --add-data "$repo\src\rr2dv;rr2dv" `
-    --add-data "$repo\tooling;tooling" `
+    --add-data "$payloadRoot\src\rr2dv;rr2dv" `
+    --add-data "$payloadRoot\tooling;tooling" `
     --distpath "$BuildRoot\dist" `
     --workpath "$BuildRoot\work" `
     --specpath "$BuildRoot" `

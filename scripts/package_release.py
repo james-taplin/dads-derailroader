@@ -8,6 +8,10 @@ import tomllib
 from pathlib import Path
 from zipfile import ZIP_DEFLATED, ZipFile, is_zipfile
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from release_payload import included, payload, TABLES, supported
+import json
+
 ROOT = Path(__file__).resolve().parents[1]
 VERSION = tomllib.loads((ROOT / "pyproject.toml").read_text(encoding="utf-8"))["project"]["version"]
 SOURCE_ROOT = f"Derailroader-{VERSION}-Source"
@@ -29,7 +33,8 @@ def reject_nested_archives(files: list[Path]) -> None:
 def source_files() -> list[Path]:
     tracked = subprocess.check_output(["git", "ls-files", "-z"], cwd=ROOT).split(b"\0")
     return [ROOT / path for raw in tracked if raw
-            if (path := raw.decode("utf-8")) in SOURCE_FILES or path.startswith(SOURCE_FOLDERS)]
+            if ((path := raw.decode("utf-8")) in SOURCE_FILES or path.startswith(SOURCE_FOLDERS))
+            and included(path)]
 
 
 def reading_files() -> list[Path]:
@@ -44,6 +49,15 @@ def package(dist: Path, output: Path) -> None:
     if not (app / "Derailroader.exe").is_file():
         raise SystemExit(f"Missing Windows build: {app / 'Derailroader.exe'}")
     app_files = sorted(p for p in app.rglob('*') if p.is_file())
+    for file in app_files:
+        relative = file.relative_to(app).as_posix()
+        tool_path = relative.removeprefix('_internal/')
+        if file.name in TABLES and file.parent.name == 'rr2dv':
+            data = json.loads(file.read_bytes())
+            if set(data[TABLES[file.name]]) != supported():
+                raise ValueError(f'Unrestricted reference table cannot ship: {relative}; rebuild with the runtime payload')
+        if not included(tool_path):
+            raise ValueError(f'Legacy tooling cannot ship in release: {relative}; rebuild with the runtime payload')
     sources = source_files()
     reading = reading_files()
     reject_nested_archives(app_files + sources + reading)
@@ -71,7 +85,7 @@ def package(dist: Path, output: Path) -> None:
     source = output / f"Derailroader-{VERSION}-Source.zip"
     with ZipFile(source, "w", ZIP_DEFLATED, compresslevel=9) as archive:
         for file in sources:
-            archive.write(file, f"{SOURCE_ROOT}/{file.relative_to(ROOT).as_posix()}")
+            archive.writestr(f"{SOURCE_ROOT}/{file.relative_to(ROOT).as_posix()}", payload(file))
     print(windows)
     print(source)
 

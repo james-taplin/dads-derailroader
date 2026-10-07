@@ -98,8 +98,8 @@ def validate_table(data: dict | None = None) -> list[str]:
     if not isinstance(data.get("gameBuild"), str) or not data["gameBuild"]:
         problems.append("the table does not say which game build it describes")
     locos = data.get("locos", {})
-    if set(locos) != set(REAL_STEAM):
-        problems.append(f"the table's locomotives differ from the stock list: {sorted(set(locos) ^ set(REAL_STEAM))}")
+    if not SUPPORTED_STEAM <= set(locos) <= REAL_STEAM:
+        problems.append(f"the table's locomotives differ from the stock list: {sorted((SUPPORTED_STEAM - set(locos)) | (set(locos) - REAL_STEAM))}")
     for name, e in sorted(locos.items()):
         for key in REQUIRED:
             if key not in e or e[key] is None and key != "tender":
