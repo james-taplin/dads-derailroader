@@ -7,6 +7,7 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from fixtures import game_installs
 from rr2dv import consent, installs
@@ -89,6 +90,28 @@ class Detection(unittest.TestCase):
         (rr.asset_packs / "ld-gp9").mkdir(parents=True)
         with self.assertRaisesRegex(installs.InstallError, "not supported in this release"):
             installs.stock_pack(rr, "ld-gp9")
+
+    @unittest.skipUnless(sys.platform == "win32", "Windows paths are case-insensitive")
+    def test_stock_pack_accepts_different_path_capitalisation(self):
+        rr = installs.railroader(Machine(None, game_installs(self.tmp)))
+        pack = rr.asset_packs / "ls-440-a23"
+        pack.mkdir(parents=True)
+        differently_cased = installs.Install(rr.game, Path(str(rr.root).lower()), rr.mods, rr.source)
+        self.assertEqual(installs.stock_pack(differently_cased, pack.name), pack)
+        self.assertEqual(installs.stock_pack(rr, str(pack).lower()), pack)
+
+    def test_stock_pack_resolving_to_another_folder_is_refused(self):
+        rr = installs.railroader(Machine(None, game_installs(self.tmp)))
+        pack = rr.asset_packs / "ls-440-a23"
+        pack.mkdir(parents=True)
+        realpath = os.path.realpath
+
+        def resolved(path):
+            return str(self.tmp / "elsewhere" / pack.name) if Path(path) == pack else realpath(path)
+
+        with patch("rr2dv.installs.os.path.realpath", side_effect=resolved):
+            with self.assertRaisesRegex(installs.InstallError, "link"):
+                installs.stock_pack(rr, pack.name)
 
     def test_a_folder_in_a_railroader_mods_folder_is_never_read(self):
         rr = installs.railroader(Machine(None, game_installs(self.tmp)))

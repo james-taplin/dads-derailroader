@@ -142,7 +142,8 @@ def stock_pack(rr: Install, given: str | os.PathLike) -> Path:
     reason = stock.refusal(candidate.name)
     if reason:
         raise InstallError(reason)
-    if candidate.is_symlink() or os.path.realpath(candidate) != os.path.abspath(candidate):
+    # Windows resolves the on-disk spelling, which may differ only in capitalisation.
+    if candidate.is_symlink() or os.path.normcase(os.path.realpath(candidate)) != os.path.normcase(os.path.abspath(candidate)):
         raise InstallError(f"{candidate} is a link, not a folder in Railroader's own asset packs; rr2dv reads only the real folder")
     if not candidate.is_dir():
         raise InstallError(f"{candidate} is not a folder; is the Railroader install complete? (looked in {rr.asset_packs})")
