@@ -60,6 +60,50 @@ class PackageRelease(unittest.TestCase):
                 mod.package(root/'dist',root/'output')
             self.assertFalse((root/'output').exists())
 
+    def test_release_payload_keeps_supported_profiles_and_runtime_tools(self):
+        mod = load()
+        from release_payload import stage, supported, TOOLING, TABLES
+        import json
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp) / 'payload'
+            stage(root)
+            actual = {p.relative_to(root).as_posix() for p in (root / 'tooling').rglob('*') if p.is_file()}
+            self.assertEqual(actual, TOOLING)
+            self.assertIn('tooling/builder/tools/pilot/copy_deps.py', actual)
+            self.assertIn('tooling/builder/tools/unity/LocoConfig.cs', actual)
+            for name, key in TABLES.items():
+                staged = json.loads((root / 'src/rr2dv' / name).read_bytes())[key]
+                original = json.loads((mod.ROOT / 'src/rr2dv' / name).read_bytes())[key]
+                self.assertEqual(set(staged), supported())
+                for loco in supported():
+                    self.assertEqual(staged[loco], original[loco])
+            import subprocess, sys, os
+            result = subprocess.run([sys.executable, '-B', '-c',
+                'from rr2dv.stock import validate_table; errors=validate_table(); assert not errors, errors; '
+                'from rr2dv.projectcache import _scripts; assert len(_scripts()) == 8'],
+                cwd=root, env={**os.environ, 'PYTHONPATH': str(root / 'src')},
+                capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            with self.assertRaises(FileExistsError):
+                stage(root)
+        names = {p.relative_to(mod.ROOT).as_posix() for p in mod.source_files()}
+        self.assertEqual({p for p in names if p.startswith('tooling/')}, TOOLING)
+
+    def test_stale_windows_tooling_and_profiles_are_rejected(self):
+        mod = load()
+        for relative, contents in [
+            ('tooling/builder/tools/share_project.py', b'legacy'),
+            ('rr2dv/stock_locos.json', (mod.ROOT / 'src/rr2dv/stock_locos.json').read_bytes()),
+        ]:
+            with tempfile.TemporaryDirectory() as tmp:
+                root = Path(tmp); app = root / 'dist/Derailroader'; app.mkdir(parents=True)
+                (app / 'Derailroader.exe').write_bytes(b'exe')
+                stale = app / '_internal' / relative
+                stale.parent.mkdir(parents=True); stale.write_bytes(contents)
+                with self.assertRaises(ValueError):
+                    mod.package(root / 'dist', root / 'out')
+                self.assertFalse((root / 'out').exists())
+
     def test_python_runtime_unpack_preserves_bytes(self):
         spec=importlib.util.spec_from_file_location('unpack_runtime',SCRIPT.with_name('unpack_python_runtime.py'))
         mod=importlib.util.module_from_spec(spec);spec.loader.exec_module(mod)

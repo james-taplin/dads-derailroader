@@ -1,0 +1,14 @@
+[
+  "tooling/builder/tools/resolve_clip_paths.py",
+  "tooling/builder/tools/pilot/copy_deps.py",
+  "tooling/builder/tools/unity/CclLocoBuild.AnimatedToggles.cs",
+  "tooling/builder/tools/unity/CclLocoBuild.cs",
+  "tooling/builder/tools/unity/LlwCatalogConfig.cs",
+  "tooling/builder/tools/unity/LlwVehicleRecord.cs",
+  "tooling/builder/tools/unity/LocoConfig.cs",
+  "tooling/builder/tools/unity/MeshIslandWeldTests.cs",
+  "tooling/builder/tools/unity/NewLocoBuildGate.cs",
+  "tooling/builder/tools/unity/RRPlacementValidation.cs",
+  "tooling/builder/tools/unity/ReviewedMeshIslandRemoval.cs",
+  "tooling/builder/tools/unity/UnifiedBuilderTests.cs"
+]
