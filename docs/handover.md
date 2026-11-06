@@ -1,3 +1,13 @@
+## 0.4.8 maintenance preparation — 6 November 2026
+
+James reports Nexus restored the page, with 0.4.7 still its last public download. He authorised merging the preserved Windows path-capitalisation fix and `clean` release-payload policy into main, building/testing 0.4.8 and preparing files for his manual Nexus upload. Local main includes both histories; the testing checkout is untouched. No push, tag, installation or publication is authorised by this preparation.
+
+Both version declarations are 0.4.8. README, wiki introduction and changelog describe the maintenance changes and retain the ten-engine scope. The Unity licence-startup fix was already in GitHub main, but is new relative to the original Nexus fixed.1 download. Existing coupling, cab, lights and animation issues remain open; diesels remain parked. No gameplay acceptance is implied.
+
+The Windows build uses an isolated Python 3.12 environment under ignored `rr2dv_work/release-0.4.8`, with its exact dependency versions recorded. Build output, test logs, package verification and Nexus upload files are retained there. The build's frozen self-test passed. Use short temporary paths for synthetic conversion tests: placing fixtures beneath the release-evidence directory exceeded the existing 74-character work-root limit. James specifies `B:\rr2dv` for actual conversion work; do not change or remove his existing runs/settings.
+
+Integrated validation: the final full Python suite ran 422 tests in 326.881 seconds: 401 passed, 21 optional/environment-dependent checks skipped, no failures or errors. The focused install/package/licence/message suite ran 41 tests: 40 passed, one skipped. The initial full-suite attempts were interrupted after the long fixture work-root setup was diagnosed; these are retained separately and are not passing results. No actual locomotive conversion, Unity export, game launch or installation was performed for this maintenance release. James retains gameplay testing.
+
 ## Current source scope — 3 October 2026
 
 The ten-locomotive restriction from commit `5cf87ecf18706989e451ddc780ea79ccdf6208fc` is promoted to main and the testing branch (`claude/unity-crash-message`). Source version remains `0.4.7+fixed.1`. Supported: A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22. Reading 6-Chime is excluded. The complete stock tuning/catalogue reference is retained; its presence does not enable excluded conversions.

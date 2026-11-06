@@ -1,3 +1,12 @@
+Version 0.4.8 (6 November 2026)
+
+- fixed valid Windows installation paths being rejected as links when folder capitalisation differs
+- added quicker detection of a persistent missing Unity Editor licence, with activation instructions instead of waiting for the one-hour timeout [already included in the later GitHub 0.4.7 rebuild; new since the original Nexus 0.4.7 download]
+- removed unused developer utilities and unsupported locomotive fitting profiles from generated release downloads; catalogue pages remain included
+- release packaging now rejects stale unrestricted fitting tables or legacy tooling in Windows builds
+- retains the ten supported steam locomotives and the Reading 6-Chime exclusion; diesels are not included
+- existing coupling, cab-control, lighting and animation issues remain under investigation; this maintenance release does not claim new in-game acceptance
+
 Version 0.4.7 (GitHub rebuild from main, 4 October 2026)
 
 - restricted support to A-23, A-26, C-25, D-46, F-71, G-25, K-35, P-18, T-17 and T-22; other locomotive selections are refused
